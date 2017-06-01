@@ -1,0 +1,69 @@
+{
+  "listeners": [
+    {
+      "address": "tcp://0.0.0.0:9000",
+      "ssl_context": {
+        "alpn_protocols": "h2",
+        "cert_chain_file": "/etc/nginx/ssl/cert.pem",
+        "private_key_file": "/etc/nginx/ssl/key.pem",
+        "ca_cert_file": "/etc/nginx/ssl/cert.pem"
+      },
+      "filters": [
+        {
+          "type": "read",
+          "name": "http_connection_manager",
+          "config": {
+            "codec_type": "auto",
+            "stat_prefix": "ingress_http",
+            "route_config": {
+              "virtual_hosts": [
+                {
+                  "name": "local_service",
+                  "domains": ["*"],
+                  "routes": [
+                    {
+                      "timeout_ms": 2000,
+                      "prefix": "/",
+                      "cluster": "local_service"
+                    }
+                  ]
+                }
+              ]
+            },
+            "filters": [
+              {
+                "type": "decoder",
+                "name": "router",
+                "config": {}
+              }
+            ]
+          }
+        }
+      ]
+    }
+  ],
+  "admin": {
+    "access_log_path": "/dev/null",
+    "address": "tcp://0.0.0.0:9901"
+  },
+  "cluster_manager": {
+    "clusters": [
+      {
+        "name": "local_service",
+        "features": "http2",
+        "ssl_context": {
+          "alpn_protocols": "h2",
+          "ca_cert_file": "/etc/nginx/ssl/cert.pem"
+        },
+        "connect_timeout_ms": 2000,
+        "type": "static",
+        "lb_type": "round_robin",
+        "hosts": [
+          {
+            "url": "tcp://127.0.0.1:443"
+          }
+        ]
+      }
+    ]
+  }
+}
