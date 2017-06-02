@@ -60,7 +60,7 @@
         "lb_type": "round_robin",
         "hosts": [
           {
-            "url": "tcp://127.0.0.1:443"
+            "url": "tcp://127.0.0.1:4500"
           }
         ]
       }

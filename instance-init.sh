@@ -16,13 +16,14 @@ echo -e "Scripts transfer complete.\n"
 gcloud compute scp $2 $1:./envoy-fastbuild
 echo -e "envoy-binary transfer complete.\n"
 gcloud compute ssh --ssh-flag="-t" --command="sudo chmod +x *.sh" $1
-cd ~/Google/envoy/
 gcloud compute ssh --ssh-flag="-t" --command="sudo bash ./init-script.sh" $1
+cd ~/Google/envoy/
 gcloud compute scp --recurse ./generated/configs/* $1:./envoy-configs/
 echo -e "Running Benchmark.\n"
-gcloud compute ssh $1 --ssh-flag="-t" --command="sudo python distribute_proc.py ./envoy-fastbuild ./envoy-configs/simple-loopback.json result.txt"
+gcloud compute ssh $1 --command="python distribute_proc.py ./envoy-fastbuild ./envoy-configs/simple-loopback.json result.txt"
 echo -e "Benchmarking complete.\n"
 cd -
+rm -f result.txt
 gcloud compute scp $1:./result.txt ./
-echo -e "Y" | gcloud compute instances delete $1
+# echo -e "Y" | gcloud compute instances delete $1
 echo -e "Check your result in result.txt .\n"

@@ -19,8 +19,8 @@ server {
 
 	# SSL configuration
 	#
-	 listen 443 ssl http2 default_server;
-	 listen [::]:443 ssl http2 default_server;
+	 listen 4500 ssl http2 default_server;
+	 listen [::]:4500 ssl http2 default_server;
 
 	#
 	# Note: You should disable gzip for SSL traffic.
@@ -34,7 +34,7 @@ server {
 	#
 	# include snippets/snakeoil.conf;
 
-	root /var/www/html;
+	#user /var/www/html;
 
 	# Add index.php to the list if you are using PHP
 	index index.html index.htm index.nginx-debian.html;

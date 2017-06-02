@@ -5,6 +5,12 @@ import io
 import sh
 
 
+def AllocProcessToCores(proc_command, start_core, end_core, out, background):
+  """proc_command is run on designated cores;out can be file/StringIO/io."""
+  taskset_args = "-c {}-{} {}".format(start_core, end_core, proc_command)
+  sh.taskset(taskset_args.split(" "), _out=out, _bg=background)
+
+
 parser = argparse.ArgumentParser()
 parser.add_argument("envoy_binary_path",
                     help="the path to the binary file of Envoy")
@@ -59,46 +65,47 @@ h2load_conns = args.h2load_conns
 h2load_threads = args.h2load_threads
 
 # allocate nginx to designated cores
-buf = io.StringIO()
-sh.pgrep("nginx", _out=buf)
-for x in buf.getvalue().split("\n"):
-  output = io.StringIO()
-  if x.strip():
-    sh.sudo.taskset("-cp",
-                    "{}-{}".format(
-                        nginx_start_core, nginx_end_core), x, _out=output)
+output = io.StringIO()
+AllocProcessToCores("nginx -c /etc/nginx/nginx.conf", nginx_start_core,
+                    nginx_end_core, output, False)
 
 # allocate envoy to designated cores
 # following is the shell command we are trying to replicate
 # ./envoy-fastbuild -c envoy-configs/simple-loopback.json\
 # -l debug > out.txt 2>&1 &
-envoyconfig = "-c {} -l debug".format(envoy_config_path)
+envoy_command = "{} -c {} -l debug".format(envoy_path, envoy_config_path)
 outfile = "out.txt"  # this is a temporary file
-envoy = sh.Command(envoy_path)
 # this creates the process in the background, however it'll be destroyed
 # once the python script is finished
 # if we really need envoy to keep running on background after exiting the
 # python script, then we probably should use subprocess instead of sh
-run = envoy(envoyconfig.split(" "), _out=outfile, _err_to_out=True, _bg=True)
-print "envoy process id is: " + str(run.pid)
-sh.sudo.taskset("-cp", "{}-{}".format(
-    envoy_start_core, envoy_end_core), str(run.pid), _out=output)
+# run = envoy(envoyconfig.split(" "), _out=outfile, _err_to_out=True, _bg=True)
+# print "envoy process id is: " + str(run.pid)
+# sh.sudo.taskset("-cp", "{}-{}".format(
+#     envoy_start_core, envoy_end_core), str(run.pid), _out=output)
+AllocProcessToCores(envoy_command, envoy_start_core, envoy_end_core,
+                    outfile, True)
 
 # allocate h2load to designated cores
 open(result, "w").write("")
 
 h2load_res = open(result, "a")
 
-h2load_args = "-c {}-{} h2load https://localhost -n{} -c{} -m{} -t{}".format(
-    h2load_start_core, h2load_end_core, h2load_reqs,
-    h2load_clients, h2load_conns, h2load_threads)
-sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+h2load_command = "h2load https://localhost:4500 -n{} -c{} -m{} -t{}".format(
+    h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
+# sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+AllocProcessToCores(h2load_command, h2load_start_core, h2load_end_core,
+                    h2load_res, False)
 print "h2load direct is done."
 
-h2load_args = "-c {}-{} h2load https://localhost:9000 -n{} -c{} -m{} -t{}".format(
-    h2load_start_core, h2load_end_core, h2load_reqs,
-    h2load_clients, h2load_conns, h2load_threads)
-sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+h2load_command = "h2load https://localhost:9000 -n{} -c{} -m{} -t{}".format(
+    h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
+# sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+AllocProcessToCores(h2load_command, h2load_start_core, h2load_end_core,
+                    h2load_res, False)
 print "h2load against envoy is done."
+
+# killing nginx non-root processes
+sh.pkill("nginx")
 
 # run.wait()
