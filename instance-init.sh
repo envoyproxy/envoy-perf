@@ -17,7 +17,7 @@ gcloud compute ssh --ssh-flag="-t" --command="sudo chmod +x *.sh" $1
 cd ~/Google/envoy/
 gcloud compute ssh --ssh-flag="-t" --command="sudo bash ./init-script.sh" $1
 gcloud compute scp --recurse ./generated/configs/* $1:./envoy-configs/
-gcloud compute ssh $1 --ssh-flag="-t" --command="sudo python3 distribute_proc.py ./envoy-fastbuild ./envoy-configs/simple-loopback.json"
+gcloud compute ssh $1 --ssh-flag="-t" --command="sudo python distribute_proc.py ./envoy-fastbuild ./envoy-configs/simple-loopback.json"
 cd -
 gcloud compute scp $1:./result.txt ./
 echo -e "Y" | gcloud compute instances delete $1
