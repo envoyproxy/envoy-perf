@@ -25,5 +25,5 @@ echo -e "Benchmarking complete.\n"
 cd -
 rm -f result.txt
 gcloud compute scp $1:./result.txt ./
-# echo -e "Y" | gcloud compute instances delete $1
+echo -e "Y" | gcloud compute instances delete $1
 echo -e "Check your result in result.txt .\n"
