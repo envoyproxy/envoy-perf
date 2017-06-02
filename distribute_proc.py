@@ -39,6 +39,12 @@ parser.add_argument("--h2load_conns", help="number of h2load connections. "
 parser.add_argument("--h2load_threads", help="number of h2load threads. "
                                              "default: 5", default="5")
 
+parser.add_argument("--direct_port", help="the direct port for benchmarking"
+                                          "default: 4500", default="4500")
+
+parser.add_argument("--envoy_port", help="the Envoy proxy port for benchmarking"
+                                         "default: 9000", default="9000")
+
 args = parser.parse_args()
 envoy_path = args.envoy_binary_path
 envoy_config_path = args.envoy_config_path
@@ -63,6 +69,8 @@ h2load_reqs = args.h2load_reqs
 h2load_clients = args.h2load_clients
 h2load_conns = args.h2load_conns
 h2load_threads = args.h2load_threads
+direct_port = args.direct_port
+envoy_port = args.envoy_port
 
 # allocate nginx to designated cores
 output = io.StringIO()
@@ -91,15 +99,15 @@ open(result, "w").write("")
 
 h2load_res = open(result, "a")
 
-h2load_command = "h2load https://localhost:4500 -n{} -c{} -m{} -t{}".format(
-    h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
+h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
+    direct_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
 # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
 AllocProcessToCores(h2load_command, h2load_start_core, h2load_end_core,
                     h2load_res, False)
 print "h2load direct is done."
 
-h2load_command = "h2load https://localhost:9000 -n{} -c{} -m{} -t{}".format(
-    h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
+h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
+    envoy_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
 # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
 AllocProcessToCores(h2load_command, h2load_start_core, h2load_end_core,
                     h2load_res, False)
