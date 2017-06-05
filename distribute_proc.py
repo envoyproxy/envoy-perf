@@ -118,7 +118,7 @@ outfile = "out.txt"  # this is a temporary file
 # sh.sudo.taskset("-cp", "{}-{}".format(
 #     envoy_start_core, envoy_end_core), str(run.pid), _out=output)
 envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
-                    outfile, True, proc_command=envoy_command)
+                                    outfile, True, proc_command=envoy_command)
 print "envoy process id is {}".format(envoy_process.pid)
 
 # allocate h2load to designated cores

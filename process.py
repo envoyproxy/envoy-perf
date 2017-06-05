@@ -2,9 +2,9 @@
 
 """
 
-import io
-import sh
 import shlex
+
+import sh
 
 
 class Process(object):
