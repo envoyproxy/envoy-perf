@@ -2,14 +2,36 @@
 
 import argparse
 import io
-import sh
+
+from process import Process
 
 
-def AllocProcessToCores(proc_command, start_core, end_core, out, background):
-  """proc_command is run on designated cores;out can be file/StringIO/io."""
-  taskset_args = "-c {}-{} {}".format(start_core, end_core, proc_command)
-  sh.taskset(taskset_args.split(" "), _out=out, _bg=background)
+def AllocProcessToCores(start_core, end_core, out,
+                        background, proc_command=None, pid=None):
+  """allocate processes to designated stretch of cores.
 
+  Args:
+    start_core: the start of the stretch of cores to allocate to the process.
+    end_core: the end of the stretch of cores to allocate to the process.
+    out: file name or output stream for redirection purpose.
+    background: True/False
+    proc_command: the command to run on designated cores.
+    pid: if directly want to set affinity of pids, either proc_command or pid
+    should be given.
+  Returns:
+    the taskset process id is returned
+  """
+  if pid is None:
+    taskset_command = "taskset -ac {}-{} {}".format(start_core,
+                                                    end_core, proc_command)
+  elif proc_command is None:
+    taskset_command = "taskset -acp {}-{} {}".format(start_core, end_core, pid)
+  else:
+    print "Error: Invalid/Unavailable pid/process command."
+  taskset_proc = Process(proc_name="taskset",
+                         proc_command=taskset_command, outstream=out)
+  taskset_proc.run_process(background=background)
+  return taskset_proc
 
 parser = argparse.ArgumentParser()
 parser.add_argument("envoy_binary_path",
@@ -40,10 +62,10 @@ parser.add_argument("--h2load_threads", help="number of h2load threads. "
                                              "default: 5", default="5")
 
 parser.add_argument("--direct_port", help="the direct port for benchmarking"
-                                          "default: 4500", default="4500")
+                                          ". default: 4500", default="4500")
 
 parser.add_argument("--envoy_port", help="the Envoy proxy port for benchmarking"
-                                         "default: 9000", default="9000")
+                                         ". default: 9000", default="9000")
 
 args = parser.parse_args()
 envoy_path = args.envoy_binary_path
@@ -74,8 +96,12 @@ envoy_port = args.envoy_port
 
 # allocate nginx to designated cores
 output = io.StringIO()
-AllocProcessToCores("nginx -c /etc/nginx/nginx.conf", nginx_start_core,
-                    nginx_end_core, output, False)
+nginx_process = AllocProcessToCores(nginx_start_core,
+                                    nginx_end_core, output, True,
+                                    proc_command="nginx -c "
+                                                 "/etc/nginx/nginx.conf "
+                                                 "-g \"daemon off;\"")
+print "nginx process id is {}".format(nginx_process.pid)
 
 # allocate envoy to designated cores
 # following is the shell command we are trying to replicate
@@ -91,8 +117,9 @@ outfile = "out.txt"  # this is a temporary file
 # print "envoy process id is: " + str(run.pid)
 # sh.sudo.taskset("-cp", "{}-{}".format(
 #     envoy_start_core, envoy_end_core), str(run.pid), _out=output)
-AllocProcessToCores(envoy_command, envoy_start_core, envoy_end_core,
-                    outfile, True)
+envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
+                    outfile, True, proc_command=envoy_command)
+print "envoy process id is {}".format(envoy_process.pid)
 
 # allocate h2load to designated cores
 open(result, "w").write("")
@@ -102,18 +129,19 @@ h2load_res = open(result, "a")
 h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
     direct_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
 # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
-AllocProcessToCores(h2load_command, h2load_start_core, h2load_end_core,
-                    h2load_res, False)
+AllocProcessToCores(h2load_start_core, h2load_end_core,
+                    h2load_res, False, proc_command=h2load_command)
 print "h2load direct is done."
 
 h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
     envoy_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
 # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
-AllocProcessToCores(h2load_command, h2load_start_core, h2load_end_core,
-                    h2load_res, False)
+AllocProcessToCores(h2load_start_core, h2load_end_core,
+                    h2load_res, False, proc_command=h2load_command)
 print "h2load against envoy is done."
 
-# killing nginx non-root processes
-sh.pkill("nginx")
+# killing nginx, envoy processes
+nginx_process.kill_process("-QUIT")
+envoy_process.kill_process()
 
 # run.wait()
