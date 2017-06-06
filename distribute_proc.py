@@ -8,7 +8,7 @@ from process import Process
 
 def AllocProcessToCores(start_core, end_core, out,
                         background, proc_command=None, pid=None):
-  """allocate processes to designated stretch of cores.
+  """Allocate processes to designated stretch of cores.
 
   Args:
     start_core: the start of the stretch of cores to allocate to the process.
@@ -24,8 +24,6 @@ def AllocProcessToCores(start_core, end_core, out,
   if pid is None:
     taskset_command = "taskset -ac {}-{} {}".format(start_core,
                                                     end_core, proc_command)
-  elif proc_command is None:
-    taskset_command = "taskset -acp {}-{} {}".format(start_core, end_core, pid)
   else:
     print "Error: Invalid/Unavailable pid/process command."
   taskset_proc = Process(proc_name="taskset",
@@ -35,7 +33,7 @@ def AllocProcessToCores(start_core, end_core, out,
 
 
 def ParseH2Load(iostream):
-  """ParseH2Load output on a given stream and overwrite the stream.
+  """Parses h2load output on a given stream and overwrite the stream.
 
     starts overwriting from the current position of the stream
 

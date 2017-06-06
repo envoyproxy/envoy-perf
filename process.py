@@ -1,6 +1,4 @@
-"""The process class to be used by other functions to run/kill linux processes.
-
-"""
+"""The process class to run/kill linux processes."""
 
 import shlex
 
@@ -27,7 +25,7 @@ class Process(object):
     self.os = outstream
 
   def RunProcess(self, background=False):
-    """this function will run the command if command_pid is not None.
+    """This function will run the command if self.command is not None.
 
       Otherwise, the function has no effect.
     Args:
@@ -44,7 +42,7 @@ class Process(object):
       self.name = command_args[0]
 
   def KillProcess(self, signal="-9"):
-    """this function kills the process.
+    """This function kills the process.
 
       this function uses -TERM signal to kill the processes, but
       if it does not kill recursively kill the process-tree
