@@ -2,6 +2,7 @@
 
 import argparse
 import StringIO
+import pexpect
 
 from process import Process
 
@@ -32,35 +33,24 @@ def AllocProcessToCores(start_core, end_core, out,
   return taskset_proc
 
 
-def ParseH2Load(iostream):
+def RunAndParseH2Load(h2load_command, iostream):
   """Parses h2load output on a given stream and overwrite the stream.
 
     starts overwriting from the current position of the stream
 
   Args:
+    h2load_command: the command to run for h2load. can be wrapped over other
+    commands like taskset
     iostream: reads unformatted output from this stream and then writes back.
   """
-  initial_pos = iostream.tell()
-  buf = StringIO.StringIO()
-  for line in iostream:
-    if line.find("finished in") != -1:
-      buf.write(line)
-      break
-  # read and take the rest of the stream
-  for line in iostream:
-    buf.write(line)
-
-  # print buf.getvalue()
-  print initial_pos
-
-  # seek to the initial position to overwrite
-  iostream.seek(initial_pos, 0)
-  for line in buf.getvalue().split("\n"):
-    # print line
-    iostream.write("{}\n".format(line))
-
-  # delete rest of the stuff
-  # iostream.truncate()
+  h2load_child = pexpect.spawn(h2load_command, logfile=open("log.txt", "wb"))
+  h2load_child.expect("finished in")
+  iostream.write(h2load_child.after)
+  h2load_child.expect(pexpect.EOF)
+  iostream.write(h2load_child.before)
+  h2load_child.close()
+  if h2load_child.exitstatus != 0:
+    print "Error: problem running h2load. Check log.txt"
 
 
 def main():
@@ -155,35 +145,33 @@ def main():
   print "envoy process id is {}".format(envoy_process.pid)
 
   # allocate h2load to designated cores
-  open(result, "w").write("")
+  open(result, "w").write("")  # truncate thw whole current result file
+
+  h2load_command = ("taskset -ac {}-{} "
+                    "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
+                        h2load_start_core, h2load_end_core, direct_port,
+                        h2load_reqs, h2load_clients, h2load_conns,
+                        h2load_threads)
+  # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+  # AllocProcessToCores(h2load_start_core, h2load_end_core,
+  #                     h2load_res, False, proc_command=h2load_command)
 
   h2load_res = open(result, "a")
-  pos_before_result = h2load_res.tell()
-
-  h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
-      direct_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
-  # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
-  AllocProcessToCores(h2load_start_core, h2load_end_core,
-                      h2load_res, False, proc_command=h2load_command)
-
-  h2load_res = open(result, "r+")  # read+write mode to provide to ParseH2Load
-  h2load_res.seek(pos_before_result, 0)
-  ParseH2Load(h2load_res)
+  RunAndParseH2Load(h2load_command, h2load_res)
   print "h2load direct is done."
 
-  h2load_res = open(result, "a")
-  pos_before_result = h2load_res.tell()
-
-  h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
-      envoy_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
+  h2load_command = ("taskset -ac {}-{} "
+                    "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
+                        h2load_start_core, h2load_end_core, envoy_port,
+                        h2load_reqs, h2load_clients, h2load_conns,
+                        h2load_threads)
   # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
-  AllocProcessToCores(h2load_start_core, h2load_end_core,
-                      h2load_res, False, proc_command=h2load_command)
+  # AllocProcessToCores(h2load_start_core, h2load_end_core,
+  #                     h2load_res, False, proc_command=h2load_command)
 
-  h2load_res = open(result, "r+")  # read+write mode to provide to ParseH2Load
-  h2load_res.seek(pos_before_result, 0)
-  ParseH2Load(h2load_res)
-  print "h2load against envoy is done."
+  h2load_res = open(result, "a")
+  RunAndParseH2Load(h2load_command, h2load_res)
+  print "h2load with envoy is done."
 
     # killing nginx, envoy processes
   nginx_process.KillProcess("-QUIT")
