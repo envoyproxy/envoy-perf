@@ -26,7 +26,7 @@ class Process(object):
     self.command = proc_command
     self.os = outstream
 
-  def run_process(self, background=False):
+  def RunProcess(self, background=False):
     """this function will run the command if command_pid is not None.
 
       Otherwise, the function has no effect.
@@ -43,7 +43,7 @@ class Process(object):
       self.pid = running_process.pid
       self.name = command_args[0]
 
-  def kill_process(self, signal="-9"):
+  def KillProcess(self, signal="-9"):
     """this function kills the process.
 
       this function uses -TERM signal to kill the processes, but

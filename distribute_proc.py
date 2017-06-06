@@ -1,7 +1,7 @@
 """This module executes h2load, Nginx and Envoy on separate cores."""
 
 import argparse
-import io
+import StringIO
 
 from process import Process
 
@@ -30,8 +30,39 @@ def AllocProcessToCores(start_core, end_core, out,
     print "Error: Invalid/Unavailable pid/process command."
   taskset_proc = Process(proc_name="taskset",
                          proc_command=taskset_command, outstream=out)
-  taskset_proc.run_process(background=background)
+  taskset_proc.RunProcess(background=background)
   return taskset_proc
+
+
+def ParseH2Load(iostream):
+  """ParseH2Load output on a given stream and overwrite the stream.
+
+    starts overwriting from the current position of the stream
+
+  Args:
+    iostream: reads unformatted output from this stream and then writes back.
+  """
+  initial_pos = iostream.tell()
+  buf = StringIO.StringIO()
+  for line in iostream:
+    if line.find("finished in") != -1:
+      buf.write(line)
+      break
+  # read and take the rest of the stream
+  for line in iostream:
+    buf.write(line)
+
+  # print buf.getvalue()
+  print initial_pos
+
+  # seek to the initial position to overwrite
+  iostream.seek(initial_pos, 0)
+  for line in buf.getvalue().split("\n"):
+    # print line
+    iostream.write("{}\n".format(line))
+
+  # delete rest of the stuff
+  # iostream.truncate()
 
 
 def main():
@@ -102,7 +133,7 @@ def main():
   envoy_port = args.envoy_port
 
   # allocate nginx to designated cores
-  output = io.StringIO()
+  output = StringIO.StringIO()
   nginx_process = AllocProcessToCores(nginx_start_core,
                                       nginx_end_core, output, True,
                                       proc_command="nginx -c "
@@ -115,11 +146,7 @@ def main():
   # ./envoy-fastbuild -c envoy-configs/simple-loopback.json\
   # -l debug > out.txt 2>&1 &
   envoy_command = "{} -c {} -l debug".format(envoy_path, envoy_config_path)
-  outfile = "out.txt"  # this is a temporary file
-  # this creates the process in the background, however it'll be destroyed
-  # once the python script is finished
-  # if we really need envoy to keep running on background after exiting the
-  # python script, then we probably should use subprocess instead of sh
+  outfile = "out.txt"  # this is a temporary dump output file
   # run =
   # envoy(envoyconfig.split(" "), _out=outfile, _err_to_out=True, _bg=True)
   # print "envoy process id is: " + str(run.pid)
@@ -133,23 +160,36 @@ def main():
   open(result, "w").write("")
 
   h2load_res = open(result, "a")
+  pos_before_result = h2load_res.tell()
 
   h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
       direct_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
   # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
   AllocProcessToCores(h2load_start_core, h2load_end_core,
                       h2load_res, False, proc_command=h2load_command)
+
+  h2load_res = open(result, "r+")  # read+write mode to provide to ParseH2Load
+  h2load_res.seek(pos_before_result, 0)
+  ParseH2Load(h2load_res)
   print "h2load direct is done."
+
+  h2load_res = open(result, "a")
+  pos_before_result = h2load_res.tell()
+
   h2load_command = "h2load https://localhost:{} -n{} -c{} -m{} -t{}".format(
       envoy_port, h2load_reqs, h2load_clients, h2load_conns, h2load_threads)
   # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
   AllocProcessToCores(h2load_start_core, h2load_end_core,
                       h2load_res, False, proc_command=h2load_command)
+
+  h2load_res = open(result, "r+")  # read+write mode to provide to ParseH2Load
+  h2load_res.seek(pos_before_result, 0)
+  ParseH2Load(h2load_res)
   print "h2load against envoy is done."
 
     # killing nginx, envoy processes
-  nginx_process.kill_process("-QUIT")
-  envoy_process.kill_process()
+  nginx_process.KillProcess("-QUIT")
+  envoy_process.KillProcess()
 
   # run.wait()
 
