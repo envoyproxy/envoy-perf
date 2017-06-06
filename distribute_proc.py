@@ -1,60 +1,114 @@
 """This module executes h2load, Nginx and Envoy on separate cores."""
 
 import argparse
+import json
 import StringIO
 import pexpect
 
 from process import Process
 
 
-def AllocProcessToCores(start_core, end_core, out,
-                        background, proc_command=None, pid=None):
+def AllocProcessToCores(start_core, end_core, out, proc_command):
   """Allocate processes to designated stretch of cores.
+
+    Always runs a process in background curently.
 
   Args:
     start_core: the start of the stretch of cores to allocate to the process.
     end_core: the end of the stretch of cores to allocate to the process.
     out: file name or output stream for redirection purpose.
-    background: True/False
     proc_command: the command to run on designated cores.
-    pid: if directly want to set affinity of pids, either proc_command or pid
-    should be given.
   Returns:
-    the taskset process id is returned
+    The taskset process id is returned
   """
-  if pid is None:
+  if proc_command is not None:
     taskset_command = "taskset -ac {}-{} {}".format(start_core,
                                                     end_core, proc_command)
   else:
-    print "Error: Invalid/Unavailable pid/process command."
-  taskset_proc = Process(proc_name="taskset",
-                         proc_command=taskset_command, outstream=out)
-  taskset_proc.RunProcess(background=background)
+    print "Error: Invalid/Unavailable process command."
+  taskset_proc = Process(taskset_command, out, proc_name="taskset")
+  taskset_proc.RunProcess()
   return taskset_proc
 
 
+# TODO(sohamcodes): This should eventually parse out the results and use this
+# for statistical or visualization purposes. For now, we just write to a text
+# file.
 def RunAndParseH2Load(h2load_command, iostream):
   """Parses h2load output on a given stream and overwrite the stream.
 
-    starts overwriting from the current position of the stream
+    Starts overwriting from the current position of the stream.
 
   Args:
     h2load_command: the command to run for h2load. can be wrapped over other
     commands like taskset
     iostream: reads unformatted output from this stream and then writes back.
   """
-  h2load_child = pexpect.spawn(h2load_command, logfile=open("log.txt", "wb"))
-  h2load_child.expect("finished in")
-  iostream.write(h2load_child.after)
-  h2load_child.expect(pexpect.EOF)
-  iostream.write(h2load_child.before)
-  h2load_child.close()
-  if h2load_child.exitstatus != 0:
+  child = pexpect.spawn(h2load_command, logfile=open("log.txt", "wb"))
+
+  total_time = {
+      "total_time": {
+          "unit": None,
+          "data": []
+      }
+  }
+
+  child.expect("finished in\s+(\d+).(\d+)([a-z]*),")  # total millisecond time
+  time_d, time_dp, unit = child.match.groups()
+  total_time["total_time"]["unit"] = unit
+  total_time["total_time"]["data"].append("{}.{}".format(time_d, time_dp))
+  print json.dumps(total_time)
+
+  child.expect("\s+(\d+).*(\d*)\s*req/s,")  # total requests per second
+  child.expect("\s+(\d+).*(\d*)\s*([A-Z]*)B/s")  # total Bytes per second
+  child.expect("\n")
+
+  # h2load_child.expect("finished in")
+  iostream.write(child.after)
+  # h2load_child.expect(pexpect.EOF)
+  # iostream.write(h2load_child.before)
+  child.close()
+  if child.exitstatus != 0:
     print "Error: problem running h2load. Check log.txt"
 
 
-def main():
+def ParseStartAndEndCore(comma_sep_string):
+  """This function parses out a comma-separated string to two separate values.
 
+  Args:
+    comma_sep_string: the comma-separated string.
+  Returns:
+    A tuple of two values
+  """
+  values = comma_sep_string.split(",")
+  return (values[0], values[1])
+
+
+def GetNginxConfig():
+  """This function returns the nginx configuration.
+
+  Right now, it just returns hardcoded values. Later on, we might return user-
+  provided values
+  Returns:
+    Returns the nginx configuration
+  """
+  return "-c /etc/nginx/nginx.conf -g \"daemon off;\""
+
+
+# TODO(sohamcodes): debug is always included now. Later on, debug should be
+# enabled based on the debug-mode
+def GetEnvoyConfig(envoy_config_path):
+  """This function returns the Envoy configuration.
+
+  Args:
+    envoy_config_path: the path to the envoy's config file.
+  Returns:
+    Formatted envoy configuration. Right now it always include the debug info
+  """
+  return "-c {} -l debug".format(envoy_config_path)
+
+
+def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("envoy_binary_path",
                       help="the path to the binary file of Envoy")
@@ -99,19 +153,13 @@ def main():
   result = args.result
 
   if args.nginx_cores:
-    nums = args.nginx_cores.split(",")
-    nginx_start_core = nums[0]
-    nginx_end_core = nums[1]
+    nginx_start_core, nginx_end_core = ParseStartAndEndCore(args.nginx_cores)
 
   if args.envoy_cores:
-    nums = args.envoy_cores.split(",")
-    envoy_start_core = nums[0]
-    envoy_end_core = nums[1]
+    envoy_start_core, envoy_end_core = ParseStartAndEndCore(args.envoy_cores)
 
   if args.h2load_cores:
-    nums = args.h2load_cores.split(",")
-    h2load_start_core = nums[0]
-    h2load_end_core = nums[1]
+    h2load_start_core, h2load_end_core = ParseStartAndEndCore(args.h2load_cores)
 
   h2load_reqs = args.h2load_reqs
   h2load_clients = args.h2load_clients
@@ -123,17 +171,15 @@ def main():
   # allocate nginx to designated cores
   output = StringIO.StringIO()
   nginx_process = AllocProcessToCores(nginx_start_core,
-                                      nginx_end_core, output, True,
-                                      proc_command="nginx -c "
-                                                   "/etc/nginx/nginx.conf "
-                                                   "-g \"daemon off;\"")
+                                      nginx_end_core, output,
+                                      "nginx {}".format(GetNginxConfig()))
   print "nginx process id is {}".format(nginx_process.pid)
 
   # allocate envoy to designated cores
-    # following is the shell command we are trying to replicate
+  # following is the shell command we are trying to replicate
   # ./envoy-fastbuild -c envoy-configs/simple-loopback.json\
   # -l debug > out.txt 2>&1 &
-  envoy_command = "{} -c {} -l debug".format(envoy_path, envoy_config_path)
+  envoy_command = "{} {}".format(envoy_path, GetEnvoyConfig(envoy_config_path))
   outfile = "out.txt"  # this is a temporary dump output file
   # run =
   # envoy(envoyconfig.split(" "), _out=outfile, _err_to_out=True, _bg=True)
@@ -141,11 +187,11 @@ def main():
   # sh.sudo.taskset("-cp", "{}-{}".format(
   #     envoy_start_core, envoy_end_core), str(run.pid), _out=output)
   envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
-                                      outfile, True, proc_command=envoy_command)
+                                      outfile, envoy_command)
   print "envoy process id is {}".format(envoy_process.pid)
 
   # allocate h2load to designated cores
-  open(result, "w").write("")  # truncate thw whole current result file
+  open(result, "w").write("")  # truncate the whole current result file
 
   h2load_command = ("taskset -ac {}-{} "
                     "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
@@ -156,8 +202,7 @@ def main():
   # AllocProcessToCores(h2load_start_core, h2load_end_core,
   #                     h2load_res, False, proc_command=h2load_command)
 
-  h2load_res = open(result, "a")
-  RunAndParseH2Load(h2load_command, h2load_res)
+  RunAndParseH2Load(h2load_command, open(result, "a"))
   print "h2load direct is done."
 
   h2load_command = ("taskset -ac {}-{} "
@@ -169,11 +214,10 @@ def main():
   # AllocProcessToCores(h2load_start_core, h2load_end_core,
   #                     h2load_res, False, proc_command=h2load_command)
 
-  h2load_res = open(result, "a")
-  RunAndParseH2Load(h2load_command, h2load_res)
+  RunAndParseH2Load(h2load_command, open(result, "a"))
   print "h2load with envoy is done."
 
-    # killing nginx, envoy processes
+  # killing nginx, envoy processes
   nginx_process.KillProcess("-QUIT")
   envoy_process.KillProcess()
 

@@ -8,44 +8,40 @@ import sh
 class Process(object):
   """Process class which represents a process in linux."""
 
-  def __init__(self, pid=None, proc_name=None, proc_command=None,
-               outstream=None):
+  def __init__(self, proc_command, outstream, proc_name=None):
     """Initializer with optional arguments.
 
     Args:
-      pid: if pid is available
-      proc_name: if pid is already there, then attach a proc_name
       proc_command: use this if you want to run a new process and don't have pid
       outstream: this can be plain string containing the file-name, or a file
       output stream
+      proc_name: if pid is already there, then attach a proc_name
     """
-    self.pid = pid
     self.name = proc_name
     self.command = proc_command
     self.os = outstream
+    self.pid = 0  # by default pid is zero; it's updated when command is run
 
-  def RunProcess(self, background=False):
-    """This function will run the command if self.command is not None.
+  def RunProcess(self):
+    """This function will run the process' command.
 
-      Otherwise, the function has no effect.
-    Args:
-      background: True/False
+      It will run the command in background. Currenlty, we don't support running
+      command in foreground.
     Returns:
         Doesn't return anything but
         runs the process by running the proc_command.
     """
-    if self.command is not None:
-      command_args = shlex.split(self.command)
-      run = sh.Command(command_args[0])
-      running_process = run(command_args[1:], _out=self.os, _bg=background)
-      self.pid = running_process.pid
-      self.name = command_args[0]
+    command_args = shlex.split(self.command)
+    run = sh.Command(command_args[0])
+    self.name = command_args[0]
+    running_process = run(command_args[1:], _out=self.os, _bg=True)
+    self.pid = running_process.pid
 
   def KillProcess(self, signal="-9"):
-    """This function kills the process.
+    """This function kills the process with default signal -9.
 
-      this function uses -TERM signal to kill the processes, but
-      if it does not kill recursively kill the process-tree
+      This function uses by default, -SIGINT or -9 signal to kill the
+      processes, but it does not recursively kill the process-tree
     Args:
       signal: optional. Needed if you want to specify a particular kill signal.
       default is -9/-SIGKILL
