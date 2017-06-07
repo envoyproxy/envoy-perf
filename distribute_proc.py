@@ -31,10 +31,20 @@ def AllocProcessToCores(start_core, end_core, out, proc_command):
   return taskset_proc
 
 
-# TODO(sohamcodes): This should eventually parse out the results and use this
-# for statistical or visualization purposes. For now, we just write to a text
-# file.
-def RunAndParseH2Load(h2load_command, iostream):
+def ConvertToFraction(integer, fraction):
+  """This function convert two numbers into a float value.
+
+  Args:
+    integer: integer part of the number
+    fraction: fraction part of the numbers
+  Returns:
+    floating value corresponding to the integer and fraction
+  """
+  return float("{}.{}".format(integer,
+                              0 if not fraction.strip() else fraction))
+
+
+def RunAndParseH2Load(h2load_command):
   """Parses h2load output on a given stream and overwrite the stream.
 
     Starts overwriting from the current position of the stream.
@@ -42,34 +52,179 @@ def RunAndParseH2Load(h2load_command, iostream):
   Args:
     h2load_command: the command to run for h2load. can be wrapped over other
     commands like taskset
-    iostream: reads unformatted output from this stream and then writes back.
+  Returns:
+    The Json dictionaries corresponding to h2load output.
   """
   child = pexpect.spawn(h2load_command, logfile=open("log.txt", "wb"))
 
+  child.expect(r"finished in\s+(\d+)\.?(\d*)([a-z]+),")  # total time
+  time_i, time_f, unit = child.match.groups()
   total_time = {
-      "total_time": {
-          "unit": None,
-          "data": []
-      }
+      "unit": unit,
+      "data": ConvertToFraction(time_i, time_f)
   }
+  # print json.dumps(total_time)
 
-  child.expect("finished in\s+(\d+).(\d+)([a-z]*),")  # total millisecond time
-  time_d, time_dp, unit = child.match.groups()
-  total_time["total_time"]["unit"] = unit
-  total_time["total_time"]["data"].append("{}.{}".format(time_d, time_dp))
-  print json.dumps(total_time)
+  child.expect(r"\s+(\d+)\.?(\d*)\s*req/s,")  # total requests per second
+  req_i, req_f = child.match.groups()
+  total_req_p_sec = {
+      "unit": "req/s",  # we know that it will always be req/s
+      "data": ConvertToFraction(req_i, req_f)
+  }
+  # print json.dumps(total_req_p_sec)
 
-  child.expect("\s+(\d+).*(\d*)\s*req/s,")  # total requests per second
-  child.expect("\s+(\d+).*(\d*)\s*([A-Z]*)B/s")  # total Bytes per second
-  child.expect("\n")
+  child.expect(r"\s+(\d+)\.?(\d*)\s*([A-Z]*)B/s")  # total Bytes per second
+  data_i, data_f, unit = child.match.groups()
+  total_data_p_sec = {
+      "unit": "{}B/s".format(unit),  # {M}B/s
+      "data": ConvertToFraction(data_i, data_f)
+  }
+  # print total_data_p_sec
 
-  # h2load_child.expect("finished in")
-  iostream.write(child.after)
-  # h2load_child.expect(pexpect.EOF)
-  # iostream.write(h2load_child.before)
+  child.expect(r"requests:\s+(\d+)\s+total,\s+(\d+)\s+started,\s+(\d+)\s+done"
+               r",\s+(\d+)\s+succeeded,\s+(\d+)\s+failed,\s+(\d+)\s+errored,\s"
+               r"+(\d+)\s+timeout")
+  (req_tot, req_sta, req_done, req_suc, req_fail, req_err,
+   req_tout) = child.match.groups()
+
+  requests_stat = {
+      "total": req_tot,
+      "started": req_sta,
+      "done": req_done,
+      "success": req_suc,
+      "fail": req_fail,
+      "error": req_err,
+      "timeout": req_tout
+  }
+  # print requests_stat
+
+  child.expect(r"status codes: (\d+)\s+2xx,\s+(\d+)\s+3xx,\s+(\d+)\s+4xx"
+               r",\s+(\d+)\s+5xx")
+  stat_2xx, stat_3xx, stat_4xx, stat_5xx = child.match.groups()
+  status_codes = {
+      "2xx": stat_2xx,
+      "3xx": stat_3xx,
+      "4xx": stat_4xx,
+      "5xx": stat_5xx
+  }
+  # print status_codes
+
+  child.expect(r"traffic:[\s\w.]+\((\d+)\)\s+total,\s+[\s\w.]+\((\d+)\)"
+               r"\s+headers\s+\(space savings\s+(\d+)\.?(\d*)%\),\s+[\s\w.]+"
+               r"\((\d+)\)\s+data")
+  (traf_tot, traf_head, traf_save_i, traf_save_f,
+   traf_data) = child.match.groups()
+
+  traffic_detail = {
+      "traffic_total": traf_tot,
+      "traffic_headers": traf_head,
+      "traffic_savings%": ConvertToFraction(traf_save_i, traf_save_f),
+      "traffic_data": traf_data
+  }
+  # print traffic_detail
+
+  child.expect(r"time for request\s*:\s+(\d+)\.?(\d*)([a-z]+)\s+(\d+)\.?(\d*)"
+               r"([a-z]+)\s+(\d+)\.?(\d*)([a-z]+)\s+(\d+)\.?(\d*)([a-z]+)\s+"
+               r"(\d+)\.?(\d*)%")
+  (tfr_min_i, tfr_min_f, tfr_min_unit, tfr_max_i, tfr_max_f, tfr_max_unit,
+   tfr_mean_i, tfr_mean_f, tfr_mean_unit, tfr_sd_i, tfr_sd_f, tfr_sd_unit,
+   tfr_sd_per_i, tfr_sd_per_f) = child.match.groups()
+  time_for_request = {
+      "min": {
+          "unit": tfr_min_unit,
+          "data": ConvertToFraction(tfr_min_i, tfr_min_f)
+      },
+      "max": {
+          "unit": tfr_max_unit,
+          "data": ConvertToFraction(tfr_max_i, tfr_max_f)
+      },
+      "mean": {
+          "unit": tfr_mean_unit,
+          "data": ConvertToFraction(tfr_mean_i, tfr_mean_f)
+      },
+      "sd": {
+          "unit": tfr_sd_unit,
+          "data": ConvertToFraction(tfr_sd_i, tfr_sd_f)
+      },
+      "sd%": ConvertToFraction(tfr_sd_per_i, tfr_sd_per_f)
+  }
+  # print time_for_request
+
+  child.expect(r"time for connect\s*:\s+(\d+)\.?(\d*)([a-z]+)\s+(\d+)\.?(\d*)"
+               r"([a-z]+)\s+(\d+)\.?(\d*)([a-z]+)\s+(\d+)\.?(\d*)([a-z]+)\s+"
+               r"(\d+)\.?(\d*)%")
+  (tfc_min_i, tfc_min_f, tfc_min_unit, tfc_max_i, tfc_max_f, tfc_max_unit,
+   tfc_mean_i, tfc_mean_f, tfc_mean_unit, tfc_sd_i, tfc_sd_f, tfc_sd_unit,
+   tfc_sd_per_i, tfc_sd_per_f) = child.match.groups()
+  time_for_connect = {
+      "min": {
+          "unit": tfc_min_unit,
+          "data": ConvertToFraction(tfc_min_i, tfc_min_f)
+      },
+      "max": {
+          "unit": tfc_max_unit,
+          "data": ConvertToFraction(tfc_max_i, tfc_max_f)
+      },
+      "mean": {
+          "unit": tfc_mean_unit,
+          "data": ConvertToFraction(tfc_mean_i, tfc_mean_f)
+      },
+      "sd": {
+          "unit": tfc_sd_unit,
+          "data": ConvertToFraction(tfc_sd_i, tfc_sd_f)
+      },
+      "sd%": ConvertToFraction(tfc_sd_per_i, tfc_sd_per_f)
+  }
+  # print time_for_connect
+
+  child.expect(r"time to 1st byte\s*:\s+(\d+)\.?(\d*)([a-z]+)\s+(\d+)\.?(\d*)"
+               r"([a-z]+)\s+(\d+)\.?(\d*)([a-z]+)\s+(\d+)\.?(\d*)([a-z]+)\s+"
+               r"(\d+)\.?(\d*)%")
+  (tfb_min_i, tfb_min_f, tfb_min_unit, tfb_max_i, tfb_max_f, tfb_max_unit,
+   tfb_mean_i, tfb_mean_f, tfb_mean_unit, tfb_sd_i, tfb_sd_f, tfb_sd_unit,
+   tfb_sd_per_i, tfb_sd_per_f) = child.match.groups()
+  time_for_1st_byte = {
+      "min": {
+          "unit": tfb_min_unit,
+          "data": ConvertToFraction(tfb_min_i, tfb_min_f)
+      },
+      "max": {
+          "unit": tfb_max_unit,
+          "data": ConvertToFraction(tfb_max_i, tfb_max_f)
+      },
+      "mean": {
+          "unit": tfb_mean_unit,
+          "data": ConvertToFraction(tfb_mean_i, tfb_mean_f)
+      },
+      "sd": {
+          "unit": tfb_sd_unit,
+          "data": ConvertToFraction(tfb_sd_i, tfb_sd_f)
+      },
+      "sd%": ConvertToFraction(tfb_sd_per_i, tfb_sd_per_f)
+  }
+  # print time_for_1st_byte
+
+  child.expect(r"req/s\s*:\s*(\d+)\.?(\d*)\s+(\d+)\.?(\d*)\s+(\d+)\.?(\d*)\s+"
+               r"(\d+)\.?(\d*)\s+(\d+)\.?(\d*)%")
+  (rps_min_i, rps_min_f, rps_max_i, rps_max_f, rps_mean_i, rps_mean_f, rps_sd_i,
+   rps_sd_f, rps_sd_per_i, rps_sd_per_f) = child.match.groups()
+  req_per_sec = {
+      "min": ConvertToFraction(rps_min_i, rps_min_f),
+      "max": ConvertToFraction(rps_max_i, rps_max_f),
+      "mean": ConvertToFraction(rps_mean_i, rps_mean_f),
+      "sd": ConvertToFraction(rps_sd_i, rps_sd_f),
+      "sd%": ConvertToFraction(rps_sd_per_i, rps_sd_per_f)
+  }
+  # print req_per_sec
+
   child.close()
+
   if child.exitstatus != 0:
     print "Error: problem running h2load. Check log.txt"
+    return None
+  return (total_time, total_req_p_sec, total_data_p_sec, requests_stat,
+          status_codes, traffic_detail, time_for_request, time_for_connect,
+          time_for_1st_byte, req_per_sec)
 
 
 def ParseStartAndEndCore(comma_sep_string):
@@ -82,6 +237,33 @@ def ParseStartAndEndCore(comma_sep_string):
   """
   values = comma_sep_string.split(",")
   return (values[0], values[1])
+
+
+def AddResultToJsonDict(single_result, full_dict, title):
+  """This function adds a single result to the full json dictionary.
+
+  Args:
+    single_result: the statistics of a single h2load run.
+    full_dict: the dictionary in which single result will be appended.
+    title: this needs to be unique, otherwise previous value will be overwritten
+  """
+  single_result_json = {
+      "total_time": single_result[0],
+      "total_req_per_sec": single_result[1],
+      "total_data_per_sec": single_result[2],
+      "requests_statistics": single_result[3],
+      "status_codes_statistics": single_result[4],
+      "traffic_details": single_result[5],
+      "time_for_request": single_result[6],
+      "time_for_connect": single_result[7],
+      "time_for_1st_byte": single_result[8],
+      "req/s": single_result[9]
+  }
+
+  if title not in full_dict:
+    full_dict[title] = []
+
+  full_dict[title].append(single_result_json)
 
 
 def GetNginxConfig():
@@ -146,11 +328,15 @@ def main():
   parser.add_argument("--envoy_port",
                       help="the Envoy proxy port for benchmarking"
                            ". default: 9000", default="9000")
+  parser.add_argument("--num_iter",
+                      help="the number of times h2load will be run"
+                           ". default: 5", type=int, default=5)
 
   args = parser.parse_args()
   envoy_path = args.envoy_binary_path
   envoy_config_path = args.envoy_config_path
   result = args.result
+  number_iteration = args.num_iter
 
   if args.nginx_cores:
     nginx_start_core, nginx_end_core = ParseStartAndEndCore(args.nginx_cores)
@@ -190,36 +376,42 @@ def main():
                                       outfile, envoy_command)
   print "envoy process id is {}".format(envoy_process.pid)
 
-  # allocate h2load to designated cores
-  open(result, "w").write("")  # truncate the whole current result file
+  result_json = {}
 
-  h2load_command = ("taskset -ac {}-{} "
-                    "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
-                        h2load_start_core, h2load_end_core, direct_port,
-                        h2load_reqs, h2load_clients, h2load_conns,
-                        h2load_threads)
-  # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
-  # AllocProcessToCores(h2load_start_core, h2load_end_core,
-  #                     h2load_res, False, proc_command=h2load_command)
+  for _ in range(0, number_iteration):
+    # allocate h2load to designated cores
+    h2load_command = ("taskset -ac {}-{} "
+                      "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
+                          h2load_start_core, h2load_end_core, direct_port,
+                          h2load_reqs, h2load_clients, h2load_conns,
+                          h2load_threads)
+    # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+    # AllocProcessToCores(h2load_start_core, h2load_end_core,
+    #                     h2load_res, False, proc_command=h2load_command)
 
-  RunAndParseH2Load(h2load_command, open(result, "a"))
-  print "h2load direct is done."
+    AddResultToJsonDict(RunAndParseH2Load(h2load_command),
+                        result_json, "direct")
+    print "h2load direct is done."
 
-  h2load_command = ("taskset -ac {}-{} "
-                    "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
-                        h2load_start_core, h2load_end_core, envoy_port,
-                        h2load_reqs, h2load_clients, h2load_conns,
-                        h2load_threads)
-  # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
-  # AllocProcessToCores(h2load_start_core, h2load_end_core,
-  #                     h2load_res, False, proc_command=h2load_command)
+    h2load_command = ("taskset -ac {}-{} "
+                      "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
+                          h2load_start_core, h2load_end_core, envoy_port,
+                          h2load_reqs, h2load_clients, h2load_conns,
+                          h2load_threads)
+    # sh.sudo.taskset(h2load_args.split(" "), _out=h2load_res)
+    # AllocProcessToCores(h2load_start_core, h2load_end_core,
+    #                     h2load_res, False, proc_command=h2load_command)
 
-  RunAndParseH2Load(h2load_command, open(result, "a"))
-  print "h2load with envoy is done."
+    AddResultToJsonDict(RunAndParseH2Load(h2load_command),
+                        result_json, "envoy")
+    print "h2load with envoy is done."
 
   # killing nginx, envoy processes
   nginx_process.KillProcess("-QUIT")
   envoy_process.KillProcess()
+
+  with open(result, "w") as f:
+    json.dump(result_json, f)
 
   # run.wait()
 
