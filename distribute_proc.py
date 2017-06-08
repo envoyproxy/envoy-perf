@@ -2,7 +2,6 @@
 
 import argparse
 import json
-import StringIO
 import pexpect
 
 from process import Process
