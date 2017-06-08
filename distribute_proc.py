@@ -233,7 +233,7 @@ def ParseStartAndEndCore(comma_sep_string):
   Args:
     comma_sep_string: the comma-separated string.
   Returns:
-    A tuple of two values
+    A tuple of two separated values
   """
   values = comma_sep_string.split(",")
   return (values[0], values[1])
@@ -245,7 +245,8 @@ def AddResultToJsonDict(single_result, full_dict, title):
   Args:
     single_result: the statistics of a single h2load run.
     full_dict: the dictionary in which single result will be appended.
-    title: this needs to be unique, otherwise previous value will be overwritten
+    title: this does not need to be unique, if it matches with any existing
+    value, then new result will be appended in the existing title category
   """
   single_result_json = {
       "total_time": single_result[0],
