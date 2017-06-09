@@ -1,0 +1,60 @@
+starting benchmark...
+spawning thread #0: 20 total client(s). 2000 total requests
+spawning thread #1: 20 total client(s). 2000 total requests
+spawning thread #2: 20 total client(s). 2000 total requests
+spawning thread #3: 20 total client(s). 2000 total requests
+spawning thread #4: 20 total client(s). 2000 total requests
+TLS Protocol: TLSv1.2
+Cipher: ECDHE-RSA-AES128-GCM-SHA256
+Server Temp Key: ECDH P-256 256 bits
+Application protocol: h2
+progress: 10% done
+progress: 20% done
+progress: 30% done
+progress: 40% done
+progress: 50% done
+progress: 60% done
+progress: 70% done
+progress: 80% done
+progress: 90% done
+progress: 100% done
+
+finished in 628.90ms, 15900.91 req/s, 11.32MB/s
+requests: 10000 total, 10000 started, 10000 done, 10000 succeeded, 0 failed, 0 errored, 0 timeout
+status codes: 10000 2xx, 0 3xx, 0 4xx, 0 5xx
+traffic: 7.12MB (7464900) total, 1.11MB (1160000) headers (space savings 37.63%), 5.84MB (6120000) data
+                     min         max         mean         sd        +/- sd
+time for request:      160us     34.80ms      9.20ms      7.46ms    80.12%
+time for connect:   162.33ms    586.55ms    422.17ms    155.60ms    68.00%
+time to 1st byte:   189.51ms    591.03ms    436.79ms    155.43ms    73.00%
+req/s           :     159.91      305.65      206.02       54.66    75.00%
+starting benchmark...
+spawning thread #0: 20 total client(s). 2000 total requests
+spawning thread #1: 20 total client(s). 2000 total requests
+spawning thread #2: 20 total client(s). 2000 total requests
+spawning thread #3: 20 total client(s). 2000 total requests
+spawning thread #4: 20 total client(s). 2000 total requests
+TLS Protocol: TLSv1.2
+Cipher: ECDHE-RSA-AES128-GCM-SHA256
+Server Temp Key: ECDH P-256 256 bits
+Application protocol: h2
+progress: 10% done
+progress: 20% done
+progress: 30% done
+progress: 40% done
+progress: 50% done
+progress: 60% done
+progress: 70% done
+progress: 80% done
+progress: 90% done
+progress: 100% done
+
+finished in 1.46s, 6840.14 req/s, 4.30MB/s
+requests: 10000 total, 10000 started, 10000 done, 10000 succeeded, 0 failed, 0 errored, 0 timeout
+status codes: 10000 2xx, 0 3xx, 0 4xx, 0 5xx
+traffic: 6.29MB (6590722) total, 279.71KB (286422) headers (space savings 85.75%), 5.84MB (6120000) data
+                     min         max         mean         sd        +/- sd
+time for request:     2.34ms    271.01ms     89.35ms     43.06ms    72.38%
+time for connect:    32.49ms    317.02ms    202.83ms     66.35ms    68.00%
+time to 1st byte:    67.98ms    576.51ms    342.25ms    106.46ms    71.00%
+req/s           :      68.90      510.79      102.49       56.60    94.00%

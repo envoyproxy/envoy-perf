@@ -24,24 +24,30 @@ def AllocProcessToCores(start_core, end_core, out, proc_command):
     taskset_command = "taskset -ac {}-{} {}".format(start_core,
                                                     end_core, proc_command)
   else:
-    print "Error: Invalid/Unavailable process command."
+    # TODO: check for all other corner cases for proc_command where it might
+    # go wrong
+    raise ValueError("Invalid/Unavailable proc_command: {}", proc_command)
   taskset_proc = Process(taskset_command, out)
   taskset_proc.RunProcess()
   return taskset_proc
 
 
-def RunAndParseH2Load(h2load_command):
-  """Parses h2load output on a given stream and overwrite the stream.
-
-    Starts overwriting from the current position of the stream.
+def RunAndParseH2Load(h2load_command, h2load_timeout=120):
+  """Runs the h2load command and returns a json dictionary of parsed result.
 
   Args:
     h2load_command: the command to run for h2load. can be wrapped over other
     commands like taskset
+    timeout: the number of seconds pspawn would wait before timeout. default:
+    120
   Returns:
     The Json dictionaries corresponding to h2load output.
   """
-  child = pexpect.spawn(h2load_command, logfile=open("log.txt", "rb+"))
+  # TODO(sohamcodes): logfile for h2load needs to be handled separately
+  # for now, it only works as a single log file, capturing log of multiple
+  # h2load runs
+  child = pexpect.spawn(h2load_command, logfile=open("log.txt", "rb+"),
+                        timeout=h2load_timeout)
 
   child.expect(r"finished in\s+(\d+\.?\d*)([a-z]+),")  # total time
   time, unit = child.match.groups()
@@ -296,15 +302,22 @@ def main():
   parser.add_argument("--h2load_threads", help="number of h2load threads. "
                                                "default: 5", default="5")
 
+  # TODO(sohamcodes): range for port number should be checked
   parser.add_argument("--direct_port", help="the direct port for benchmarking"
-                                            ". default: 4500", default="4500")
+                                            ". default: 4500",
+                      type=int, default=4500)
 
   parser.add_argument("--envoy_port",
                       help="the Envoy proxy port for benchmarking"
-                           ". default: 9000", default="9000")
+                           ". default: 9000", type=int, default=9000)
   parser.add_argument("--num_iter",
                       help="the number of times h2load will be run"
                            ". default: 5", type=int, default=5)
+
+  parser.add_argument("--h2load_timeout",
+                      help="the maximum number of seconds to wait for h2load"
+                           " to return some result"
+                           ". default: 120", type=int, default=120)
 
   args = parser.parse_args()
   envoy_path = args.envoy_binary_path
@@ -352,7 +365,7 @@ def main():
                           h2load_reqs, h2load_clients, h2load_conns,
                           h2load_threads)
 
-    AddResultToJsonDict(RunAndParseH2Load(h2load_command),
+    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout),
                         result_json, "direct")
     print "h2load direct is done."
 
@@ -361,7 +374,7 @@ def main():
                           h2load_start_core, h2load_end_core, envoy_port,
                           h2load_reqs, h2load_clients, h2load_conns,
                           h2load_threads)
-    AddResultToJsonDict(RunAndParseH2Load(h2load_command),
+    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout),
                         result_json, "envoy")
     print "h2load with envoy is done."
 

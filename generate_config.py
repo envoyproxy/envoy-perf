@@ -5,24 +5,20 @@ import argparse
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 
-# TODO(sohamcodes): Need to do templating for nginx.conf, default
-# also add a call this python script in the main scripting
-
-
 def main():
   parser = argparse.ArgumentParser()
   parser.add_argument("template_dir",
                       help="the absolute path to the template directory")
   parser.add_argument("--nginx_config_filename",
-                      help="the generated nginx config file name",
+                      help="the new nginx config file name",
                       default="nginx.conf")
   # TODO(sohamcodes): later on, there could be more than one server, so this
   # parameter needs to be changed accordingly
   parser.add_argument("--server_config_filename",
-                      help="the filename for the server configuration."
+                      help="the new filename for the server configuration."
                            " default: default", default="default")
-  parser.add_argument("--no_of_worker_proc",
-                      help="no of worker processes in nginx. default: 10",
+  parser.add_argument("--worker_proc_count",
+                      help="number of worker processes in nginx. default: 10",
                       type=int, default=10)
   parser.add_argument("--worker_rlimit_nofile",
                       help="maximum number of open files for worker processes"
@@ -36,9 +32,8 @@ def main():
                       help="timeout for keepalive connections"
                       ". default: 250",
                       type=int, default=250)
-  parser.add_argument("--port_no",
-                      help="nginx's responsive port no"
-                      ". default: 4500",
+  parser.add_argument("--nginx_port", help="nginx's responsive port number"
+                                        ". default: 4500",
                       type=int, default=4500)
 
   args = parser.parse_args()
@@ -50,14 +45,14 @@ def main():
 
   with open(args.nginx_config_filename, "w") as f:
     f.write(j2_env.get_template("nginx.template.conf").render(
-        no_of_worker_proc=str(args.no_of_worker_proc),
+        no_of_worker_proc=str(args.worker_proc_count),
         worker_rlimit_nofile=str(args.worker_rlimit_nofile),
         worker_connections=str(args.worker_connections),
         keepalive_timeout=str(args.keepalive_timeout)))
 
   with open(args.server_config_filename, "w") as f:
     f.write(j2_env.get_template("default.template").render(
-        port_no=str(args.port_no)))
+        port_no=str(args.nginx_port)))
 
 if __name__ == "__main__":
   main()
