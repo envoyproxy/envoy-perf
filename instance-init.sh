@@ -19,3 +19,6 @@ chomod 766 transfer_files.sh run_remote_scripts.sh
 ./transfer_files.sh $1 $2 $3 $4
 
 ./run_remote_scripts $1 $6 $5
+
+echo -e "Y\n" | gcloud compute instances delete $1
+echo -e "Check your result in result.txt .\n"

@@ -11,5 +11,3 @@ gcloud compute ssh $1 --command="python distribute_proc.py ./envoy-fastbuild ./e
 echo -e "Benchmarking complete.\n"
 rm -f $3/result.txt
 gcloud compute scp $1:./result.txt $3/
-echo -e "Y\n" | gcloud compute instances delete $1
-echo -e "Check your result in result.txt .\n"
