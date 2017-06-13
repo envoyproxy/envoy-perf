@@ -3,6 +3,7 @@
 # $1 - virtual-machine name
 # $2 - username on the VM in the cloud-platform
 # $3 - abosolute directory path for the result file
+set -e
 
 gcloud compute ssh --ssh-flag="-t" --command="sudo chmod +x *.sh" $1
 gcloud compute ssh --ssh-flag="-t" --command="sudo bash ./init-script.sh $2" $1

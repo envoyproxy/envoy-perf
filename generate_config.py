@@ -37,7 +37,7 @@ def main():
                       type=int, default=4500)
 
   args = parser.parse_args()
-  if args.port_no < 1024 or args.port_no > 65535:
+  if args.nginx_port < 1024 or args.nginx_port > 65535:
     parser.error("argument --port_no needs to be >= 1024 and <= 65535")
 
   j2_env = Environment(loader=FileSystemLoader(args.template_dir),

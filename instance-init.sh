@@ -9,16 +9,16 @@
 
 set -e
 
-gcloud compute instances create --zone "us-east1-b" $1 --custom-cpu 20 --custom-memory 76 --image-family ubuntu-1604-lts --image-project ubuntu-os-cloud
+gcloud compute instances create --zone "us-west1-b" $1 --custom-cpu 20 --custom-memory 76 --image-family ubuntu-1604-lts --image-project ubuntu-os-cloud
 echo -e "Instance Created. Needs to wait for 30s.\n"
 sleep 30s
-gcloud config set compute/zone "us-east1-b"
+gcloud config set compute/zone "us-west1-b"
 gcloud config set project "envoy-ci"
 
-chomod 766 transfer_files.sh run_remote_scripts.sh
+chmod 766 transfer_files.sh run_remote_scripts.sh
 ./transfer_files.sh $1 $2 $3 $4
 
-./run_remote_scripts $1 $6 $5
+./run_remote_scripts.sh $1 $6 $5
 
 echo -e "Y\n" | gcloud compute instances delete $1
-echo -e "Check your result in result.txt .\n"
+echo -e "Check your result in $5/result.txt .\n"

@@ -46,7 +46,7 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=120):
   # TODO(sohamcodes): logfile for h2load needs to be handled separately
   # for now, it only works as a single log file, capturing log of multiple
   # h2load runs
-  child = pexpect.spawn(h2load_command, logfile=open("log.txt", "rb+"),
+  child = pexpect.spawn(h2load_command, logfile=open("log.txt", "ab+"),
                         timeout=h2load_timeout)
 
   child.expect(r"finished in\s+(\d+\.?\d*)([a-z]+),")  # total time
