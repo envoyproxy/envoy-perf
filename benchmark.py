@@ -187,7 +187,7 @@ def main():
                            "can be found. default: ubuntu-os-cloud",
                       default="ubuntu-os-cloud")
   parser.add_argument("--project",
-                      help="the project name"
+                      help="the project name."
                            "default: envoy-ci",
                       default="envoy-ci")
   parser.add_argument("--logfile",
@@ -196,9 +196,9 @@ def main():
 
   args = parser.parse_args()
   envoy_path = args.local_envoy_binary_path
-  scripts_path = args.scripts_path
-  envoy_config_path = args.envoy_config_path
-  result_dir = args.result_dir
+  scripts_path = args.scripts_path.rstrip("/")
+  envoy_config_path = args.envoy_config_path.strip("/")
+  result_dir = args.result_dir.rstrip("/")
 
   RunCommand(GetGcloud(("instances create --zone {} {} "
                         " --custom-cpu {} --custom-memory {}"
@@ -206,7 +206,8 @@ def main():
                             args.zone, args.vm_name, args.cpu, args.ram,
                             args.os_img_family, args.os_img_project)),
              exceptiononbadexit=True)
-  # following code will not be executed if there is an error
+
+  # following code will not be executed if there is an error above
   print "Instance created successfully."
 
   RunCommand("gcloud config set compute/zone {}".format(args.zone),
@@ -247,7 +248,7 @@ def main():
     time.sleep(5)
 
   if count == 0:
-    raise RuntimeError("scp is not working with remote machine {}".format(
+    raise RuntimeError("scp is not working with the remote machine, {}".format(
         args.vm_name))
 
   print "envoy binary transfer complete."
@@ -277,7 +278,9 @@ def main():
                 args.username, args.vm_name)
   print "Benchmarking done successfully."
 
-  RunSCPRemoteToLocal("./result.txt", args.username, args.vm_name, "./")
+  RunSCPRemoteToLocal("./result.txt", args.username, args.vm_name, "{}/".format(
+      result_dir
+  ))
   print "Check {}/result.txt file.".format(
       result_dir)
   print "Deleting instance. Wait..."
