@@ -7,11 +7,11 @@ import time
 import pexpect
 
 
-def GetSCPCommand(sourcefiles, username, remotehost, dest="./"):
-  """The function returns a formatted scp command.
+def GetSCPLocalToRemote(sourcefiles, username, remotehost, dest="./"):
+  """The function returns a formatted scp command for local to remote transfers.
 
   It expects one or more source files and single destination. Destination can
-  be directory or file. It acts just as a formatter, and not a syntax-checker
+  be directory or file.
   Args:
     sourcefiles: multiple source files in an array
     username: username on the remote host
@@ -111,8 +111,8 @@ def RunSSHCommand(command, username, remotehost, flag=None):
   return RunCommand(command, exceptiononbadexit=True, timeout=None)
 
 
-def RunSCPCommand(sourcefiles, username, remotehost, dest="./",
-                  exceptiononbadexit=False):
+def RunSCPLocalToRemote(sourcefiles, username, remotehost, dest="./",
+                        exceptiononbadexit=False):
   """The function transfers files from local machine to remote host.
 
   It expects one or more source files and single destination. Destination can
@@ -126,18 +126,18 @@ def RunSCPCommand(sourcefiles, username, remotehost, dest="./",
   Returns:
     Returns the return value of RunCommand
   """
-  command = GetGcloud(GetSCPCommand(sourcefiles, username, remotehost,
-                                    dest=dest))
+  command = GetGcloud(GetSCPLocalToRemote(sourcefiles, username, remotehost,
+                                          dest=dest))
   # this is done to allow wild card characters through pexpect
   command = "bash -c \"{}\"".format(command)
   return RunCommand(command, exceptiononbadexit=exceptiononbadexit)
 
 
-def RunSCPReverseCommand(source, username, remotehost, dest,
-                         exceptiononbadexit=True):
-  """This function does the opposite of RunSCPCommand.
+def RunSCPRemoteToLocal(source, username, remotehost, dest,
+                        exceptiononbadexit=True):
+  """This function does the opposite of RunSCPLocalToRemote.
 
-  Moves files from remote host to local machine.
+  Copies a file or directory from remote host to local machine.
   Args:
     source: source filename
     username: username on the remote host
@@ -238,9 +238,9 @@ def main():
   # TODO(sohamcodes):remote envoy binary is hardcoded here.
   # It can be made dynamic.
   count = 15  # scp will be tried 15 times before we say it's failed
-  while count > 0 and RunCommand(GetGcloud(
-      GetSCPCommand([envoy_path], args.username, args.vm_name,
-                    dest="./envoy-fastbuild"))) != 0:
+  while count > 0 and RunSCPLocalToRemote([envoy_path], args.username,
+                                          args.vm_name,
+                                          dest="./envoy-fastbuild") != 0:
     count -= 1
     print ("Port 22 is not ready yet. Trying again after 5s. "
            "Total try left: {}").format(count)
@@ -252,16 +252,16 @@ def main():
 
   print "envoy binary transfer complete."
 
-  RunSCPCommand(["{}/*".format(scripts_path)], args.username, args.vm_name,
-                exceptiononbadexit=True)
+  RunSCPLocalToRemote(["{}/*".format(scripts_path)],
+                      args.username, args.vm_name, exceptiononbadexit=True)
 
   print "Script transfer complete."
 
   RunSSHCommand("mkdir -p \"envoy-configs\"", args.username, args.vm_name)
 
-  RunSCPCommand(["{}/*".format(envoy_config_path)],
-                args.username, args.vm_name, dest="./envoy-configs/",
-                exceptiononbadexit=True)
+  RunSCPLocalToRemote(["{}/*".format(envoy_config_path)],
+                      args.username, args.vm_name, dest="./envoy-configs/",
+                      exceptiononbadexit=True)
   print "Envoy configs transfer complete."
 
   RunSSHCommand("sudo chmod +x *.sh", args.username, args.vm_name, flag="-t")
@@ -277,10 +277,10 @@ def main():
                 args.username, args.vm_name)
   print "Benchmarking done successfully."
 
-  RunSCPReverseCommand("./result.txt", args.username, args.vm_name, "./")
+  RunSCPRemoteToLocal("./result.txt", args.username, args.vm_name, "./")
   print "Check {}/result.txt file.".format(
       result_dir)
-  print "Deleting instance."
+  print "Deleting instance. Wait..."
 
   RunCommand(GetGcloud("instances delete {}".format(args.vm_name)),
              ev={"Do you want to continue (Y/n)?": "Y\n"},
