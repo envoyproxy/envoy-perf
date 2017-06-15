@@ -3,155 +3,38 @@
 
 import argparse
 import time
-
 import pexpect
 
-
-def GetSCPLocalToRemote(sourcefiles, username, remotehost, dest="./"):
-  """The function returns a formatted scp command for local to remote transfers.
-
-  It expects one or more source files and single destination. Destination can
-  be directory or file.
-  Args:
-    sourcefiles: multiple source files in an array
-    username: username on the remote host
-    remotehost: name of remote host
-    dest: a single directory or a file. default:./ which is home
-  Returns:
-    Returns the formatted scp command
-  """
-  command = "scp --recurse"
-  for f in sourcefiles:
-    command = "{} \"{}\"".format(command, f)
-  return "{} \"{}\"@\"{}\":\"{}\"".format(command, username, remotehost, dest)
+from shell_helpers import GetGcloud
+from shell_helpers import RunCommand
+from shell_helpers import RunSCPLocalToRemote
+from shell_helpers import RunSCPRemoteToLocal
+from shell_helpers import RunSSHCommand
+from shell_helpers import RunGCloudCompute
 
 
-def GetSSHCommand(remotecommand, username, remotehost, flag=None):
-  """The function returns formatted ssh command.
+def GetRemoteHost(username, remotehost):
+  """This function returns a formatted remote host for ssh, scp.
 
   Args:
-    remotecommand: remote command to be executed
-    username: username on the remote host
-    remotehost: name of remote host
-    flag: optional flag to be passed to the ssh
+    username: username on remote host
+    remotehost: name of remotehost
   Returns:
-    Formatted ssh command
+    A formatted string of remote location for ssh
   """
-  if flag is None:
-    return "ssh \"{}\"@\"{}\" --command=\"{}\"".format(
-        username, remotehost, remotecommand)
-  else:
-    return ("ssh \"{}\"@\"{}\" --ssh-flag=\"{}\""
-            " --command=\"{}\"").format(username, remotehost, flag,
-                                        remotecommand)
+  return ("{}@{}").format(username, remotehost)
 
-
-def GetGcloud(arguments):
-  """Get gcloud command with arguments.
-
-  Functionalities might be expanded later to run gcloud commands.
-  Args:
-    arguments: arguments to be given to gcloud compute
-  Returns:
-    returns thr formatted command for gcloud compute
-  """
-  return "gcloud compute {}".format(arguments)
-
-
-def RunCommand(command, timeout=180, logfile=open("logfile.log", "a"), ev=None,
-               exceptiononbadexit=False):
-  """Runs a given command through pexpect.run.
-
-  This function acts as a wrapper over pxpect.run . You can have exception or
-  return values based on the exitstatus of the command execution. If exitstatus
-   is not zero, then it will return -1, unless you want RuntimeError. If there
-  is TIMEOUT, then exception is raised. If events do not match, command's
-  output is printed, and -1 is returned.
-  Args:
-    command: the command to run via pexpect.run
-    timeout: timeout for pexpect.run . default: 180 seconds
-    logfile: an opened filestream to write the output
-    ev: any events that is to be attached to pexpect.run
-    exceptiononbadexit: do you want an exception if a bad exit happens
-  Returns:
-    Returns -1, if bad exitstatus is not zero and exceptiononbadexit is False
-    and when events do not match
-    Otherwise returns 0, if everything is fine
-  """
-  try:
-    (command_output, exitstatus) = pexpect.run(command, timeout=timeout,
-                                               withexitstatus=True,
-                                               logfile=logfile, events=ev)
-    if exitstatus != 0:
-      print command_output
-      if exceptiononbadexit:
-        raise RuntimeError("Exit status: {}.".format(exitstatus))
-      return -1
-  except pexpect.TIMEOUT:
-    raise RuntimeError("Following command taking too long: {}", command)
-  except pexpect.EOF:
-    print "EOF found."
-    print command_output
-    return -1
-  return 0
-
-
-def RunSSHCommand(command, username, remotehost, flag=None):
-  """This function runs the SSH command.
+def GetRemoteDestination(username, remotehost, dest="./"):
+  """This function returns a formatted remote host for scp.
 
   Args:
-    command: the command to run on remote host
-    username: the username to login to remote host
-    remotehost: name of remote host
-    flag: optional flags to ssh
+    username: username on remote host
+    remotehost: name of remotehost
+    dest: destination path on remote host. default: ./
   Returns:
-    Returns the return value of RunCommand
+    A formatted string of remote location for scp
   """
-  command = GetGcloud(GetSSHCommand(command, username, remotehost, flag=flag))
-  return RunCommand(command, exceptiononbadexit=True, timeout=None)
-
-
-def RunSCPLocalToRemote(sourcefiles, username, remotehost, dest="./",
-                        exceptiononbadexit=False):
-  """The function transfers files from local machine to remote host.
-
-  It expects one or more source files and single destination. Destination can
-  be directory or file. It acts just as a formatter, and not a syntax-checker
-  Args:
-    sourcefiles: multiple source files in an array
-    username: username on the remote host
-    remotehost: name of remote host
-    dest: a single directory or a file. default:./ which is home
-    exceptiononbadexit: do you want an exception if a bad exit happens
-  Returns:
-    Returns the return value of RunCommand
-  """
-  command = GetGcloud(GetSCPLocalToRemote(sourcefiles, username, remotehost,
-                                          dest=dest))
-  # this is done to allow wild card characters through pexpect
-  command = "bash -c \"{}\"".format(command)
-  return RunCommand(command, exceptiononbadexit=exceptiononbadexit)
-
-
-def RunSCPRemoteToLocal(source, username, remotehost, dest,
-                        exceptiononbadexit=True):
-  """This function does the opposite of RunSCPLocalToRemote.
-
-  Copies a file or directory from remote host to local machine.
-  Args:
-    source: source filename
-    username: username on the remote host
-    remotehost: name of remote host
-    dest: local filename
-    exceptiononbadexit: do you want an exception if bad exit happens
-  Returns:
-    Returns the return value of RunCommand
-  """
-  command = ("bash"
-             " -c \"{}\"").format(GetGcloud("scp --recurse {}@{}:{} {}".format(
-                 username, remotehost, source, dest)))
-  return RunCommand(command, exceptiononbadexit=exceptiononbadexit)
-
+  return ("{}:\"{}\"").format(GetRemoteHost(username, remotehost), dest)
 
 def main():
   parser = argparse.ArgumentParser()
@@ -191,34 +74,38 @@ def main():
                            "default: envoy-ci",
                       default="envoy-ci")
   parser.add_argument("--logfile",
-                      help="the local log file for this script. default: "
-                           "logfile.log", default="logfile.log")
+                      help="the local log file for this script. New log will be"
+                           "appended to this file. default: "
+                           "benchmark.log", default="benchmark.log")
 
   args = parser.parse_args()
   envoy_path = args.local_envoy_binary_path
   scripts_path = args.scripts_path.rstrip("/")
   envoy_config_path = args.envoy_config_path.strip("/")
   result_dir = args.result_dir.rstrip("/")
+  logfile = open(args.logfile, "ab")
 
-  RunCommand(GetGcloud(("instances create --zone {} {} "
-                        " --custom-cpu {} --custom-memory {}"
-                        " --image-family {} --image-project {}").format(
-                            args.zone, args.vm_name, args.cpu, args.ram,
-                            args.os_img_family, args.os_img_project)),
-             exceptiononbadexit=True)
+  RunGCloudCompute(["instances", "create", "--zone", args.zone, args.vm_name,
+                            "--custom-cpu", str(args.cpu), "--custom-memory",
+                            str(args.ram), "--image-family",
+                            args.os_img_family,
+                            "--image-project", args.os_img_project],
+                   logfile=logfile)
 
   # following code will not be executed if there is an error above
   print "Instance created successfully."
 
-  RunCommand("gcloud config set compute/zone {}".format(args.zone),
-             exceptiononbadexit=True)
-  RunCommand("gcloud config set project {}".format(args.project),
-             exceptiononbadexit=True)
+  RunCommand(["gcloud", "config", "set", "compute/zone", args.zone],
+             logfile=logfile)
+  RunCommand(["gcloud", "config", "set", "project", args.project],
+             logfile=logfile)
 
   # the following loop checks whether the current instance is up and running
   while True:
-    status = pexpect.spawn(GetGcloud("instances describe {} --zone {}".format(
-        args.vm_name, args.zone)), logfile=open(args.logfile, "a"))
+    # TODO(sohamcodes): Do the same thing with RunCommand
+    status = pexpect.spawn(("gcloud compute instances describe {} --zone"
+                            " {}").format(
+        args.vm_name, args.zone), logfile=logfile)
     try:
       status.expect(r"status:\s+([A-Z]+)")
       cur_status = status.match.group(1)
@@ -233,61 +120,69 @@ def main():
       print ("Status is not found. "
              "There is some problem in finding the instance.")
 
-  RunCommand("chmod 766 transfer_files.sh run_remote_scripts.sh",
-             exceptiononbadexit=True)
-
-  # TODO(sohamcodes):remote envoy binary is hardcoded here.
-  # It can be made dynamic.
+  RunCommand(["chmod", "766", "transfer_files.sh", "run_remote_scripts.sh"],
+             logfile=logfile)
+  #
+  # # TODO(sohamcodes):remote envoy binary is hardcoded here.
+  # # It can be made dynamic.
   count = 15  # scp will be tried 15 times before we say it's failed
-  while count > 0 and RunSCPLocalToRemote([envoy_path], args.username,
-                                          args.vm_name,
-                                          dest="./envoy-fastbuild") != 0:
-    count -= 1
-    print ("Port 22 is not ready yet. Trying again after 5s. "
-           "Total try left: {}").format(count)
-    time.sleep(5)
+  while count > 0:
+    try:
+      RunSCPLocalToRemote([envoy_path, GetRemoteDestination(
+          args.username, args.vm_name, "./envoy-fastbuild"
+      )], logfile=logfile)
+      break  # if it comes here then scp was successful
+    except Exception as e:
+      print e
+      count -= 1
+      print ("Port 22 is not ready yet. Trying again after 5s. "
+             "Total try left: {}").format(count)
+      time.sleep(5)
 
   if count == 0:
     raise RuntimeError("scp is not working with the remote machine, {}".format(
         args.vm_name))
 
-  print "envoy binary transfer complete."
+  print "Envoy binary transfer complete."
 
-  RunSCPLocalToRemote(["{}/*".format(scripts_path)],
-                      args.username, args.vm_name, exceptiononbadexit=True)
+  RunSCPLocalToRemote(["{}/*".format(scripts_path), GetRemoteDestination(
+                      args.username, args.vm_name)], logfile=logfile)
 
   print "Script transfer complete."
 
-  RunSSHCommand("mkdir -p \"envoy-configs\"", args.username, args.vm_name)
+  RunSSHCommand([GetRemoteHost(args.username, args.vm_name), "--command",
+      "mkdir -p \"envoy-configs\""], logfile=logfile)
 
-  RunSCPLocalToRemote(["{}/*".format(envoy_config_path)],
-                      args.username, args.vm_name, dest="./envoy-configs/",
-                      exceptiononbadexit=True)
+  RunSCPLocalToRemote(["{}/*".format(envoy_config_path), GetRemoteDestination(
+      args.username, args.vm_name, dest="./envoy-configs/")],
+                      logfile=logfile)
   print "Envoy configs transfer complete."
 
-  RunSSHCommand("sudo chmod +x *.sh", args.username, args.vm_name, flag="-t")
+  RunSSHCommand([GetRemoteHost(args.username, args.vm_name),
+      "--command", "sudo chmod +x *.sh", "--", "-t"], logfile=logfile)
 
-  RunSSHCommand("sudo bash ./init-script.sh {}".format(
-      args.username), args.username, args.vm_name, flag="-t")
+  RunSSHCommand([GetRemoteHost(args.username, args.vm_name),
+     "--command",
+      "sudo bash ./init-script.sh {}".format(args.username), "--", "-t"],
+                logfile=logfile)
 
   print "Setup complete. Running Benchmark."
 
-  RunSSHCommand("python distribute_proc.py "
+  RunSSHCommand([GetRemoteHost(args.username, args.vm_name), "--command",
+                "python distribute_proc.py "
                 "./envoy-fastbuild ./envoy-configs/"
-                "simple-loopback.json result.txt",
-                args.username, args.vm_name)
+                "simple-loopback.json result.txt"], logfile=logfile)
   print "Benchmarking done successfully."
 
-  RunSCPRemoteToLocal("./result.txt", args.username, args.vm_name, "{}/".format(
-      result_dir
-  ))
+  RunSCPRemoteToLocal([GetRemoteDestination(args.username, args.vm_name,
+      "./result.txt"), "{}/".format(result_dir)], logfile=logfile)
   print "Check {}/result.txt file.".format(
       result_dir)
   print "Deleting instance. Wait..."
 
-  RunCommand(GetGcloud("instances delete {}".format(args.vm_name)),
-             ev={"Do you want to continue (Y/n)?": "Y\n"},
-             exceptiononbadexit=True)
+  pexpect.run("gcloud compute instances delete {}".format(args.vm_name),
+              events={"Do you want to continue (Y/n)?": "Y\n"}, logfile=logfile,
+              timeout=None)
 
   print "Instance deleted."
 

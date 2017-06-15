@@ -9,7 +9,7 @@ class Process(object):
   """Process class which represents a process in linux."""
 
   def __init__(self, proc_command, outstream):
-    """Initializer with optional arguments.
+    """Initializer with arguments.
 
     Args:
       proc_command: the command to be run

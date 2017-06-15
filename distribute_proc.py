@@ -201,8 +201,7 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=120):
   child.close()
 
   if child.exitstatus != 0:
-    print "Error: problem running h2load. Check log.txt"
-    return None
+    raise RuntimeError("Error: problem running h2load. Check log.")
   single_result_json = {
       "total_time": total_time,
       "total_req_per_sec": total_req_p_sec,
