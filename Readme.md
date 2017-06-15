@@ -6,7 +6,7 @@
 Follow these set-up before running the benchmarking script.
 
 1. Keep your envoy-binary in an accessible location, `$ENVOY_BINARY`
-2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`
+2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`. This refers to the same files included in this module.
 3. Keep all the Envoy configurations in a directory, `$ENVOY_CONFIG`
 4. Select a directory in which you want to keep the result, `$RESULT`
 
@@ -29,8 +29,8 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 	           			the os in which you want the benchmark. default:
 	                        ubuntu-1604-lts
 	  --os_img_project
-	                 	the project in which the oscan be found. default:
-	                        ubuntu-os-cloud
+	                 	the project in which the os can be found in Google Cloud.
+	                        default: ubuntu-os-cloud
 	  --project     	the project namedefault: envoy-ci
 	  --logfile     	the local log file for this script. default:
 	                        benchmark.log
