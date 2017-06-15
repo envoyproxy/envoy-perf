@@ -8,17 +8,20 @@ import sh
 class Process(object):
   """Process class which represents a process in linux."""
 
-  def __init__(self, proc_command, outstream):
+  def __init__(self, proc_command, outstream, args=None):
     """Initializer with arguments.
 
     Args:
       proc_command: the command to be run
       outstream: this can be plain string containing the file-name, or a file
       output stream. process' stdout, stderr are sent here
+      args: if you want to provide arguments as an array. Make sure to provide
+      proc_command as a single command, in case you are providing this value
     """
     self.command = proc_command
     self.os = outstream
     self.pid = 0  # by default pid is zero; it's updated when command is run
+    self.args = args
 
   def RunProcess(self):
     """This function will run the process' command.
@@ -29,10 +32,17 @@ class Process(object):
         Doesn't return anything but
         runs the process by running the proc_command.
     """
-    command_args = shlex.split(self.command)
-    run = sh.Command(command_args[0])
-    self.name = command_args[0]
-    running_process = run(command_args[1:], _out=self.os, _err_to_out=True,
+    if not self.args:  # when arguments are not provided as array
+      command_args = shlex.split(self.command)
+      run = sh.Command(command_args[0])
+      self.name = command_args[0]
+      command_args = command_args[1:]
+    else:  # when argument is provided as array
+      command_args = self.args
+      run = sh.Command(self.command)
+      self.name = self.command
+
+    running_process = run(command_args, _out=self.os, _err_to_out=True,
                           _bg=True)
     self.pid = running_process.pid
 

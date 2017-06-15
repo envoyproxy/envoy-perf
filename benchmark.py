@@ -77,6 +77,8 @@ def main():
                       help="the local log file for this script. New log will be"
                            "appended to this file. default: "
                            "benchmark.log", default="benchmark.log")
+  # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and
+  # h2load runs on the VM, by adding more top level parameters
 
   args = parser.parse_args()
   envoy_path = args.local_envoy_binary_path
@@ -102,7 +104,6 @@ def main():
 
   # the following loop checks whether the current instance is up and running
   while True:
-    # TODO(sohamcodes): Do the same thing with RunCommand
     status = pexpect.spawn(("gcloud compute instances describe {} --zone"
                             " {}").format(
         args.vm_name, args.zone), logfile=logfile)
@@ -122,7 +123,7 @@ def main():
 
   RunCommand(["chmod", "766", "transfer_files.sh", "run_remote_scripts.sh"],
              logfile=logfile)
-  #
+
   # # TODO(sohamcodes):remote envoy binary is hardcoded here.
   # # It can be made dynamic.
   count = 15  # scp will be tried 15 times before we say it's failed
@@ -180,6 +181,7 @@ def main():
       result_dir)
   print "Deleting instance. Wait..."
 
+  # pexpect.run does not take argument as arrays
   pexpect.run("gcloud compute instances delete {}".format(args.vm_name),
               events={"Do you want to continue (Y/n)?": "Y\n"}, logfile=logfile,
               timeout=None)
