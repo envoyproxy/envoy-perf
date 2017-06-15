@@ -17,7 +17,11 @@ class Process(object):
       output stream. process' stdout, stderr are sent here
       args: if you want to provide arguments as an array. Make sure to provide
       proc_command as a single command, in case you are providing this value
+    Raises:
+      ValueError: when proc_command is empty or have no value
     """
+    if not proc_command.strip():
+      raise ValueError("argument proc_command should be given.")
     self.command = proc_command
     self.os = outstream
     self.pid = 0  # by default pid is zero; it's updated when command is run

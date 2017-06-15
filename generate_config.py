@@ -5,8 +5,10 @@ import argparse
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 
+
 def main():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("template_dir",
                       help="the absolute path to the template directory")
   parser.add_argument("--nginx_config_filename",
@@ -15,25 +17,22 @@ def main():
   # TODO(sohamcodes): later on, there could be more than one server, so this
   # parameter needs to be changed accordingly
   parser.add_argument("--server_config_filename",
-                      help="the new filename for the server configuration."
-                           " default: default", default="default")
+                      help="the new filename for the server configuration.",
+                      default="default")
   parser.add_argument("--worker_proc_count",
-                      help="number of worker processes in nginx. default: 10",
+                      help="number of worker processes in nginx.",
                       type=int, default=10)
   parser.add_argument("--worker_rlimit_nofile",
-                      help="maximum number of open files for worker processes"
-                      ". default: 100000",
+                      help="maximum number of open files for worker processes.",
                       type=int, default=100000)
   parser.add_argument("--worker_connections",
                       help="maximum number of simultaneous open connections"
-                      " by a worker processes. default: 4000",
+                      " by a worker processes.",
                       type=int, default=4000)
   parser.add_argument("--keepalive_timeout",
-                      help="timeout for keepalive connections"
-                      ". default: 250",
+                      help="timeout for keepalive connections.",
                       type=int, default=250)
-  parser.add_argument("--nginx_port", help="nginx's responsive port number"
-                                        ". default: 4500",
+  parser.add_argument("--nginx_port", help="nginx's responsive port number.",
                       type=int, default=4500)
 
   args = parser.parse_args()

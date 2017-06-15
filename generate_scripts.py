@@ -7,22 +7,19 @@ from jinja2 import FileSystemLoader
 
 
 def main():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("template_dir",
                       help="the absolute path to the template directory")
   parser.add_argument("username",
                       help="your username on the VM in the cloud-platform")
-  parser.add_argument("--script_name",
-                      help="don't change this. This is kept"
-                           " for future-exptentsion. default: Makefile",
-                      default="Makefile")
 
   args = parser.parse_args()
 
   j2_env = Environment(loader=FileSystemLoader(args.template_dir),
                        trim_blocks=True)
-                       
-  with open(args.script_name, "w") as f:
+
+  with open("Makefile", "w") as f:
     f.write(j2_env.get_template("Makefile.template").render(
         username=str(args.username)))
 

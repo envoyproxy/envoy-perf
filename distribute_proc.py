@@ -19,34 +19,38 @@ def AllocProcessToCores(start_core, end_core, out, proc_command):
     proc_command: the command to run on designated cores.
   Returns:
     The taskset process id is returned
+  Raises:
+    ValueError: When invalid or no proc_command is given
   """
-  if proc_command is not None:
-    taskset_command = "taskset -ac {}-{} {}".format(start_core,
-                                                    end_core, proc_command)
+  if proc_command:
+    taskset_command_args = ["-ac", "{}-{}".format(start_core, end_core)]
+    taskset_command_args.extend(proc_command)
+    # taskset_command = "taskset -ac {}-{} {}".format(start_core,
+    #                                                 end_core, proc_command)
   else:
-    # TODO: check for all other corner cases for proc_command where it might
-    # go wrong
     raise ValueError("Invalid/Unavailable proc_command: {}", proc_command)
-  taskset_proc = Process(taskset_command, out)
+  taskset_proc = Process("taskset", out, args=taskset_command_args)
   taskset_proc.RunProcess()
   return taskset_proc
 
 
-def RunAndParseH2Load(h2load_command, h2load_timeout=120):
+def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
   """Runs the h2load command and returns a json dictionary of parsed result.
 
   Args:
     h2load_command: the command to run for h2load. can be wrapped over other
     commands like taskset
-    timeout: the number of seconds pspawn would wait before timeout. default:
-    120
+    h2load_timeout: the number of seconds pspawn would wait before timeout.
+    logfile: An opened filestream to write the log of h2load run
   Returns:
     The Json dictionaries corresponding to h2load output.
+  Raises:
+    RuntimeError: When h2load run causes some error
   """
-  # TODO(sohamcodes): logfile for h2load needs to be handled separately
+  # TODO(sohamcodes): logfile for h2load needs to be handled separately.
   # for now, it only works as a single log file, capturing log of multiple
   # h2load runs
-  child = pexpect.spawn(h2load_command, logfile=open("log.txt", "ab+"),
+  child = pexpect.spawn(h2load_command, logfile=logfile,
                         timeout=h2load_timeout)
 
   child.expect(r"finished in\s+(\d+\.?\d*)([a-z]+),")  # total time
@@ -253,7 +257,7 @@ def GetNginxConfig():
   Returns:
     Returns the nginx configuration
   """
-  return "-c /etc/nginx/nginx.conf -g \"daemon off;\""
+  return ["-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
 
 
 # TODO(sohamcodes): debug is always included now. Later on, debug should be
@@ -266,11 +270,12 @@ def GetEnvoyConfig(envoy_config_path):
   Returns:
     Formatted envoy configuration. Right now it always include the debug info
   """
-  return "-c {} -l debug".format(envoy_config_path)
+  return ["-c", envoy_config_path, "-l", "debug"]
 
 
 def main():
-  parser = argparse.ArgumentParser()
+  parser = argparse.ArgumentParser(
+      formatter_class=argparse.ArgumentDefaultsHelpFormatter)
   parser.add_argument("envoy_binary_path",
                       help="the path to the binary file of Envoy")
   parser.add_argument("envoy_config_path",
@@ -280,49 +285,41 @@ def main():
                            "results will be written")
   parser.add_argument("--nginx_cores",
                       help="the start and end core numbers for Nginx server to "
-                           "run, separated by a comma. default: 0,4",
+                           "run, separated by a comma.",
                       default="0,4")
   parser.add_argument("--envoy_cores",
                       help="the start and end core numbers for"
-                           " Envoy to run, separated by a comma."
-                           " default: 5,9", default="5,9")
+                           " Envoy to run, separated by a comma.",
+                      default="5,9")
   parser.add_argument("--h2load_cores",
                       help="the start and end core numbers for "
-                           "h2load to run, separated by a "
-                           "comma. default: 10,14",
+                           "h2load to run, separated by a comma.",
                       default="10,14")
   parser.add_argument("--h2load_reqs",
-                      help="number of h2load requests. default: "
-                           "10000", default="10000")
-  parser.add_argument("--h2load_clients", help="number of h2load clients. "
-                                               "default: 100", default="100")
-  parser.add_argument("--h2load_conns", help="number of h2load connections. "
-                                             "default: 10", default="10")
-  parser.add_argument("--h2load_threads", help="number of h2load threads. "
-                                               "default: 5", default="5")
+                      help="number of h2load requests", default="10000")
+  parser.add_argument("--h2load_clients", help="number of h2load clients.",
+                      default="100")
+  parser.add_argument("--h2load_conns", help="number of h2load connections.",
+                      default="10")
+  parser.add_argument("--h2load_threads", help="number of h2load threads.",
+                      default="5")
 
   # TODO(sohamcodes): range for port number should be checked
-  parser.add_argument("--direct_port", help="the direct port for benchmarking"
-                                            ". default: 4500",
+  parser.add_argument("--direct_port", help="the direct port for benchmarking.",
                       type=int, default=4500)
 
   parser.add_argument("--envoy_port",
-                      help="the Envoy proxy port for benchmarking"
-                           ". default: 9000", type=int, default=9000)
+                      help="the Envoy proxy port for benchmarking",
+                      type=int, default=9000)
   parser.add_argument("--num_iter",
-                      help="the number of times h2load will be run"
-                           ". default: 5", type=int, default=5)
+                      help="the number of times h2load will be run",
+                      type=int, default=5)
 
   parser.add_argument("--h2load_timeout",
                       help="the maximum number of seconds to wait for h2load"
-                           " to return some result"
-                           ". default: 120", type=int, default=120)
+                           " to return some result", type=int, default=120)
 
   args = parser.parse_args()
-  envoy_path = args.envoy_binary_path
-  envoy_config_path = args.envoy_config_path
-  result = args.result
-  number_iteration = args.num_iter
 
   if args.nginx_cores:
     nginx_start_core, nginx_end_core = ParseStartAndEndCore(args.nginx_cores)
@@ -333,47 +330,46 @@ def main():
   if args.h2load_cores:
     h2load_start_core, h2load_end_core = ParseStartAndEndCore(args.h2load_cores)
 
-  h2load_reqs = args.h2load_reqs
-  h2load_clients = args.h2load_clients
-  h2load_conns = args.h2load_conns
-  h2load_threads = args.h2load_threads
-  direct_port = args.direct_port
-  envoy_port = args.envoy_port
-
   # allocate nginx to designated cores
   output = "nginx_out.txt"
+  nginx_command = ["nginx"]
+  nginx_command.extend(GetNginxConfig())
   nginx_process = AllocProcessToCores(nginx_start_core,
                                       nginx_end_core, output,
-                                      "nginx {}".format(GetNginxConfig()))
+                                      nginx_command)
   print "nginx process id is {}".format(nginx_process.pid)
 
   # allocate envoy to designated cores
-  envoy_command = "{} {}".format(envoy_path, GetEnvoyConfig(envoy_config_path))
+  envoy_command = [args.envoy_binary_path]
+  envoy_command.extend(GetEnvoyConfig(args.envoy_config_path))
   outfile = "envoy_out.txt"  # this is envoy output file
   envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
                                       outfile, envoy_command)
   print "envoy process id is {}".format(envoy_process.pid)
 
   result_json = {}
+  logfile = open("h2load_log.log", "ab+")
 
-  for _ in xrange(number_iteration):
-    # allocate h2load to designated cores
+  for _ in xrange(args.num_iter):
+    # allocate h2load to designated cores as foreground process
     h2load_command = ("taskset -ac {}-{} "
                       "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
-                          h2load_start_core, h2load_end_core, direct_port,
-                          h2load_reqs, h2load_clients, h2load_conns,
-                          h2load_threads)
+                          h2load_start_core, h2load_end_core, args.direct_port,
+                          args.h2load_reqs, args.h2load_clients,
+                          args.h2load_conns, args.h2load_threads)
 
-    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout),
+    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout,
+                                          logfile=logfile),
                         result_json, "direct")
     print "h2load direct is done."
 
     h2load_command = ("taskset -ac {}-{} "
                       "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
-                          h2load_start_core, h2load_end_core, envoy_port,
-                          h2load_reqs, h2load_clients, h2load_conns,
-                          h2load_threads)
-    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout),
+                          h2load_start_core, h2load_end_core, args.envoy_port,
+                          args.h2load_reqs, args.h2load_clients,
+                          args.h2load_conns, args.h2load_threads)
+    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout,
+                                          logfile=logfile),
                         result_json, "envoy")
     print "h2load with envoy is done."
 
@@ -381,7 +377,7 @@ def main():
   nginx_process.KillProcess("-QUIT")
   envoy_process.KillProcess()
 
-  with open(result, "w") as f:
+  with open(args.result, "w") as f:
     json.dump(result_json, f)
 
 if __name__ == "__main__":
