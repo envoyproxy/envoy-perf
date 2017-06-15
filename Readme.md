@@ -35,10 +35,10 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 		                benchmarking result file (default: ./)
 	  --username   		username on the VM in the cloud-platform (default:
 		                envoy)
-	  --zone            the zone where you want to create the VM. (default:
+	  --zone            	the zone where you want to create the VM. (default:
 		                us-east1-b)
-	  --cpu             number of CPU cores. (default: 20)
-	  --ram             amount of ram in the VM in MB. (default: 76)
+	  --cpu             	number of CPU cores. (default: 20)
+	  --ram             	amount of ram in the VM in MB. (default: 76)
 	  --os_img_family
 		                the os in which you want the benchmark. (default:
 		                ubuntu-1604-lts)
