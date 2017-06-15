@@ -20,7 +20,7 @@ Run the benchmarking script, as follows with python2:
 
 The above command will create a VM in the `us-east1-b` zone (default) with the name, `envoy-vm`. The VM will have, by default, 20 CPUs, 76GB RAM and run Ubuntu 16.04 LTS under `envoy-ci` project. All the output and errors will be written in a file, named `benchmark.log`. You can change these default settings by providing the following arguments to the above Python script:
 
-	  --vm_name			name of the virtual machine that you want to create
+	  --vm_name		name of the virtual machine that you want to create
 		                (default: envoy-vm)
 	  --local_envoy_binary_path
 		                local absolute path of the envoy binary (default:
