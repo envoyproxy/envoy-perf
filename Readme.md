@@ -6,7 +6,7 @@
 Follow these set-up before running the benchmarking script.
 
 1. Keep your envoy-binary in an accessible location, `$ENVOY_BINARY`.
-2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`. This refers to the same files included in this module.
+2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`. The scripts and Makefiles refer to the same files that are included in this benchmarking package.
 3. Keep all the Envoy configurations in a directory, `$ENVOY_CONFIG`.
 4. Select a directory in which you want to keep the result, `$RESULT`.
 
@@ -20,7 +20,7 @@ Run the benchmarking script, as follows with python2:
 
 The above command will create a VM in the `us-east1-b` zone (default) with the name, `envoy-vm`. The VM will have, by default, 20 CPUs, 76GB RAM and run Ubuntu 16.04 LTS under `envoy-ci` project. All the output and errors will be written in a file, named `benchmark.log`. You can change these default settings by providing the following arguments to the above Python script:
 
-	  --vm_name			name of the virtual machine that you want to create
+	  --vm_name		name of the virtual machine that you want to create
 		                (default: envoy-vm)
 	  --local_envoy_binary_path
 		                local absolute path of the envoy binary (default:
