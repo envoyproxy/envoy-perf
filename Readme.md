@@ -16,7 +16,7 @@ Install the following packages (possibly running the below commands): `pexpect`
 
 Run the benchmarking script, as follows with python2:
 
-	python2 benchmark.py $VM_NAME $ENVOY_BINARY $SCRIPTS $ENVOY_CONFIG $RESULT $USERNAME
+	python2 benchmark.py
 
 The above command will create a VM in the `us-east1-b` zone (default) with the name, `envoy-vm`. The VM will have, by default, 20 CPUs, 76GB RAM and run Ubuntu 16.04 LTS under `envoy-ci` project. All the output and errors will be written in a file, named `benchmark.log`. You can change these default settings by providing the following arguments to the above Python script:
 
@@ -35,10 +35,10 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 		                benchmarking result file (default: ./)
 	  --username   		username on the VM in the cloud-platform (default:
 		                envoy)
-	  --zone            the zone where you want to create the VM. (default:
+	  --zone            	the zone where you want to create the VM. (default:
 		                us-east1-b)
-	  --cpu             number of CPU cores. (default: 20)
-	  --ram             amount of ram in the VM in MB. (default: 76)
+	  --cpu             	number of CPU cores. (default: 20)
+	  --ram             	amount of ram in the VM in MB. (default: 76)
 	  --os_img_family
 		                the os in which you want the benchmark. (default:
 		                ubuntu-1604-lts)
