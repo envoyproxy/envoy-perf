@@ -15,29 +15,58 @@ class BenchmarkError(Exception):
   pass
 
 
-def FormatRemoteHost(username, remotehost):
-  """This function returns a formatted remote host for ssh, scp.
+def CheckStatus(args):
+  """This function tries to check the status of the VM Instance.
 
   Args:
-    username: username on remote host
-    remotehost: name of remotehost
+    args: all the arguments to the program
+  Raises:
+    BenchmarkError: If instance is not RUNNING
   Returns:
-    A formatted string of remote location for ssh
+    Returns 0, if everything is fine
   """
-  return ("{}@{}").format(username, remotehost)
+  status = subprocess.check_output(sh_utils.GetGcloud([
+      "instances", "describe",
+      args.vm_name, "--zone",
+      args.zone], project=args.project))
+  cur_status = re.search(r"status:\s+([A-Z]+)", status)
+  if cur_status.group(1) == "RUNNING":
+    print "Instance is running successfully."
+    return 0
+  else:
+    raise BenchmarkError(("Instance is not running"
+                          ". Current status: {}").format(cur_status.group(1)))
 
 
-def FormatRemoteDestination(username, remotehost, dest="./"):
-  """This function returns a formatted remote host for scp.
+def TryFunctionWithTimeout(func, error_handler, num_tries, sleep_bt_attempts,
+                           *args, **kwargs):
+  """The function tries to run a function without any exception.
 
+  The function tries for a certain number of tries. If it cannot succeed,
+  it raises BenchmarkError.
   Args:
-    username: username on remote host
-    remotehost: name of remotehost
-    dest: destination path on remote host. default: ./
-  Returns:
-    A formatted string of remote location for scp
+    func: the function to try running without exception
+    error_handler: the exception that the function should catch and keep trying.
+    num_tries: number of tries it should make before raising the final
+    exception
+    sleep_bt_attempts: number of seconds to sleep between each retry
+    *args: arguments to the function
+    **kwargs: named arguments to the function
+  Raises:
+    BenchmarkError: When all tries are failed.
   """
-  return ("{}:\"{}\"").format(FormatRemoteHost(username, remotehost), dest)
+  count = num_tries
+  while count > 0:
+    try:
+      func(*args, **kwargs)
+      return
+    except error_handler as e:
+      count -= 1
+      print e
+      print ("Problem in connecting. Trying again after"
+             " {}s. Total try left: {}.").format(sleep_bt_attempts, count)
+    time.sleep(sleep_bt_attempts)
+  raise BenchmarkError("All tries failed.")
 
 
 def RunBenchmark(args, logfile):
@@ -47,143 +76,106 @@ def RunBenchmark(args, logfile):
     args: the arguments provided to the top-level Python script
     logfile: an opened filestream for logging
   Raises:
-    RuntimeError: Raised when scp cannot connect
+    BenchmarkError: Raised when scp cannot connect
   """
+  scripts_path = os.path.realpath(args.scripts_path)
+  envoy_config_path = os.path.realpath(args.envoy_config_path)
+  result_dir = os.path.realpath(args.result_dir)
 
-  if args.create_delete == "yes" or args.create_delete.strip() == "y":
+  if args.create_delete:
     sh_utils.RunGCloudCompute(["instances", "create", "--zone",
                                args.zone, args.vm_name, "--custom-cpu",
                                str(args.cpu), "--custom-memory",
                                str(args.ram), "--image-family",
                                args.os_img_family, "--image-project",
-                               args.os_img_project],
+                               args.os_img_project], args.project,
                               logfile=logfile)
     print "Instance created successfully."
   else:
-    print ("You have selected not to create the Instance. "
-           "No Instance is created")
+    print "Instance creation is skipped due to --no-create_delete"
 
-  sh_utils.RunCommand(["gcloud", "config", "set", "compute/zone", args.zone],
-                      logfile=logfile)
-  sh_utils.RunCommand(["gcloud", "config", "set", "project", args.project],
-                      logfile=logfile)
+  # sh_utils.RunCommand(["gcloud", "config", "set", "compute/zone", args.zone],
+  #                     logfile=logfile)
+  # sh_utils.RunCommand(["gcloud", "config", "set", "project", args.project],
+  #                     logfile=logfile)
 
-  args.scripts_path = os.path.realpath(args.scripts_path)
-  args.envoy_config_path = os.path.realpath(args.envoy_config_path)
-  args.result_dir = os.path.realpath(args.result_dir)
+  # sleep between attemps is hardcoded here, for now
+  TryFunctionWithTimeout(CheckStatus, BenchmarkError, args.num_retries,
+                         args.sleep_bt_retry, args)
 
-  # the following loop checks whether the current instance is up and running
-  while True:
-    # status = pexpect.spawn(("gcloud compute instances describe {} --zone"
-    #                         " {}").format(args.vm_name, args.zone),
-    #                        logfile=logfile)
-    try:
-      status = subprocess.check_output(sh_utils.GetGcloud([
-          "instances", "describe",
-          args.vm_name, "--zone",
-          args.zone]))
-      cur_status = re.search(r"status:\s+([A-Z]+)", status)
-      if cur_status.group(1) == "RUNNING":
-        print "Instance is running successfully."
-        break
-      else:
-        print "Instance is not running. Current status: {}.".format(
-            cur_status.group(1))
-    except subprocess.CalledProcessError as e:
-      print ("Status is not found. "
-             "There is some problem in parsing the status of the Instance.")
-      raise BenchmarkError(e)
-
-  sh_utils.RunCommand(["chmod", "766", "transfer_files.sh",
-                       "run_remote_scripts.sh"],
-                      logfile=logfile)
-
-  # # TODO(sohamcodes):remote envoy binary is hardcoded here.
-  # # It can be made dynamic.
-  count = 15  # scp will be tried 15 times before we say it's failed
-  while count > 0:
-    try:
-      sh_utils.RunSCPLocalToRemote([args.local_envoy_binary_path,
-                                    FormatRemoteDestination(args.username,
-                                                            args.vm_name,
-                                                            "./envoy-fastbuild"
-                                                           )],
-                                   logfile=logfile)
-      break  # if it comes here then scp was successful
-    except RuntimeError as e:
-      print e
-      count -= 1
-      print ("Port 22 is not ready yet. Trying again after 5s. "
-             "Total try left: {}").format(count)
-      time.sleep(5)
-
-  if count == 0:
-    raise RuntimeError("scp cannot connect to the remote machine, {}".format(
-        args.vm_name))
-
+  TryFunctionWithTimeout(sh_utils.RunSCPLocalToRemote, RuntimeError,
+                         args.num_retries, args.sleep_bt_retry,
+                         [args.local_envoy_binary_path], args.username,
+                         args.vm_name, dest="./envoy-fastbuild",
+                         logfile=logfile, zone=args.zone,
+                         project=args.project)
   print "Envoy binary transfer complete."
 
-  sh_utils.RunSCPLocalToRemote(["{}/*".format(args.scripts_path),
-                                FormatRemoteDestination(args.username,
-                                                        args.vm_name)],
-                               logfile=logfile)
-
+  sh_utils.RunSCPLocalToRemote(["{}/*".format(scripts_path)], args.username,
+                               args.vm_name,
+                               logfile=logfile,
+                               zone=args.zone, project=args.project)
   print "Script transfer complete."
 
-  sh_utils.RunSSHCommand([FormatRemoteHost(args.username, args.vm_name),
-                          "--command", "mkdir -p \"envoy-configs\""],
-                         logfile=logfile)
+  sh_utils.RunSSHCommand(args.username, args.vm_name,
+                         args=["--command", "mkdir -p \"envoy-configs\""],
+                         logfile=logfile,
+                         zone=args.zone, project=args.project)
 
-  sh_utils.RunSCPLocalToRemote(["{}/*".format(args.envoy_config_path),
-                                FormatRemoteDestination(args.username,
-                                                        args.vm_name,
-                                                        dest="./envoy-configs/")
-                               ],
-                               logfile=logfile)
+  sh_utils.RunSCPLocalToRemote(["{}/*".format(envoy_config_path)],
+                               args.username, args.vm_name,
+                               dest="./envoy-configs/",
+                               logfile=logfile,
+                               zone=args.zone, project=args.project)
   print "Envoy configs transfer complete. Setting up the environment."
 
-  if args.skip_setup == "no" or args.create_delete.strip() == "n":
-    sh_utils.RunSSHCommand([FormatRemoteHost(args.username, args.vm_name),
-                            "--command", "sudo chmod +x *.sh", "--", "-t"],
-                           logfile=logfile)
+  if args.setup:
+    sh_utils.RunSSHCommand(args.username, args.vm_name,
+                           args=["--command", "sudo chmod +x *.sh", "--", "-t"],
+                           logfile=logfile,
+                           zone=args.zone, project=args.project)
 
-    sh_utils.RunSSHCommand([FormatRemoteHost(args.username, args.vm_name),
-                            "--command",
-                            "sudo bash ./init-script.sh {}".format(
-                                args.username),
-                            "--", "-t"],
-                           logfile=logfile)
+    sh_utils.RunSSHCommand(args.username, args.vm_name,
+                           args=["--command",
+                                 "sudo bash ./init-script.sh {}".format(
+                                     args.username),
+                                 "--", "-t"],
+                           logfile=logfile,
+                           zone=args.zone, project=args.project)
     print "Setup complete. Running Benchmark."
   else:
-    print "You have selected not to run setup."
+    print "Setup is skipped due to --no-setup."
 
   # TODO(sohamcodes): this currently takes a fixed config for Envoy. It needs
   # to be changed in future to take multiple configs and run independently.
-  sh_utils.RunSSHCommand([FormatRemoteHost(args.username, args.vm_name),
-                          "--command", "python distribute_proc.py "
-                          "./envoy-fastbuild ./envoy-configs/"
-                          "simple-loopback.json result.txt"], logfile=logfile)
+  sh_utils.RunSSHCommand(args.username, args.vm_name,
+                         args=["--command",
+                               ("python distribute_proc.py "
+                                "./envoy-fastbuild ./envoy-configs/"
+                                "simple-loopback.json result.txt")],
+                         logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
-  sh_utils.RunSCPRemoteToLocal([FormatRemoteDestination(args.username,
-                                                        args.vm_name,
-                                                        "./result.txt"),
-                                "{}/".format(args.result_dir)], logfile=logfile)
+  sh_utils.RunSCPRemoteToLocal([sh_utils.FormatRemoteDestination(
+      args.username, args.vm_name, "./result.txt"),
+                                "{}/".format(result_dir)], logfile=logfile,
+                               zone=args.zone, project=args.project)
 
   print "Check {}/result.txt file.".format(
-      args.result_dir)
+      result_dir)
 
-  if args.create_delete == "yes" or args.create_delete.strip() == "y":
+  if args.create_delete:
     print "Deleting instance. Wait..."
     # pexpect.run does not take argument as arrays
-    pexpect.run("gcloud compute instances delete {}".format(args.vm_name),
+    pexpect.run(("gcloud compute --project {}"
+                 " instances delete {} --zone {}").format(
+                     args.project, args.vm_name, args.zone),
                 events={"Do you want to continue (Y/n)?": "Y\n"},
                 logfile=logfile,
                 timeout=None)
     print "Instance deleted."
   else:
-    print ("You have selected not to delete the Instance. "
-           "No Instance is not deleted.")
+    print "Instance deletion is skipped due to --no-create_delete."
 
 
 def main():
@@ -229,13 +221,31 @@ def main():
   parser.add_argument("--logfile",
                       help="the local log file for this script. New log will be"
                            "appended to this file.", default="benchmark.log")
+  parser.add_argument("--num_retries",
+                      help="the number of retries for a single command.",
+                      type=int, default=15)
+  parser.add_argument("--sleep_bt_retry",
+                      help="number of seconds to sleep between each retry.",
+                      type=int, default=5)
 
-  parser.add_argument("--create_delete", help="Do you want to create/delete"
-                                              " a VM? (yes/no)",
-                      default="yes")
-  parser.add_argument("--skip_setup", help="Do you want to skip the setup?"
-                                           "(yes/no)",
-                      default="yes")
+  create_del_parser = parser.add_mutually_exclusive_group(required=False)
+  create_del_parser.add_argument("--create_delete", dest="create_delete",
+                                 action="store_true",
+                                 help="if you want to create/delete new VM.")
+  create_del_parser.add_argument("--no-create_delete", dest="create_delete",
+                                 action="store_false",
+                                 help=("if you don't want to "
+                                       "create/delete new VM."))
+  parser.set_defaults(create_delete=True)
+
+  skip_setup_parser = parser.add_mutually_exclusive_group(required=False)
+  skip_setup_parser.add_argument("--setup", dest="setup",
+                                 action="store_true",
+                                 help="if you want to run setup.")
+  skip_setup_parser.add_argument("--no-setup", dest="setup",
+                                 action="store_false",
+                                 help="if you want to skip setup.")
+  parser.set_defaults(setup=True)
 
   # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and
   # h2load runs on the VM, by adding more top level parameters
