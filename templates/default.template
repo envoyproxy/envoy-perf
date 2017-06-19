@@ -11,7 +11,7 @@
 # Please see /usr/share/doc/nginx-doc/examples/ for more detailed examples.
 ##
 
-# Default server configuration for nginx
+# Default server configuration
 #
 server {
 	#listen 80 http2 default_server;
@@ -19,8 +19,8 @@ server {
 
 	# SSL configuration
 	#
-	 listen 4500 ssl http2 default_server;
-	 listen [::]:4500 ssl http2 default_server;
+	 listen {{ port_no }} ssl http2 default_server;
+	 listen [::]:{{ port_no }} ssl http2 default_server;
 
 	#
 	# Note: You should disable gzip for SSL traffic.
