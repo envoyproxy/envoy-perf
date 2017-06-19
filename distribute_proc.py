@@ -1,11 +1,10 @@
 """This module executes h2load, Nginx and Envoy on separate cores."""
 
 import argparse
-import json
-import pexpect
-
 from collections import defaultdict
+import json
 
+import pexpect
 from process import Process
 
 

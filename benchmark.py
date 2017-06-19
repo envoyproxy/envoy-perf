@@ -34,7 +34,7 @@ def CheckStatus(args):
     return None
   else:
     return ("Instance is not running"
-           ". Current status: {}").format(cur_status.group(1))
+            ". Current status: {}").format(cur_status.group(1))
 
 
 def TryFunctionWithTimeout(func, error_handler, num_tries,
@@ -185,17 +185,17 @@ def main():
                            " that you want to create",
                       default="envoy-vm")
   parser.add_argument("--local_envoy_binary_path",
-                      help="local absolute path of the envoy binary",
+                      help="local relative path of the envoy binary",
                       default="./envoy-fastbuild")
   parser.add_argument("--scripts_path",
-                      help="local absolute path to the directory of all helper"
+                      help="local relative path to the directory of all helper"
                            " scripts and configs", default="./")
   parser.add_argument("--envoy_config_path",
-                      help="local absolute path to the directory of "
+                      help="local relative path to the directory of "
                            "the envoy configs",
                       default="./envoy-configs")
   parser.add_argument("--result_dir",
-                      help="local absolute path to the directory of the "
+                      help="local relative path to the directory of the "
                            "benchmarking result file",
                       default="./")
   parser.add_argument("--username",

@@ -23,15 +23,15 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 	  --vm_name		name of the virtual machine that you want to create
 		                (default: envoy-vm)
 	  --local_envoy_binary_path
-		                local absolute path of the envoy binary (default:
+		                local relative path of the envoy binary (default:
 		                ./envoy-fastbuild)
-	  --scripts_path	local absolute path to the directory of all helper
+	  --scripts_path	local relative path to the directory of all helper
 		                scripts and configs (default: ./)
 	  --envoy_config_path
-		                local absolute path to the directory of the envoy
+		                local relative path to the directory of the envoy
 		                configs (default: ./envoy-configs)
 	  --result_dir
-		                local absolute path to the directory of the
+		                local relative path to the directory of the
 		                benchmarking result file (default: ./)
 	  --username   		username on the VM in the cloud-platform (default:
 		                envoy)
