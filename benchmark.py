@@ -20,10 +20,9 @@ def CheckStatus(args):
 
   Args:
     args: all the arguments to the program
-  Raises:
-    BenchmarkError: If instance is not RUNNING
   Returns:
-    Returns 0, if everything is fine
+    Returns None, if everything is fine
+    Otherwise, return the error message and status parsed
   """
   status = subprocess.check_output(sh_utils.GetGcloud([
       "instances", "describe",
@@ -34,7 +33,7 @@ def CheckStatus(args):
     print "Instance is running successfully."
     return None
   else:
-    raise ("Instance is not running"
+    return ("Instance is not running"
            ". Current status: {}").format(cur_status.group(1))
 
 
@@ -66,15 +65,16 @@ def TryFunctionWithTimeout(func, error_handler, num_tries,
         print ret_val
     except error_handler as e:
       print e
-    print ("Problem in connecting. Trying again after"
-           " {}s. Total try left: {}.").format(sleep_between_attempt_secs,
-                                               count)
+    print ("Problem running function, {}. Trying again after"
+           " {}s. Total tries left: {}.").format(func,
+                                                 sleep_between_attempt_secs,
+                                                 count)
     time.sleep(sleep_between_attempt_secs)
   raise BenchmarkError("All tries failed.")
 
 
 def RunBenchmark(args, logfile):
-  """This function actually runs the whole benchmarking script.
+  """This function provides top-level control over benchmark execution.
 
   Args:
     args: the arguments provided to the top-level Python script
@@ -128,7 +128,7 @@ def RunBenchmark(args, logfile):
   print "Envoy configs transfer complete. Setting up the environment."
 
   if args.setup:
-    print "Setup will take some time. Wait..."
+    print "Setup started (this may take some time)..."
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command", "sudo chmod +x *.sh", "--", "-t"],
                            logfile=logfile,
@@ -248,9 +248,7 @@ def main():
 
   args = parser.parse_args()
 
-  try:
-    logfile = open(args.logfile, "ab")
-  finally:
+  with open(args.logfile, "ab") as logfile:
     RunBenchmark(args, logfile)
 
 

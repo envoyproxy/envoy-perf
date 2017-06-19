@@ -16,7 +16,7 @@ Install the following packages (possibly running the below commands): `pexpect`
 
 Run the benchmarking script, as follows with python2:
 
-	python2 benchmark.py $VM_NAME $ENVOY_BINARY $SCRIPTS $ENVOY_CONFIG $RESULT $USERNAME
+	python2 benchmark.py --local_envoy_binary_path $ENVOY_BINARY --scripts_path $SCRIPTS --envoy_config_path $ENVOY_CONFIG --result_dir $RESULT --username $USERNAME
 
 The above command will create a VM in the `us-east1-b` zone (default) with the name, `envoy-vm`. The VM will have, by default, 20 CPUs, 76GB RAM and run Ubuntu 16.04 LTS under `envoy-ci` project. All the output and errors will be written in a file, named `benchmark.log`. You can change these default settings by providing the following arguments to the above Python script:
 
@@ -40,14 +40,14 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 	  --cpu             number of CPU cores. (default: 20)
 	  --ram             amount of ram in the VM in MB. (default: 76)
 	  --os_img_family
-		                the os in which you want the benchmark. (default:
+		                the OS in which you want the benchmark. (default:
 		                ubuntu-1604-lts)
 	  --os_img_project
-		                the project in which the os can be found. (default:
+		                the project in which the OS can be found. (default:
 		                ubuntu-os-cloud)
 	  --project     	the project name. (default: envoy-ci)
-	  --logfile     	the local log file for this script. New log will
-		                beappended to this file. (default: benchmark.log)
+	  --logfile     	the local log file for this script. New log messages 
+		                are appended to this file. (default: benchmark.log)
 	 --num_retries      the number of retries for a single command. (default:
                         15)
 	  --sleep_between_retry
