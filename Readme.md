@@ -6,7 +6,7 @@
 Follow these set-up before running the benchmarking script.
 
 1. Keep your envoy-binary in an accessible location, `$ENVOY_BINARY`.
-2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`. The scripts and Makefiles refer to the same files that are included in this benchmarking package.
+2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`. The scripts, Makefiles refer to the same files that are included in this benchmarking package.
 3. Keep all the Envoy configurations in a directory, `$ENVOY_CONFIG`.
 4. Select a directory in which you want to keep the result, `$RESULT`.
 
@@ -16,7 +16,7 @@ Install the following packages (possibly running the below commands): `pexpect`
 
 Run the benchmarking script, as follows with python2:
 
-	python2 benchmark.py
+	python2 benchmark.py $VM_NAME $ENVOY_BINARY $SCRIPTS $ENVOY_CONFIG $RESULT $USERNAME
 
 The above command will create a VM in the `us-east1-b` zone (default) with the name, `envoy-vm`. The VM will have, by default, 20 CPUs, 76GB RAM and run Ubuntu 16.04 LTS under `envoy-ci` project. All the output and errors will be written in a file, named `benchmark.log`. You can change these default settings by providing the following arguments to the above Python script:
 
@@ -35,10 +35,10 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 		                benchmarking result file (default: ./)
 	  --username   		username on the VM in the cloud-platform (default:
 		                envoy)
-	  --zone            	the zone where you want to create the VM. (default:
+	  --zone            the zone where you want to create the VM. (default:
 		                us-east1-b)
-	  --cpu             	number of CPU cores. (default: 20)
-	  --ram             	amount of ram in the VM in MB. (default: 76)
+	  --cpu             number of CPU cores. (default: 20)
+	  --ram             amount of ram in the VM in MB. (default: 76)
 	  --os_img_family
 		                the os in which you want the benchmark. (default:
 		                ubuntu-1604-lts)
@@ -48,9 +48,13 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 	  --project     	the project name. (default: envoy-ci)
 	  --logfile     	the local log file for this script. New log will
 		                beappended to this file. (default: benchmark.log)
-	  --create_delete
-		                Do you want to create/delete a VM? (yes/no) (default:
-		                yes)
-	  --skip_setup
-		                Do you want to skip the setup?(yes/no) (default: yes)
+	 --num_retries      the number of retries for a single command. (default:
+                        15)
+	  --sleep_between_retry
+		                number of seconds to sleep between each retry.
+		                (default: 5)
+	  --create_delete       if you want to create/delete new VM. (default: True)
+	  --no-create_delete
+	  --setup               if you want to run setup. (default: True)
+	  --no-setup
 	                        
