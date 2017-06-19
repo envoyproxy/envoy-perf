@@ -32,14 +32,14 @@ def CheckStatus(args):
   cur_status = re.search(r"status:\s+([A-Z]+)", status)
   if cur_status.group(1) == "RUNNING":
     print "Instance is running successfully."
-    return 0
+    return None
   else:
-    raise BenchmarkError(("Instance is not running"
-                          ". Current status: {}").format(cur_status.group(1)))
+    raise ("Instance is not running"
+           ". Current status: {}").format(cur_status.group(1))
 
 
-def TryFunctionWithTimeout(func, error_handler, num_tries, sleep_bt_attempts,
-                           *args, **kwargs):
+def TryFunctionWithTimeout(func, error_handler, num_tries,
+                           sleep_between_attempt_secs, *args, **kwargs):
   """The function tries to run a function without any exception.
 
   The function tries for a certain number of tries. If it cannot succeed,
@@ -49,7 +49,7 @@ def TryFunctionWithTimeout(func, error_handler, num_tries, sleep_bt_attempts,
     error_handler: the exception that the function should catch and keep trying.
     num_tries: number of tries it should make before raising the final
     exception
-    sleep_bt_attempts: number of seconds to sleep between each retry
+    sleep_between_attempt_secs: number of seconds to sleep between each retry
     *args: arguments to the function
     **kwargs: named arguments to the function
   Raises:
@@ -58,14 +58,18 @@ def TryFunctionWithTimeout(func, error_handler, num_tries, sleep_bt_attempts,
   count = num_tries
   while count > 0:
     try:
-      func(*args, **kwargs)
-      return
-    except error_handler as e:
+      ret_val = func(*args, **kwargs)
       count -= 1
+      if not ret_val:
+        return
+      else:
+        print ret_val
+    except error_handler as e:
       print e
-      print ("Problem in connecting. Trying again after"
-             " {}s. Total try left: {}.").format(sleep_bt_attempts, count)
-    time.sleep(sleep_bt_attempts)
+    print ("Problem in connecting. Trying again after"
+           " {}s. Total try left: {}.").format(sleep_between_attempt_secs,
+                                               count)
+    time.sleep(sleep_between_attempt_secs)
   raise BenchmarkError("All tries failed.")
 
 
@@ -94,17 +98,11 @@ def RunBenchmark(args, logfile):
   else:
     print "Instance creation is skipped due to --no-create_delete"
 
-  # sh_utils.RunCommand(["gcloud", "config", "set", "compute/zone", args.zone],
-  #                     logfile=logfile)
-  # sh_utils.RunCommand(["gcloud", "config", "set", "project", args.project],
-  #                     logfile=logfile)
-
-  # sleep between attemps is hardcoded here, for now
   TryFunctionWithTimeout(CheckStatus, BenchmarkError, args.num_retries,
-                         args.sleep_bt_retry, args)
+                         args.sleep_between_retry, args)
 
   TryFunctionWithTimeout(sh_utils.RunSCPLocalToRemote, RuntimeError,
-                         args.num_retries, args.sleep_bt_retry,
+                         args.num_retries, args.sleep_between_retry,
                          [args.local_envoy_binary_path], args.username,
                          args.vm_name, dest="./envoy-fastbuild",
                          logfile=logfile, zone=args.zone,
@@ -130,6 +128,7 @@ def RunBenchmark(args, logfile):
   print "Envoy configs transfer complete. Setting up the environment."
 
   if args.setup:
+    print "Setup will take some time. Wait..."
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command", "sudo chmod +x *.sh", "--", "-t"],
                            logfile=logfile,
@@ -224,7 +223,7 @@ def main():
   parser.add_argument("--num_retries",
                       help="the number of retries for a single command.",
                       type=int, default=15)
-  parser.add_argument("--sleep_bt_retry",
+  parser.add_argument("--sleep_between_retry",
                       help="number of seconds to sleep between each retry.",
                       type=int, default=5)
 
@@ -233,9 +232,7 @@ def main():
                                  action="store_true",
                                  help="if you want to create/delete new VM.")
   create_del_parser.add_argument("--no-create_delete", dest="create_delete",
-                                 action="store_false",
-                                 help=("if you don't want to "
-                                       "create/delete new VM."))
+                                 action="store_false")
   parser.set_defaults(create_delete=True)
 
   skip_setup_parser = parser.add_mutually_exclusive_group(required=False)
@@ -243,8 +240,7 @@ def main():
                                  action="store_true",
                                  help="if you want to run setup.")
   skip_setup_parser.add_argument("--no-setup", dest="setup",
-                                 action="store_false",
-                                 help="if you want to skip setup.")
+                                 action="store_false")
   parser.set_defaults(setup=True)
 
   # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and

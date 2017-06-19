@@ -100,6 +100,9 @@ def GetGcloud(args, project=None):
   return command
 
 
+# TODO(sohamcodes): pexpect.spawn can be changed to subprocess call
+# However, timeout for subprocess is available only on python3
+# So, we can implement it later.
 def RunCommand(args, timeout=None, logfile=None):
   """Runs a given command through pexpect.run.
 

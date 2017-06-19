@@ -4,6 +4,8 @@ import argparse
 import json
 import pexpect
 
+from collections import defaultdict
+
 from process import Process
 
 
@@ -19,16 +21,9 @@ def AllocProcessToCores(start_core, end_core, out, proc_command):
     proc_command: the command to run on designated cores.
   Returns:
     The taskset process id is returned
-  Raises:
-    ValueError: When invalid or no proc_command is given
   """
-  if proc_command:
-    taskset_command_args = ["-ac", "{}-{}".format(start_core, end_core)]
-    taskset_command_args.extend(proc_command)
-    # taskset_command = "taskset -ac {}-{} {}".format(start_core,
-    #                                                 end_core, proc_command)
-  else:
-    raise ValueError("Invalid/Unavailable proc_command: {}", proc_command)
+  taskset_command_args = ["-ac", "{}-{}".format(start_core, end_core)]
+  taskset_command_args.extend(proc_command)
   taskset_proc = Process("taskset", out, args=taskset_command_args)
   taskset_proc.RunProcess()
   return taskset_proc
@@ -229,8 +224,7 @@ def ParseStartAndEndCore(comma_sep_string):
   Returns:
     A tuple of two separated values
   """
-  values = comma_sep_string.split(",")
-  return (values[0], values[1])
+  return comma_sep_string.split(",")
 
 
 def AddResultToJsonDict(single_result_json, full_dict, title):
@@ -242,9 +236,6 @@ def AddResultToJsonDict(single_result_json, full_dict, title):
     title: this does not need to be unique, if it matches with any existing
     value, then new result will be appended in the existing title category
   """
-
-  if title not in full_dict:
-    full_dict[title] = []
 
   full_dict[title].append(single_result_json)
 
@@ -347,7 +338,7 @@ def main():
                                       outfile, envoy_command)
   print "envoy process id is {}".format(envoy_process.pid)
 
-  result_json = {}
+  result_json = defaultdict(list)
   logfile = open("h2load_log.log", "ab+")
 
   for _ in xrange(args.num_iter):
