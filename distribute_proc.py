@@ -8,6 +8,7 @@ import pexpect
 from process import Process
 
 
+# TODO(sohamcodes): This function needs to eventually support arbitrary mask.
 def AllocProcessToCores(start_core, end_core, out, proc_command):
   """Allocate processes to designated stretch of cores.
 
@@ -29,7 +30,7 @@ def AllocProcessToCores(start_core, end_core, out, proc_command):
 
 
 def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
-  """Runs the h2load command and returns a json dictionary of parsed result.
+  """Runs the h2load command and returns a JSON dictionary of parsed result.
 
   Args:
     h2load_command: the command to run for h2load. can be wrapped over other
@@ -37,7 +38,7 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
     h2load_timeout: the number of seconds pspawn would wait before timeout.
     logfile: An opened filestream to write the log of h2load run
   Returns:
-    The Json dictionaries corresponding to h2load output.
+    The JSON dictionaries corresponding to h2load output.
   Raises:
     RuntimeError: When h2load run causes some error
   """
@@ -227,10 +228,10 @@ def ParseStartAndEndCore(comma_sep_string):
 
 
 def AddResultToJsonDict(single_result_json, full_dict, title):
-  """This function adds a single result to the full json dictionary.
+  """This function adds a single result to the full JSON dictionary.
 
   Args:
-    single_result_json: the statistics of a single h2load run in json
+    single_result_json: the statistics of a single h2load run in JSON
     full_dict: the dictionary in which single result will be appended.
     title: this does not need to be unique, if it matches with any existing
     value, then new result will be appended in the existing title category
@@ -239,20 +240,20 @@ def AddResultToJsonDict(single_result_json, full_dict, title):
   full_dict[title].append(single_result_json)
 
 
-def GetNginxConfig():
+def GetNginxCommandLineArguments():
   """This function returns the nginx configuration.
 
   Right now, it just returns hardcoded values. Later on, we might return user-
   provided values
   Returns:
-    Returns the nginx configuration
+    Returns the Nginx commandline arguments
   """
   return ["-c", "/etc/nginx/nginx.conf", "-g", "daemon off;"]
 
 
 # TODO(sohamcodes): debug is always included now. Later on, debug should be
 # enabled based on the debug-mode
-def GetEnvoyConfig(envoy_config_path):
+def GetEnvoyCommandLineArguments(envoy_config_path):
   """This function returns the Envoy configuration.
 
   Args:
@@ -321,9 +322,9 @@ def main():
     h2load_start_core, h2load_end_core = ParseStartAndEndCore(args.h2load_cores)
 
   # allocate nginx to designated cores
-  output = "nginx_out.txt"
+  output = "nginx_out.log"
   nginx_command = ["nginx"]
-  nginx_command.extend(GetNginxConfig())
+  nginx_command.extend(GetNginxCommandLineArguments())
   nginx_process = AllocProcessToCores(nginx_start_core,
                                       nginx_end_core, output,
                                       nginx_command)
@@ -331,8 +332,8 @@ def main():
 
   # allocate envoy to designated cores
   envoy_command = [args.envoy_binary_path]
-  envoy_command.extend(GetEnvoyConfig(args.envoy_config_path))
-  outfile = "envoy_out.txt"  # this is envoy output file
+  envoy_command.extend(GetEnvoyCommandLineArguments(args.envoy_config_path))
+  outfile = "envoy_out.log"  # this is envoy output file
   envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
                                       outfile, envoy_command)
   print "envoy process id is {}".format(envoy_process.pid)
@@ -348,9 +349,9 @@ def main():
                           args.h2load_reqs, args.h2load_clients,
                           args.h2load_conns, args.h2load_threads)
 
-    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout,
-                                          logfile=logfile),
-                        result_json, "direct")
+    result_json["direct"].append(RunAndParseH2Load(
+        h2load_command, args.h2load_timeout, logfile=logfile))
+
     print "h2load direct is done."
 
     h2load_command = ("taskset -ac {}-{} "
@@ -358,9 +359,8 @@ def main():
                           h2load_start_core, h2load_end_core, args.envoy_port,
                           args.h2load_reqs, args.h2load_clients,
                           args.h2load_conns, args.h2load_threads)
-    AddResultToJsonDict(RunAndParseH2Load(h2load_command, args.h2load_timeout,
-                                          logfile=logfile),
-                        result_json, "envoy")
+    result_json["envoy"].append(RunAndParseH2Load(
+        h2load_command, args.h2load_timeout, logfile=logfile))
     print "h2load with envoy is done."
 
   # killing nginx, envoy processes
