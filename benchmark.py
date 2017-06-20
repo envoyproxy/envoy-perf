@@ -151,16 +151,16 @@ def RunBenchmark(args, logfile):
                          args=["--command",
                                ("python distribute_proc.py "
                                 "./envoy-fastbuild ./envoy-configs/"
-                                "simple-loopback.json result.txt")],
+                                "simple-loopback.json result.json")],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
   sh_utils.RunSCPRemoteToLocal([sh_utils.FormatRemoteDestination(
-      args.username, args.vm_name, "./result.txt"),
+      args.username, args.vm_name, "./result.json"),
                                 "{}/".format(result_dir)], logfile=logfile,
                                zone=args.zone, project=args.project)
 
-  print "Check {}/result.txt file.".format(
+  print "Check {}/result.json file.".format(
       result_dir)
 
   if args.create_delete:
