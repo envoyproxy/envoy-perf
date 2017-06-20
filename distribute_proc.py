@@ -321,7 +321,7 @@ def main():
     h2load_start_core, h2load_end_core = ParseStartAndEndCore(args.h2load_cores)
 
   # allocate nginx to designated cores
-  output = "nginx_out.txt"
+  output = "nginx_out.log"
   nginx_command = ["nginx"]
   nginx_command.extend(GetNginxConfig())
   nginx_process = AllocProcessToCores(nginx_start_core,
@@ -332,7 +332,7 @@ def main():
   # allocate envoy to designated cores
   envoy_command = [args.envoy_binary_path]
   envoy_command.extend(GetEnvoyConfig(args.envoy_config_path))
-  outfile = "envoy_out.txt"  # this is envoy output file
+  outfile = "envoy_out.log"  # this is envoy output file
   envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
                                       outfile, envoy_command)
   print "envoy process id is {}".format(envoy_process.pid)
