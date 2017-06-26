@@ -215,7 +215,7 @@ def main():
                       help="the project in which the os can be found.",
                       default="ubuntu-os-cloud")
   parser.add_argument("--project",
-                      help="the project name.",
+                      help="the project name in Google Cloud.",
                       default="envoy-ci")
   parser.add_argument("--logfile",
                       help="the local log file for this script. New log will be"

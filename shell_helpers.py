@@ -82,17 +82,18 @@ def GetSSHCommand(username, remotehost, args=None, zone=None):
   return command
 
 
-def GetGcloud(args, project=None):
-  """Get gcloud command with arguments.
+def GetGcloud(args, project=None, service="compute"):
+  """Get gcloud compute command with arguments.
 
   Functionalities might be expanded later to run gcloud commands.
   Args:
     args: command with arguments as an array
     project: the project on which the glcoud compute will work
+    service: the service on gcloud that you want to use. default: compute
   Returns:
     returns thr formatted command for gcloud compute
   """
-  command = ["gcloud", "compute"]
+  command = ["gcloud", service]
   if project:
     command.extend(["--project", project])
 
@@ -210,4 +211,19 @@ def RunGCloudCompute(args, project, logfile=None):
   Returns:
     Returns the return value of RunCommand
   """
-  return RunCommand(GetGcloud(args, project), logfile=logfile)
+  return RunCommand(GetGcloud(args, project=project), logfile=logfile)
+
+
+def RunGCloudService(args, project, service, logfile=None):
+  """This function runs a gcloud `service` command.
+
+  Args:
+    args: command with arguments as an array
+    project: the project in which the remotehost belongs to
+    service: the service user wants to run on gcloud
+    logfile: an opened filestream to write log
+  Returns:
+    Returns the return value of RunCommand
+  """
+  return RunCommand(GetGcloud(args, project=project,
+                              service=service), logfile=logfile)
