@@ -8,36 +8,12 @@ import subprocess
 import database_helpers as db_utils
 import MySQLdb
 import pexpect
+import python_helpers as python_utils
 import shell_helpers as sh_utils
 
 
 class DataStoreError(Exception):
   pass
-
-
-def CreateMutuallyExclusiveArgument(parser, argument_name, help_string):
-  """The function creates a mututally exclusive argument on parser.
-
-  It just creates an argument against the `argument_name` on parser with a
-  required help_string. The given `argument_name` is set to True and the
-  --no-`argument_name` is set to False. It doesn't set the default value. The
-  caller needs to set the default against `argument_name`.
-  Args:
-    parser: the parser on which the new argument will be created.
-    argument_name: the name of the mutually exclusive argument. The caller needs
-    to manually set the default value of the argument.
-    help_string: the required help string on the `argument_name`
-  Returns/Yields:
-    It creates a mutually exclusive argument on parser.
-  """
-  temporary_parser = parser.add_mutually_exclusive_group(required=False)
-  temporary_parser.add_argument("--{}".format(argument_name),
-                                dest=argument_name, help=help_string,
-                                action="store_true")
-
-  temporary_parser.add_argument("--no-{}".format(argument_name),
-                                dest=argument_name,
-                                action="store_false")
 
 
 def CreateTable(connection, table_name):
@@ -53,6 +29,9 @@ def CreateTable(connection, table_name):
   create_table_statement = ("CREATE TABLE IF NOT EXISTS  {}"
                             "(id INTEGER NOT NULL AUTO_INCREMENT,"
                             "category VARCHAR(20) NOT NULL,"
+                            "time_of_entry DATETIME,"
+                            "runid VARCHAR(30),"
+                            "envoy_hash VARCHAR(40),"
                             "total_time INTEGER UNSIGNED,"
                             "time_for_1st_byte_max INTEGER UNSIGNED,"
                             "time_for_1st_byte_min INTEGER UNSIGNED,"
@@ -98,7 +77,7 @@ def CreateTable(connection, table_name):
 
 
 def GetMicrosecondData(data):
-  """The fucntion accepts a dictionary and returns microsecond data inside it.
+  """The function accepts a dictionary and returns microsecond data inside it.
 
   Based on the unit (s, ms, us) inside the dictionary, the function converts to
   microsecond value.
@@ -107,18 +86,18 @@ def GetMicrosecondData(data):
   Returns:
     A float value on the microsecond unit.
   """
+  assert data["unit"] == "us" or data["unit"] == "ms" or data["unit"] == "s"
+
   if data["unit"] == "us":
     return float(data["data"])
   elif data["unit"] == "ms":
     return float(data["data"]) * 1000
   elif data["unit"] == "s":
     return float(data["data"]) * 1000000
-  else:
-    return None
 
 
 def GetByteData(data):
-  """The fucntion accepts a dictionary and returns Bytes value inside it.
+  """The function accepts a dictionary and returns Bytes value inside it.
 
   Based on the unit (B, MB, KB), the function converts to Bytes value. It also
   works for B/s, MB/s, etc.
@@ -127,14 +106,15 @@ def GetByteData(data):
   Returns:
     A float value of the Bytes unit.
   """
+  assert (data["unit"].startswith("B") or data["unit"].startswith("K") or
+          data["unit"].startswith("M"))
+
   if data["unit"].startswith("B"):
-    return float(data["data"])
+    return int(data["data"])
   elif data["unit"].startswith("K"):
-    return float(data["data"]) * 1000
+    return int(float(data["data"]) * 1024)
   elif data["unit"].startswith("M"):
-    return float(data["data"]) * 1000000
-  else:
-    return None
+    return int(float(data["data"]) * 1024 * 1024)
 
 
 def JSONToInsertCommand(table, **kwargs):
@@ -143,8 +123,18 @@ def JSONToInsertCommand(table, **kwargs):
   command = "INSERT INTO {} ({}) VALUES ({});".format(table, keys, values)
   return command
 
+def Enquote(string):
+  """This function adds quotations around the string.
 
-def InsertIntoTable(connection, table, json_file):
+  Args:
+    string: input string
+  Returns:
+    A string with a starting and ending quote.
+  """
+  return "\"{}\"".format(string)
+
+
+def InsertIntoTable(connection, table, json_file, runid, envoy_hash):
   """The function inserts h2load result in JSON file into the provided table.
 
   The function takes an opened JSON filestream, loads the JSON structure inside
@@ -171,7 +161,7 @@ def InsertIntoTable(connection, table, json_file):
       # gracefully, probably by keeping consistency in the JSON format and
       # DB table column-names
       command = JSONToInsertCommand(
-          table, category="\"{}\"".format(key),
+          table, category=Enquote(key),
           total_time=GetMicrosecondData(row["total_time"]),
           time_for_1st_byte_max=GetMicrosecondData(
               row["time_for_1st_byte"]["max"]),
@@ -225,10 +215,12 @@ def InsertIntoTable(connection, table, json_file):
           traffic_total_headers_bytes=int(
               row["traffic_details"]["traffic_headers"]),
           traffic_total_savings=float(
-              row["traffic_details"]["traffic_savings%"])
+              row["traffic_details"]["traffic_savings%"]),
+          runid=Enquote(runid),
+          envoy_hash=Enquote(envoy_hash),
+          time_of_entry="NOW()"
           )
-      print command
-      print db_utils.ExecuteAndReturnResult(connection, command)
+      db_utils.ExecuteAndReturnResult(connection, command)
 
 
 def GetInstanceIP(instance_name, project):
@@ -250,7 +242,8 @@ def GetInstanceIP(instance_name, project):
 def main():
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
-  parser.add_argument("--instance_name", help="the name of the gcloud instance",
+  parser.add_argument("--db_instance_name",
+                      help="the name of the gcloud instance",
                       default="envoy-db-instance")
   parser.add_argument("--tier", help="the tier of GCloud SQL service",
                       default="db-n1-standard-2")
@@ -275,39 +268,48 @@ def main():
   parser.add_argument("--ownip", help=("the machine's IP from where"
                                        " the script is being run"),
                       default="127.0.0.1")
+  parser.add_argument("--envoy_hash",
+                      help="the hash of envoy version",
+                      default="xxxxxx")
+  parser.add_argument("--runid",
+                      help="the run id of this benchmark",
+                      default="0")
 
-  CreateMutuallyExclusiveArgument(parser, "create_instance",
-                                  ("turn on if you want to create a "
-                                   "Google Cloud SQL instance"))
+  python_utils.CreateMutuallyExclusiveArgument(parser, "create_instance",
+                                               ("turn on if you want to create"
+                                                " a Google Cloud SQL instance"))
   parser.set_defaults(create_instance=True)
 
-  CreateMutuallyExclusiveArgument(parser, "create_db",
-                                  "turn on if you want to create the DB")
+  python_utils.CreateMutuallyExclusiveArgument(parser, "create_db",
+                                               ("turn on if you want"
+                                                " to create the DB"))
   parser.set_defaults(create_db=True)
 
-  CreateMutuallyExclusiveArgument(parser, "delete_db",
-                                  "turn on if you want to delete the DB")
+  python_utils.CreateMutuallyExclusiveArgument(parser, "delete_db",
+                                               ("turn on if you want"
+                                                " to delete the DB"))
   parser.set_defaults(delete_db=True)
 
   args = parser.parse_args()
   logfile = open(args.logfile, "ab")
 
   if args.create_instance:
-    sh_utils.RunGCloudService(["instances", "create", args.instance_name,
+    sh_utils.RunGCloudService(["instances", "create", args.db_instance_name,
                                "--tier", args.tier], args.project,
                               "sql", logfile)
-    print "Google Cloud SQL Instance {} is created.".format(args.instance_name)
+    print "Google Cloud SQL Instance {} is created.".format(
+        args.db_instance_name)
   else:
     print "Instance creation is skipped due to --no-create_instance."
 
   sh_utils.RunGCloudService(["users", "set-password", args.username, "%",
-                             "--instance", args.instance_name, "--password",
+                             "--instance", args.db_instance_name, "--password",
                              args.password], project=args.project,
                             service="sql", logfile=logfile)
   print "Usernames and passwords are set."
 
   auth_ip_command = sh_utils.GetGcloud(
-      ["instances", "patch", args.instance_name,
+      ["instances", "patch", args.db_instance_name,
        "--authorized-networks", args.ownip],
       project=args.project, service="sql")
   auth_ip_command = " ".join(auth_ip_command)
@@ -315,9 +317,9 @@ def main():
               events={"Do you want to continue (Y/n)?": "Y\n"},
               logfile=logfile, timeout=None)
   print ("This machine is configured to use the Google"
-         " Cloud SQL Instance {}").format(args.instance_name)
+         " Cloud SQL Instance {}.").format(args.db_instance_name)
 
-  hostname = GetInstanceIP(args.instance_name, args.project)
+  hostname = GetInstanceIP(args.db_instance_name, args.project)
 
   if args.create_db:
     connection = MySQLdb.connect(host=hostname, user=args.username,
@@ -335,9 +337,9 @@ def main():
   # table will only be created if not exists
   CreateTable(connection, args.table_name)
   with open(args.json_result, "r") as f:
-    InsertIntoTable(connection, args.table_name, f)
-
+    InsertIntoTable(connection, args.table_name, f, args.runid, args.envoy_hash)
     connection.commit()
+    print "Data is inserted from JSON file to Database."
 
   if args.delete_db:
     db_utils.ExecuteAndReturnResult(connection,

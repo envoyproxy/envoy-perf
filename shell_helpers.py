@@ -82,8 +82,8 @@ def GetSSHCommand(username, remotehost, args=None, zone=None):
   return command
 
 
-def GetGcloud(args, project=None, service="compute"):
-  """Get gcloud compute command with arguments.
+def GetGcloud(args, project=None, service=None):
+  """Get gcloud command with arguments.
 
   Functionalities might be expanded later to run gcloud commands.
   Args:
@@ -93,7 +93,10 @@ def GetGcloud(args, project=None, service="compute"):
   Returns:
     returns thr formatted command for gcloud compute
   """
-  command = ["gcloud", service]
+  command = ["gcloud"]
+  if service:
+    command.append(service)
+
   if project:
     command.extend(["--project", project])
 
@@ -149,7 +152,7 @@ def RunSSHCommand(username, remotehost, args=None, logfile=None, zone=None,
     Returns the return value of RunCommand
   """
   command = GetGcloud(GetSSHCommand(username, remotehost, args=args, zone=zone),
-                      project=project)
+                      project=project, service="compute")
   return RunCommand(command, timeout=None,
                     logfile=logfile)
 
@@ -175,7 +178,7 @@ def RunSCPLocalToRemote(sourcefiles, username, remotehost, dest="./",
   if zone:
     command.extend(["--zone", zone])
   command = WrapOverBash(GetGcloud(command,
-                                   project=project))
+                                   project=project, service="compute"))
   # this is done to allow wild card characters through pexpect
   # command = "bash -c \"{}\"".format(command)
   return RunCommand(command, logfile=logfile)
@@ -197,7 +200,7 @@ def RunSCPRemoteToLocal(args, logfile=None, zone=None, project=None):
   command.extend(args)
   if zone:
     command.extend(["--zone", zone])
-  command = WrapOverBash(GetGcloud(command, project=project))
+  command = WrapOverBash(GetGcloud(command, project=project, service="compute"))
   return RunCommand(command, logfile=logfile)
 
 
@@ -211,7 +214,7 @@ def RunGCloudCompute(args, project, logfile=None):
   Returns:
     Returns the return value of RunCommand
   """
-  return RunCommand(GetGcloud(args, project=project), logfile=logfile)
+  return RunGCloudService(args, project, "compute", logfile=logfile)
 
 
 def RunGCloudService(args, project, service, logfile=None):

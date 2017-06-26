@@ -8,6 +8,7 @@ import subprocess
 import time
 
 import pexpect
+import python_helpers as python_utils
 import shell_helpers as sh_utils
 
 
@@ -27,7 +28,7 @@ def CheckStatus(args):
   status = subprocess.check_output(sh_utils.GetGcloud([
       "instances", "describe",
       args.vm_name, "--zone",
-      args.zone], project=args.project))
+      args.zone], project=args.project, service="compute"))
   cur_status = re.search(r"status:\s+([A-Z]+)", status)
   if cur_status.group(1) == "RUNNING":
     print "Instance is running successfully."
@@ -176,6 +177,35 @@ def RunBenchmark(args, logfile):
   else:
     print "Instance deletion is skipped due to --no-create_delete."
 
+  data_store_command = ("python store_data.py --ownip {}"
+                        " --runid {} --envoy_hash {}").format(
+                            args.ownip, args.runid, args.envoy_hash)
+
+  if args.create_db_instance:
+    data_store_command = ("{} --create_instance --db_instance_name {}").format(
+        data_store_command, args.db_instance_name
+    )
+  else:
+    data_store_command = "{} --no-create_instance".format(data_store_command)
+
+  if args.create_db:
+    data_store_command = ("{} --create_db --database {}").format(
+        data_store_command, args.database
+    )
+  else:
+    data_store_command = "{} --no-create_db".format(data_store_command)
+
+  if args.delete_db:
+    data_store_command = ("{} --delete_db").format(
+        data_store_command
+    )
+  else:
+    data_store_command = "{} --no-delete_db".format(data_store_command)
+
+  print data_store_command
+  pexpect.run(data_store_command, timeout=None, logfile=logfile)
+  print "Data stored into database."
+
 
 def main():
   parser = argparse.ArgumentParser(
@@ -226,22 +256,45 @@ def main():
   parser.add_argument("--sleep_between_retry",
                       help="number of seconds to sleep between each retry.",
                       type=int, default=5)
+  parser.add_argument("--db_instance_name",
+                      help="the name of the gcloud instance",
+                      default="envoy-db-instance")
+  parser.add_argument("--envoy_hash",
+                      help="the hash of envoy version",
+                      default="xxxxxx")
+  parser.add_argument("--runid",
+                      help="the run id of this benchmark",
+                      default="0")
+  parser.add_argument("--ownip", help=("the machine's IP from where"
+                                       " the script is being run"),
+                      default="127.0.0.1")
+  parser.add_argument("--database", help="name of the database",
+                      default="envoy_stat_db")
 
-  create_del_parser = parser.add_mutually_exclusive_group(required=False)
-  create_del_parser.add_argument("--create_delete", dest="create_delete",
-                                 action="store_true",
-                                 help="if you want to create/delete new VM.")
-  create_del_parser.add_argument("--no-create_delete", dest="create_delete",
-                                 action="store_false")
+  python_utils.CreateMutuallyExclusiveArgument(parser, "create_delete",
+                                               ("if you want to create/"
+                                                "delete new benchmarking VM."))
   parser.set_defaults(create_delete=True)
 
-  skip_setup_parser = parser.add_mutually_exclusive_group(required=False)
-  skip_setup_parser.add_argument("--setup", dest="setup",
-                                 action="store_true",
-                                 help="if you want to run setup.")
-  skip_setup_parser.add_argument("--no-setup", dest="setup",
-                                 action="store_false")
+  python_utils.CreateMutuallyExclusiveArgument(parser, "setup",
+                                               ("if you want to run"
+                                                " setup on benchmarking VM."))
   parser.set_defaults(setup=True)
+
+  python_utils.CreateMutuallyExclusiveArgument(parser, "create_db_instance",
+                                               ("turn on if you want to create"
+                                                " a Google Cloud SQL instance"))
+  parser.set_defaults(create_db_instance=True)
+
+  python_utils.CreateMutuallyExclusiveArgument(parser, "create_db",
+                                               ("turn on if you want"
+                                                " to create the DB"))
+  parser.set_defaults(create_db=True)
+
+  python_utils.CreateMutuallyExclusiveArgument(parser, "delete_db",
+                                               ("turn on if you want"
+                                                " to delete the DB"))
+  parser.set_defaults(delete_db=True)
 
   # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and
   # h2load runs on the VM, by adding more top level parameters
