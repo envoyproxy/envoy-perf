@@ -10,9 +10,14 @@ Follow these set-up before running the benchmarking script.
 3. Keep all the Envoy configurations in a directory, `$ENVOY_CONFIG`.
 4. Select a directory in which you want to keep the result, `$RESULT`.
 
-Install the following packages (possibly running the below commands): `pexpect`
+Google Cloud-related setup:
+1. Create a Service Account.
+2. Grant proper roles to the newly created Service Account, such as roles/owner.
+
+Install the following packages (possibly running the below commands): `pexpect` `python-matplotlib`
 
 1. `sudo pip install pexpect`
+2. `sudo apt-get install python-matplotlib`
 
 Run the benchmarking script, as follows with python2:
 

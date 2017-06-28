@@ -1,7 +1,8 @@
 """This file consists of generic Python helper functions."""
 
 
-def CreateMutuallyExclusiveArgument(parser, argument_name, help_string):
+def CreateBooleanArgument(parser, argument_name, help_string,
+                          **default_condition):
   """The function creates a mututally exclusive argument on parser.
 
   It just creates an argument against the `argument_name` on parser with a
@@ -13,6 +14,8 @@ def CreateMutuallyExclusiveArgument(parser, argument_name, help_string):
     argument_name: the name of the mutually exclusive argument. The caller needs
     to manually set the default value of the argument.
     help_string: the required help string on the `argument_name`
+    **default_condition: provide the default condition for the parser for this
+    boolean argument
   """
   temporary_parser = parser.add_mutually_exclusive_group(required=False)
   temporary_parser.add_argument("--{}".format(argument_name),
@@ -22,3 +25,4 @@ def CreateMutuallyExclusiveArgument(parser, argument_name, help_string):
   temporary_parser.add_argument("--no-{}".format(argument_name),
                                 dest=argument_name,
                                 action="store_false")
+  parser.set_defaults(**default_condition)

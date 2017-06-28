@@ -4,12 +4,14 @@
 import argparse
 import os
 import re
+import StringIO
 import subprocess
 import time
 
 import pexpect
-import python_helpers as python_utils
+import requests
 import shell_helpers as sh_utils
+import utils
 
 
 class BenchmarkError(Exception):
@@ -36,6 +38,13 @@ def CheckStatus(args):
   else:
     return ("Instance is not running"
             ". Current status: {}").format(cur_status.group(1))
+
+
+def GetOwnIP():
+  return requests.get(("http://metadata.google.internal/computeMetadata"
+                       "/v1/instance/"
+                       "network-interfaces/0/access-configs/0/external-ip"),
+                      headers={"Metadata-Flavor": "Google"}).content.strip()
 
 
 def TryFunctionWithTimeout(func, error_handler, num_tries,
@@ -85,7 +94,6 @@ def RunBenchmark(args, logfile):
   """
   scripts_path = os.path.realpath(args.scripts_path)
   envoy_config_path = os.path.realpath(args.envoy_config_path)
-  result_dir = os.path.realpath(args.result_dir)
 
   if args.create_delete:
     sh_utils.RunGCloudCompute(["instances", "create", "--zone",
@@ -93,8 +101,14 @@ def RunBenchmark(args, logfile):
                                str(args.cpu), "--custom-memory",
                                str(args.ram), "--image-family",
                                args.os_img_family, "--image-project",
-                               args.os_img_project], args.project,
+                               args.os_img_project,
+                               "--scopes",
+                               "default,sql,sql-admin,cloud-platform",
+                               "--service-account", args.service_account],
+                              args.project,
                               logfile=logfile)
+    # cloud-platform scope is used to authorize the VM to
+    # do `gcloud sql` and other operations
     print "Instance created successfully."
   else:
     print "Instance creation is skipped due to --no-create_delete"
@@ -156,14 +170,6 @@ def RunBenchmark(args, logfile):
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
-  sh_utils.RunSCPRemoteToLocal([sh_utils.FormatRemoteDestination(
-      args.username, args.vm_name, "./result.json"),
-                                "{}/".format(result_dir)], logfile=logfile,
-                               zone=args.zone, project=args.project)
-
-  print "Check {}/result.json file.".format(
-      result_dir)
-
   if args.create_delete:
     print "Deleting instance. Wait..."
     # pexpect.run does not take argument as arrays
@@ -177,39 +183,49 @@ def RunBenchmark(args, logfile):
   else:
     print "Instance deletion is skipped due to --no-create_delete."
 
+  ownip = StringIO.StringIO()
+  sh_utils.RunSSHCommand(args.username, args.vm_name,
+                         args=["--command",
+                               ("echo -e \"import benchmark\nprint "
+                                "benchmark.GetOwnIP()\" | python")],
+                         logfile=ownip, zone=args.zone, project=args.project)
+
   data_store_command = ("python store_data.py --ownip {}"
                         " --runid {} --envoy_hash {}").format(
-                            args.ownip, args.runid, args.envoy_hash)
+                            ownip.getvalue().strip(),
+                            args.runid, args.envoy_hash)
 
   if args.create_db_instance:
     data_store_command = ("{} --create_instance --db_instance_name {}").format(
-        data_store_command, args.db_instance_name
-    )
+        data_store_command, args.db_instance_name)
   else:
     data_store_command = "{} --no-create_instance".format(data_store_command)
 
   if args.create_db:
     data_store_command = ("{} --create_db --database {}").format(
-        data_store_command, args.database
-    )
+        data_store_command, args.database)
   else:
     data_store_command = "{} --no-create_db".format(data_store_command)
 
   if args.delete_db:
     data_store_command = ("{} --delete_db").format(
-        data_store_command
-    )
+        data_store_command)
   else:
     data_store_command = "{} --no-delete_db".format(data_store_command)
 
-  print data_store_command
-  pexpect.run(data_store_command, timeout=None, logfile=logfile)
+  sh_utils.RunSSHCommand(args.username, args.vm_name,
+                         args=["--command",
+                               data_store_command],
+                         logfile=logfile, zone=args.zone, project=args.project)
   print "Data stored into database."
 
 
 def main():
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument("--service_account",
+                      help="email-id of the service-account",
+                      default="envoy-service@envoy-ci.iam.gserviceaccount.com")
   parser.add_argument("--vm_name",
                       help="name of the virtual machine"
                            " that you want to create",
@@ -224,10 +240,6 @@ def main():
                       help="local relative path to the directory of "
                            "the envoy configs",
                       default="./envoy-configs")
-  parser.add_argument("--result_dir",
-                      help="local relative path to the directory of the "
-                           "benchmarking result file",
-                      default="./")
   parser.add_argument("--username",
                       help="username on the VM in the cloud-platform",
                       default="envoy")
@@ -259,42 +271,49 @@ def main():
   parser.add_argument("--db_instance_name",
                       help="the name of the gcloud instance",
                       default="envoy-db-instance")
+  parser.add_argument("--tier", help="the tier of GCloud SQL service",
+                      default="db-n1-standard-2")
+  parser.add_argument("--db_username", help="username on the DB",
+                      default="root")
+  parser.add_argument("--db_password",
+                      help="password for the username on the DB",
+                      default="password")
+  parser.add_argument("--table_name", help=("the table which stores "
+                                            "the benchmarking data"),
+                      default="envoy_stat")
   parser.add_argument("--envoy_hash",
                       help="the hash of envoy version",
-                      default="xxxxxx")
+                      required=True)
   parser.add_argument("--runid",
                       help="the run id of this benchmark",
                       default="0")
-  parser.add_argument("--ownip", help=("the machine's IP from where"
-                                       " the script is being run"),
-                      default="127.0.0.1")
   parser.add_argument("--database", help="name of the database",
                       default="envoy_stat_db")
 
-  python_utils.CreateMutuallyExclusiveArgument(parser, "create_delete",
-                                               ("if you want to create/"
-                                                "delete new benchmarking VM."))
-  parser.set_defaults(create_delete=True)
+  utils.CreateBooleanArgument(parser, "create_delete",
+                              ("if you want to create/"
+                               "delete new benchmarking VM."),
+                              create_delete=True)
 
-  python_utils.CreateMutuallyExclusiveArgument(parser, "setup",
-                                               ("if you want to run"
-                                                " setup on benchmarking VM."))
-  parser.set_defaults(setup=True)
+  utils.CreateBooleanArgument(parser, "setup",
+                              ("if you want to run"
+                               " setup on benchmarking VM."),
+                              setup=True)
 
-  python_utils.CreateMutuallyExclusiveArgument(parser, "create_db_instance",
-                                               ("turn on if you want to create"
-                                                " a Google Cloud SQL instance"))
-  parser.set_defaults(create_db_instance=True)
+  utils.CreateBooleanArgument(parser, "create_db_instance",
+                              ("turn on if you want to create"
+                               " a Google Cloud SQL instance"),
+                              create_db_instance=True)
 
-  python_utils.CreateMutuallyExclusiveArgument(parser, "create_db",
-                                               ("turn on if you want"
-                                                " to create the DB"))
-  parser.set_defaults(create_db=True)
+  utils.CreateBooleanArgument(parser, "create_db",
+                              ("turn on if you want"
+                               " to create the DB"),
+                              create_db=True)
 
-  python_utils.CreateMutuallyExclusiveArgument(parser, "delete_db",
-                                               ("turn on if you want"
-                                                " to delete the DB"))
-  parser.set_defaults(delete_db=True)
+  utils.CreateBooleanArgument(parser, "delete_db",
+                              ("turn on if you want"
+                               " to delete the DB"),
+                              delete_db=True)
 
   # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and
   # h2load runs on the VM, by adding more top level parameters

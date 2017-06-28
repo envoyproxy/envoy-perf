@@ -1,5 +1,10 @@
 """This file consists of database helper functions."""
 
+import re
+import subprocess
+
+import shell_helpers as sh_utils
+
 
 def ExecuteAndReturnResult(connection, statement):
   """This function will execute a SQL statement and return the SQL output.
@@ -13,3 +18,38 @@ def ExecuteAndReturnResult(connection, statement):
   cursor = connection.cursor()
   cursor.execute(statement)
   return cursor.fetchall()
+
+
+def GetInstanceIP(instance_name, project):
+  """This function gets a SQL instance's IP by running the gcloud sql describe.
+
+  Args:
+    instance_name: name of the instance
+    project: the project name in which the instance is in
+  Returns:
+    Returns a string which is the IP Address of the `instance_name`.
+  """
+  status = subprocess.check_output(
+      sh_utils.GetGcloud(["instances", "describe", instance_name],
+                         project=project, service="sql"))
+  ip = re.search(r"ipAddress:\s+([0-9]+\.[0-9]+\.[0-9]+\.[0-9]+)", status)
+  return ip.group(1)
+
+
+def GetFieldFromTable(connection, table_name, field="*", cond=None):
+  """This function gets column(s) from a table.
+
+  Args:
+    connection: connection to the DB instance
+    table_name: name of the table to get the rows from
+    field: optional column name(s). default: all the fileds (*)
+    cond: optional filters
+  Returns:
+    Returns all the fields
+  """
+  statement = "SELECT {} FROM {}".format(field, table_name)
+  if cond:
+    statement = "{} {}".format(statement, cond)
+  statement = "{};".format(statement)
+  print statement
+  return ExecuteAndReturnResult(connection, statement)
