@@ -1,4 +1,4 @@
-"""This file creates is for the DB-related work on the statistics."""
+"""This file is used to store data on the Database."""
 
 import argparse
 import json

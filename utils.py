@@ -4,14 +4,14 @@ import os
 import random
 import string
 
+
 def CreateBooleanArgument(parser, argument_name, help_string,
                           **default_condition):
   """The function creates a mututally exclusive argument on parser.
 
-  It just creates an argument against the `argument_name` on parser with a
-  required help_string. The given `argument_name` is set to True and the
-  --no-`argument_name` is set to False. It doesn't set the default value. The
-  caller needs to set the default against `argument_name`.
+  It creates an argument with the `argument_name` on `parser` with a
+  required `help_string`. The given `argument_name` is set to True and the
+  --no-`argument_name` is set to False. Default condition is also set.
   Args:
     parser: the parser on which the new argument will be created.
     argument_name: the name of the mutually exclusive argument. The caller needs
@@ -38,5 +38,5 @@ def GetRandomPassword():
     Returns a random 20-length password consisting of ASCII characters.
   """
   length = 20
-  random.seed = (os.urandom(1024))
-  return ''.join(random.choice(string.ascii_letters) for _ in xrange(length))
+  random.seed = os.urandom(1024)
+  return "".join(random.choice(string.ascii_letters) for _ in xrange(length))

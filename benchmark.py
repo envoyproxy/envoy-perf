@@ -83,30 +83,24 @@ def TryFunctionWithTimeout(func, error_handler, num_tries,
   raise BenchmarkError("All tries failed.")
 
 
-def AppendArgument(main_command, boolean_var, arg_name,
-                   default_additional_args=None):
+def GetBooleanFormattedArgument(boolean_var, arg_name):
   """This function appends argument to the `main command`.
 
   It takes a boolean var and decides whether to add the arg or append --no-
   in front of the argument. It also adds any default argument along with it.
 
   Args:
-    main_command: the main_command on which the appending will happen.
     boolean_var: the boolean variable to decide whether to append --no- for
     `arg_name`
     arg_name: name of the argument to append
-    default_additional_args: optional other arguments to append, in their fully
-    qualified form.
   Returns:
-    Returns the appended command  
+    Returns the appended command
   """
   if boolean_var:
-    main_command = "{} --{}".format(main_command, arg_name)
+    formatted_arg = "--{}".format(arg_name)
   else:
-    main_command = "{} --no-{}".format(main_command, arg_name)
-  if default_additional_args:
-    main_command = "{} {}".format(main_command, default_additional_args)
-  return main_command
+    formatted_arg = "--no-{}".format(arg_name)
+  return formatted_arg
 
 
 def RunBenchmark(args, logfile):
@@ -221,15 +215,17 @@ def RunBenchmark(args, logfile):
                             ownip.getvalue().strip(),
                             args.runid, args.envoy_hash, args.db_username)
 
-  data_store_command = AppendArgument(
-      data_store_command, args.create_db_instance,
-      "create_instance", "--db_instance_name {}".format(
-          args.db_instance_name))
-  data_store_command = AppendArgument(data_store_command, args.create_db,
-                                      "create_db", "--database {}".format(
-                                          args.database))
-  data_store_command = AppendArgument(data_store_command,
-                                      args.delete_db, "delete_db")
+  data_store_command = "{} {} --db_instance_name {}".format(
+      data_store_command, GetBooleanFormattedArgument(
+          args.create_db_instance, "create_instance"), args.db_instance_name)
+
+  data_store_command = "{} {} --database {}".format(
+      data_store_command, GetBooleanFormattedArgument(
+          args.create_db, "create_db"), args.database)
+
+  data_store_command = "{} {}".format(
+      data_store_command,
+      GetBooleanFormattedArgument(args.delete_db, "delete_db"))
 
   sh_utils.RunSSHCommand(args.username, args.vm_name,
                          args=["--command",

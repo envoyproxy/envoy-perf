@@ -51,5 +51,4 @@ def GetFieldFromTable(connection, table_name, field="*", cond=None):
   if cond:
     statement = "{} {}".format(statement, cond)
   statement = "{};".format(statement)
-  print statement
   return ExecuteAndReturnResult(connection, statement)
