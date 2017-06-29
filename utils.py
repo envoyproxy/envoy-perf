@@ -1,5 +1,8 @@
 """This file consists of generic Python helper functions."""
 
+import os
+import random
+import string
 
 def CreateBooleanArgument(parser, argument_name, help_string,
                           **default_condition):
@@ -26,3 +29,14 @@ def CreateBooleanArgument(parser, argument_name, help_string,
                                 dest=argument_name,
                                 action="store_false")
   parser.set_defaults(**default_condition)
+
+
+def GetRandomPassword():
+  """This function generates a random 20-length password.
+
+  Returns:
+    Returns a random 20-length password consisting of ASCII characters.
+  """
+  length = 20
+  random.seed = (os.urandom(1024))
+  return ''.join(random.choice(string.ascii_letters) for _ in xrange(length))
