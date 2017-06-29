@@ -83,6 +83,32 @@ def TryFunctionWithTimeout(func, error_handler, num_tries,
   raise BenchmarkError("All tries failed.")
 
 
+def AppendArgument(main_command, boolean_var, arg_name,
+                   default_additional_args=None):
+  """This function appends argument to the `main command`.
+
+  It takes a boolean var and decides whether to add the arg or append --no-
+  in front of the argument. It also adds any default argument along with it.
+
+  Args:
+    main_command: the main_command on which the appending will happen.
+    boolean_var: the boolean variable to decide whether to append --no- for
+    `arg_name`
+    arg_name: name of the argument to append
+    default_additional_args: optional other arguments to append, in their fully
+    qualified form.
+  Returns:
+    Returns the appended command  
+  """
+  if boolean_var:
+    main_command = "{} --{}".format(main_command, arg_name)
+  else:
+    main_command = "{} --no-{}".format(main_command, arg_name)
+  if default_additional_args:
+    main_command = "{} {}".format(main_command, default_additional_args)
+  return main_command
+
+
 def RunBenchmark(args, logfile):
   """This function provides top-level control over benchmark execution.
 
@@ -191,27 +217,19 @@ def RunBenchmark(args, logfile):
                          logfile=ownip, zone=args.zone, project=args.project)
 
   data_store_command = ("python store_data.py --ownip {}"
-                        " --runid {} --envoy_hash {}").format(
+                        " --runid {} --envoy_hash {} --username {}").format(
                             ownip.getvalue().strip(),
-                            args.runid, args.envoy_hash)
+                            args.runid, args.envoy_hash, args.db_username)
 
-  if args.create_db_instance:
-    data_store_command = ("{} --create_instance --db_instance_name {}").format(
-        data_store_command, args.db_instance_name)
-  else:
-    data_store_command = "{} --no-create_instance".format(data_store_command)
-
-  if args.create_db:
-    data_store_command = ("{} --create_db --database {}").format(
-        data_store_command, args.database)
-  else:
-    data_store_command = "{} --no-create_db".format(data_store_command)
-
-  if args.delete_db:
-    data_store_command = ("{} --delete_db").format(
-        data_store_command)
-  else:
-    data_store_command = "{} --no-delete_db".format(data_store_command)
+  data_store_command = AppendArgument(
+      data_store_command, args.create_db_instance,
+      "create_instance", "--db_instance_name {}".format(
+          args.db_instance_name))
+  data_store_command = AppendArgument(data_store_command, args.create_db,
+                                      "create_db", "--database {}".format(
+                                          args.database))
+  data_store_command = AppendArgument(data_store_command,
+                                      args.delete_db, "delete_db")
 
   sh_utils.RunSSHCommand(args.username, args.vm_name,
                          args=["--command",
@@ -275,9 +293,6 @@ def main():
                       default="db-n1-standard-2")
   parser.add_argument("--db_username", help="username on the DB",
                       default="root")
-  parser.add_argument("--db_password",
-                      help="password for the username on the DB",
-                      default="password")
   parser.add_argument("--table_name", help=("the table which stores "
                                             "the benchmarking data"),
                       default="envoy_stat")

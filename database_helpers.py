@@ -13,7 +13,7 @@ def ExecuteAndReturnResult(connection, statement):
     connection: connection to the DB instance
     statement: statement to be executed.
   Returns:
-    It returns the SQl output after executing the `statement`.
+    It returns the SQL output after executing the `statement`.
   """
   cursor = connection.cursor()
   cursor.execute(statement)
