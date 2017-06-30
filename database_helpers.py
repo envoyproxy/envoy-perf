@@ -52,3 +52,17 @@ def GetFieldFromTable(connection, table_name, field="*", cond=None):
     statement = "{} {}".format(statement, cond)
   statement = "{};".format(statement)
   return ExecuteAndReturnResult(connection, statement)
+
+
+def SingleColumnToList(select_based_list):
+  """This function converts a single-column returned by SELECT to a Python list.
+
+  Args:
+    select_based_list: the select based list.
+  Returns:
+    A Python list
+  """
+  converted_list = list()
+  for data in select_based_list:
+    converted_list.append(data[0])
+  return converted_list
