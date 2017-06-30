@@ -4,11 +4,14 @@
 import argparse
 import os
 import re
+import StringIO
 import subprocess
 import time
 
 import pexpect
+import requests
 import shell_helpers as sh_utils
+import utils
 
 
 class BenchmarkError(Exception):
@@ -27,7 +30,7 @@ def CheckStatus(args):
   status = subprocess.check_output(sh_utils.GetGcloud([
       "instances", "describe",
       args.vm_name, "--zone",
-      args.zone], project=args.project))
+      args.zone], project=args.project, service="compute"))
   cur_status = re.search(r"status:\s+([A-Z]+)", status)
   if cur_status.group(1) == "RUNNING":
     print "Instance is running successfully."
@@ -35,6 +38,13 @@ def CheckStatus(args):
   else:
     return ("Instance is not running"
             ". Current status: {}").format(cur_status.group(1))
+
+
+def GetOwnIP():
+  return requests.get(("http://metadata.google.internal/computeMetadata"
+                       "/v1/instance/"
+                       "network-interfaces/0/access-configs/0/external-ip"),
+                      headers={"Metadata-Flavor": "Google"}).content.strip()
 
 
 def TryFunctionWithTimeout(func, error_handler, num_tries,
@@ -73,6 +83,26 @@ def TryFunctionWithTimeout(func, error_handler, num_tries,
   raise BenchmarkError("All tries failed.")
 
 
+def GetBooleanFormattedArgument(boolean_var, arg_name):
+  """This function appends argument to the `main command`.
+
+  It takes a boolean var and decides whether to add the arg or append --no-
+  in front of the argument. It also adds any default argument along with it.
+
+  Args:
+    boolean_var: the boolean variable to decide whether to append --no- for
+    `arg_name`
+    arg_name: name of the argument to append
+  Returns:
+    Returns the appended command
+  """
+  if boolean_var:
+    formatted_arg = "--{}".format(arg_name)
+  else:
+    formatted_arg = "--no-{}".format(arg_name)
+  return formatted_arg
+
+
 def RunBenchmark(args, logfile):
   """This function provides top-level control over benchmark execution.
 
@@ -84,7 +114,6 @@ def RunBenchmark(args, logfile):
   """
   scripts_path = os.path.realpath(args.scripts_path)
   envoy_config_path = os.path.realpath(args.envoy_config_path)
-  result_dir = os.path.realpath(args.result_dir)
 
   if args.create_delete:
     sh_utils.RunGCloudCompute(["instances", "create", "--zone",
@@ -92,8 +121,14 @@ def RunBenchmark(args, logfile):
                                str(args.cpu), "--custom-memory",
                                str(args.ram), "--image-family",
                                args.os_img_family, "--image-project",
-                               args.os_img_project], args.project,
+                               args.os_img_project,
+                               "--scopes",
+                               "default,sql,sql-admin,cloud-platform",
+                               "--service-account", args.service_account],
+                              args.project,
                               logfile=logfile)
+    # cloud-platform scope is used to authorize the VM to
+    # do `gcloud sql` and other operations
     print "Instance created successfully."
   else:
     print "Instance creation is skipped due to --no-create_delete"
@@ -155,14 +190,6 @@ def RunBenchmark(args, logfile):
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
-  sh_utils.RunSCPRemoteToLocal([sh_utils.FormatRemoteDestination(
-      args.username, args.vm_name, "./result.json"),
-                                "{}/".format(result_dir)], logfile=logfile,
-                               zone=args.zone, project=args.project)
-
-  print "Check {}/result.json file.".format(
-      result_dir)
-
   if args.create_delete:
     print "Deleting instance. Wait..."
     # pexpect.run does not take argument as arrays
@@ -176,10 +203,43 @@ def RunBenchmark(args, logfile):
   else:
     print "Instance deletion is skipped due to --no-create_delete."
 
+  ownip = StringIO.StringIO()
+  sh_utils.RunSSHCommand(args.username, args.vm_name,
+                         args=["--command",
+                               ("echo -e \"import benchmark\nprint "
+                                "benchmark.GetOwnIP()\" | python")],
+                         logfile=ownip, zone=args.zone, project=args.project)
+
+  data_store_command = ("python store_data.py --ownip {}"
+                        " --runid {} --envoy_hash {} --username {}").format(
+                            ownip.getvalue().strip(),
+                            args.runid, args.envoy_hash, args.db_username)
+
+  data_store_command = "{} {} --db_instance_name {}".format(
+      data_store_command, GetBooleanFormattedArgument(
+          args.create_db_instance, "create_instance"), args.db_instance_name)
+
+  data_store_command = "{} {} --database {}".format(
+      data_store_command, GetBooleanFormattedArgument(
+          args.create_db, "create_db"), args.database)
+
+  data_store_command = "{} {}".format(
+      data_store_command,
+      GetBooleanFormattedArgument(args.delete_db, "delete_db"))
+
+  sh_utils.RunSSHCommand(args.username, args.vm_name,
+                         args=["--command",
+                               data_store_command],
+                         logfile=logfile, zone=args.zone, project=args.project)
+  print "Data stored into database."
+
 
 def main():
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+  parser.add_argument("--service_account",
+                      help="email-id of the service-account",
+                      default="envoy-service@envoy-ci.iam.gserviceaccount.com")
   parser.add_argument("--vm_name",
                       help="name of the virtual machine"
                            " that you want to create",
@@ -194,10 +254,6 @@ def main():
                       help="local relative path to the directory of "
                            "the envoy configs",
                       default="./envoy-configs")
-  parser.add_argument("--result_dir",
-                      help="local relative path to the directory of the "
-                           "benchmarking result file",
-                      default="./")
   parser.add_argument("--username",
                       help="username on the VM in the cloud-platform",
                       default="envoy")
@@ -215,7 +271,7 @@ def main():
                       help="the project in which the os can be found.",
                       default="ubuntu-os-cloud")
   parser.add_argument("--project",
-                      help="the project name.",
+                      help="the project name in Google Cloud.",
                       default="envoy-ci")
   parser.add_argument("--logfile",
                       help="the local log file for this script. New log will be"
@@ -226,22 +282,49 @@ def main():
   parser.add_argument("--sleep_between_retry",
                       help="number of seconds to sleep between each retry.",
                       type=int, default=5)
+  parser.add_argument("--db_instance_name",
+                      help="the name of the gcloud instance",
+                      default="envoy-db-instance")
+  parser.add_argument("--tier", help="the tier of GCloud SQL service",
+                      default="db-n1-standard-2")
+  parser.add_argument("--db_username", help="username on the DB",
+                      default="root")
+  parser.add_argument("--table_name", help=("the table which stores "
+                                            "the benchmarking data"),
+                      default="envoy_stat")
+  parser.add_argument("--envoy_hash",
+                      help="the hash of envoy version",
+                      required=True)
+  parser.add_argument("--runid",
+                      help="the run id of this benchmark",
+                      default="0")
+  parser.add_argument("--database", help="name of the database",
+                      default="envoy_stat_db")
 
-  create_del_parser = parser.add_mutually_exclusive_group(required=False)
-  create_del_parser.add_argument("--create_delete", dest="create_delete",
-                                 action="store_true",
-                                 help="if you want to create/delete new VM.")
-  create_del_parser.add_argument("--no-create_delete", dest="create_delete",
-                                 action="store_false")
-  parser.set_defaults(create_delete=True)
+  utils.CreateBooleanArgument(parser, "create_delete",
+                              ("if you want to create/"
+                               "delete new benchmarking VM."),
+                              create_delete=True)
 
-  skip_setup_parser = parser.add_mutually_exclusive_group(required=False)
-  skip_setup_parser.add_argument("--setup", dest="setup",
-                                 action="store_true",
-                                 help="if you want to run setup.")
-  skip_setup_parser.add_argument("--no-setup", dest="setup",
-                                 action="store_false")
-  parser.set_defaults(setup=True)
+  utils.CreateBooleanArgument(parser, "setup",
+                              ("if you want to run"
+                               " setup on benchmarking VM."),
+                              setup=True)
+
+  utils.CreateBooleanArgument(parser, "create_db_instance",
+                              ("turn on if you want to create"
+                               " a Google Cloud SQL instance"),
+                              create_db_instance=True)
+
+  utils.CreateBooleanArgument(parser, "create_db",
+                              ("turn on if you want"
+                               " to create the DB"),
+                              create_db=True)
+
+  utils.CreateBooleanArgument(parser, "delete_db",
+                              ("turn on if you want"
+                               " to delete the DB"),
+                              delete_db=True)
 
   # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and
   # h2load runs on the VM, by adding more top level parameters
