@@ -1,13 +1,10 @@
-"""This file creates a graph from the metric Gcloud SQL database."""
+"""This file creates a graph for some metric in the Gcloud SQL database."""
 
 import argparse
 
 import database_helpers as db_utils
 import matplotlib.pyplot as plt
-import MySQLdb
 import numpy as np
-import shell_helpers as sh_utils
-import utils
 
 
 def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
@@ -21,44 +18,62 @@ def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
     x_axis_values: the values in x axis to compare
     x_axis_field: column name in the table for the x axis
   """
-  direct_lists = list()
-  envoy_lists = list()
 
-  for x in x_axis_values:
-    condition = ("where {}=\"{}\" and"
-                 " category=\"direct\"").format(x_axis_field, x)
-    direct_list = db_utils.SingleColumnToList(db_utils.GetFieldFromTable(
-        connection, table_name, field=y_axis_field, cond=condition))
-    if not direct_list:
-      print "{} {} is not found in table for direct results.".format(
-          x_axis_field, x)
-      direct_list = [0]
+  def GetListsFromDB(x_axis_values, x_axis_field, connection,
+                     table_name, y_axis_field, category):
+    """This function returns lists of values of a field from the DB.
 
-    direct_lists.append(direct_list)
+    The function returns lists of `y_axis_field` for the values corresponding to
+    the `x_axis_values` in `x_axis_field`.
+    Args:
+      x_axis_values: a list of values for which the `y_axis_field` will be
+       fetched for.
+      x_axis_field: name of the field for x_axis
+      connection: the connection to the database
+      table_name: name of the table in the database which has the data
+      y_axis_field: the name of the column in the table, whose data will be put
+      into the list
+      category: Direct or Envoy or which category the data belong to
+    Returns:
+      Returns a list of lists with all the values of `y_axis_field`
+      corresponding to `x_axis_values`.
+    """
+    lists = list()
+    for x in x_axis_values:
+      condition = ("where {}=\"{}\" and"
+                   " category=\"{}\"").format(x_axis_field, x, category)
+      single_list = db_utils.SingleColumnToList(db_utils.GetFieldFromTable(
+          connection, table_name, field=y_axis_field, cond=condition))
+      if not single_list:
+        print "{} {} is not found in table for {} results.".format(
+            x_axis_field, x, category)
+        single_list = [0]
 
-    condition = ("where {}=\"{}\" and"
-                 " category=\"envoy\"").format(x_axis_field, x)
-    envoy_list = db_utils.SingleColumnToList(db_utils.GetFieldFromTable(
-        connection, table_name, field=y_axis_field, cond=condition))
-    if not envoy_list:
-      print "{} {} is not found in table for Envoy results.".format(
-          x_axis_field, x)
-      envoy_list = [0]
+      lists.append(single_list)
+    return lists
 
-    envoy_lists.append(envoy_list)
+  direct_lists = GetListsFromDB(x_axis_values, x_axis_field, connection,
+                                table_name, y_axis_field, "direct")
+  envoy_lists = GetListsFromDB(x_axis_values, x_axis_field, connection,
+                               table_name, y_axis_field, "envoy")
 
   ind = np.arange(len(x_axis_values))
-  direct_means = list()
-  direct_std = list()
-  envoy_means = list()
-  envoy_std = list()
 
-  for single_set in direct_lists:
-    direct_means.append(np.mean(single_set))
-    direct_std.append(np.std(single_set))
-  for single_set in envoy_lists:
-    envoy_means.append(np.mean(single_set))
-    envoy_std.append(np.std(single_set))
+  def GetMeansAndStdsFromList(lists):
+    """This function returns the means and standard deviation of lists.
+
+    Args:
+      lists: A list of lists. Each list inside the top-level list consists a
+      bunch of numbers
+    Returns:
+      A pair of list containing means and standard deviations.
+    """
+    means = [np.mean(single_list) for single_list in lists]
+    stds = [np.std(single_list) for single_list in lists]
+    return (means, stds)
+
+  direct_means, direct_std = GetMeansAndStdsFromList(direct_lists)
+  envoy_means, envoy_std = GetMeansAndStdsFromList(envoy_lists)
 
   width = 0.35
   fig, ax = plt.subplots()
@@ -69,10 +84,12 @@ def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
   ax.set_xlabel(x_axis_field)
   ax.set_xticks(ind + width)
   ax.set_xticklabels(x_axis_values)
-  ax.legend((rects1[0], rects2[0]), ("Direct", "Envoy"))
+  # legend will be placed out of the main graph
+  ax.legend((rects1[0], rects2[0]), ("Direct", "Envoy"),
+            loc="center left", bbox_to_anchor=(1, 0.5))
   AutoLabel(rects1, ax)
   AutoLabel(rects2, ax)
-  fig.savefig("{} {}.pdf".format(
+  fig.savefig("{} {}.png".format(
       x_axis_field, ",".join(str(i) for i in x_axis_values)),
               bbox_inches="tight")
 
@@ -124,16 +141,9 @@ def main():
 
   args = parser.parse_args()
   logfile = open(args.logfile, "ab")
-  hostname = db_utils.GetInstanceIP(args.db_instance_name, args.project)
-
-  password = utils.GetRandomPassword()
-  sh_utils.RunGCloudService(["users", "set-password", args.username, "%",
-                             "--instance", args.db_instance_name, "--password",
-                             password], project=args.project,
-                            service="sql", logfile=logfile)
-  print "DB Usernames and passwords are set."
-  connection = MySQLdb.connect(host=hostname, user=args.username,
-                               passwd=password, db=args.database)
+  connection = db_utils.AuthorizeMachineAndConnectDB(
+      args.db_instance_name, args.project, args.username,
+      args.database, logfile)
   print "Connection to get data from DB is successful."
 
   if args.runids:
