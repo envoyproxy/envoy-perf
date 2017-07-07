@@ -367,7 +367,7 @@ def main():
                           h2load_start_core, h2load_end_core, args.envoy_port,
                           args.h2load_reqs, args.h2load_clients,
                           args.h2load_conns, args.h2load_threads)
-    result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
+    result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     print "h2load with envoy is done."
 
