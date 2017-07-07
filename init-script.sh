@@ -4,6 +4,8 @@
 
 set -e
 
+chmod +x ./install-gcloud.sh
+./install-gcloud.sh
 sudo apt-get update
 sudo apt-get install -y make
 sudo make lib

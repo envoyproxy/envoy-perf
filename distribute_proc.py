@@ -253,15 +253,17 @@ def GetNginxCommandLineArguments():
 
 # TODO(sohamcodes): debug is always included now. Later on, debug should be
 # enabled based on the debug-mode
-def GetEnvoyCommandLineArguments(envoy_config_path):
+def GetEnvoyCommandLineArguments(envoy_config_path, envoy_thread_number):
   """This function returns the Envoy configuration.
 
   Args:
     envoy_config_path: the path to the envoy's config file.
+    envoy_thread_number: number of worker threads for Envoy
   Returns:
-    Formatted envoy configuration. Right now it always include the debug info
+    Formatted envoy configuration. Right now it always include the debug info.
   """
-  return ["-c", envoy_config_path, "-l", "debug"]
+  return ["-c", envoy_config_path, "-l", "debug", "--concurrency",
+          str(envoy_thread_number)]
 
 
 def main():
@@ -277,15 +279,15 @@ def main():
   parser.add_argument("--nginx_cores",
                       help="the start and end core numbers for Nginx server to "
                            "run, separated by a comma.",
-                      default="0,4")
+                      default="0,10")
   parser.add_argument("--envoy_cores",
                       help="the start and end core numbers for"
                            " Envoy to run, separated by a comma.",
-                      default="5,9")
+                      default="11,18")
   parser.add_argument("--h2load_cores",
                       help="the start and end core numbers for "
                            "h2load to run, separated by a comma.",
-                      default="10,14")
+                      default="19,19")
   parser.add_argument("--h2load_reqs",
                       help="number of h2load requests", default="10000")
   parser.add_argument("--h2load_clients", help="number of h2load clients.",
@@ -293,7 +295,7 @@ def main():
   parser.add_argument("--h2load_conns", help="number of h2load connections.",
                       default="10")
   parser.add_argument("--h2load_threads", help="number of h2load threads.",
-                      default="5")
+                      default="1")
 
   # TODO(sohamcodes): range for port number should be checked
   parser.add_argument("--direct_port", help="the direct port for benchmarking.",
@@ -309,6 +311,10 @@ def main():
   parser.add_argument("--h2load_timeout",
                       help="the maximum number of seconds to wait for h2load"
                            " to return some result", type=int, default=120)
+
+  parser.add_argument("--arrangement", help=("the type of arrangement in"
+                                             " this experiment."),
+                      default="single-vm")
 
   args = parser.parse_args()
 
@@ -331,8 +337,10 @@ def main():
   print "nginx process id is {}".format(nginx_process.pid)
 
   # allocate envoy to designated cores
+  envoy_thread_number = int(envoy_end_core) - int(envoy_start_core)
   envoy_command = [args.envoy_binary_path]
-  envoy_command.extend(GetEnvoyCommandLineArguments(args.envoy_config_path))
+  envoy_command.extend(GetEnvoyCommandLineArguments(args.envoy_config_path,
+                                                    envoy_thread_number))
   outfile = "envoy_out.log"  # this is envoy output file
   envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
                                       outfile, envoy_command)
@@ -349,7 +357,7 @@ def main():
                           args.h2load_reqs, args.h2load_clients,
                           args.h2load_conns, args.h2load_threads)
 
-    result_json["direct"].append(RunAndParseH2Load(
+    result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
 
     print "h2load direct is done."
@@ -359,7 +367,7 @@ def main():
                           h2load_start_core, h2load_end_core, args.envoy_port,
                           args.h2load_reqs, args.h2load_clients,
                           args.h2load_conns, args.h2load_threads)
-    result_json["envoy"].append(RunAndParseH2Load(
+    result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     print "h2load with envoy is done."
 

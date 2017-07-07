@@ -67,8 +67,8 @@ def TryFunctionWithTimeout(func, error_handler, num_tries,
   count = num_tries
   while count > 0:
     try:
-      ret_val = func(*args, **kwargs)
       count -= 1
+      ret_val = func(*args, **kwargs)
       if not ret_val:
         return
       else:
@@ -178,6 +178,14 @@ def RunBenchmark(args, logfile):
                            zone=args.zone, project=args.project)
     print "Setup complete. Running Benchmark."
   else:
+    # even if setup is skipped, we need to change the ownership of nginx log
+    sh_utils.RunSSHCommand(args.username, args.vm_name,
+                           args=["--command",
+                                 "sudo chown -R {}:{} /var/log/nginx".format(
+                                     args.username, args.username),
+                                 "--", "-t"],
+                           logfile=logfile,
+                           zone=args.zone, project=args.project)
     print "Setup is skipped due to --no-setup."
 
   # TODO(sohamcodes): this currently takes a fixed config for Envoy. It needs
@@ -186,22 +194,10 @@ def RunBenchmark(args, logfile):
                          args=["--command",
                                ("python distribute_proc.py "
                                 "./envoy-fastbuild ./envoy-configs/"
-                                "simple-loopback.json result.json")],
+                                "simple-loopback.json result.json "
+                                "--arrangement {}").format(args.arrangement)],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
-
-  if args.create_delete:
-    print "Deleting instance. Wait..."
-    # pexpect.run does not take argument as arrays
-    pexpect.run(("gcloud compute --project {}"
-                 " instances delete {} --zone {}").format(
-                     args.project, args.vm_name, args.zone),
-                events={"Do you want to continue (Y/n)?": "Y\n"},
-                logfile=logfile,
-                timeout=None)
-    print "Instance deleted."
-  else:
-    print "Instance deletion is skipped due to --no-create_delete."
 
   ownip = StringIO.StringIO()
   sh_utils.RunSSHCommand(args.username, args.vm_name,
@@ -232,6 +228,19 @@ def RunBenchmark(args, logfile):
                                data_store_command],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Data stored into database."
+
+  if args.create_delete:
+    print "Deleting instance. Wait..."
+    # pexpect.run does not take argument as arrays
+    pexpect.run(("gcloud compute --project {}"
+                 " instances delete {} --zone {}").format(
+                     args.project, args.vm_name, args.zone),
+                events={"Do you want to continue (Y/n)?": "Y\n"},
+                logfile=logfile,
+                timeout=None)
+    print "Instance deleted."
+  else:
+    print "Instance deletion is skipped due to --no-create_delete."
 
 
 def main():
@@ -300,6 +309,9 @@ def main():
                       default="0")
   parser.add_argument("--database", help="name of the database",
                       default="envoy_stat_db")
+  parser.add_argument("--arrangement", help=("the type of arrangement in"
+                                             " this experiment."),
+                      default="single-vm-permanent")
 
   utils.CreateBooleanArgument(parser, "create_delete",
                               ("if you want to create/"
