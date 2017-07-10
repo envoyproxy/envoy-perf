@@ -319,6 +319,8 @@ def main():
 
   h2load_threads = int(h2load_end_core) - int(h2load_start_core) + 1
 
+  h2load_threads = int(h2load_end_core) - int(h2load_start_core) + 1
+
   # allocate nginx to designated cores
   output = "nginx_out.log"
   nginx_command = ["nginx"]
