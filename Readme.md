@@ -2,6 +2,9 @@
 
 1. python2.7 Installation: `sudo apt-get install python2.7`
 2. gcloud Installation: Follow instructions here: https://cloud.google.com/sdk/docs/quickstart-debian-ubuntu
+3. Install the following packages:
+`sudo pip install pexpect`
+`sudo apt-get install python-matplotlib`
 
 Edit and set the values of these variables (e.g. `$ENVOY_BINARY`) to the appropriate values:
 
@@ -13,11 +16,6 @@ Edit and set the values of these variables (e.g. `$ENVOY_BINARY`) to the appropr
 Google Cloud-related setup:
 1. Create a Service Account.
 2. Grant proper roles to the newly created Service Account, such as roles/owner.
-
-Install the following packages (possibly running the below commands): `pexpect` `python-matplotlib`
-
-1. `sudo pip install pexpect`
-2. `sudo apt-get install python-matplotlib`
 
 Run the benchmarking script, as follows with python2:
 
