@@ -162,17 +162,21 @@ def RunBenchmark(args, logfile):
                                zone=args.zone, project=args.project)
   print "Envoy configs transfer complete. Setting up the environment."
 
+  nginx_start_core, nginx_end_core = utils.ParseCommaSeparatedTuple(
+      args.nginx_cores)
+  # total cores available are: int(nginx_end_core) - int(nginx_start_core) + 1
+  # but one is master process, so that is not included in calculation below
+  nginx_worker_proc_count = int(nginx_end_core) - int(nginx_start_core)
   if args.setup:
     print "Setup started (this may take some time)..."
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command", "sudo chmod +x *.sh", "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
-
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
-                                 "sudo bash ./init-script.sh {}".format(
-                                     args.username),
+                                 "sudo bash ./init-script.sh {} {}".format(
+                                     args.username, nginx_worker_proc_count),
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
@@ -181,8 +185,29 @@ def RunBenchmark(args, logfile):
     # even if setup is skipped, we need to change the ownership of nginx log
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
-                                 "sudo chown -R {}:{} /var/log/nginx".format(
-                                     args.username, args.username),
+                                 ("sudo chown -R {}:{} /var/log/nginx "
+                                  "/etc/nginx/").format(
+                                      args.username, args.username),
+                                 "--", "-t"],
+                           logfile=logfile,
+                           zone=args.zone, project=args.project)
+    # the nginx worker processes count setup
+    sh_utils.RunSSHCommand(args.username, args.vm_name,
+                           args=["--command",
+                                 ("python generate_config.py ./templates/ "
+                                  "--worker_proc_count {}").format(
+                                      nginx_worker_proc_count)],
+                           logfile=logfile,
+                           zone=args.zone, project=args.project)
+    sh_utils.RunSSHCommand(args.username, args.vm_name,
+                           args=["--command",
+                                 ("python generate_scripts.py ./templates/ "
+                                  "{}").format(
+                                      args.username)],
+                           logfile=logfile,
+                           zone=args.zone, project=args.project)
+    sh_utils.RunSSHCommand(args.username, args.vm_name,
+                           args=["--command", "sudo make nginx",
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
@@ -190,12 +215,25 @@ def RunBenchmark(args, logfile):
 
   # TODO(sohamcodes): this currently takes a fixed config for Envoy. It needs
   # to be changed in future to take multiple configs and run independently.
+  print "Benchmarking is started."
   sh_utils.RunSSHCommand(args.username, args.vm_name,
                          args=["--command",
                                ("python distribute_proc.py "
                                 "./envoy-fastbuild ./envoy-configs/"
                                 "simple-loopback.json result.json "
-                                "--arrangement {}").format(args.arrangement)],
+                                "--nginx_cores {} "
+                                "--envoy_cores {} "
+                                "--h2load_cores {} "
+                                "--h2load_reqs {} "
+                                "--h2load_clients {} "
+                                "--h2load_conns {} "
+                                "--h2load_timeout {} "
+                                "--arrangement {}").format(
+                                    args.nginx_cores, args.envoy_cores,
+                                    args.h2load_cores, args.h2load_reqs,
+                                    args.h2load_clients, args.h2load_conns,
+                                    args.h2load_timeout,
+                                    args.arrangement)],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
@@ -313,6 +351,27 @@ def main():
   parser.add_argument("--arrangement", help=("the type of arrangement in"
                                              " this experiment."),
                       default="single-vm-permanent")
+  parser.add_argument("--nginx_cores",
+                      help="the start and end core numbers for Nginx server to "
+                           "run, separated by a comma.",
+                      default="0,10")
+  parser.add_argument("--envoy_cores",
+                      help="the start and end core numbers for"
+                           " Envoy to run, separated by a comma.",
+                      default="11,18")
+  parser.add_argument("--h2load_cores",
+                      help="the start and end core numbers for "
+                           "h2load to run, separated by a comma.",
+                      default="19,19")
+  parser.add_argument("--h2load_reqs",
+                      help="number of h2load requests", default="10000")
+  parser.add_argument("--h2load_clients", help="number of h2load clients.",
+                      default="100")
+  parser.add_argument("--h2load_conns", help="number of h2load connections.",
+                      default="10")
+  parser.add_argument("--h2load_timeout",
+                      help="the maximum number of seconds to wait for h2load"
+                           " to return some result", type=int, default=120)
 
   utils.CreateBooleanArgument(parser, "create_delete",
                               ("if you want to create/"
@@ -338,9 +397,6 @@ def main():
                               ("turn on if you want"
                                " to delete the DB"),
                               delete_db=True)
-
-  # TODO(sohamcodes): ability to add more customization on how nginx, Envoy and
-  # h2load runs on the VM, by adding more top level parameters
 
   args = parser.parse_args()
 

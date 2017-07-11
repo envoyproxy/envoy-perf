@@ -6,6 +6,7 @@ import json
 
 import pexpect
 from process import Process
+import utils
 
 
 # TODO(sohamcodes): This function needs to eventually support arbitrary mask.
@@ -216,17 +217,6 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
   return single_result_json
 
 
-def ParseStartAndEndCore(comma_sep_string):
-  """This function parses out a comma-separated string to two separate values.
-
-  Args:
-    comma_sep_string: the comma-separated string.
-  Returns:
-    A tuple of two separated values
-  """
-  return comma_sep_string.split(",")
-
-
 def AddResultToJsonDict(single_result_json, full_dict, title):
   """This function adds a single result to the full JSON dictionary.
 
@@ -317,13 +307,16 @@ def main():
   args = parser.parse_args()
 
   if args.nginx_cores:
-    nginx_start_core, nginx_end_core = ParseStartAndEndCore(args.nginx_cores)
+    nginx_start_core, nginx_end_core = utils.ParseCommaSeparatedTuple(
+        args.nginx_cores)
 
   if args.envoy_cores:
-    envoy_start_core, envoy_end_core = ParseStartAndEndCore(args.envoy_cores)
+    envoy_start_core, envoy_end_core = utils.ParseCommaSeparatedTuple(
+        args.envoy_cores)
 
   if args.h2load_cores:
-    h2load_start_core, h2load_end_core = ParseStartAndEndCore(args.h2load_cores)
+    h2load_start_core, h2load_end_core = utils.ParseCommaSeparatedTuple(
+        args.h2load_cores)
 
   h2load_threads = int(h2load_end_core) - int(h2load_start_core) + 1
 
