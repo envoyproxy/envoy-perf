@@ -307,16 +307,13 @@ def main():
   args = parser.parse_args()
 
   if args.nginx_cores:
-    nginx_start_core, nginx_end_core = utils.ParseCommaSeparatedTuple(
-        args.nginx_cores)
+    nginx_start_core, nginx_end_core = args.nginx_cores.split(",")
 
   if args.envoy_cores:
-    envoy_start_core, envoy_end_core = utils.ParseCommaSeparatedTuple(
-        args.envoy_cores)
+    envoy_start_core, envoy_end_core = args.envoy_cores.split(",")
 
   if args.h2load_cores:
-    h2load_start_core, h2load_end_core = utils.ParseCommaSeparatedTuple(
-        args.h2load_cores)
+    h2load_start_core, h2load_end_core = args.h2load_cores.split(",")
 
   h2load_threads = int(h2load_end_core) - int(h2load_start_core) + 1
 

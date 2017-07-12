@@ -34,9 +34,12 @@
               {
                 "type": "decoder",
                 "name": "router",
-                "config": {}
+                "config": {
+                  "dynamic_stats": false
+                }
               }
-            ]
+            ],
+            "generate_request_id": false
           }
         }
       ]

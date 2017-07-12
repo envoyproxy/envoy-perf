@@ -162,8 +162,7 @@ def RunBenchmark(args, logfile):
                                zone=args.zone, project=args.project)
   print "Envoy configs transfer complete. Setting up the environment."
 
-  nginx_start_core, nginx_end_core = utils.ParseCommaSeparatedTuple(
-      args.nginx_cores)
+  nginx_start_core, nginx_end_core = args.nginx_cores.split(",")
   # total cores available are: int(nginx_end_core) - int(nginx_start_core) + 1
   # but one is master process, so that is not included in calculation below
   nginx_worker_proc_count = int(nginx_end_core) - int(nginx_start_core)

@@ -40,14 +40,3 @@ def GetRandomPassword():
   length = 20
   random.seed = os.urandom(1024)
   return "".join(random.choice(string.ascii_letters) for _ in xrange(length))
-
-
-def ParseCommaSeparatedTuple(comma_sep_string):
-  """This function parses out a comma-separated string to two separate values.
-
-  Args:
-    comma_sep_string: the comma-separated string.
-  Returns:
-    A tuple of two separated values
-  """
-  return comma_sep_string.split(",")
