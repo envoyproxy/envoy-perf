@@ -17,11 +17,12 @@ nginx:
 	sudo ufw allow 'Nginx FULL'
 	openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -days 365 -subj /CN=localhost -passout pass:1234 -nodes
 	sudo mkdir -p /etc/nginx/ssl
-	sudo chown -R sohamcodes:sohamcodes /etc/nginx/
-	sudo chown -R sohamcodes:sohamcodes /var/log/nginx/
+	sudo chown -R sohamcodes /etc/nginx/
+	sudo chown -R sohamcodes /var/log/nginx/
 	cp cert.pem key.pem /etc/nginx/ssl/
 	rm -f cert.pem key.pem
 	cp nginx.conf /etc/nginx/
 	cp default /etc/nginx/sites-available/
 	sudo ufw disable
 	sudo systemctl stop nginx
+	sudo pkill nginx || true
