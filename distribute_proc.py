@@ -252,7 +252,7 @@ def GetEnvoyCommandLineArguments(envoy_config_path, envoy_thread_number):
   Returns:
     Formatted envoy configuration. Right now it always include the debug info.
   """
-  return ["-c", envoy_config_path, "-l", "debug", "--concurrency",
+  return ["-c", envoy_config_path, "-l", "error", "--concurrency",
           str(envoy_thread_number)]
 
 

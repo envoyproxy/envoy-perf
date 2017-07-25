@@ -18,7 +18,6 @@ def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
     x_axis_values: the values in x axis to compare
     x_axis_field: column name in the table for the x axis
   """
-
   def GetListsFromDB(x_axis_values, x_axis_field, connection,
                      table_name, y_axis_field, category):
     """This function returns lists of values of a field from the DB.
@@ -152,7 +151,6 @@ def main():
   if args.envoy_hashes:
     DrawBarGraph(connection, args.table_name, args.fieldname,
                  args.envoy_hashes, "envoy_hash")
-
 
 if __name__ == "__main__":
   main()
