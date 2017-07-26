@@ -95,8 +95,8 @@ def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
             loc="center left", bbox_to_anchor=(1, 0.5))
   AutoLabel(rects1, ax)
   AutoLabel(rects2, ax)
-  fig.savefig("{} {} {}.png".format(
-      x_axis_field, ",".join(str(i) for i in x_axis_values), y_axis_field),
+  fig.savefig("{} {}.png".format(
+      x_axis_field, ",".join(str(i) for i in x_axis_values)),
               bbox_inches="tight")
 
 
@@ -175,7 +175,7 @@ def DrawTimeSeriesGraph(connection, table_name, y_axis_field, time,
   ax.set_xticklabels(direct_times, rotation="vertical", fontsize=8)
   ax.legend((rects1[0], rects2[0]), ("Direct", "Envoy"),
             loc="center left", bbox_to_anchor=(1, 0.5))
-  fig.savefig("Time-{}-{}-{}.png".format(time, arrangement, y_axis_field),
+  fig.savefig("Time-{}-{}.png".format(time, arrangement),
               bbox_inches="tight")
 
 
