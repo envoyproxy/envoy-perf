@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
+class ShowGraphError(Exception):
+  pass
+
+
 def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
                  x_axis_field, arrangement):
   """This function draws a single graph based on the mean value.
@@ -121,6 +125,8 @@ def DrawTimeSeriesGraph(connection, table_name, y_axis_field, time,
     y_axis_field: column name in the table for the y axis
     time: the starting time for the graph
     arrangement: the type of arrangement in the experiment
+  Raises:
+    ShowGraphError: When direct or Envoy's data is not found in the database
   """
   def GetListFromDB(time, category, y_axis_field, connection, table_name):
     condition = ("where time_of_entry >= \"{}\" and"
@@ -145,20 +151,18 @@ def DrawTimeSeriesGraph(connection, table_name, y_axis_field, time,
                              y_axis_field, connection, table_name)
 
   if direct_list:
-    direct_means = [v[0] for v in direct_list]
-    direct_std = [v[1] for v in direct_list]
+    direct_means, direct_std = zip(*direct_list)
     direct_times = [v[2].time().strftime("%H:%M") if not i % 2 else ""
                     for i, v in enumerate(direct_list)]
   else:
-    return
+    raise ShowGraphError("Direct's data not found for time-series graph.")
 
   if envoy_list:
-    envoy_means = [v[0] for v in envoy_list]
-    envoy_std = [v[1] for v in direct_list]
+    envoy_means, envoy_std = zip(*envoy_list)
     # time is not needed again but if needed, it can be taken from here
     # envoy_times = [v[2] for v in envoy_list]
   else:
-    return
+    raise ShowGraphError("Envoy's data not found for time-series graph.")
 
   ind = np.arange(len(direct_times))
   fig, ax = plt.subplots()

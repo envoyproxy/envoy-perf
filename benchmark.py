@@ -347,7 +347,12 @@ def main():
                       default="0")
   parser.add_argument("--database", help="name of the database",
                       default="envoy_stat_db")
-  parser.add_argument("--arrangement", help=("the type of arrangement in"
+  # This argument is appended with the category (Direct/Envoy) in the DB
+  # The argument tells what was the configuration of the machines and experiment
+  # Such as whether it was a single-vm, whether the VM was permanent one
+  # or created newly everytime the test was being conducted
+  parser.add_argument("--arrangement", help=("the type of arrangement of
+                                             "machines in"
                                              " this experiment."),
                       default="single-vm-permanent")
   parser.add_argument("--nginx_cores",
