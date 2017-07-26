@@ -174,8 +174,10 @@ def RunBenchmark(args, logfile):
                            zone=args.zone, project=args.project)
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
-                                 "sudo bash ./init-script.sh {} {}".format(
-                                     args.username, nginx_worker_proc_count),
+                                 ("sudo bash ./init-script.sh {} {}"
+                                  " {ssl}").format(
+                                     args.username, nginx_worker_proc_count,
+                                     ssl="--ssl" if args.ssl else "--no-ssl"),
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
@@ -194,8 +196,9 @@ def RunBenchmark(args, logfile):
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
                                  ("python generate_config.py ./templates/ "
-                                  "--worker_proc_count {}").format(
-                                      nginx_worker_proc_count)],
+                                  "--worker_proc_count {} {ssl}").format(
+                                      nginx_worker_proc_count,
+                                      ssl="--ssl" if args.ssl else "--no-ssl")],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
     sh_utils.RunSSHCommand(args.username, args.vm_name,
@@ -396,6 +399,10 @@ def main():
                               ("turn on if you want"
                                " to delete the DB"),
                               delete_db=True)
+  utils.CreateBooleanArgument(parser, "ssl",
+                              ("turn on if you want"
+                               " to enable ssl for the benchmarking"),
+                              ssl=True)
 
   args = parser.parse_args()
 
