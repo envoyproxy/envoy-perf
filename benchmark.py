@@ -175,9 +175,10 @@ def RunBenchmark(args, logfile):
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
                                  ("sudo bash ./init-script.sh {} {}"
-                                  " {ssl}").format(
+                                  " {ssl} {http2}").format(
                                       args.username, nginx_worker_proc_count,
-                                      ssl="--ssl" if args.ssl else "--no-ssl"),
+                                      ssl="--ssl" if args.ssl else "--no-ssl",
+                                      http2="--h1" if args.h1 else "--no-h1"),
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
@@ -196,9 +197,11 @@ def RunBenchmark(args, logfile):
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
                                  ("python generate_config.py ./templates/ "
-                                  "--worker_proc_count {} {ssl}").format(
+                                  "--worker_proc_count {} {ssl}"
+                                  " {http2}").format(
                                       nginx_worker_proc_count,
-                                      ssl="--ssl" if args.ssl else "--no-ssl")],
+                                      ssl="--ssl" if args.ssl else "--no-ssl",
+                                      http2="--h1" if args.h1 else "--no-h1")],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
     sh_utils.RunSSHCommand(args.username, args.vm_name,
@@ -231,13 +234,14 @@ def RunBenchmark(args, logfile):
                                 "--h2load_duration {} "
                                 "--h2load_timeout {} "
                                 "--h2load_con_conn {} "
-                                "--arrangement {} {ssl}").format(
+                                "--arrangement {} {ssl} {http2}").format(
                                     args.nginx_cores, args.envoy_cores,
                                     args.h2load_cores, args.h2load_warmup,
                                     args.h2load_clients, args.h2load_duration,
                                     args.h2load_timeout, args.h2load_con_conn,
                                     args.arrangement,
-                                    ssl="--ssl" if args.ssl else "--no-ssl")],
+                                    ssl="--ssl" if args.ssl else "--no-ssl",
+                                    http2="--h1" if args.h1 else "--no-h1")],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
@@ -389,7 +393,7 @@ def main():
                            " to return some result", type=int, default=120)
 
   utils.CreateBooleanArgument(parser, "create_delete",
-                              ("if you want to create/"
+                              ("if you want to create and "
                                "delete new benchmarking VM."),
                               create_delete=True)
 
@@ -416,6 +420,10 @@ def main():
                               ("turn on if you want"
                                " to enable ssl for the benchmarking"),
                               ssl=True)
+  utils.CreateBooleanArgument(parser, "h1",
+                              ("turn on if you want"
+                               " to enable HTTP1.1, instead of default h2"),
+                              h1=False)
 
   args = parser.parse_args()
 

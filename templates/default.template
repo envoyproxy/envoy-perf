@@ -3,8 +3,8 @@ server {
 
 	# SSL configuration
 	#
-	 listen {{ port_no }} {{ ssl }}http2 default_server;
-	 listen [::]:{{ port_no }} {{ ssl }}http2 default_server;
+	 listen {{ port_no }} {{ ssl }}{{ http2 }}default_server;
+	 listen [::]:{{ port_no }} {{ ssl }}{{ http2 }}default_server;
 
 	index index.html index.htm index.nginx-debian.html;
 
