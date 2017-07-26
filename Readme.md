@@ -6,7 +6,7 @@
 `sudo pip install pexpect`
 `sudo apt-get install python-matplotlib`
 
-Edit and set the values of these variables (e.g. `$ENVOY_BINARY`) to the appropriate values:
+Follow the instructions below and set the values of the variables (e.g. `$ENVOY_BINARY`) appropriately:
 
 1. Keep your envoy-binary in an accessible location, `$ENVOY_BINARY`.
 2. Keep all the scripts, Makefiles in a directory, `$SCRIPTS`. The scripts, Makefiles refer to the same files that are included in this benchmarking package.
