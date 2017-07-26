@@ -303,6 +303,10 @@ def main():
   parser.add_argument("--arrangement", help=("the type of arrangement in"
                                              " this experiment."),
                       default="single-vm-permanent")
+  utils.CreateBooleanArgument(parser, "ssl",
+                              ("turn on if you want"
+                               " to enable ssl for the benchmarking"),
+                              ssl=True)
 
   args = parser.parse_args()
 
@@ -342,10 +346,12 @@ def main():
   for _ in xrange(args.num_iter):
     # allocate h2load to designated cores as foreground process
     h2load_command = ("taskset -ac {}-{} "
-                      "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
+                      "h2load http{ssl}://localhost:{} -n{}"
+                      " -c{} -m{} -t{}").format(
                           h2load_start_core, h2load_end_core, args.direct_port,
                           args.h2load_reqs, args.h2load_clients,
-                          args.h2load_conns, h2load_threads)
+                          args.h2load_conns, h2load_threads,
+                          ssl="s" if args.ssl else "")
 
     result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
@@ -353,10 +359,12 @@ def main():
     print "h2load direct is done."
 
     h2load_command = ("taskset -ac {}-{} "
-                      "h2load https://localhost:{} -n{} -c{} -m{} -t{}").format(
+                      "h2load http{ssl}://localhost:{} -n{}"
+                      " -c{} -m{} -t{}").format(
                           h2load_start_core, h2load_end_core, args.envoy_port,
                           args.h2load_reqs, args.h2load_clients,
-                          args.h2load_conns, h2load_threads)
+                          args.h2load_conns, h2load_threads,
+                          ssl="s" if args.ssl else "")
     result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     print "h2load with envoy is done."

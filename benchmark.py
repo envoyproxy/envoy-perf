@@ -230,12 +230,13 @@ def RunBenchmark(args, logfile):
                                 "--h2load_clients {} "
                                 "--h2load_conns {} "
                                 "--h2load_timeout {} "
-                                "--arrangement {}").format(
+                                "--arrangement {} {ssl}").format(
                                     args.nginx_cores, args.envoy_cores,
                                     args.h2load_cores, args.h2load_reqs,
                                     args.h2load_clients, args.h2load_conns,
                                     args.h2load_timeout,
-                                    args.arrangement)],
+                                    args.arrangement,
+                                    ssl="--ssl" if args.ssl else "--no-ssl")],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
