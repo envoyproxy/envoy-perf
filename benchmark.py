@@ -351,7 +351,7 @@ def main():
   # The argument tells what was the configuration of the machines and experiment
   # Such as whether it was a single-vm, whether the VM was permanent one
   # or created newly everytime the test was being conducted
-  parser.add_argument("--arrangement", help=("the type of arrangement of
+  parser.add_argument("--arrangement", help=("the type of arrangement of"
                                              "machines in"
                                              " this experiment."),
                       default="single-vm-permanent")
