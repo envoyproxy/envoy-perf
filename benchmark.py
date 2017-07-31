@@ -226,14 +226,14 @@ def RunBenchmark(args, logfile):
                                 "--nginx_cores {} "
                                 "--envoy_cores {} "
                                 "--h2load_cores {} "
-                                "--h2load_reqs {} "
+                                "--h2load_warmup {} "
                                 "--h2load_clients {} "
-                                "--h2load_conns {} "
+                                "--h2load_duration {} "
                                 "--h2load_timeout {} "
                                 "--arrangement {} {ssl}").format(
                                     args.nginx_cores, args.envoy_cores,
-                                    args.h2load_cores, args.h2load_reqs,
-                                    args.h2load_clients, args.h2load_conns,
+                                    args.h2load_cores, args.h2load_warmup,
+                                    args.h2load_clients, args.h2load_duration,
                                     args.h2load_timeout,
                                     args.arrangement,
                                     ssl="--ssl" if args.ssl else "--no-ssl")],
@@ -366,12 +366,12 @@ def main():
                       help="the start and end core numbers for "
                            "h2load to run, separated by a comma.",
                       default="19,19")
-  parser.add_argument("--h2load_reqs",
-                      help="number of h2load requests", default="10000")
+  parser.add_argument("--h2load_warmup",
+                      help="period of time in seconds to warm up for h2load", default="5")
   parser.add_argument("--h2load_clients", help="number of h2load clients.",
-                      default="100")
-  parser.add_argument("--h2load_conns", help="number of h2load connections.",
                       default="10")
+  parser.add_argument("--h2load_duration",
+                      help="period of time in seconds for measurements in h2load", default="10")
   parser.add_argument("--h2load_timeout",
                       help="the maximum number of seconds to wait for h2load"
                            " to return some result", type=int, default=120)

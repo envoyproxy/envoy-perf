@@ -278,12 +278,12 @@ def main():
                       help="the start and end core numbers for "
                            "h2load to run, separated by a comma.",
                       default="19,19")
-  parser.add_argument("--h2load_reqs",
-                      help="number of h2load requests", default="10000")
+  parser.add_argument("--h2load_warmup",
+                      help="period of time in seconds to warm up for h2load", default="5")
   parser.add_argument("--h2load_clients", help="number of h2load clients.",
-                      default="100")
-  parser.add_argument("--h2load_conns", help="number of h2load connections.",
                       default="10")
+  parser.add_argument("--h2load_duration",
+                      help="period of time in seconds for measurements in h2load", default="10")
 
   # TODO(sohamcodes): range for port number should be checked
   parser.add_argument("--direct_port", help="the direct port for benchmarking.",
@@ -346,11 +346,11 @@ def main():
   for _ in xrange(args.num_iter):
     # allocate h2load to designated cores as foreground process
     h2load_command = ("taskset -ac {}-{} "
-                      "h2load http{ssl}://localhost:{} -n{}"
-                      " -c{} -m{} -t{}").format(
+                      "h2load http{ssl}://localhost:{} -n 0 --warm-up-time {}"
+                      " -c{} -D {} -t{}").format(
                           h2load_start_core, h2load_end_core, args.direct_port,
-                          args.h2load_reqs, args.h2load_clients,
-                          args.h2load_conns, h2load_threads,
+                          args.h2load_warmup, args.h2load_clients,
+                          args.h2load_duration, h2load_threads,
                           ssl="s" if args.ssl else "")
 
     result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
@@ -359,16 +359,17 @@ def main():
     print "h2load direct is done."
 
     h2load_command = ("taskset -ac {}-{} "
-                      "h2load http{ssl}://localhost:{} -n{}"
-                      " -c{} -m{} -t{}").format(
+                      "h2load http{ssl}://localhost:{} -n 0 --warm-up-time {}"
+                      " -c{} -D {} -t{}").format(
                           h2load_start_core, h2load_end_core, args.envoy_port,
-                          args.h2load_reqs, args.h2load_clients,
-                          args.h2load_conns, h2load_threads,
+                          args.h2load_warmup, args.h2load_clients,
+                          args.h2load_duration, h2load_threads,
                           ssl="s" if args.ssl else "")
     result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     print "h2load with envoy is done."
 
+  print pexpect.run("curl -v http://localhost:9901/stats/")
   # killing nginx, envoy processes
   nginx_process.KillProcess("-QUIT")
   envoy_process.KillProcess()
