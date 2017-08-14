@@ -217,19 +217,6 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
   return single_result_json
 
 
-def AddResultToJsonDict(single_result_json, full_dict, title):
-  """This function adds a single result to the full JSON dictionary.
-
-  Args:
-    single_result_json: the statistics of a single h2load run in JSON
-    full_dict: the dictionary in which single result will be appended.
-    title: this does not need to be unique, if it matches with any existing
-    value, then new result will be appended in the existing title category
-  """
-
-  full_dict[title].append(single_result_json)
-
-
 def GetNginxCommandLineArguments():
   """This function returns the nginx configuration.
 
@@ -256,6 +243,23 @@ def GetEnvoyCommandLineArguments(envoy_config_path, envoy_thread_number):
           str(envoy_thread_number)]
 
 
+def GetCoreRange(start, end):
+  """This function returns the core numbers separated by comma for range.
+
+  Args:
+    start: starting core number
+    end: ending core number
+  Returns:
+    Core numbers, separated by comma.
+  """
+  start_num = int(start)
+  end_num = int(end)
+  comma_string = str(start)
+  for i in range(start_num + 1, end_num + 1):
+    comma_string = "{},{}".format(comma_string, i)
+  return comma_string
+
+
 def main():
   parser = argparse.ArgumentParser(
       formatter_class=argparse.ArgumentDefaultsHelpFormatter)
@@ -279,11 +283,17 @@ def main():
                            "h2load to run, separated by a comma.",
                       default="19,19")
   parser.add_argument("--h2load_warmup",
-                      help="period of time in seconds to warm up for h2load", default="5")
+                      help="period of time in seconds to warm up for h2load",
+                      default="5")
   parser.add_argument("--h2load_clients", help="number of h2load clients.",
                       default="10")
+  parser.add_argument("--h2load_con_conn", help=("number of h2load concurrent"
+                                                 " connections."),
+                      default="10")
   parser.add_argument("--h2load_duration",
-                      help="period of time in seconds for measurements in h2load", default="10")
+                      help=("period of time in seconds for"
+                            " measurements in h2load"),
+                      default="5")
 
   # TODO(sohamcodes): range for port number should be checked
   parser.add_argument("--direct_port", help="the direct port for benchmarking.",
@@ -342,34 +352,47 @@ def main():
 
   result_json = defaultdict(list)
   logfile = open("h2load_log.log", "ab+")
+  mplog_direct = open("mpstat_direct.log", "ab+")
+  mplog_envoy = open("mpstat_envoy.log", "ab+")
+  cores_string = "{},{},{}".format(
+      GetCoreRange(nginx_start_core, nginx_end_core),
+      GetCoreRange(h2load_start_core, h2load_end_core),
+      GetCoreRange(envoy_start_core, envoy_end_core))
 
   for _ in xrange(args.num_iter):
     # allocate h2load to designated cores as foreground process
+    mpstat_direct = Process("mpstat -P {} 1".format(
+        cores_string), mplog_direct)
+    mpstat_direct.RunProcess()
     h2load_command = ("taskset -ac {}-{} "
                       "h2load http{ssl}://localhost:{} -n 0 --warm-up-time {}"
-                      " -c{} -D {} -t{}").format(
+                      " -c{} -D {} -t{} -m{}").format(
                           h2load_start_core, h2load_end_core, args.direct_port,
                           args.h2load_warmup, args.h2load_clients,
                           args.h2load_duration, h2load_threads,
+                          args.h2load_con_conn,
                           ssl="s" if args.ssl else "")
-
     result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
-
+    mpstat_direct.KillProcess("-SIGINT")
     print "h2load direct is done."
 
+    mpstat_envoy = Process("mpstat -P {} 1".format(
+        cores_string), mplog_envoy)
+    mpstat_envoy.RunProcess()
     h2load_command = ("taskset -ac {}-{} "
                       "h2load http{ssl}://localhost:{} -n 0 --warm-up-time {}"
-                      " -c{} -D {} -t{}").format(
+                      " -c{} -D {} -t{} -m{}").format(
                           h2load_start_core, h2load_end_core, args.envoy_port,
                           args.h2load_warmup, args.h2load_clients,
                           args.h2load_duration, h2load_threads,
+                          args.h2load_con_conn,
                           ssl="s" if args.ssl else "")
     result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
+    mpstat_envoy.KillProcess("-SIGINT")
     print "h2load with envoy is done."
 
-  print pexpect.run("curl -v http://localhost:9901/stats/")
   # killing nginx, envoy processes
   nginx_process.KillProcess("-QUIT")
   envoy_process.KillProcess()

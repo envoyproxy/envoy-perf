@@ -26,11 +26,11 @@ def main():
                       type=int, default=10)
   parser.add_argument("--worker_rlimit_nofile",
                       help="maximum number of open files for worker processes.",
-                      type=int, default=100000)
+                      type=int, default=10000)
   parser.add_argument("--worker_connections",
                       help="maximum number of simultaneous open connections"
                       " by a worker processes.",
-                      type=int, default=4000)
+                      type=int, default=10000)
   parser.add_argument("--keepalive_timeout",
                       help="timeout for keepalive connections.",
                       type=int, default=250)

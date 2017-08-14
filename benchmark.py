@@ -176,8 +176,8 @@ def RunBenchmark(args, logfile):
                            args=["--command",
                                  ("sudo bash ./init-script.sh {} {}"
                                   " {ssl}").format(
-                                     args.username, nginx_worker_proc_count,
-                                     ssl="--ssl" if args.ssl else "--no-ssl"),
+                                      args.username, nginx_worker_proc_count,
+                                      ssl="--ssl" if args.ssl else "--no-ssl"),
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
@@ -230,11 +230,12 @@ def RunBenchmark(args, logfile):
                                 "--h2load_clients {} "
                                 "--h2load_duration {} "
                                 "--h2load_timeout {} "
+                                "--h2load_con_conn {} "
                                 "--arrangement {} {ssl}").format(
                                     args.nginx_cores, args.envoy_cores,
                                     args.h2load_cores, args.h2load_warmup,
                                     args.h2load_clients, args.h2load_duration,
-                                    args.h2load_timeout,
+                                    args.h2load_timeout, args.h2load_con_conn,
                                     args.arrangement,
                                     ssl="--ssl" if args.ssl else "--no-ssl")],
                          logfile=logfile, zone=args.zone, project=args.project)
@@ -367,11 +368,17 @@ def main():
                            "h2load to run, separated by a comma.",
                       default="19,19")
   parser.add_argument("--h2load_warmup",
-                      help="period of time in seconds to warm up for h2load", default="5")
+                      help="period of time in seconds to warm up for h2load",
+                      default="5")
   parser.add_argument("--h2load_clients", help="number of h2load clients.",
                       default="10")
+  parser.add_argument("--h2load_con_conn", help=("number of h2load concurrent"
+                                                 " connections."),
+                      default="10")
   parser.add_argument("--h2load_duration",
-                      help="period of time in seconds for measurements in h2load", default="10")
+                      help=("period of time in seconds"
+                            " for measurements in h2load"),
+                      default="5")
   parser.add_argument("--h2load_timeout",
                       help="the maximum number of seconds to wait for h2load"
                            " to return some result", type=int, default=120)

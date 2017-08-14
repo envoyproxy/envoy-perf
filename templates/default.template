@@ -16,18 +16,6 @@ server {
 		try_files $uri $uri/ =404;
 	}
 
-    location /nginx_status {
-        # Turn on nginx stats
-        stub_status on;
-
-        access_log   off;
-
-        allow 127.0.0.1;
-
-        # Send rest of the world to /dev/null #
-        deny all;
-   }
-
   # the below comment is kept, in case needed in future
 	# deny access to .htaccess files, if Apache's document root
 	# concurs with nginx's one
