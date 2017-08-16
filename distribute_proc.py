@@ -3,6 +3,7 @@
 import argparse
 from collections import defaultdict
 import json
+import time
 
 import pexpect
 from process import Process
@@ -50,10 +51,10 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
                         timeout=h2load_timeout)
 
   child.expect(r"finished in\s+(\d+\.?\d*)([a-z]+),")  # total time
-  time, unit = child.match.groups()
+  total_time, unit = child.match.groups()
   total_time = {
       "unit": unit,
-      "data": float(time)
+      "data": float(total_time)
   }
 
   child.expect(r"\s+(\d+\.?\d*)\s*req/s,")  # total requests per second
@@ -200,6 +201,7 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
 
   while child.isalive():
     print "h2load is still alive, after parsing is complete."
+    time.sleep(2)
 
   child.close()
 
