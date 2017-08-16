@@ -3,6 +3,7 @@
 import argparse
 from collections import defaultdict
 import json
+import time
 
 import pexpect
 from process import Process
@@ -50,10 +51,10 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
                         timeout=h2load_timeout)
 
   child.expect(r"finished in\s+(\d+\.?\d*)([a-z]+),")  # total time
-  time, unit = child.match.groups()
+  total_time, unit = child.match.groups()
   total_time = {
       "unit": unit,
-      "data": float(time)
+      "data": float(total_time)
   }
 
   child.expect(r"\s+(\d+\.?\d*)\s*req/s,")  # total requests per second
@@ -198,6 +199,10 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
       "sd%": float(rps_sd_per)
   }
 
+  while child.isalive():
+    print "h2load is still alive, after parsing is complete."
+    time.sleep(2)
+
   child.close()
 
   if child.exitstatus != 0:
@@ -317,8 +322,13 @@ def main():
                               ("turn on if you want"
                                " to enable ssl for the benchmarking"),
                               ssl=True)
+  utils.CreateBooleanArgument(parser, "h1",
+                              ("turn on if you want"
+                               " to enable HTTP1.1, instead of default h2"),
+                              h1=False)
 
   args = parser.parse_args()
+  print args.h1
 
   if args.nginx_cores:
     nginx_start_core, nginx_end_core = args.nginx_cores.split(",")
@@ -366,12 +376,13 @@ def main():
     mpstat_direct.RunProcess()
     h2load_command = ("taskset -ac {}-{} "
                       "h2load http{ssl}://localhost:{} -n 0 --warm-up-time {}"
-                      " -c{} -D {} -t{} -m{}").format(
+                      " -c{} -D {} -t{} -m{} {http2}").format(
                           h2load_start_core, h2load_end_core, args.direct_port,
                           args.h2load_warmup, args.h2load_clients,
                           args.h2load_duration, h2load_threads,
                           args.h2load_con_conn,
-                          ssl="s" if args.ssl else "")
+                          ssl="s" if args.ssl else "",
+                          http2="--h1" if args.h1 else "")
     result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     mpstat_direct.KillProcess("-SIGINT")
@@ -382,12 +393,13 @@ def main():
     mpstat_envoy.RunProcess()
     h2load_command = ("taskset -ac {}-{} "
                       "h2load http{ssl}://localhost:{} -n 0 --warm-up-time {}"
-                      " -c{} -D {} -t{} -m{}").format(
+                      " -c{} -D {} -t{} -m{} {http2}").format(
                           h2load_start_core, h2load_end_core, args.envoy_port,
                           args.h2load_warmup, args.h2load_clients,
                           args.h2load_duration, h2load_threads,
                           args.h2load_con_conn,
-                          ssl="s" if args.ssl else "")
+                          ssl="s" if args.ssl else "",
+                          http2="--h1" if args.h1 else "")
     result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     mpstat_envoy.KillProcess("-SIGINT")

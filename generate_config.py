@@ -26,20 +26,24 @@ def main():
                       type=int, default=10)
   parser.add_argument("--worker_rlimit_nofile",
                       help="maximum number of open files for worker processes.",
-                      type=int, default=10000)
+                      type=int, default=200000)
   parser.add_argument("--worker_connections",
                       help="maximum number of simultaneous open connections"
                       " by a worker processes.",
-                      type=int, default=10000)
+                      type=int, default=35000)
   parser.add_argument("--keepalive_timeout",
                       help="timeout for keepalive connections.",
-                      type=int, default=250)
+                      type=int, default=2000)
   parser.add_argument("--nginx_port", help="nginx's responsive port number.",
                       type=int, default=4500)
   utils.CreateBooleanArgument(parser, "ssl",
                               ("turn on if you want"
                                " to enable ssl on Nginx"),
                               ssl=True)
+  utils.CreateBooleanArgument(parser, "h1",
+                              ("turn on if you want"
+                               " to enable HTTP1.1, instead of default h2"),
+                              h1=False)
 
   args = parser.parse_args()
   if args.nginx_port < 1024 or args.nginx_port > 65535:
@@ -58,7 +62,8 @@ def main():
   with open(args.server_config_filename, "w") as f:
     f.write(j2_env.get_template("default.template").render(
         port_no=str(args.nginx_port),
-        ssl=("ssl " if args.ssl else "")))
+        ssl=("ssl " if args.ssl else ""),
+        http2=("" if args.h1 else "http2 ")))
 
 if __name__ == "__main__":
   main()
