@@ -83,6 +83,9 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 	  --no-create_db
 	  --delete_db       turn on if you want to delete the DB (default: True)
 	  --no-delete_db
+	  --ssl                 turn on if you want to enable ssl for the benchmarking
+                        (default: True)
+  	  --no-ssl
 
 ###Generating Graphs:
 

@@ -174,8 +174,10 @@ def RunBenchmark(args, logfile):
                            zone=args.zone, project=args.project)
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
-                                 "sudo bash ./init-script.sh {} {}".format(
-                                     args.username, nginx_worker_proc_count),
+                                 ("sudo bash ./init-script.sh {} {}"
+                                  " {ssl}").format(
+                                      args.username, nginx_worker_proc_count,
+                                      ssl="--ssl" if args.ssl else "--no-ssl"),
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
@@ -194,8 +196,9 @@ def RunBenchmark(args, logfile):
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command",
                                  ("python generate_config.py ./templates/ "
-                                  "--worker_proc_count {}").format(
-                                      nginx_worker_proc_count)],
+                                  "--worker_proc_count {} {ssl}").format(
+                                      nginx_worker_proc_count,
+                                      ssl="--ssl" if args.ssl else "--no-ssl")],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
     sh_utils.RunSSHCommand(args.username, args.vm_name,
@@ -223,16 +226,18 @@ def RunBenchmark(args, logfile):
                                 "--nginx_cores {} "
                                 "--envoy_cores {} "
                                 "--h2load_cores {} "
-                                "--h2load_reqs {} "
+                                "--h2load_warmup {} "
                                 "--h2load_clients {} "
-                                "--h2load_conns {} "
+                                "--h2load_duration {} "
                                 "--h2load_timeout {} "
-                                "--arrangement {}").format(
+                                "--h2load_con_conn {} "
+                                "--arrangement {} {ssl}").format(
                                     args.nginx_cores, args.envoy_cores,
-                                    args.h2load_cores, args.h2load_reqs,
-                                    args.h2load_clients, args.h2load_conns,
-                                    args.h2load_timeout,
-                                    args.arrangement)],
+                                    args.h2load_cores, args.h2load_warmup,
+                                    args.h2load_clients, args.h2load_duration,
+                                    args.h2load_timeout, args.h2load_con_conn,
+                                    args.arrangement,
+                                    ssl="--ssl" if args.ssl else "--no-ssl")],
                          logfile=logfile, zone=args.zone, project=args.project)
   print "Benchmarking done successfully."
 
@@ -367,12 +372,18 @@ def main():
                       help="the start and end core numbers for "
                            "h2load to run, separated by a comma.",
                       default="19,19")
-  parser.add_argument("--h2load_reqs",
-                      help="number of h2load requests", default="10000")
+  parser.add_argument("--h2load_warmup",
+                      help="period of time in seconds to warm up for h2load",
+                      default="5")
   parser.add_argument("--h2load_clients", help="number of h2load clients.",
-                      default="100")
-  parser.add_argument("--h2load_conns", help="number of h2load connections.",
                       default="10")
+  parser.add_argument("--h2load_con_conn", help=("number of h2load concurrent"
+                                                 " connections."),
+                      default="10")
+  parser.add_argument("--h2load_duration",
+                      help=("period of time in seconds"
+                            " for measurements in h2load"),
+                      default="5")
   parser.add_argument("--h2load_timeout",
                       help="the maximum number of seconds to wait for h2load"
                            " to return some result", type=int, default=120)
@@ -401,6 +412,10 @@ def main():
                               ("turn on if you want"
                                " to delete the DB"),
                               delete_db=True)
+  utils.CreateBooleanArgument(parser, "ssl",
+                              ("turn on if you want"
+                               " to enable ssl for the benchmarking"),
+                              ssl=True)
 
   args = parser.parse_args()
 

@@ -5,6 +5,8 @@ import argparse
 from jinja2 import Environment
 from jinja2 import FileSystemLoader
 
+import utils
+
 
 def main():
   parser = argparse.ArgumentParser(
@@ -24,16 +26,20 @@ def main():
                       type=int, default=10)
   parser.add_argument("--worker_rlimit_nofile",
                       help="maximum number of open files for worker processes.",
-                      type=int, default=100000)
+                      type=int, default=10000)
   parser.add_argument("--worker_connections",
                       help="maximum number of simultaneous open connections"
                       " by a worker processes.",
-                      type=int, default=4000)
+                      type=int, default=10000)
   parser.add_argument("--keepalive_timeout",
                       help="timeout for keepalive connections.",
                       type=int, default=250)
   parser.add_argument("--nginx_port", help="nginx's responsive port number.",
                       type=int, default=4500)
+  utils.CreateBooleanArgument(parser, "ssl",
+                              ("turn on if you want"
+                               " to enable ssl on Nginx"),
+                              ssl=True)
 
   args = parser.parse_args()
   if args.nginx_port < 1024 or args.nginx_port > 65535:
@@ -51,7 +57,8 @@ def main():
 
   with open(args.server_config_filename, "w") as f:
     f.write(j2_env.get_template("default.template").render(
-        port_no=str(args.nginx_port)))
+        port_no=str(args.nginx_port),
+        ssl=("ssl " if args.ssl else "")))
 
 if __name__ == "__main__":
   main()
