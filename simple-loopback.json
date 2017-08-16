@@ -54,6 +54,13 @@
       {
         "name": "local_service",
         "features": "http2",
+        "circuit_breakers": {
+          "default": {
+            "max_connections": 98304,
+            "max_pending_requests": 98304,
+            "max_requests": 98304
+          }
+        },
         "ssl_context": {
           "alpn_protocols": "h2",
           "ca_cert_file": "/etc/nginx/ssl/cert.pem"
