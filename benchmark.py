@@ -234,12 +234,13 @@ def RunBenchmark(args, logfile):
                                 "--h2load_duration {} "
                                 "--h2load_timeout {} "
                                 "--h2load_con_conn {} "
+                                "--num_iter {}"
                                 "--arrangement {} {ssl} {http2}").format(
                                     args.nginx_cores, args.envoy_cores,
                                     args.h2load_cores, args.h2load_warmup,
                                     args.h2load_clients, args.h2load_duration,
                                     args.h2load_timeout, args.h2load_con_conn,
-                                    args.arrangement,
+                                    args.num_iter, args.arrangement,
                                     ssl="--ssl" if args.ssl else "--no-ssl",
                                     http2="--h1" if args.h1 else "--no-h1")],
                          logfile=logfile, zone=args.zone, project=args.project)
