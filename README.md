@@ -69,6 +69,8 @@ The above command will create a VM in the `us-east1-b` zone (default) with the n
 	  --envoy_hash      the hash of envoy version (default: None)
 	  --runid           the run id of this benchmark (default: 0)
 	  --database 	    name of the database (default: envoy_stat_db)
+    --num_iter   		the number of times h2load will be executed,
+                        separately for direct and Envoy (default: 5)
 	  --create_delete   if you want to create/delete new benchmarking VM.
 		                (default: True)
 	  --no-create_delete
