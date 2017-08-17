@@ -151,14 +151,14 @@ def DrawTimeSeriesGraph(connection, table_name, y_axis_field, time,
                              y_axis_field, connection, table_name)
 
   if direct_list:
-    direct_means, direct_std = zip(*direct_list)
+    direct_means, direct_std = zip(*direct_list)[:2]
     direct_times = [v[2].time().strftime("%H:%M") if not i % 2 else ""
                     for i, v in enumerate(direct_list)]
   else:
     raise ShowGraphError("Direct's data not found for time-series graph.")
 
   if envoy_list:
-    envoy_means, envoy_std = zip(*envoy_list)
+    envoy_means, envoy_std = zip(*envoy_list)[:2]
     # time is not needed again but if needed, it can be taken from here
     # envoy_times = [v[2] for v in envoy_list]
   else:
@@ -175,6 +175,18 @@ def DrawTimeSeriesGraph(connection, table_name, y_axis_field, time,
   ax.set_xticklabels(direct_times, rotation="vertical", fontsize=8)
   ax.legend((rects1[0], rects2[0]), ("Direct", "Envoy"),
             loc="center left", bbox_to_anchor=(1, 0.5))
+
+  # Helper function to put standard deviation as labels inside the graph
+  # data points
+  def PutStdDevOnGraph(ax, rects, stddev):
+    for i, num in enumerate(rects[0].get_xydata()):
+      ax.text(num[0], 1.05*num[1],
+              "%d%%" % int(100.0*stddev[i]/(1.0*num[1])),
+              ha="center", va="bottom", fontsize=8)
+
+  PutStdDevOnGraph(ax, rects1, direct_std)
+  PutStdDevOnGraph(ax, rects2, envoy_std)
+
   fig.savefig("Time-{}-{}.png".format(time, arrangement),
               bbox_inches="tight")
 
