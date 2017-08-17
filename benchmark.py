@@ -391,6 +391,10 @@ def main():
   parser.add_argument("--h2load_timeout",
                       help="the maximum number of seconds to wait for h2load"
                            " to return some result", type=int, default=120)
+  parser.add_argument("--num_iter",
+                      help=("the number of times h2load will be"
+                            " executed, separately for direct and Envoy"),
+                      type=int, default=5)
 
   utils.CreateBooleanArgument(parser, "create_delete",
                               ("if you want to create and "
