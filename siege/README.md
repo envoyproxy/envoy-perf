@@ -23,13 +23,11 @@ overall throughput, error rate, and max latency.
 
 **Prerequisites:**
 
-You must have an origin server running on your system, such as nginx or apache2. By default,
-apache2 on ubuntu serves a top-level index.html that is good enough to get started. You must
-also have the siege binary installed, either from the distro or by building from
-https://github.com/JoeDog/siege.
+You must have python3 and the siege binary installed, either from the distro or by
+building from https://github.com/JoeDog/siege.
 
 ```shell
-sudo apt-get install apache2 siege
+sudo apt-get install siege
 ```
 
 **Building the clean and experimental version of Envoy**
