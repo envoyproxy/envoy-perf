@@ -18,3 +18,7 @@ Performance benchmarking can take multiple forms:
    performance in a realistic multi-machine scenario. However, the insructions
    don't work, and it hasn't been touched in a year (other than moving the
    files).
+2. siege/ contains an initial attempt at a simple test to run iteratively
+   during development to get a view of the time/space impact of the changes
+   under configuration.
+   
