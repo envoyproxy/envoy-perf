@@ -63,7 +63,7 @@ def main(argv):
   clean = parseCsv(argv[1].replace(".csv", ".mem"))
   experimental = parseCsv(argv[2].replace(".csv", ".mem"))
 
-  addRow("Stats Mem")
+  addRow("EnvoyMem")
   addRow("VSZ")
   addRow("RSS")
 

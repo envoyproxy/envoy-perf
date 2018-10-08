@@ -5,16 +5,34 @@
 #
 # Usage:
 #    siege.sh clean_envoy_binary experimental_envoy_binary output_dir
+#
+# The two binaries should generally be built with
+#     bazel build -c opt source/exe:envoy-static
+# and can then be copied to a safe place (e.g. /tmp) so that they can each
+# be based on a single git workspace that you flip between branches.
+#
+# output_dir is where the logs and raw CSV files get written, but the
+# the summarized performance data is printed as a table to stdout.
 
 set -e
 set -u
 
+if [ $# != 3 ]; then
+  echo Usage: $0 clean_envoy_binary experimental_envoy_binary output_dir
+  exit 1
+fi
+
+# Capture arguments as locals for readability.
 clean_envoy="$1"
 experimental_envoy="$2"
 outdir="$3"
 
+# Connect to the script directory so local references to the yaml configs and
+# lorem_ipsum.txt work.
 siege_dir=$(dirname $(realpath $0))
+cd "$siege_dir"
 
+# Derive some temp filenames from $outdir.
 log="$outdir/siege.log"
 clean_csv="$outdir/clean.csv"
 clean_mem="$outdir/clean.mem"
@@ -23,34 +41,47 @@ experimental_mem="$outdir/experimental.mem"
 
 # TODO(jmarantz): make the configuration pluggable, which means grepping
 # for these ports rather than hardcoding them. It's annoying to grep in
-# yaml files because there isn't per-line context.
+# yaml files because there isn't per-line context. Another possibility
+# is to scrape them from Envoy log output.
 proxy_port=10001
 upstream_port=10000
 admin_port=8081
 
 envoy_conf="$siege_dir/front-proxy.yaml"
-file="lorem_ipsum.txt"
-upstream_url="http://127.0.0.1:$upstream_port/$file"
-proxy_url="http://127.0.0.1:$proxy_port/$file"
+upstream_url="http://127.0.0.1:$upstream_port"
+proxy_url="http://127.0.0.1:$proxy_port"
 
-# siege sometimes hangs when using time-based exit criteria.  See
-# https://github.com/JoeDog/siege/issues/66 .  In the meantime, use
-# repetitions, which don't have that issue.
-# --time=5s
+# Siege sometimes hangs when using time-based exit criteria.  See
+# https://github.com/JoeDog/siege/issues/66.  In the meantime, use
+# repetitions, which don't have that issue. If we were to use time
+# we'd specify something like --time=5s.
+#
+# TODO(jmarantz): it would be nice to make the number of reps configurable,
+# e.g. with a command-line option.
 reps=2000
 siege_args="--reps=$reps --rc=$siege_dir/siege.conf $proxy_url"
 
+# Clean up any old log files, so the CSVs just show the results from
+# the runs we are about to do.
 rm -f "$log" "$clean_csv" "$experimental_csv"
-echo "Stats Mem, VSZ, RSS" > "$clean_mem"
+echo "EnvoyMem, VSZ, RSS" > "$clean_mem"
 cp "$clean_mem" "$experimental_mem"
 
+# We use the admin port both for scraping memory and for quitting at
+# the end of each run.
 admin="http://127.0.0.1:$admin_port"
 
+# Blocks the script until a server started in the background is ready
+# to respond to the URL passed as an arg.
 function wait_for_url() {
   local url="$1"
   (set +e; set +x; until curl "$url"; do sleep 0.1; done) &>> "$log"
 }
 
+# Starts up Envoy that serves as both an origin and a proxy, and then
+# sieges it with ~50k requests, measuring the overall throughput, errors,
+# and memory usage. The path to the binary and filenames to collect
+# performance and memory CSVs are passed in.
 function run_envoy_and_siege() {
   local envoy="$1"
   local csv="$2"
@@ -66,24 +97,25 @@ function run_envoy_and_siege() {
   wait_for_url "$proxy_url"
   wait_for_url "$upstream_url"
 
-  # Siege the envoy, then quit and wait for the background process to exit
+  # Siege the envoy.
   (set +e; set -x; siege --log="$csv" $siege_args) &>> "$log"
 
+  # Capture Envoy's opinion of how much memory it's using, and also
+  # ask the OS what it thinks via ps. Append those to a separate CSV
+  # file from the one harvested by siege.
   statmem=$(curl -s "$admin/memory" | grep allocated | cut -d\" -f4)
-
-  # Collecting the envoy PID with $! after instantiating it doesn't seem to
-  # work. Maybe it forks? In any case, get it now via grep.
-  
   pid_vsz_rsz=$(ps -eo pid,vsz,rsz | grep "^[ ]*$envoy_pid ")
   vsz=$(echo "$pid_vsz_rsz" | cut -d\  -f2)
   rsz=$(echo "$pid_vsz_rsz" | cut -d\  -f3)
   echo "$statmem,$vsz,$rsz" >> "$mem"
 
+  # Send Envoy a quit request and wait for the process to exit.
   (set -x; curl -X POST "$admin/quitquitquit") &>> "$log"
   wait
 }
 
-
+# Loops 5x interleaving runs with the clean and experimental versions
+# of Envoy, collecting the results in separate CSV files.
 echo -n Logging 10 runs to "$log"...
 for run in {0..4}; do
   run_envoy_and_siege "$clean_envoy" "$clean_csv" "$clean_mem"
