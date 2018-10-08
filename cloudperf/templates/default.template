@@ -1,0 +1,28 @@
+# This template is used to generate one of nginx configurations files.
+server {
+
+	# SSL configuration
+	#
+	 listen {{ port_no }} {{ ssl }}{{ http2 }}default_server;
+	 listen [::]:{{ port_no }} {{ ssl }}{{ http2 }}default_server;
+
+	index index.html index.htm index.nginx-debian.html;
+
+	server_name _;
+
+	location / {
+		# First attempt to serve request as file, then
+		# as directory, then fall back to displaying a 404.
+		try_files $uri $uri/ =404;
+	}
+
+  # the below comment is kept, in case needed in future
+	# deny access to .htaccess files, if Apache's document root
+	# concurs with nginx's one
+	#
+	#location ~ /\.ht {
+	#	deny all;
+	#}
+	ssl_certificate /etc/nginx/ssl/cert.pem;
+	ssl_certificate_key /etc/nginx/ssl/key.pem;
+}
