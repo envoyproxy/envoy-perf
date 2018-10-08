@@ -34,10 +34,13 @@ cd "$siege_dir"
 
 # Derive some temp filenames from $outdir.
 log="$outdir/siege.log"
-clean_csv="$outdir/clean.csv"
-clean_mem="$outdir/clean.mem"
-experimental_csv="$outdir/experimental.csv"
-experimental_mem="$outdir/experimental.mem"
+clean_perf_csv="$outdir/clean.perf.csv"
+clean_mem_csv="$outdir/clean.mem.csv"
+clean_csv_files="$clean_perf_csv $clean_mem_csv"
+experimental_perf_csv="$outdir/experimental.perf.csv"
+experimental_mem_csv="$outdir/experimental.mem.csv"
+experimental_csv_files="$experimental_perf_csv $experimental_mem_csv"
+csv_files="$clean_csv_files $experimental_csv_files"
 
 # TODO(jmarantz): make the configuration pluggable, which means grepping
 # for these ports rather than hardcoding them. It's annoying to grep in
@@ -63,9 +66,9 @@ siege_args="--reps=$reps --rc=$siege_dir/siege.conf $proxy_url"
 
 # Clean up any old log files, so the CSVs just show the results from
 # the runs we are about to do.
-rm -f "$log" "$clean_csv" "$experimental_csv"
-echo "EnvoyMem, VSZ, RSS" > "$clean_mem"
-cp "$clean_mem" "$experimental_mem"
+rm -f "$log" $csv_files
+echo "EnvoyMem, VSZ, RSS" > "$clean_mem_csv"
+cp "$clean_mem_csv" "$experimental_mem_csv"
 
 # We use the admin port both for scraping memory and for quitting at
 # the end of each run.
@@ -84,8 +87,8 @@ function wait_for_url() {
 # performance and memory CSVs are passed in.
 function run_envoy_and_siege() {
   local envoy="$1"
-  local csv="$2"
-  local mem="$3"
+  local perf_csv="$2"
+  local mem_csv="$3"
 
   # Run Envoy in the background and wait for it to respond on the upstream
   # port, admin port, and proxy port.
@@ -98,7 +101,7 @@ function run_envoy_and_siege() {
   wait_for_url "$upstream_url"
 
   # Siege the envoy.
-  (set +e; set -x; siege --log="$csv" $siege_args) &>> "$log"
+  (set +e; set -x; siege --log="$perf_csv" $siege_args) &>> "$log"
 
   # Capture Envoy's opinion of how much memory it's using, and also
   # ask the OS what it thinks via ps. Append those to a separate CSV
@@ -107,7 +110,7 @@ function run_envoy_and_siege() {
   pid_vsz_rsz=$(ps -eo pid,vsz,rsz | grep "^[ ]*$envoy_pid ")
   vsz=$(echo "$pid_vsz_rsz" | cut -d\  -f2)
   rsz=$(echo "$pid_vsz_rsz" | cut -d\  -f3)
-  echo "$statmem,$vsz,$rsz" >> "$mem"
+  echo "$statmem,$vsz,$rsz" >> "$mem_csv"
 
   # Send Envoy a quit request and wait for the process to exit.
   (set -x; curl -X POST "$admin/quitquitquit") &>> "$log"
@@ -118,14 +121,14 @@ function run_envoy_and_siege() {
 # of Envoy, collecting the results in separate CSV files.
 echo -n Logging 10 runs to "$log"...
 for run in {0..4}; do
-  run_envoy_and_siege "$clean_envoy" "$clean_csv" "$clean_mem"
+  run_envoy_and_siege "$clean_envoy" $clean_csv_files
   echo -n "...$((2*run+1))"
-  run_envoy_and_siege "$experimental_envoy" "$experimental_csv" "$experimental_mem"
+  run_envoy_and_siege "$experimental_envoy" $experimental_csv_files
   echo -n "...$((2*run+2))"
 done
 
 echo ""
-./siege_result_analysis.py "$clean_csv" "$experimental_csv"
+./siege_result_analysis.py $csv_files
 
 echo ""
-echo CSV files written to "$clean_csv" and "$experimental_csv"
+echo CSV files written to $csv_files

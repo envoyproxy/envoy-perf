@@ -29,13 +29,11 @@ def columnValues(data, column_name):
   return [float(row[column_name]) for row in data]
 
 def main(argv):
-  # Setup reader.
-  if len(argv) != 3:
-    print('Usage: %s csv_file [column_name...]' % argv[0])
-    print('if you omit the column name, %s will print them out' % argv[0])
+  if len(argv) != 5:
+    print('Usage: %s clean_perf_csv clean_mem_csv experimental_perf_csv experimental_mem_csv' % argv[0])
     sys.exit(1)
   clean = parseCsv(argv[1])
-  experimental = parseCsv(argv[2])
+  experimental = parseCsv(argv[3])
 
   # Set up a matrix for printing the analyzed results
   matrix = [["", "Clean", "Std Dev", "Experimental", "Std Dev", "Improvement"],
@@ -60,8 +58,8 @@ def main(argv):
   addRow("Throughput")
   addRow("Failed")
 
-  clean = parseCsv(argv[1].replace(".csv", ".mem"))
-  experimental = parseCsv(argv[2].replace(".csv", ".mem"))
+  clean = parseCsv(argv[2])
+  experimental = parseCsv(argv[4])
 
   addRow("EnvoyMem")
   addRow("VSZ")
