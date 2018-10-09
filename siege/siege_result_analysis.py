@@ -42,8 +42,9 @@ def columnValues(data, column_name):
   return [float(row[column_name]) for row in data]
 
 def main(argv):
-  if len(argv) != 5:
-    print('Usage: %s clean_perf_csv clean_mem_csv experimental_perf_csv experimental_mem_csv' % argv[0])
+  if len(argv) != 6:
+    print('Usage: %s clean_perf_csv clean_mem_csv experimental_perf_csv ' +
+          'experimental_mem_csv aggregate_csv' % argv[0])
     sys.exit(1)
 
   # Save the performance CSV data from the clean and experimental runs, using
@@ -51,9 +52,10 @@ def main(argv):
   clean = parseCsv(argv[1])
   experimental = parseCsv(argv[3])
 
-  # Set up a matrix for printing the analyzed perf results.
-  matrix = [["", "Clean", "Std Dev", "Experimental", "Std Dev", "Improvement"],
-            ["", "-----", "-------", "------------", "-------", "-----------"]]
+  # Write aggregated stats to aggregate.csv
+  aggregate = open(argv[5], "w")
+  aggregate.write(",Clean,Std Dev,Experimental,Std Dev,Improvement\n")
+  aggregate.write(",-----,-------,------------,-------,-----------\n")
 
   # Adds a row to the matrix for later printing, including the medians and
   # standard deviations for a particular column.
@@ -62,15 +64,15 @@ def main(argv):
     exp_values = columnValues(experimental, metric)
     mean_clean = statistics.median(clean_values)
     mean_exp = statistics.median(exp_values)
-    improvement = 0
+    improvement = "0"
     if mean_clean > 0:
       improvement_percent = 100 * ((mean_clean - mean_exp) / mean_clean)
       improvement = "%s%%" % round(improvement_percent, 3)
-    matrix.append([
+    aggregate.write("%s,%s,%s,%s,%s,%s\n" % (
         metric,
         round(mean_clean, 2), round(statistics.stdev(clean_values), 3),
         round(mean_exp, 2), round(statistics.stdev(exp_values), 3),
-        improvement])
+        improvement))
 
   # Compute the performance data stats and add them to the matrix.
   addRow("Trans Rate")
@@ -86,15 +88,7 @@ def main(argv):
   addRow("VSZ")
   addRow("RSS")
 
-  # Finally, render the matrix in a simple table. There are various packages we
-  # could use to print this in really swanky ascii, but this tabular format
-  # appears sufficient, and doesn't require taking on an external package
-  # install.
-  for row in matrix:
-    str = ""
-    for col in row:
-      str += "%-15s" % col
-    print(str)
+  aggregate.close()
 
   sys.exit(0)
 

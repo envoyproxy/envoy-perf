@@ -1,6 +1,6 @@
 # Envoy simple performance scripts.
 
-**Development-focused benchmarks:**
+##Development-focused benchmarks:
 
 When updating code in Envoy it is often useful to try to reason about the
 performance impact of a change you are making. It is handy to have a suite of
@@ -16,12 +16,12 @@ best results:
 4. If you are testing code changes, interleave runs between an envoy-static built from master
    and one built from your branch.
 
-**About Siege:**
+##About Siege:
 
 Siege is a github project that efficiently pummels an HTTP server with requests and measures
 overall throughput, error rate, and max latency.
 
-**Prerequisites:**
+##Prerequisites:
 
 You must have python3 and the siege binary installed, either from the distro or by
 building from https://github.com/JoeDog/siege.
@@ -30,7 +30,7 @@ building from https://github.com/JoeDog/siege.
 sudo apt-get install siege
 ```
 
-**Building the clean and experimental version of Envoy**
+##:Building the clean and experimental version of Envoy:
 
 ```shell
 cd ../envoy

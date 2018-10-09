@@ -26,6 +26,7 @@ fi
 clean_envoy="$1"
 experimental_envoy="$2"
 outdir="$3"
+aggregate_csv="$outdir/aggregate.csv"
 
 # Connect to the script directory so local references to the yaml configs and
 # lorem_ipsum.txt work.
@@ -40,7 +41,8 @@ clean_csv_files="$clean_perf_csv $clean_mem_csv"
 experimental_perf_csv="$outdir/experimental.perf.csv"
 experimental_mem_csv="$outdir/experimental.mem.csv"
 experimental_csv_files="$experimental_perf_csv $experimental_mem_csv"
-csv_files="$clean_csv_files $experimental_csv_files"
+aggregate_csv="$outdir/aggregate.csv"
+csv_files="$clean_csv_files $experimental_csv_files $aggregate_csv"
 
 # TODO(jmarantz): make the configuration pluggable, which means grepping
 # for these ports rather than hardcoding them. It's annoying to grep in
@@ -131,4 +133,8 @@ echo ""
 ./siege_result_analysis.py $csv_files
 
 echo ""
-echo CSV files written to $csv_files
+column -s, -t < "$aggregate_csv"
+# less -#2 -N -S
+
+echo ""
+echo CSV files written to $csv_files "$aggregate_csv"
