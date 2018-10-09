@@ -54,8 +54,8 @@ def main(argv):
 
   # Write aggregated stats to aggregate.csv
   aggregate = open(argv[5], "w")
-  aggregate.write(",Clean,Std Dev,Experimental,Std Dev,Improvement\n")
-  aggregate.write(",-----,-------,------------,-------,-----------\n")
+  aggregate.write(" ,Clean,Std Dev,Experimental,Std Dev,Improvement\n")
+  aggregate.write(" ,-----,-------,------------,-------,-----------\n")
 
   # Adds a row to the matrix for later printing, including the medians and
   # standard deviations for a particular column.
