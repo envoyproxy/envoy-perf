@@ -18,8 +18,9 @@ best results:
 
 ##About Siege:
 
-Siege is a github project that efficiently pummels an HTTP server with requests and measures
-overall throughput, error rate, and max latency.
+Siege is a github project that efficiently pummels an HTTP 1.1 server with
+requests and measures overall throughput, error rate, and max latency. It is
+also available pre-built on Debian and possibly other distros.
 
 ##Prerequisites:
 
