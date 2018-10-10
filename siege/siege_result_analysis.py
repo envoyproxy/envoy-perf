@@ -36,15 +36,28 @@ def parseCsv(file):
     return [{k: v for k, v in row.items()}
             for row in csv.DictReader(f, skipinitialspace=True)]
 
-# Extracts the values of a particular column-name from the array of map,
+# Extracts the values of a particular column-name from the array of maps,
 # returning the array of values.
 def columnValues(data, column_name):
-  return [float(row[column_name]) for row in data]
+  # A simple way to write out the column values is:
+  #    return [float(row[column_name]) for row in data]
+  # However this will fail one of the pieces of data is corrupt. Instead, let's
+  # track parse failures overall and manually build up the array of values.
+  failures = 0
+  values = []
+  for row in data:
+    try:
+      value = float(row[column_name])
+      values.append(value)
+    except Exception as e:
+      print("failure parsing float: `%s`" % str(e))
+      failures = failures + 1
+  return values, failures
 
 def main(argv):
   if len(argv) != 6:
-    print('Usage: %s clean_perf_csv clean_mem_csv experimental_perf_csv ' +
-          'experimental_mem_csv aggregate_csv' % argv[0])
+    print(('Usage: %s clean_perf_csv clean_mem_csv experimental_perf_csv '
+           'experimental_mem_csv aggregate_csv') % argv[0])
     sys.exit(1)
 
   # Save the performance CSV data from the clean and experimental runs, using
@@ -54,24 +67,24 @@ def main(argv):
 
   # Write aggregated stats to aggregate.csv
   aggregate = open(argv[5], "w")
-  aggregate.write(" ,Clean,Std Dev,Experimental,Std Dev,Improvement\n")
-  aggregate.write(" ,-----,-------,------------,-------,-----------\n")
+  aggregate.write(" ,Clean,Std Dev,Failures,Experimental,Std Dev,Failures,Improvement\n")
+  aggregate.write(" ,-----,-------,--------,------------,-------,--------,-----------\n")
 
   # Adds a row to the matrix for later printing, including the medians and
   # standard deviations for a particular column.
   def addRow(metric):
-    clean_values = columnValues(clean, metric)
-    exp_values = columnValues(experimental, metric)
+    clean_values, exp_failures = columnValues(clean, metric)
+    exp_values, clean_failures = columnValues(experimental, metric)
     mean_clean = statistics.median(clean_values)
     mean_exp = statistics.median(exp_values)
     improvement = "0"
     if mean_clean > 0:
       improvement_percent = 100 * ((mean_clean - mean_exp) / mean_clean)
       improvement = "%s%%" % round(improvement_percent, 3)
-    aggregate.write("%s,%s,%s,%s,%s,%s\n" % (
+    aggregate.write("%s,%s,%s,%s,%s,%s,%s,%s\n" % (
         metric,
-        round(mean_clean, 2), round(statistics.stdev(clean_values), 3),
-        round(mean_exp, 2), round(statistics.stdev(exp_values), 3),
+        round(mean_clean, 2), round(statistics.stdev(clean_values), 3), exp_failures,
+        round(mean_exp, 2), round(statistics.stdev(exp_values), 3), clean_failures,
         improvement))
 
   # Compute the performance data stats and add them to the matrix.
