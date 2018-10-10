@@ -52,7 +52,7 @@ proxy_port=10001
 upstream_port=10000
 admin_port=8081
 
-envoy_conf="$siege_dir/front-proxy.yaml"
+envoy_conf="$siege_dir/front-proxy.json"
 upstream_url="http://127.0.0.1:$upstream_port"
 proxy_url="http://127.0.0.1:$proxy_port"
 
