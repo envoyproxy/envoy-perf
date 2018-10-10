@@ -13,6 +13,8 @@
 #
 # output_dir is where the logs and raw CSV files get written, but the
 # the summarized performance data is printed as a table to stdout.
+#
+# TODO(jmarantz): rewrite in Python.
 
 set -e
 set -u
@@ -134,7 +136,6 @@ echo ""
 
 echo ""
 column -s, -t < "$aggregate_csv"
-# less -#2 -N -S
 
 echo ""
 echo CSV files written to $csv_files "$aggregate_csv"
