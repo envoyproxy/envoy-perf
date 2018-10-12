@@ -66,42 +66,40 @@ def main(argv):
   experimental = parseCsv(argv[3])
 
   # Write aggregated stats to aggregate.csv
-  aggregate = open(argv[5], "w")
-  aggregate.write(" ,Clean,Std Dev,Failures,Experimental,Std Dev,Failures,Improvement\n")
-  aggregate.write(" ,-----,-------,--------,------------,-------,--------,-----------\n")
+  with open(argv[5], "w") as aggregate:
+    aggregate.write(" ,Clean,Std Dev,Failures,Experimental,Std Dev,Failures,Improvement\n")
+    aggregate.write(" ,-----,-------,--------,------------,-------,--------,-----------\n")
 
-  # Adds a row to the matrix for later printing, including the medians and
-  # standard deviations for a particular column.
-  def addRow(metric):
-    clean_values, exp_failures = columnValues(clean, metric)
-    exp_values, clean_failures = columnValues(experimental, metric)
-    mean_clean = statistics.median(clean_values)
-    mean_exp = statistics.median(exp_values)
-    improvement = "0"
-    if mean_clean > 0:
-      improvement_percent = 100 * ((mean_clean - mean_exp) / mean_clean)
-      improvement = "%s%%" % round(improvement_percent, 3)
-    aggregate.write("%s,%s,%s,%s,%s,%s,%s,%s\n" % (
-        metric,
-        round(mean_clean, 2), round(statistics.stdev(clean_values), 3), exp_failures,
-        round(mean_exp, 2), round(statistics.stdev(exp_values), 3), clean_failures,
-        improvement))
+    # Adds a row to the matrix for later printing, including the medians and
+    # standard deviations for a particular column.
+    def addRow(metric):
+      clean_values, exp_failures = columnValues(clean, metric)
+      exp_values, clean_failures = columnValues(experimental, metric)
+      mean_clean = statistics.median(clean_values)
+      mean_exp = statistics.median(exp_values)
+      improvement = "0"
+      if mean_clean > 0:
+        improvement_percent = 100 * ((mean_clean - mean_exp) / mean_clean)
+        improvement = "%s%%" % round(improvement_percent, 3)
+      aggregate.write("%s,%s,%s,%s,%s,%s,%s,%s\n" % (
+          metric,
+          round(mean_clean, 2), round(statistics.stdev(clean_values), 3), exp_failures,
+          round(mean_exp, 2), round(statistics.stdev(exp_values), 3), clean_failures,
+          improvement))
 
-  # Compute the performance data stats and add them to the matrix.
-  addRow("Trans Rate")
-  addRow("Throughput")
-  addRow("Failed")
+    # Compute the performance data stats and add them to the matrix.
+    addRow("Trans Rate")
+    addRow("Throughput")
+    addRow("Failed")
 
-  # Now parse the memory CSV data, collate & compute stats, and add those as new
-  # rows of the performande matrix.
-  clean = parseCsv(argv[2])
-  experimental = parseCsv(argv[4])
+    # Now parse the memory CSV data, collate & compute stats, and add those as new
+    # rows of the performande matrix.
+    clean = parseCsv(argv[2])
+    experimental = parseCsv(argv[4])
 
-  addRow("EnvoyMem")
-  addRow("VSZ")
-  addRow("RSS")
-
-  aggregate.close()
+    addRow("EnvoyMem")
+    addRow("VSZ")
+    addRow("RSS")
 
   sys.exit(0)
 
