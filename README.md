@@ -1,6 +1,6 @@
 # Envoy performance tools collection
 
-##Performance benchmarking Options:
+## Performance benchmarking Options
 
 Performance benchmarking can take multiple forms:
 
@@ -12,7 +12,7 @@ Performance benchmarking can take multiple forms:
    -- similar to coverage tests
 
 
-##Subdirectories:
+## Subdirectories
 
 1. [cloudperf/](cloudperf/README.md) contains what appears to be an attempt an
    attempt at measuring performance in a realistic multi-machine
