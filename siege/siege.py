@@ -87,6 +87,42 @@ def main(argv):
   vsz_mem = []
   rss_mem = []
 
+
+  # Starts up Envoy that serves as both an origin and a proxy, and then
+  # sieges it with ~50k requests, measuring the overall throughput, errors,
+  # and memory usage. The path to the binary and filenames to collect
+  # performance CSV into a file that's passed in, and return some memory info
+  # as a triple...
+  def runEnvoyAndSiege(envoy_binary, csv_files):
+    # Run Envoy in the background and wait for it to respond on the upstream
+    # port, admin port, and proxy port.
+    #echo "$envoy" -c "$envoy_conf" "&" &>> "$log"
+    envoy = subprocess.Popen([envoy_binary, "-c", envoy_conf])
+
+    waitForUrl(admin)
+    waitForUrl(proxy_url)
+    waitForUrl(upstream_url)
+
+    # Siege the envoy.
+    subprocess.call(["siege", "--log=" + csv_files[0]] + siege_args)
+    # (set +e; set -x; siege --log="$perf_csv" $siege_args) &>> "$log"
+
+    # Capture Envoy's opinion of how much memory it's using, and also
+    # ask the OS what it thinks via ps. Append those to a separate CSV
+    # file from the one harvested by siege.
+    statmem = loadJson(admin + "/memory")["allocated"]
+    #pid_vsz_rsz = $(ps -eo pid,vsz,rsz | grep "^[ ]*$envoy_pid ")
+    #vsz=$(echo "$pid_vsz_rsz" | cut -d\  -f2)
+    #rsz=$(echo "$pid_vsz_rsz" | cut -d\  -f3)
+
+    with open(csv_files[1], "a") as mem_csv:
+      mem_csv.write("%s,%d,%d" % (statmem, 0, 0))
+
+    # Send Envoy a quit request and wait for the process to exit.
+    requests.post(admin + "/quitquitquit")
+    envoy.wait()
+
+
   # echo "EnvoyMem, VSZ, RSS" > "$clean_mem_csv"
   # cp "$clean_mem_csv" "$experimental_mem_csv"
 
@@ -94,14 +130,14 @@ def main(argv):
   # of Envoy, collecting the results in separate CSV files.
   print("Logging 10 runs to %s ... " % log)
   for run in range(0, 4):
-    runEnvoyAndSiege(clean_envoy, envoy_conf, clean_csv_files, siege_args)
+    runEnvoyAndSiege(clean_envoy, clean_csv_files)
     print("...%d" % (2 * run + 1))
-    runEnvoyAndSiege(experimental_envoy, envoy_conf, experimental_csv_files, siege_args)
+    runEnvoyAndSiege(experimental_envoy, experimental_csv_files)
     print("...%d" % (2 * run + 2))
 
   print("\n")
   #./siege_result_analysis.py $csv_files
-  print("\nCSV files written to %s\n", csv_files)
+  print("\nCSV files written to %s\n" % csv_files)
 
 # Blocks the script until a server started in the background is ready
 # to respond to the URL passed as an arg.
@@ -126,39 +162,5 @@ def loadJson(url):
   data = handle.read().decode("utf-8")
   handle.close()
   return json.loads(data)
-
-# Starts up Envoy that serves as both an origin and a proxy, and then
-# sieges it with ~50k requests, measuring the overall throughput, errors,
-# and memory usage. The path to the binary and filenames to collect
-# performance CSV into a file that's passed in, and return some memory info
-# as a triple...
-def runEnvoyAndSiege(envoy_binary, envoy_conf, csv_files, siege_args):
-  # Run Envoy in the background and wait for it to respond on the upstream
-  # port, admin port, and proxy port.
-  #echo "$envoy" -c "$envoy_conf" "&" &>> "$log"
-  envoy = subprocess.Popen([envoy_binary, "-c", envoy_conf])
-
-  waitForUrl(admin)
-  waitForUrl(proxy_url)
-  waitForUrl(upstream_url)
-
-  # Siege the envoy.
-  subprocess.call(["siege", "--log=" + csv_files[0]] + siege_args)
-  # (set +e; set -x; siege --log="$perf_csv" $siege_args) &>> "$log"
-
-  # Capture Envoy's opinion of how much memory it's using, and also
-  # ask the OS what it thinks via ps. Append those to a separate CSV
-  # file from the one harvested by siege.
-  statmem = loadJson(admin + "/memory")["allocated"]
-  #pid_vsz_rsz = $(ps -eo pid,vsz,rsz | grep "^[ ]*$envoy_pid ")
-  #vsz=$(echo "$pid_vsz_rsz" | cut -d\  -f2)
-  #rsz=$(echo "$pid_vsz_rsz" | cut -d\  -f3)
-
-  with open(csv_files[1], "a") as mem_csv:
-    mem_csv.write("%s,%d,%d" % (statmem, 0, 0))
-
-  # Send Envoy a quit request and wait for the process to exit.
-  requests.post(admin + "/quitquitquit")
-  envoy.wait()
 
 main(sys.argv)
