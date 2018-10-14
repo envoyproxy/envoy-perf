@@ -74,93 +74,119 @@ def main(argv):
   # TODO(jmarantz): it would be nice to make the number of reps configurable,
   # e.g. with a command-line option.
   reps = 2000
-  siege_args = ["--reps=%d" % reps, "--rc=" + siege_dir + "/siege.conf", proxy_url]
+  siege_args = ["--reps=%d" % reps, "--rc=" + siege_dir + "/siege.conf", 
+                proxy_url]
 
   # Clean up any old log files, so the CSVs just show the results from
   # the runs we are about to do.
-  for file in csv_files + [log]:
-    if os.path.exists(file):
-      os.remove(file)
+  for fname in csv_files + [log]:
+    if os.path.exists(fname):
+      os.remove(fname)
 
-  # Collect memory information in arrays.
-  envoy_mem = []
-  vsz_mem = []
-  rss_mem = []
+  with open(log, "a") as logfile:
+    # Echoes a command to the logfile, and then returns it. This is
+    # intended to wrap the command argment to subprocess.Popen and
+    # subprocess.call so we can see in the log how they were run.
+    def echo(command):
+      logfile.write(" ".join(command) + "\n")
+      logfile.flush()
+      return command
 
+    # Starts up Envoy that serves as both an origin and a proxy, and then
+    # sieges it with ~50k requests, measuring the overall throughput, errors,
+    # and memory usage. The path to the binary and filenames to collect
+    # performance CSV into a file that's passed in, and return some memory info
+    # as a triple.
+    def runEnvoyAndSiege(envoy_binary, csv_files):
+      # Run Envoy in the background and wait for it to respond on the upstream
+      # port, admin port, and proxy port.
+      envoy = subprocess.Popen(echo([envoy_binary, "-c", envoy_conf]),
+                               stdout=logfile, stderr=logfile)
 
-  # Starts up Envoy that serves as both an origin and a proxy, and then
-  # sieges it with ~50k requests, measuring the overall throughput, errors,
-  # and memory usage. The path to the binary and filenames to collect
-  # performance CSV into a file that's passed in, and return some memory info
-  # as a triple...
-  def runEnvoyAndSiege(envoy_binary, csv_files):
-    # Run Envoy in the background and wait for it to respond on the upstream
-    # port, admin port, and proxy port.
-    #echo "$envoy" -c "$envoy_conf" "&" &>> "$log"
-    envoy = subprocess.Popen([envoy_binary, "-c", envoy_conf])
+      for url in [admin, proxy_url, upstream_url]:
+        waitForUrl(url)
 
-    waitForUrl(admin)
-    waitForUrl(proxy_url)
-    waitForUrl(upstream_url)
+      # Siege the envoy.
+      subprocess.call(echo(["siege", "--log=" + csv_files[0]] + siege_args),
+                      stdout=logfile, stderr=logfile)
 
-    # Siege the envoy.
-    subprocess.call(["siege", "--log=" + csv_files[0]] + siege_args)
-    # (set +e; set -x; siege --log="$perf_csv" $siege_args) &>> "$log"
+      # Capture Envoy's opinion of how much memory it's using, and also
+      # ask the OS what it thinks via ps. Append those to a separate CSV
+      # file from the one harvested by siege.
+      statmem = loadJson(admin + "/memory")["allocated"]
 
-    # Capture Envoy's opinion of how much memory it's using, and also
-    # ask the OS what it thinks via ps. Append those to a separate CSV
-    # file from the one harvested by siege.
-    statmem = loadJson(admin + "/memory")["allocated"]
-    #pid_vsz_rsz = $(ps -eo pid,vsz,rsz | grep "^[ ]*$envoy_pid ")
-    #vsz=$(echo "$pid_vsz_rsz" | cut -d\  -f2)
-    #rsz=$(echo "$pid_vsz_rsz" | cut -d\  -f3)
+      vsz = 0
+      rsz = 0
+      pid_str = "%d" % envoy.pid
+      for line in runCapturingStdout("ps -eo pid,vsz,rsz").split("\n"):
+        pid_vsz_rsz = line.split(" ")
+        if pid_vsz_rsz[0] == pid_str:
+          vsz = pid_vsz_rsz[1]
+          rsz = pid_vsz_rsz[2]
 
-    with open(csv_files[1], "a") as mem_csv:
-      mem_csv.write("%s,%d,%d" % (statmem, 0, 0))
+      with open(csv_files[1], "a") as mem_csv:
+        mem_csv.write("%s,%s,%s\n" % (statmem, vsz, rsz))
 
-    # Send Envoy a quit request and wait for the process to exit.
-    requests.post(admin + "/quitquitquit")
-    envoy.wait()
+      # Send Envoy a quit request and wait for the process to exit.
+      requests.post(admin + "/quitquitquit")
+      envoy.wait()
 
+    for mem_csv in [clean_mem_csv, experimental_mem_csv]:
+      with open(mem_csv, "w") as mem_csv_file:
+        mem_csv_file.write("EnvoyMem, VSZ, RSS\n")
 
-  # echo "EnvoyMem, VSZ, RSS" > "$clean_mem_csv"
-  # cp "$clean_mem_csv" "$experimental_mem_csv"
+    # Loops 5x interleaving runs with the clean and experimental versions
+    # of Envoy, collecting the results in separate CSV files.
+    progress("Logging 10 runs to %s " % log)
+    for run in range(0, 4):
+      runEnvoyAndSiege(clean_envoy, clean_csv_files)
+      progress("...%d" % (2 * run + 1))
+      runEnvoyAndSiege(experimental_envoy, experimental_csv_files)
+      progress("...%d" % (2 * run + 2))
 
-  # Loops 5x interleaving runs with the clean and experimental versions
-  # of Envoy, collecting the results in separate CSV files.
-  print("Logging 10 runs to %s ... " % log)
-  for run in range(0, 4):
-    runEnvoyAndSiege(clean_envoy, clean_csv_files)
-    print("...%d" % (2 * run + 1))
-    runEnvoyAndSiege(experimental_envoy, experimental_csv_files)
-    print("...%d" % (2 * run + 2))
+    print("\n")
+    subprocess.call(echo([siege_dir + "/siege_result_analysis.py"]) + csv_files)
 
-  print("\n")
-  #./siege_result_analysis.py $csv_files
-  print("\nCSV files written to %s\n" % csv_files)
+    # TODO(jmarantz): consider integrating siege_result_analysis.py into this
+    # driver rather than calling it as a subprocess, and also consider using
+    # a Python table-printing library rather than /usr/bin/column.
+    os.system("column -s, -t < %s" % aggregate_csv)
+    print("\n\nCSV files written to %s\n" % ", ".join(csv_files))
+
+def progress(s):
+  sys.stdout.write(s)
+  sys.stdout.flush()
 
 # Blocks the script until a server started in the background is ready
 # to respond to the URL passed as an arg.
 def waitForUrl(url):
   def readUrl():
     handle = urllib.request.urlopen(url)
-    contents = handle.read()
+    handle.read()
     handle.close()
+
   # Try only 100x (~10 seconds) before giving up
-  for iter in range(0, 100):
+  for _ in range(0, 100):
     try:
       readUrl()
       return
-    except:
+    except IOError:
       time.sleep(0.1)
   # If we didn't get a succesful read in the loop, just call readUrl()
   # outside the try/except block and let the exception propagate.
   readUrl()
 
+# Reads text output from a URL and decodes it as JSON, returning the
+# JSON object.
 def loadJson(url):
   handle = urllib.request.urlopen(url)
   data = handle.read().decode("utf-8")
   handle.close()
   return json.loads(data)
+
+# Runs a shell command, returning its stdout as a string.
+def runCapturingStdout(command):
+  proc = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
+  return proc.stdout.decode('utf-8')
 
 main(sys.argv)
