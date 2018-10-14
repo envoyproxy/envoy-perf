@@ -153,6 +153,7 @@ def main(argv):
     os.system("column -s, -t < %s" % aggregate_csv)
     print("\n\nCSV files written to %s\n" % ", ".join(csv_files))
 
+# Emits a string to stdout and flushes it, without necessarily adding a newline.
 def progress(s):
   sys.stdout.write(s)
   sys.stdout.flush()
