@@ -123,6 +123,7 @@ def main(argv):
         if pid_vsz_rsz[0] == pid_str:
           vsz = pid_vsz_rsz[1]
           rsz = pid_vsz_rsz[2]
+          break
 
       with open(csv_files[1], "a") as mem_csv:
         mem_csv.write("%s,%s,%s\n" % (statmem, vsz, rsz))
