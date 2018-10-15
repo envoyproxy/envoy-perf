@@ -47,7 +47,7 @@ def main(argv):
   clean_envoy = argv[1]
   experimental_envoy = argv[2]
   outdir = argv[3]
-  aggregate_csv= outdir + "/aggregate.csv"
+  aggregate_csv = os.path.join(outdir, "aggregate.csv")
 
   # Connect to the script directory so local references to the yaml configs and
   # lorem_ipsum.txt work.
@@ -55,16 +55,18 @@ def main(argv):
   os.chdir(siege_dir)
 
   # Derive some temp filenames from $outdir.
-  log = outdir + "/siege.log"
-  clean_perf_csv = outdir + "/clean.perf.csv"
-  clean_mem_csv = outdir + "/clean.mem.csv"
+  log = os.path.join(outdir, "siege.log")
+  clean_perf_csv = os.path.join(outdir, "clean.perf.csv")
+  clean_mem_csv = os.path.join(outdir, "clean.mem.csv")
   clean_csv_files = [clean_perf_csv, clean_mem_csv]
-  experimental_perf_csv = outdir + "/experimental.perf.csv"
-  experimental_mem_csv = outdir + "/experimental.mem.csv"
+  experimental_perf_csv = os.path.join(outdir, "experimental.perf.csv")
+  experimental_mem_csv = os.path.join(outdir, "experimental.mem.csv")
   experimental_csv_files = [experimental_perf_csv, experimental_mem_csv]
-  aggregate_csv = outdir + "/aggregate.csv"
+  aggregate_csv = os.path.join(outdir, "aggregate.csv")
   csv_files = clean_csv_files + experimental_csv_files + [aggregate_csv]
-  envoy_conf = siege_dir + "/front-proxy.yaml"
+  envoy_conf = os.path.join(siege_dir, "front-proxy.yaml")
+  siege_conf = os.path.join(siege_dir, "siege.conf")
+  siege_analysis = os.path.join(siege_dir, "siege_result_analysis.py")
 
   # Siege sometimes hangs when using time-based exit criteria.  See
   # https://github.com/JoeDog/siege/issues/66.  In the meantime, use
@@ -74,12 +76,13 @@ def main(argv):
   # TODO(jmarantz): it would be nice to make the number of reps configurable,
   # e.g. with a command-line option.
   reps = 2000
-  siege_args = ["--reps=%d" % reps, "--rc=" + siege_dir + "/siege.conf", 
-                proxy_url]
+  siege_args = ["--reps=%d" % reps, "--rc=%s" % siege_conf, proxy_url]
 
   # Clean up any old log files, so the CSVs just show the results from
-  # the runs we are about to do.
-  for fname in csv_files + [log]:
+  # the runs we are about to do. This is needed for the perf CSVs because
+  # otherwise siege appends the new runs to the previous contents of the
+  # file.
+  for fname in [clean_perf_csv, experimental_perf_csv, log]:
     if os.path.exists(fname):
       os.remove(fname)
 
@@ -147,7 +150,7 @@ def main(argv):
       progress("...%d" % (2 * run + 2))
 
     print("\n")
-    subprocess.call(echo([siege_dir + "/siege_result_analysis.py"]) + csv_files)
+    subprocess.call(echo([siege_analysis] + csv_files))
 
     # TODO(jmarantz): consider integrating siege_result_analysis.py into this
     # driver rather than calling it as a subprocess, and also consider using
