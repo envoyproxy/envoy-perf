@@ -20,16 +20,15 @@ static_resources:
               - "*"
               routes:
               - match:
-                  prefix: "/"
+                  prefix: /
                 direct_response:
                   status: 200
                   body:
-                    filename: "./lorem_ipsum.txt"
+                    filename: ./lorem_ipsum.txt
           http_filters:
           - name: envoy.router
-            config: {
+            config:
               dynamic_stats: false
-            }
   # define a reverse proxy on :10001 that always uses :10000 as an origin.
   - address:
       socket_address:
@@ -50,14 +49,13 @@ static_resources:
               - "*"
               routes:
               - match:
-                  prefix: "/"
+                  prefix: /
                 route:
                   cluster: local_service
           http_filters:
           - name: envoy.router
-            config: {
+            config:
               dynamic_stats: false
-            }
   clusters:
   - name: local_service
     connect_timeout: 0.25s
@@ -68,7 +66,7 @@ static_resources:
         address: 127.0.0.1
         port_value: 10000
 admin:
-  access_log_path: "/tmp/envoy.log"
+  access_log_path: /tmp/envoy.log
   address:
     socket_address:
       address: 0.0.0.0
