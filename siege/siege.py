@@ -118,7 +118,8 @@ def main(argv):
       vsz = 0
       rsz = 0
       pid_str = "%d" % envoy.pid
-      for line in runCapturingStdout("ps -eo pid,vsz,rsz").split("\n"):
+      ps_lines = subprocess.check_output("ps -eo pid,vsz,rsz", shell=True)
+      for line in ps_lines.decode('utf-8').split("\n"):
         pid_vsz_rsz = line.split(" ")
         if pid_vsz_rsz[0] == pid_str:
           vsz = pid_vsz_rsz[1]
@@ -139,7 +140,7 @@ def main(argv):
     # Loops 5x interleaving runs with the clean and experimental versions
     # of Envoy, collecting the results in separate CSV files.
     progress("Logging 10 runs to %s " % log)
-    for run in range(0, 4):
+    for run in range(0, 5):
       runEnvoyAndSiege(clean_envoy, clean_csv_files)
       progress("...%d" % (2 * run + 1))
       runEnvoyAndSiege(experimental_envoy, experimental_csv_files)
@@ -181,14 +182,8 @@ def waitForUrl(url):
 # Reads text output from a URL and decodes it as JSON, returning the
 # JSON object.
 def loadJson(url):
-  handle = urllib.request.urlopen(url)
-  data = handle.read().decode("utf-8")
-  handle.close()
-  return json.loads(data)
-
-# Runs a shell command, returning its stdout as a string.
-def runCapturingStdout(command):
-  proc = subprocess.run(command, shell=True, stdout=subprocess.PIPE)
-  return proc.stdout.decode('utf-8')
+  with urllib.request.urlopen(url) as handle:
+    data = handle.read().decode("utf-8")
+    return json.loads(data)
 
 main(sys.argv)
