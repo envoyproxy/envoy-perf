@@ -57,11 +57,11 @@ def main(argv):
   # Derive some temp filenames from $outdir.
   log = os.path.join(outdir, "siege.log")
   clean_perf_csv = os.path.join(outdir, "clean.perf.csv")
-  clean_mem_csv = os.path.join(outdir, "clean.mem.csv")
-  clean_csv_files = [clean_perf_csv, clean_mem_csv]
+  clean_envoy_csv = os.path.join(outdir, "clean.envoy.csv")
+  clean_csv_files = [clean_perf_csv, clean_envoy_csv]
   experimental_perf_csv = os.path.join(outdir, "experimental.perf.csv")
-  experimental_mem_csv = os.path.join(outdir, "experimental.mem.csv")
-  experimental_csv_files = [experimental_perf_csv, experimental_mem_csv]
+  experimental_envoy_csv = os.path.join(outdir, "experimental.envoy.csv")
+  experimental_csv_files = [experimental_perf_csv, experimental_envoy_csv]
   aggregate_csv = os.path.join(outdir, "aggregate.csv")
   csv_files = clean_csv_files + experimental_csv_files + [aggregate_csv]
   envoy_conf = os.path.join(siege_dir, "front-proxy.yaml")
@@ -95,17 +95,16 @@ def main(argv):
       logfile.flush()
       return command
 
-    # Starts up Envoy that serves as both an origin and a proxy, and then
-    # sieges it with ~50k requests, measuring the overall throughput, errors,
-    # and memory usage. The path to the binary and filenames to collect
-    # performance CSV into a file that's passed in, and return some memory info
-    # as a triple.
+    # Starts up Envoy that serves as both an origin and a proxy, and then sieges
+    # it with ~50k requests, measuring the overall throughput, errors, and
+    # memory usage, and contention. The path to the binary and filenames to
+    # collect performance CSV into a file that's passed in, and return some
+    # memory and contention info.
     def runEnvoyAndSiege(envoy_binary, csv_files):
       # Run Envoy in the background and wait for it to respond on the upstream
       # port, admin port, and proxy port.
-      envoy = subprocess.Popen(echo([envoy_binary, "-c", envoy_conf]),
-                               stdout=logfile, stderr=logfile)
-
+      envoy_args = [envoy_binary, "-c", envoy_conf, "--enable-mutex-tracing"]
+      envoy = subprocess.Popen(echo(envoy_args), stdout=logfile, stderr=logfile)
       for url in [admin, proxy_url, upstream_url]:
         waitForUrl(url)
 
@@ -117,6 +116,9 @@ def main(argv):
       # ask the OS what it thinks via ps. Append those to a separate CSV
       # file from the one harvested by siege.
       statmem = loadJson(admin + "/memory")["allocated"]
+      contention = loadJson(admin + "/contention")
+      num_contentions = contention["num_contentions"]
+      lifetime_wait_cycles = contention["lifetime_wait_cycles"]
 
       vsz = 0
       rsz = 0
@@ -129,16 +131,17 @@ def main(argv):
           rsz = pid_vsz_rsz[2]
           break
 
-      with open(csv_files[1], "a") as mem_csv:
-        mem_csv.write("%s,%s,%s\n" % (statmem, vsz, rsz))
+      with open(csv_files[1], "a") as envoy_csv:
+        envoy_csv.write("%s,%s,%s,%s,%s\n" % (
+            statmem, vsz, rsz, num_contentions, lifetime_wait_cycles))
 
       # Send Envoy a quit request and wait for the process to exit.
       requests.post(admin + "/quitquitquit")
       envoy.wait()
 
-    for mem_csv in [clean_mem_csv, experimental_mem_csv]:
-      with open(mem_csv, "w") as mem_csv_file:
-        mem_csv_file.write("EnvoyMem, VSZ, RSS\n")
+    for envoy_csv in [clean_envoy_csv, experimental_envoy_csv]:
+      with open(envoy_csv, "w") as envoy_csv_file:
+        envoy_csv_file.write("EnvoyMem, VSZ, RSS, Contentions, WaitCycles\n")
 
     # Loops 5x interleaving runs with the clean and experimental versions
     # of Envoy, collecting the results in separate CSV files.
