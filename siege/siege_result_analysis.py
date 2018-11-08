@@ -56,8 +56,8 @@ def columnValues(data, column_name):
 
 def main(argv):
   if len(argv) != 6:
-    print(('Usage: %s clean_perf_csv clean_mem_csv experimental_perf_csv '
-           'experimental_mem_csv aggregate_csv') % argv[0])
+    print(('Usage: %s clean_perf_csv clean_envoy_csv experimental_perf_csv '
+           'experimental_envoy_csv aggregate_csv') % argv[0])
     sys.exit(1)
 
   # Save the performance CSV data from the clean and experimental runs, using
@@ -87,19 +87,21 @@ def main(argv):
           round(mean_exp, 2), round(statistics.stdev(exp_values), 3), clean_failures,
           improvement))
 
-    # Compute the performance data stats and add them to the matrix.
+    # Compute the siege performance data stats and add them to the matrix.
     addRow("Trans Rate")
     addRow("Throughput")
     addRow("Failed")
 
-    # Now parse the memory CSV data, collate & compute stats, and add those as new
-    # rows of the performande matrix.
+    # Now parse the envoy CSV data (memory and contention, collate & compute
+    # stats, and add those as new rows of the performande matrix.
     clean = parseCsv(argv[2])
     experimental = parseCsv(argv[4])
 
     addRow("EnvoyMem")
     addRow("VSZ")
     addRow("RSS")
+    addRow("Contentions")
+    addRow("WaitCycles")
 
   sys.exit(0)
 
