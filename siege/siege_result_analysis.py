@@ -72,14 +72,15 @@ def main(argv):
 
     # Adds a row to the matrix for later printing, including the medians and
     # standard deviations for a particular column.
-    def addRow(metric):
+    def addRow(metric, greater_is_better=False):
       clean_values, exp_failures = columnValues(clean, metric)
       exp_values, clean_failures = columnValues(experimental, metric)
       mean_clean = statistics.median(clean_values)
       mean_exp = statistics.median(exp_values)
       improvement = "0"
       if mean_clean > 0:
-        improvement_percent = 100 * ((mean_clean - mean_exp) / mean_clean)
+        improvement_percent = 100 * ((mean_exp - mean_clean) / mean_clean) * (
+                1 if greater_is_better else -1)
         improvement = "%s%%" % round(improvement_percent, 3)
       aggregate.write("%s,%s,%s,%s,%s,%s,%s,%s\n" % (
           metric,
@@ -88,8 +89,8 @@ def main(argv):
           improvement))
 
     # Compute the siege performance data stats and add them to the matrix.
-    addRow("Trans Rate")
-    addRow("Throughput")
+    addRow("Trans Rate", greater_is_better=True)
+    addRow("Throughput", greater_is_better=True)
     addRow("Failed")
 
     # Now parse the envoy CSV data (memory and contention, collate & compute
