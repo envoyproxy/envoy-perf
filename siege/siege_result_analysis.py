@@ -79,8 +79,9 @@ def main(argv):
       mean_exp = statistics.median(exp_values)
       improvement = "0"
       if mean_clean > 0:
-        improvement_percent = 100 * ((mean_exp - mean_clean) / mean_clean) * (
-                1 if greater_is_better else -1)
+        improvement_percent = 100 * ((mean_clean - mean_exp) / mean_clean)
+        if greater_is_better:
+          improvement_percent = -improvement_percent
         improvement = "%s%%" % round(improvement_percent, 3)
       aggregate.write("%s,%s,%s,%s,%s,%s,%s,%s\n" % (
           metric,
