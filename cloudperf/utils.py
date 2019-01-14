@@ -4,6 +4,11 @@ import os
 import random
 import string
 
+try:
+    xrange  # Python 2
+except NameError:
+    xrange = range  # Python 3
+
 
 def CreateBooleanArgument(parser, argument_name, help_string,
                           **default_condition):

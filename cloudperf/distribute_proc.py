@@ -10,6 +10,11 @@ import pexpect
 from process import Process
 import utils
 
+try:
+    xrange  # Python 2
+except NameError:
+    xrange = range  # Python 3
+
 
 # TODO(sohamcodes): This function needs to eventually support arbitrary mask.
 def AllocProcessToCores(start_core, end_core, out, proc_command):
