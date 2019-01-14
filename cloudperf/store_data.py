@@ -1,4 +1,5 @@
 """This file is used to store data on the Database."""
+from __future__ import print_function
 
 import argparse
 import json
@@ -276,10 +277,10 @@ def main():
     sh_utils.RunGCloudService(["instances", "create", args.db_instance_name,
                                "--tier", args.tier], args.project,
                               "sql", logfile)
-    print "Google Cloud SQL Instance {} is created.".format(
-        args.db_instance_name)
+    print("Google Cloud SQL Instance {} is created.".format(
+        args.db_instance_name))
   else:
-    print "DB Instance creation is skipped due to --no-create_instance."
+    print("DB Instance creation is skipped due to --no-create_instance.")
 
   # generating a random password to be used for the DB
   password = utils.GetRandomPassword()
@@ -288,7 +289,7 @@ def main():
                              "--instance", args.db_instance_name, "--password",
                              password], project=args.project,
                             service="sql", logfile=logfile)
-  print "DB Usernames and passwords are set."
+  print("DB Usernames and passwords are set.")
 
   auth_ip_command = sh_utils.GetGcloud(
       ["instances", "patch", args.db_instance_name,
@@ -298,40 +299,40 @@ def main():
   pexpect.run(auth_ip_command,
               events={"Do you want to continue (Y/n)?": "Y\n"},
               logfile=logfile, timeout=None)
-  print ("The machine is configured to use the Google"
-         " Cloud SQL Instance {}.").format(args.db_instance_name)
+  print(("The machine is configured to use the Google"
+         " Cloud SQL Instance {}.").format(args.db_instance_name))
 
   hostname = db_utils.GetInstanceIP(args.db_instance_name, args.project)
 
   if args.create_db:
     connection = MySQLdb.connect(host=hostname, user=args.username,
                                  passwd=password)
-    print "Connection successful."
+    print("Connection successful.")
     db_utils.ExecuteAndReturnResult(connection, "CREATE DATABASE {};".format(
         args.database))
     connection.select_db(args.database)
-    print "Created DB."
+    print("Created DB.")
   else:
     connection = MySQLdb.connect(host=hostname, user=args.username,
                                  passwd=password, db=args.database)
-    print "Connection to DB {} is successful.".format(args.database)
+    print("Connection to DB {} is successful.".format(args.database))
 
   # table will only be created if not exists
   CreateTable(connection, args.table_name)
   with open(args.json_result, "r") as f:
     InsertIntoTable(connection, args.table_name, f, args.runid, args.envoy_hash)
     connection.commit()
-    print "Data is inserted from JSON file to Database."
+    print("Data is inserted from JSON file to Database.")
 
   if args.delete_db:
     db_utils.ExecuteAndReturnResult(connection,
                                     "DROP DATABASE {};".format(args.database))
-    print "Database deletion is successful."
+    print("Database deletion is successful.")
   else:
-    print "Database deletion is skipped due to --no-delete_db."
+    print("Database deletion is skipped due to --no-delete_db.")
 
   connection.close()
-  print "DB Connection closed."
+  print("DB Connection closed.")
 
 if __name__ == "__main__":
   main()
