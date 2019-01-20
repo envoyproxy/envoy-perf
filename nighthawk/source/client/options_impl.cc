@@ -34,11 +34,11 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       false, "1", "string", cmd);
 
   std::vector<std::string> log_levels;
-  log_levels.push_back("trace");
-  log_levels.push_back("debug");
-  log_levels.push_back("info");
-  log_levels.push_back("warn");
-  log_levels.push_back("error");
+  log_levels.emplace_back("trace");
+  log_levels.emplace_back("debug");
+  log_levels.emplace_back("info");
+  log_levels.emplace_back("warn");
+  log_levels.emplace_back("error");
   TCLAP::ValuesConstraint<std::string> verbosities_allowed(log_levels);
 
   TCLAP::ValueArg<std::string> verbosity(

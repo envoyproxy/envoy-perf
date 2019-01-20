@@ -66,44 +66,44 @@ public:
 class MClientContextConfigImpl : public Envoy::Ssl::ClientContextConfig {
 public:
   MClientContextConfigImpl(bool h2) : alpn_(h2 ? "h2" : "http/1.1") {}
-  virtual ~MClientContextConfigImpl() {}
+  ~MClientContextConfigImpl() override = default;
 
-  virtual const std::string& alpnProtocols() const { return alpn_; };
+  const std::string& alpnProtocols() const override { return alpn_; };
 
-  virtual const std::string& cipherSuites() const { return DEFAULT_CIPHER_SUITES; };
+  const std::string& cipherSuites() const override { return DEFAULT_CIPHER_SUITES; };
 
-  virtual const std::string& ecdhCurves() const { return DEFAULT_ECDH_CURVES; };
+  const std::string& ecdhCurves() const override { return DEFAULT_ECDH_CURVES; };
 
-  virtual std::vector<std::reference_wrapper<const Envoy::Ssl::TlsCertificateConfig>>
-  tlsCertificates() const {
+  std::vector<std::reference_wrapper<const Envoy::Ssl::TlsCertificateConfig>>
+  tlsCertificates() const override {
     std::vector<std::reference_wrapper<const Envoy::Ssl::TlsCertificateConfig>> configs;
     for (const auto& config : tls_certificate_configs_) {
-      configs.push_back(config);
+      configs.emplace_back(config);
     }
     return configs;
   };
 
-  virtual const Envoy::Ssl::CertificateValidationContextConfig*
-  certificateValidationContext() const {
+  const Envoy::Ssl::CertificateValidationContextConfig*
+  certificateValidationContext() const override {
     return validation_context_config_.get();
   };
 
-  virtual unsigned minProtocolVersion() const { return TLS1_VERSION; };
+  unsigned minProtocolVersion() const override { return TLS1_VERSION; };
 
-  virtual unsigned maxProtocolVersion() const { return TLS1_2_VERSION; };
+  unsigned maxProtocolVersion() const override { return TLS1_2_VERSION; };
 
-  virtual bool isReady() const { return true; };
+  bool isReady() const override { return true; };
 
-  virtual void setSecretUpdateCallback(std::function<void()> callback) { callback_ = callback; };
+  void setSecretUpdateCallback(std::function<void()> callback) override { callback_ = callback; };
 
   // Ssl::ClientContextConfig interface
-  virtual const std::string& serverNameIndication() const { return foo_; };
+  const std::string& serverNameIndication() const override { return foo_; };
 
-  virtual bool allowRenegotiation() const { return true; };
+  bool allowRenegotiation() const override { return true; };
 
-  virtual size_t maxSessionKeys() const { return 0; };
+  size_t maxSessionKeys() const override { return 0; };
 
-  virtual const std::string& signingAlgorithmsForTest() const { return foo_; };
+  const std::string& signingAlgorithmsForTest() const override { return foo_; };
 
 private:
   std::string foo_;

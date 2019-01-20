@@ -5,6 +5,4 @@ bazel-*
 .vscode/.vs_code_bazel_build/BUILD
 .vscode/.vs_code_bazel_build/vs_code_aspect.bzl
 res.txt
-chart.html
-out.json
-bazel_output_base
+compile_commands.json

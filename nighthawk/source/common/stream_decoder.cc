@@ -36,7 +36,6 @@ void StreamDecoder::onResetStream(Envoy::Http::StreamResetReason) {
   // TODO(oschaaf): check if we need to do something here.
   // ADD_FAILURE();
   onComplete(false);
-  delete this;
 }
 
 } // namespace Http

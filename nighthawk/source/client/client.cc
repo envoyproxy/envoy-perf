@@ -121,7 +121,7 @@ bool Main::run() {
   }
 
   for (uint32_t i = 0; i < concurrency; i++) {
-    global_results.push_back(std::vector<uint64_t>());
+    global_results.emplace_back(std::vector<uint64_t>());
     std::vector<uint64_t>& results = global_results.at(i);
     // TODO(oschaaf): get us a stats sink.
 
@@ -160,7 +160,7 @@ bool Main::run() {
       // We try to offset the start of each thread so that workers will execute tasks evenly spaced
       // in time.
       double rate = 1 / double(options_->requests_per_second()) / concurrency;
-      int64_t spread_us = rate * i * 1000000;
+      int64_t spread_us = static_cast<int64_t>(rate * i * 1000000);
       ENVOY_LOG(debug, "> worker {}: Delay start of worker for {} us.", i, spread_us);
       if (spread_us) {
         usleep(spread_us);

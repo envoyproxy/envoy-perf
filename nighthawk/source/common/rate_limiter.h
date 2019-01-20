@@ -8,7 +8,7 @@ namespace Nighthawk {
 class RateLimiter : public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   RateLimiter(Envoy::TimeSource& time_source) : time_source_(time_source) {}
-  virtual ~RateLimiter() {}
+  virtual ~RateLimiter() = default;
   virtual bool tryAcquireOne() PURE;
   virtual void releaseOne() PURE;
 
@@ -22,8 +22,8 @@ protected:
 class LinearRateLimiter : public RateLimiter {
 public:
   LinearRateLimiter(Envoy::TimeSource& time_source, std::chrono::nanoseconds pace);
-  virtual bool tryAcquireOne() override;
-  virtual void releaseOne() override;
+  bool tryAcquireOne() override;
+  void releaseOne() override;
 
 private:
   int64_t acquireable_count_;

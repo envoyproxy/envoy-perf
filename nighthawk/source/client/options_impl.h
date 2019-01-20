@@ -16,7 +16,7 @@ class OptionsImpl : public Options {
 public:
   OptionsImpl(int argc, const char* const* argv);
 
-  virtual Client::CommandLineOptionsPtr toCommandLineOptions() const override;
+  Client::CommandLineOptionsPtr toCommandLineOptions() const override;
 
   uint64_t requests_per_second() const override { return requests_per_second_; }
   uint64_t connections() const override { return connections_; }
@@ -25,7 +25,7 @@ public:
   std::string uri() const override { return uri_; }
   bool h2() const override { return h2_; }
   std::string concurrency() const override { return concurrency_; }
-  virtual std::string verbosity() const override { return verbosity_; };
+  std::string verbosity() const override { return verbosity_; };
 
 private:
   uint64_t requests_per_second_;

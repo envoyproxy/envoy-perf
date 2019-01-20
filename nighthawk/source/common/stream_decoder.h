@@ -9,7 +9,7 @@ namespace Http {
 
 class StreamDecoderCompletionCallback {
 public:
-  virtual ~StreamDecoderCompletionCallback() {}
+  virtual ~StreamDecoderCompletionCallback() = default;
   virtual void onComplete(bool success, const Envoy::Http::HeaderMap& headers) PURE;
 };
 
@@ -20,7 +20,8 @@ class StreamDecoder : public Envoy::Http::StreamDecoder, public Envoy::Http::Str
 public:
   StreamDecoder(std::function<void()> caller_completion_callback,
                 StreamDecoderCompletionCallback& on_complete_cb)
-      : caller_completion_callback_(caller_completion_callback), on_complete_cb_(on_complete_cb) {}
+      : caller_completion_callback_(std::move(caller_completion_callback)),
+        on_complete_cb_(on_complete_cb) {}
 
   bool complete() { return complete_; }
   const Envoy::Http::HeaderMap& headers() { return *headers_; }

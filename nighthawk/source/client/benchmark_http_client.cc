@@ -30,7 +30,7 @@ namespace Client {
 
 BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
                                          Envoy::Stats::Store& store, Envoy::TimeSource& time_source,
-                                         std::string uri,
+                                         const std::string& uri,
                                          Envoy::Http::HeaderMapImplPtr&& request_headers,
                                          bool use_h2)
     : dispatcher_(dispatcher), store_(store), time_source_(time_source),
@@ -48,7 +48,7 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
   path_ = std::string(path);
 
   size_t colon_index = host_.find(':');
-  is_https_ = uri.find("https://") == 0;
+  is_https_ = absl::StartsWith(uri, "https://");
 
   if (colon_index == std::string::npos) {
     port_ = is_https_ ? 443 : 80;
@@ -63,8 +63,6 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
   request_headers_->insertScheme().value(is_https_ ? Envoy::Http::Headers::get().SchemeValues.Https
                                                    : Envoy::Http::Headers::get().SchemeValues.Http);
 }
-
-BenchmarkHttpClient::~BenchmarkHttpClient() {}
 
 void BenchmarkHttpClient::syncResolveDns() {
   auto dns_resolver = dispatcher_.createDnsResolver({});
