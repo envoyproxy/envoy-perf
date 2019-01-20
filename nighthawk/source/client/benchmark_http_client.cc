@@ -140,7 +140,7 @@ bool BenchmarkHttpClient::tryStartOne(std::function<void()> caller_completion_ca
            .pendingRequests()
            .canCreate()
       // XXX(oschaaf): We can't rely on resourceManager()::requests() because that
-      // isn't used for h/1.
+      // isn't used for h/1 (it is used in tcp and h2 though).
       // Note: this improves accuracy, but some tests rely on pending requests functional
       // to queue up requests.
       || (!allow_pending_for_test_ &&

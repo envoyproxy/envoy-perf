@@ -33,7 +33,7 @@ void StreamDecoder::onComplete(bool success) {
 }
 
 void StreamDecoder::onResetStream(Envoy::Http::StreamResetReason) {
-  // TODO(oschaaf): handle this.
+  // TODO(oschaaf): check if we need to do something here.
   // ADD_FAILURE();
   onComplete(false);
   delete this;

@@ -157,8 +157,8 @@ bool Main::run() {
 
       client->initialize(runtime);
 
-      // We try to offset the start of each thread so that they will be spaced evenly in time
-      // accross a single request. This at least helps a bit for short concurrent high-rps runs.
+      // We try to offset the start of each thread so that workers will execute tasks evenly spaced
+      // in time.
       double rate = 1 / double(options_->requests_per_second()) / concurrency;
       int64_t spread_us = rate * i * 1000000;
       ENVOY_LOG(debug, "> worker {}: Delay start of worker for {} us.", i, spread_us);
@@ -170,8 +170,6 @@ bool Main::run() {
       client->tryStartOne([&dispatcher] { dispatcher->exit(); });
       dispatcher->run(Envoy::Event::Dispatcher::RunType::Block);
 
-      // With the linear rate limiter, we run an open-loop test, where we initiate new
-      // calls regardless of the number of comletions we observe keeping up.
       LinearRateLimiter rate_limiter(time_system, 1000000000ns / options_->requests_per_second());
       SequencerTarget f =
           std::bind(&BenchmarkHttpClient::tryStartOne, client.get(), std::placeholders::_1);
@@ -197,12 +195,6 @@ bool Main::run() {
                 streaming_stats.stdev() / 1000, 2,
                 store->counter("nighthawk.upstream_cx_total").value(),
                 store->counter("nighthawk.upstream_cx_connect_fail").value(),
-                // upstream_cx_overflow will have a very high (inflated) number because
-                // of BenchmarkClient's usage pattern. We track the overflow failures
-                // via the callback, wich is more interesting. We expect this to remain
-                // 0 most of the time, because we do the gating ourselves in
-                // BenchmarkHttpClient::tryStartOne and we have max 1 pending request
-                // configured.
                 client->pool_overflow_failures(), client->http_good_response_count(),
                 client->http_bad_response_count(), client->stream_reset_count());
       client.reset();
