@@ -89,7 +89,7 @@ void Sequencer::run(bool from_timer) {
       // accuracy in low rps settings. Not that this isn't ideal, because:
       // - Connection-level events are not checked here, and we may delay those.
       // - This won't help us with in all scenarios.
-      usleep(0);
+      pthread_yield();
       incidental_timer_->enableTimer(0ms);
     }
   } else {

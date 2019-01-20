@@ -38,7 +38,7 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
       port_(0), path_("/"), dns_failure_(true), timeout_(5s), connection_limit_(1),
       max_pending_requests_(1), pool_overflow_failures_(0), stream_reset_count_(0),
       http_good_response_count_(0), http_bad_response_count_(0), requests_completed_(0),
-      requests_initiated_(0) {
+      requests_initiated_(0), allow_pending_for_test_(false) {
 
   // parse incoming uri into fields that we need.
   // TODO(oschaaf): refactor. also input validation, etc.
@@ -136,17 +136,15 @@ void BenchmarkHttpClient::initialize(Envoy::Runtime::LoaderImpl& runtime) {
 }
 
 bool BenchmarkHttpClient::tryStartOne(std::function<void()> caller_completion_callback) {
-  // NOTE(oschaaf): We can't rely on resourceManager()::requests() because that
-  // isn't used for h/1.
   if (!cluster_->resourceManager(Envoy::Upstream::ResourcePriority::Default)
            .pendingRequests()
-           .canCreate() /*||
-      
-      TODO(oschaaf): this improves accuracy, but breaks the tests because
-      those rely on pending requests functional to queue up requests.
-      Revisit this later.
-
-      (requests_initiated_ - requests_completed_) >= connection_limit_*/) {
+           .canCreate()
+      // XXX(oschaaf): We can't rely on resourceManager()::requests() because that
+      // isn't used for h/1.
+      // Note: this improves accuracy, but some tests rely on pending requests functional
+      // to queue up requests.
+      || (!allow_pending_for_test_ &&
+          (requests_initiated_ - requests_completed_) >= connection_limit_)) {
     return false;
   }
 

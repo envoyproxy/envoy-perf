@@ -48,6 +48,9 @@ public:
   void set_max_pending_requests(uint64_t max_pending_requests) {
     max_pending_requests_ = max_pending_requests;
   }
+  void set_allow_pending_for_test(bool allow_pending_for_test) {
+    allow_pending_for_test_ = allow_pending_for_test;
+  }
 
 private:
   void syncResolveDns();
@@ -77,7 +80,7 @@ private:
   uint64_t http_bad_response_count_;
   uint64_t requests_completed_;
   uint64_t requests_initiated_;
-
+  bool allow_pending_for_test_;
 };
 
 } // namespace Client

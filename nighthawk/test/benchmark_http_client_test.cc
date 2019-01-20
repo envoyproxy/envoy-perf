@@ -203,6 +203,7 @@ TEST_P(BenchmarkClientTest, BasicTestH1WithRequestQueue) {
   // Allow  request queueing so we can queue up everything all at once.
   client.set_connection_timeout(1s);
   client.set_max_pending_requests(amount);
+  client.set_allow_pending_for_test(true);
 
   // TODO(oschaaf): either get rid of the intialize call, or test that we except
   // when we didn't call it before calling tryStartOne().  client.initialize(runtime_);
@@ -240,6 +241,7 @@ TEST_P(BenchmarkClientTest, BasicTestH1WithoutRequestQueue) {
 
   client.set_connection_timeout(1s);
   client.set_max_pending_requests(1);
+  client.set_allow_pending_for_test(true);
   client.initialize(runtime_);
 
   uint64_t amount = 10;
