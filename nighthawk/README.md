@@ -1,64 +1,53 @@
-# Nighthawk PoC
+# Nighthawk
 
 *A benchmarking tool based on Envoy*
 
 ## Current state
 
-This project is in proof-of-concept mode. Supports HTTP/1.1 and HTTP/2 over http
-and https.
+The nighthawk client supports HTTP/1.1 and HTTP/2 over http and https. (NOTE: https certificates are not yet validated).
 
-NOTE: https certificates are not validated.
+## Prerequisites
 
+### Ubuntu
 
-## Building and running the benchmark
+1. Install the latest version of [Bazel](https://bazel.build/versions/master/docs/install.html) in your environment.
 
+2. Install external dependencies libtool, cmake, ninja, realpath and curl libraries separately.
+On Ubuntu, run the following command:
 
-```bash
-# TODO(oschaaf): Collect and list prerequisites. Currently mostly the same as envoy.
+``` bash
+
+# For Nighthawk / Envoy. 
+# Realpath may give an error, when it does that you probably already have it.
+
+sudo apt-get install \
+   libtool \
+   cmake \
+   realpath \
+   clang-format-7 \
+   automake \
+   ninja-build \
+   curl \
+   unzip
+
+# For tools/stats.py
+sudo apt-get install python3 python3-pip
+sudo pip3 install hdrhistogram jsonpickle
+```
+
+## Building and testing Nighthawk
+```zsh
+# TODO(oschaaf): Collect and list prerequisites. 
+# Currently mostly the same as Envoy.
+
 # build it
 bazel build //:nighthawk_client
 
 # test it
 bazel test //test:nighthawk_test
-
-# start envoy
-➜ taskset -c 0-1 /path/to/envoy --config-path tools/envoy.yaml
-
-# run a benchmark
-➜ taskset -c 2-4 bazel-bin/nighthawk_client --concurrency auto --rps 500 --connections 1 --duration 5 http://127.0.0.1:10000/ 
-[14:20:40.724350][011494][I] [source/client/client.cc:110] Detected 3 (v)CPUs with affinity..
-[14:20:40.724394][011494][I] [source/client/client.cc:114] Starting 3 threads / event loops. Test duration: 5 seconds.
-[14:20:40.724401][011494][I] [source/client/client.cc:116] Global targets: 3 connections and 1500 calls per second.
-[14:20:40.724405][011494][I] [source/client/client.cc:120]    (Per-worker targets: 1 connections and 500 calls per second)
-[14:20:45.726344][011495][I] [source/client/client.cc:207] > worker 0: 499.80/second. Mean: 84.56μs. Stdev: 4.08μs. Connections good/bad/overflow: 1/0/0. Replies: good/fail:2500/0. Stream resets: 0. 
-[14:20:45.726340][011496][I] [source/client/client.cc:207] > worker 1: 499.80/second. Mean: 85.28μs. Stdev: 3.95μs. Connections good/bad/overflow: 1/0/0. Replies: good/fail:2500/0. Stream resets: 0. 
-[14:20:45.726586][011497][I] [source/client/client.cc:207] > worker 2: 499.80/second. Mean: 85.26μs. Stdev: 2.42μs. Connections good/bad/overflow: 1/0/0. Replies: good/fail:2500/0. Stream resets: 0. 
-[14:20:45.726708][011494][I] [source/client/client.cc:227] Global complete:7497. Mean: 85.03μs. Stdev: 3.58μs.
-[14:20:45.727550][011494][I] [source/client/client.cc:242] Done. Run 'tools/stats.py res.txt benchmark' for hdrhistogram.
-
-➜ tools/stats.py res.txt benchmark
-Uncorrected hdr histogram percentiles (us)
-p50: 84
-p75: 85
-p90: 86
-p99: 97
-p99.9: 108
-p99.99: 204
-p99.999: 216
-p100: 216
-min: 76.821
-max: 216.201
-mean: 85.03485487528344
-median: 84.581
-var: 12.824523210792997
-stdev: 3.5811343469343617
-
-
-
-
 ```
 
-## CLI arguments
+## Using the nighthawk client
 
 ```
 ➜ bazel-bin/nighthawk_client --help
@@ -121,9 +110,45 @@ Where:
    Nighthawk is a web server benchmarking tool.
 ```
 
+## Sample benchmark run
+
+```zsh
+# start envoy on core 2
+$ taskset -c 3 /path/to/envoy --config-path tools/envoy.yaml
+
+# run the benchmark on cores 0 and 1
+$ taskset -c 0-1 bazel-bin/nighthawk_client --concurrency auto --rps 30000 --connections 1 --duration 3 http://127.0.0.1:10000/ && tools/stats.py res.txt benchmark
+[15:58:16.907520][032275][I] [source/client/client.cc:110] Detected 2 (v)CPUs with affinity..
+[15:58:16.907555][032275][I] [source/client/client.cc:114] Starting 2 threads / event loops. Test duration: 3 seconds.
+[15:58:16.907558][032275][I] [source/client/client.cc:116] Global targets: 2 connections and 60000 calls per second.
+[15:58:16.907559][032275][I] [source/client/client.cc:120]    (Per-worker targets: 1 connections and 30000 calls per second)
+[15:58:19.908829][032277][I] [source/client/client.cc:199] > worker 1: 29999.99/second. Mean: 25.48μs. Stdev: 3.14μs. Connections good/bad/overflow: 1/0/0. Replies: good/fail:90001/0. Stream resets: 0. 
+[15:58:19.908837][032276][I] [source/client/client.cc:199] > worker 0: 29986.44/second. Mean: 32.74μs. Stdev: 3.50μs. Connections good/bad/overflow: 1/0/0. Replies: good/fail:89961/0. Stream resets: 0. 
+[15:58:19.908973][032275][I] [source/client/client.cc:219] Global #complete:179960. Mean: 29.11μs. Stdev: 4.92μs.
+[15:58:19.928943][032275][I] [source/client/client.cc:234] Done. Run 'tools/stats.py res.txt benchmark' for hdrhistogram.
+Uncorrected hdr histogram percentiles (us)
+p50: 27
+p75: 32
+p90: 33
+p99: 42
+p99.9: 66
+p99.99: 102
+p99.999: 268
+p100: 344
+min: 21.446
+max: 344.251
+mean: 29.110338769726607
+median: 27.6875
+var: 24.221109683905244
+stdev: 4.921494659542489
+```
+
 ## Development
 
-At the moment the PoC incorporates a .vscode. This has preconfigured tasks
-and launch settings to build the benchmarking client and tests, as well us
-run tests. It also provides the right settings for intellisense and wiring up
-the IDE for debugging. 
+[.vscode/tasks.json](.vscode/tasks.json) is a good place to take a peek at how to build, debug, test, and check the Nighthawk client for leaks. 
+
+
+Also, the repository has a [.vscode workspace](nighthawk.code-workspace) included. Optionally you can use that to jumpstart development if you are familiar with [VSCode](https://code.visualstudio.com/). When you choose do so, you may want to check out [tools/symlink-ide-headers.sh](tools/symlink-ide-headers.sh) to get improved intellisense and autocomplete. The workspace is set up with preconfigured tasks
+and launch settings for building, debugging, and running tests.
+
+clang7-format is used to format the code in this repository.
