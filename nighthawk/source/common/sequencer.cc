@@ -36,8 +36,7 @@ void Sequencer::stop() {
 
 void Sequencer::run(bool from_timer) {
   auto now = time_source_.monotonicTime();
-  // We put a cap on duration here. Which means we do not care care if we initiate/complete more
-  // or less requests then anticipated based on rps * duration (seconds).
+
   if ((now - start_) > (duration_)) {
     auto rate = completions_per_second();
 
@@ -86,9 +85,8 @@ void Sequencer::run(bool from_timer) {
     if (targets_initiated_ == targets_completed_) {
       // We saturated the rate limiter, and there's no outstanding work.
       // That means it looks like we are idle. Spin this event to improve
-      // accuracy in low rps settings. Not that this isn't ideal, because:
-      // - Connection-level events are not checked here, and we may delay those.
-      // - This won't help us with in all scenarios.
+      // accuracy.
+      // TODO(oschaaf): ideally we would have much finer grained timers instead.
       pthread_yield();
       incidental_timer_->enableTimer(0ms);
     }

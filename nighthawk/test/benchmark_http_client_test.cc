@@ -187,9 +187,6 @@ INSTANTIATE_TEST_CASE_P(IpVersions, BenchmarkClientTest,
                         testing::ValuesIn({Envoy::Network::Address::IpVersion::v4}),
                         Envoy::TestUtility::ipTestParamsToString);
 
-// TODO(oschaaf): this is a very,very crude end-to-end test.
-// Needs to be refactored and needs a synthetic origin to test
-// against. also, we need more tests.
 TEST_P(BenchmarkClientTest, BasicTestH1WithRequestQueue) {
   Envoy::Http::HeaderMapImplPtr request_headers = std::make_unique<Envoy::Http::HeaderMapImpl>();
   request_headers->insertMethod().value(Envoy::Http::Headers::get().MethodValues.Get);
@@ -205,7 +202,7 @@ TEST_P(BenchmarkClientTest, BasicTestH1WithRequestQueue) {
   client.set_max_pending_requests(amount);
   client.set_allow_pending_for_test(true);
 
-  // TODO(oschaaf): either get rid of the intialize call, or test that we except
+  // TODO(oschaaf): either get rid of the intialize call, or ensure that this throws
   // when we didn't call it before calling tryStartOne().  client.initialize(runtime_);
   client.initialize(runtime_);
 
@@ -273,7 +270,7 @@ TEST_P(BenchmarkClientTest, BasicTestH1WithoutRequestQueue) {
   EXPECT_EQ(1, client.http_good_response_count());
 }
 
-// TODO(oschaaf): see figure out if we can and should simulated time in this test
+// TODO(oschaaf): figure out if we can use simulated time in this test
 // to eliminate flake chances, and speed up execution.
 TEST_P(BenchmarkClientTest, SequencedH2Test) {
   Envoy::Http::HeaderMapImplPtr request_headers = std::make_unique<Envoy::Http::HeaderMapImpl>();
@@ -284,7 +281,6 @@ TEST_P(BenchmarkClientTest, SequencedH2Test) {
                                      std::move(request_headers), true /*use h2*/);
   client.initialize(runtime_);
 
-  // TODO(oschaaf): create an interface that pulls this from implementations upon implementation.
   SequencerTarget f =
       std::bind(&Client::BenchmarkHttpClient::tryStartOne, &client, std::placeholders::_1);
 

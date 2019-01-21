@@ -6,7 +6,7 @@ namespace Nighthawk {
 namespace Client {
 
 OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
-  TCLAP::CmdLine cmd("Nighthawk is a web server benchmarking tool.", ' ', "PoC");
+  TCLAP::CmdLine cmd("Nighthawk is a web server benchmarking tool.", ' ', "PoC"); // NOLINT
 
   TCLAP::ValueArg<uint64_t> requests_per_second("", "rps",
                                                 "The target requests-per-second rate. Default: 5.",

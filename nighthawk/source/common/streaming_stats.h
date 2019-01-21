@@ -5,7 +5,6 @@
 
 namespace Nighthawk {
 
-// TODO(oschaaf): test this class.
 class StreamingStats {
 public:
   StreamingStats();
