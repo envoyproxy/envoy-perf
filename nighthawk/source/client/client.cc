@@ -100,9 +100,7 @@ bool Main::run() {
   std::vector<std::vector<uint64_t>> global_results;
   std::vector<StreamingStats> global_streaming_stats;
 
-  // TODO(oschaaf): rework this. We pre-allocate the global results vector
-  // to avoid reallocations which would crash us.
-  // Wire up a proper stats sink.
+  // TODO(oschaaf): Wire up a proper stats sink.
   global_results.reserve(concurrency);
   global_streaming_stats.resize(concurrency);
 
@@ -145,16 +143,12 @@ bool Main::run() {
           std::make_unique<Envoy::Http::HeaderMapImpl>();
       request_headers->insertMethod().value(Envoy::Http::Headers::get().MethodValues.Get);
 
-      // TODO(oschaaf): would be nice to pass in a request generator here.
-      // Regardless, the header construct here needs to be fixed. It no longer makes
-      // sense to pass it in here, least that should be done is let the BenchmarkHttpClient
-      // contruct it itself if we go down that road.
+      // TODO(oschaaf): Pass in a request generator here.
       auto client =
           std::make_unique<BenchmarkHttpClient>(*dispatcher, *store, time_system, options_->uri(),
                                                 std::move(request_headers), options_->h2());
       client->set_connection_timeout(options_->timeout());
       client->set_connection_limit(options_->connections());
-
       client->initialize(runtime);
 
       // We try to offset the start of each thread so that workers will execute tasks evenly spaced
