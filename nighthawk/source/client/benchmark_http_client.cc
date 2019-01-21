@@ -146,7 +146,8 @@ bool BenchmarkHttpClient::tryStartOne(std::function<void()> caller_completion_ca
     return false;
   }
 
-  auto stream_decoder = new Nighthawk::Http::StreamDecoder(caller_completion_callback, *this);
+  auto stream_decoder =
+      new Nighthawk::Http::StreamDecoder(std::move(caller_completion_callback), *this);
   requests_initiated_++;
   pool_->newStream(*stream_decoder, *this);
 

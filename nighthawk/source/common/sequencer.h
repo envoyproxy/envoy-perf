@@ -22,7 +22,7 @@ public:
   void start();
   void waitForCompletion();
   void set_latency_callback(std::function<void(std::chrono::nanoseconds)> latency_callback) {
-    latency_callback_ = latency_callback;
+    latency_callback_ = std::move(latency_callback);
   }
 
   // TODO(oschaaf): calling this after stop() will return broken/unexpected results.
