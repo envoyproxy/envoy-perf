@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: ./ci/do_ci.sh build
+      - run: nighthawk/ci/do_ci.sh build
   test:
     docker:
       - image: *envoy-build-image
@@ -27,4 +27,3 @@ workflows:
     jobs:
       - build
       - test
-
