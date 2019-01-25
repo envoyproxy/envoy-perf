@@ -6,7 +6,8 @@ namespace Nighthawk {
 namespace Client {
 
 OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
-  TCLAP::CmdLine cmd("Nighthawk is a web server benchmarking tool.", ' ', "PoC"); // NOLINT
+  TCLAP::CmdLine cmd("Nighthawk, a L7 HTTP protocol family benchmarking tool based on Envoy.", ' ',
+                     "PoC"); // NOLINT
 
   TCLAP::ValueArg<uint64_t> requests_per_second("", "rps",
                                                 "The target requests-per-second rate. Default: 5.",
@@ -28,7 +29,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
 
   TCLAP::ValueArg<std::string> concurrency(
       "", "concurrency",
-      "The number of concurrent event loops that should be used. Specify 'auto' to let nighthawk "
+      "The number of concurrent event loops that should be used. Specify 'auto' to let Nighthawk "
       "run leverage all (aligned) vCPUs. Note that increasing this effectively multiplies "
       "configured --rps and --connection values. Default: 1.",
       false, "1", "string", cmd);

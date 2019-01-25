@@ -1,53 +1,38 @@
 # Nighthawk
 
-*A benchmarking tool based on Envoy*
+*A L7 HTTP protocol family benchmarking tool based on Envoy*
 
 ## Current state
 
-The nighthawk client supports HTTP/1.1 and HTTP/2 over http and https. (NOTE: https certificates are not yet validated).
+The nighthawk client supports HTTP/1.1 and HTTP/2 over HTTP and HTTPS.
+
+HTTPS certificates are not yet validated
 
 ## Prerequisites
 
 ### Ubuntu
 
-1. Install the latest version of [Bazel](https://bazel.build/versions/master/docs/install.html) in your environment.
+First, follow steps 1 and 2 over at [Quick start Bazel build for developers](https://github.com/envoyproxy/envoy/blob/master/bazel/README.md#quick-start-bazel-build-for-developers).
 
-2. Install external dependencies libtool, cmake, ninja, realpath and curl libraries separately.
-On Ubuntu, run the following command:
 
-``` bash
+### Optionally (for hdrhistogram)
 
-# For Nighthawk / Envoy. 
-# Realpath may give an error, when it does that you probably already have it.
 
-sudo apt-get install \
-   libtool \
-   cmake \
-   realpath \
-   clang-format-7 \
-   automake \
-   ninja-build \
-   curl \
-   unzip
-
-# For tools/stats.py
+```bash
 sudo apt-get install python3 python3-pip
 sudo pip3 install hdrhistogram jsonpickle
 ```
 
 ## Building and testing Nighthawk
-```zsh
-# TODO(oschaaf): Collect and list prerequisites. 
-# Currently mostly the same as Envoy.
-
+```bash
 # build it
-bazel build //:nighthawk_client
+bazel build -c opt //:nighthawk_client
 
 # test it
-bazel test //test:nighthawk_test
+bazel test -c opt //test:nighthawk_test
 ```
 
-## Using the nighthawk client
+## Using the Nighthawk client
 
 ```
 ➜ bazel-bin/nighthawk_client --help
@@ -71,7 +56,7 @@ Where:
 
    --concurrency <string>
      The number of concurrent event loops that should be used. Specify
-     'auto' to let nighthawk run leverage all (aligned) vCPUs. Note that
+     'auto' to let Nighthawk run leverage all (aligned) vCPUs. Note that
      increasing this effectively multiplies configured --rps and
      --connection values. Default: 1.
 
@@ -107,7 +92,7 @@ Where:
      in case of https no certificates are validated.
 
 
-   Nighthawk is a web server benchmarking tool.
+   Nighthawk, a L7 HTTP protocol family benchmarking tool.
 ```
 
 ## Sample benchmark run
@@ -143,12 +128,3 @@ var: 24.221109683905244
 stdev: 4.921494659542489
 ```
 
-## Development
-
-[.vscode/tasks.json](.vscode/tasks.json) is a good place to take a peek at how to build, debug, test, and check the Nighthawk client for leaks. 
-
-
-Also, the repository has a [.vscode workspace](nighthawk.code-workspace) included. Optionally you can use that to jumpstart development if you are familiar with [VSCode](https://code.visualstudio.com/). When you choose do so, you may want to check out [tools/symlink-ide-headers.sh](tools/symlink-ide-headers.sh) to get improved intellisense and autocomplete. The workspace is set up with preconfigured tasks
-and launch settings for building, debugging, and running tests.
-
-clang7-format is used to format the code in this repository.
