@@ -35,10 +35,10 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
                                          bool use_h2)
     : dispatcher_(dispatcher), store_(store), time_source_(time_source),
       request_headers_(std::move(request_headers)), use_h2_(use_h2), is_https_(false), host_(""),
-      port_(0), path_("/"), dns_failure_(true), timeout_(5s), connection_limit_(1),
-      max_pending_requests_(1), pool_overflow_failures_(0), stream_reset_count_(0),
-      http_good_response_count_(0), http_bad_response_count_(0), requests_completed_(0),
-      requests_initiated_(0), allow_pending_for_test_(false) {
+      host_without_port_(""), port_(0), path_("/"), dns_failure_(true), timeout_(5s),
+      connection_limit_(1), max_pending_requests_(1), pool_overflow_failures_(0),
+      stream_reset_count_(0), http_good_response_count_(0), http_bad_response_count_(0),
+      requests_completed_(0), requests_initiated_(0), allow_pending_for_test_(false) {
   // parse incoming uri into fields that we need.
   // TODO(oschaaf): refactor. also input validation, etc.
   absl::string_view host, path;
@@ -51,10 +51,11 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
 
   if (colon_index == std::string::npos) {
     port_ = is_https_ ? 443 : 80;
+    host_without_port_ = host_;
   } else {
     const std::string tcp_url = fmt::format("tcp://{}", host_);
     port_ = Envoy::Network::Utility::portFromTcpUrl(tcp_url);
-    host_ = host_.substr(0, colon_index);
+    host_without_port_ = host_.substr(0, colon_index);
   }
 
   request_headers_->insertPath().value(path_);
@@ -66,18 +67,18 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
 void BenchmarkHttpClient::syncResolveDns() {
   auto dns_resolver = dispatcher_.createDnsResolver({});
   Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
-      host_, Envoy::Network::DnsLookupFamily::V4Only,
+      host_without_port_, Envoy::Network::DnsLookupFamily::V4Only,
       [this, &active_dns_query_](
           const std::list<Envoy::Network::Address::InstanceConstSharedPtr>&& address_list) -> void {
         active_dns_query_ = nullptr;
-        ENVOY_LOG(debug, "DNS resolution complete for {} ({} entries).", this->host_,
+        ENVOY_LOG(debug, "DNS resolution complete for {} ({} entries).", host_without_port_,
                   address_list.size());
         if (!address_list.empty()) {
           dns_failure_ = false;
           target_address_ =
               Envoy::Network::Utility::getAddressWithPort(*address_list.front(), port_);
         } else {
-          ENVOY_LOG(critical, "Could not resolve host [{}]", host_);
+          ENVOY_LOG(critical, "Could not resolve host [{}]", host_without_port_);
         }
         dispatcher_.exit();
       });

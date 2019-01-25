@@ -64,6 +64,7 @@ private:
 
   bool is_https_;
   std::string host_;
+  std::string host_without_port_;
   uint32_t port_;
   std::string path_;
   bool dns_failure_;
