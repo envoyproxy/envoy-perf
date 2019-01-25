@@ -1,8 +1,5 @@
 bazel-*
 .DS_Store
 ._.DS_Store
-.vscode/browse.VC.db
-.vscode/.vs_code_bazel_build/BUILD
-.vscode/.vs_code_bazel_build/vs_code_aspect.bzl
 res.txt
 compile_commands.json
