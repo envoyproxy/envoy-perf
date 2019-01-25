@@ -11,7 +11,6 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: nighthawk/ci/do_ci.sh build
       - run: ci/do_ci.sh build
   test:
     docker:
@@ -20,7 +19,6 @@ jobs:
     steps:
       - checkout
       - run: git submodule update --init --recursive
-      - run: nighthawk/ci/do_ci.sh test
       - run: ci/do_ci.sh test
 
 workflows:
