@@ -19,7 +19,7 @@ jobs:
       - checkout
       - run: ci/do_ci.sh test
 
- workflows:
+workflows:
   version: 2
   all:
     jobs:
