@@ -10,7 +10,7 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - run: git submodule update --init
+      - run: git submodule update --init --recursive
       - run: ./ci/do_ci.sh build
   test:
     docker:
@@ -18,8 +18,8 @@ jobs:
     resource_class: xlarge
     steps:
       - checkout
-      - run: git submodule update --init
-      - run: ./ci/do_ci.sh test
+      - run: git submodule update --init --recursive
+      - run: nighthawk/ci/do_ci.sh test
 
 workflows:
   version: 2
