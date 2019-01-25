@@ -25,15 +25,15 @@ envoy_cc_library(
         "stream_decoder.h",
         "streaming_stats.h",
     ],
-    visibility = ["//visibility:public"],
     repository = "@envoy",
+    visibility = ["//visibility:public"],
     deps = [
-        "//include/nighthawk/common:base_includes",
         "//include/nighthawk/client:client_includes",
-        "@envoy//source/exe:envoy_common_lib",
+        "//include/nighthawk/common:base_includes",
         "@envoy//source/common/common:compiler_requirements_lib",
-        "@envoy//source/common/stats:stats_lib",
-        "@envoy//source/server/config_validation:server_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",
-    ]
+        "@envoy//source/common/stats:stats_lib",
+        "@envoy//source/exe:envoy_common_lib",
+        "@envoy//source/server/config_validation:server_lib",
+    ],
 )

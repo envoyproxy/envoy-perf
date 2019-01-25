@@ -16,4 +16,3 @@ envoy_basic_cc_library(
     ],
     include_prefix = "nighthawk/common",
 )
-
