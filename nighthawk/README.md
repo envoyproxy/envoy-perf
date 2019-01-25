@@ -56,9 +56,9 @@ Where:
 
    --concurrency <string>
      The number of concurrent event loops that should be used. Specify
-     'auto' to let Nighthawk run leverage all (aligned) vCPUs. Note that
-     increasing this effectively multiplies configured --rps and
-     --connection values. Default: 1.
+     'auto' to let Nighthawk leverage all vCPUs that have affinity to the Nighthawk
+     process. Note that increasing this results in an effective load multiplier
+     combined with the configured --rps and --connections values. Default: 1.
 
    --h2
      Use HTTP/2
@@ -72,7 +72,7 @@ Where:
      The number of seconds that the test should run. Default: 5.
 
    --connections <uint64_t>
-     The number of connections that the test should maximally use. Default:
+     The number of connections per event loop that the test should maximally use. Default:
      1.
 
    --rps <uint64_t>
@@ -98,11 +98,11 @@ Where:
 ## Sample benchmark run
 
 ```zsh
-# start envoy on core 2
-$ taskset -c 3 /path/to/envoy --config-path tools/envoy.yaml
+# start the benchmark target (Envoy in this case) on core 3.
+$ taskset -c 3 /path/to/envoy --config-path nighthawk/tools/envoy.yaml
 
 # run the benchmark on cores 0 and 1
-$ taskset -c 0-1 bazel-bin/nighthawk_client --concurrency auto --rps 30000 --connections 1 --duration 3 http://127.0.0.1:10000/ && tools/stats.py res.txt benchmark
+$ taskset -c 0-1 nighthawk/bazel-bin/nighthawk_client --concurrency auto --rps 30000 --connections 1 --duration 3 http://127.0.0.1:10000/ && tools/stats.py res.txt benchmark
 [15:58:16.907520][032275][I] [source/client/client.cc:110] Detected 2 (v)CPUs with affinity..
 [15:58:16.907555][032275][I] [source/client/client.cc:114] Starting 2 threads / event loops. Test duration: 3 seconds.
 [15:58:16.907558][032275][I] [source/client/client.cc:116] Global targets: 2 connections and 60000 calls per second.

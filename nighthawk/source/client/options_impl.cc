@@ -12,10 +12,11 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   TCLAP::ValueArg<uint64_t> requests_per_second("", "rps",
                                                 "The target requests-per-second rate. Default: 5.",
                                                 false, 5 /*default qps*/, "uint64_t", cmd);
-  TCLAP::ValueArg<uint64_t> connections("", "connections",
-                                        "The number of connections that the test should maximally "
-                                        "use. Default: 1.",
-                                        false, 1, "uint64_t", cmd);
+  TCLAP::ValueArg<uint64_t> connections(
+      "", "connections",
+      "The number of connections per event loop that the test should maximally "
+      "use. Default: 1.",
+      false, 1, "uint64_t", cmd);
   TCLAP::ValueArg<uint64_t> duration("", "duration",
                                      "The number of seconds that the test should run. Default: 5.",
                                      false, 5, "uint64_t", cmd);
@@ -29,9 +30,10 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
 
   TCLAP::ValueArg<std::string> concurrency(
       "", "concurrency",
-      "The number of concurrent event loops that should be used. Specify 'auto' to let Nighthawk "
-      "run leverage all (aligned) vCPUs. Note that increasing this effectively multiplies "
-      "configured --rps and --connection values. Default: 1.",
+      "The number of concurrent event loops that should be used. Specify 'auto' to let "
+      "Nighthawk leverage all vCPUs that have affinity to the Nighthawk process.Note that "
+      "increasing this results in an effective load multiplier combined with the configured-- rps "
+      "and --connections values.Default : 1. ",
       false, "1", "string", cmd);
 
   std::vector<std::string> log_levels;
