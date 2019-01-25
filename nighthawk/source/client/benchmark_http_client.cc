@@ -39,7 +39,6 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
       max_pending_requests_(1), pool_overflow_failures_(0), stream_reset_count_(0),
       http_good_response_count_(0), http_bad_response_count_(0), requests_completed_(0),
       requests_initiated_(0), allow_pending_for_test_(false) {
-
   // parse incoming uri into fields that we need.
   // TODO(oschaaf): refactor. also input validation, etc.
   absl::string_view host, path;
@@ -47,13 +46,13 @@ BenchmarkHttpClient::BenchmarkHttpClient(Envoy::Event::Dispatcher& dispatcher,
   host_ = std::string(host);
   path_ = std::string(path);
 
-  size_t colon_index = host_.find(':');
+  const size_t colon_index = host_.find(':');
   is_https_ = absl::StartsWith(uri, "https://");
 
   if (colon_index == std::string::npos) {
     port_ = is_https_ ? 443 : 80;
   } else {
-    std::string tcp_url = fmt::format("tcp://{}", this->host_);
+    const std::string tcp_url = fmt::format("tcp://{}", host_);
     port_ = Envoy::Network::Utility::portFromTcpUrl(tcp_url);
     host_ = host_.substr(0, colon_index);
   }

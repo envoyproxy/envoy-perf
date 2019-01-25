@@ -15,7 +15,6 @@ public:
   /**
    * Start the worker thread.
    */
-  // TODO(oschaaf): Guarddog?
   virtual void start() PURE;
 
   /**
