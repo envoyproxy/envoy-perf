@@ -40,6 +40,7 @@ protected:
   void stop();
 
 private:
+  static const std::chrono::milliseconds ENVOY_TIMER_MIN_RES;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;
   Envoy::Event::TimerPtr periodic_timer_;

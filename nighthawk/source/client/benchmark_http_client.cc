@@ -160,7 +160,7 @@ void BenchmarkHttpClient::onComplete(bool success, const Envoy::Http::HeaderMap&
     stream_reset_count_++;
   } else {
     ASSERT(headers.Status());
-    int64_t status = Envoy::Http::Utility::getResponseStatus(headers);
+    const int64_t status = Envoy::Http::Utility::getResponseStatus(headers);
     // TODO(oschaaf): we can very probably pull these from the stats.
     if (status >= 400 && status <= 599) {
       http_bad_response_count_++;
@@ -179,7 +179,7 @@ void BenchmarkHttpClient::onPoolFailure(Envoy::Http::ConnectionPool::PoolFailure
     pool_overflow_failures_++;
     break;
   default:
-    ASSERT(false);
+    NOT_REACHED_GCOVR_EXCL_LINE;
   }
 }
 

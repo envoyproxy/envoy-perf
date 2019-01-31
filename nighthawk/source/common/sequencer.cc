@@ -8,6 +8,8 @@ using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
+const std::chrono::milliseconds Sequencer::ENVOY_TIMER_MIN_RES = 1ms;
+
 Sequencer::Sequencer(Envoy::Event::Dispatcher& dispatcher, Envoy::TimeSource& time_source,
                      RateLimiter& rate_limiter, SequencerTarget& target,
                      std::chrono::microseconds duration, std::chrono::microseconds grace_timeout)
@@ -26,7 +28,7 @@ void Sequencer::start() {
   run(true);
 }
 
-void Sequencer::scheduleRun() { periodic_timer_->enableTimer(1ms); }
+void Sequencer::scheduleRun() { periodic_timer_->enableTimer(ENVOY_TIMER_MIN_RES); }
 
 void Sequencer::stop() {
   periodic_timer_->disableTimer();
@@ -35,7 +37,7 @@ void Sequencer::stop() {
 }
 
 void Sequencer::run(bool from_timer) {
-  auto now = time_source_.monotonicTime();
+  const auto now = time_source_.monotonicTime();
 
   if ((now - start_) > (duration_)) {
     auto rate = completions_per_second();
@@ -48,7 +50,7 @@ void Sequencer::run(bool from_timer) {
                 std::chrono::duration_cast<std::chrono::milliseconds>(now - start_).count(), rate);
       return;
     } else {
-      // We wait untill all due responses are in or the grace period times out.
+      // We wait until all due responses are in or the grace period times out.
       if (((now - start_) - duration_) > grace_timeout_) {
         stop();
         ENVOY_LOG(warn,

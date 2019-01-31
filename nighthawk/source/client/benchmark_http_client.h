@@ -58,9 +58,9 @@ private:
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::Stats::Store& store_;
   Envoy::TimeSource& time_source_;
-  Envoy::Http::HeaderMapImplPtr request_headers_;
+  const Envoy::Http::HeaderMapImplPtr request_headers_;
   Envoy::Upstream::ClusterInfoConstSharedPtr cluster_;
-  bool use_h2_;
+  const bool use_h2_;
 
   bool is_https_;
   std::string host_;
