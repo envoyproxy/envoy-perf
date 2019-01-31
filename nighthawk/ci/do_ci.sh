@@ -13,6 +13,7 @@ function do_test() {
     # to see how this was finally resolved in Envoy's code base. There is a TODO for when
     # when a later bazel version is deployed in CI here:
     # https://github.com/lizan/envoy/blob/2eb772ac7518c8fbf2a8c7acbc1bf89e548d9c86/ci/do_ci.sh#L86
+    [ -z "$CIRCLECI" ] || export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --local_resources=12288,5,1"
     [ -z "$CIRCLECI" ] || export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --local_resources=12288,5,1 --local_test_jobs=8"
     bazel test --test_output=all --test_env=ENVOY_IP_TEST_VERSIONS=v4only \
       //test:nighthawk_test
