@@ -1,14 +1,9 @@
-licenses(["notice"])  # Apache 2
-
 load(
     "@envoy//bazel:envoy_build_system.bzl",
-    "envoy_cc_binary",
     "envoy_cc_library",
-    "envoy_cc_platform_dep",
-    "envoy_cc_posix_library",
-    "envoy_cc_win32_library",
-    "envoy_package",
 )
+
+licenses(["notice"])  # Apache 2
 
 envoy_cc_library(
     name = "nighthawk_common_lib",
@@ -19,6 +14,7 @@ envoy_cc_library(
         "streaming_stats.cc",
     ],
     hdrs = [
+        "frequency.h",
         "rate_limiter.h",
         "sequencer.h",
         "ssl.h",

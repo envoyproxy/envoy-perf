@@ -284,7 +284,7 @@ TEST_P(BenchmarkClientTest, SequencedH2Test) {
   SequencerTarget f =
       std::bind(&Client::BenchmarkHttpClient::tryStartOne, &client, std::placeholders::_1);
 
-  LinearRateLimiter rate_limiter(time_system_, 1000ms);
+  LinearRateLimiter rate_limiter(time_system_, 1_Hz);
   std::chrono::milliseconds duration(5999ms);
   Sequencer sequencer(*dispatcher_, time_system_, rate_limiter, f, duration, 10s);
 

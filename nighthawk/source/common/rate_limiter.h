@@ -3,6 +3,8 @@
 #include "common/common/logger.h"
 #include "envoy/event/timer.h"
 
+#include "frequency.h"
+
 namespace Nighthawk {
 
 class RateLimiter : public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
@@ -21,14 +23,14 @@ protected:
 // instantiation.
 class LinearRateLimiter : public RateLimiter {
 public:
-  LinearRateLimiter(Envoy::TimeSource& time_source, std::chrono::nanoseconds pace);
+  LinearRateLimiter(Envoy::TimeSource& time_source, const Frequency frequency);
   bool tryAcquireOne() override;
   void releaseOne() override;
 
 private:
   int64_t acquireable_count_;
   uint64_t acquired_count_;
-  const std::chrono::nanoseconds pace_;
+  const Frequency frequency_;
   const Envoy::MonotonicTime started_at_;
 };
 

@@ -18,6 +18,7 @@
 
 #include "client/benchmark_http_client.h"
 #include "client/options_impl.h"
+#include "common/frequency.h"
 #include "common/rate_limiter.h"
 #include "common/sequencer.h"
 #include "common/streaming_stats.h"
@@ -164,7 +165,7 @@ bool Main::run() {
       client->tryStartOne([&dispatcher] { dispatcher->exit(); });
       dispatcher->run(Envoy::Event::Dispatcher::RunType::Block);
 
-      LinearRateLimiter rate_limiter(time_system, 1000000000ns / options_->requests_per_second());
+      LinearRateLimiter rate_limiter(time_system, Frequency(options_->requests_per_second()));
       SequencerTarget f =
           std::bind(&BenchmarkHttpClient::tryStartOne, client.get(), std::placeholders::_1);
       Sequencer sequencer(*dispatcher, time_system, rate_limiter, f, options_->duration(),

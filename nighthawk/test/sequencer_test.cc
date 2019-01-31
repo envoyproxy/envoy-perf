@@ -49,7 +49,7 @@ public:
 };
 
 TEST_F(SequencerTest, BasicTest) {
-  LinearRateLimiter rate_limiter(time_system_, 100ms);
+  LinearRateLimiter rate_limiter(time_system_, 10_Hz);
   SequencerTarget f = std::bind(&SequencerTest::callback_test, this, std::placeholders::_1);
 
   Sequencer sequencer(*dispatcher_, time_system_, rate_limiter, f, 1050ms, 1s);
@@ -61,7 +61,7 @@ TEST_F(SequencerTest, BasicTest) {
 }
 
 TEST_F(SequencerTest, EmptyCallbackThrowsTest) {
-  LinearRateLimiter rate_limiter(time_system_, 100ms);
+  LinearRateLimiter rate_limiter(time_system_, 10_Hz);
   SequencerTarget callback_empty;
 
   ASSERT_THROW(

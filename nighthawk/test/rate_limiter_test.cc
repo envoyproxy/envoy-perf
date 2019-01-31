@@ -6,6 +6,7 @@
 
 #include "nighthawk/common/exception.h"
 
+#include "common/frequency.h"
 #include "common/rate_limiter.h"
 
 using namespace std::chrono_literals;
@@ -17,7 +18,7 @@ class RateLimiterTest : public testing::Test {};
 TEST_F(RateLimiterTest, LinearRateLimiterTest) {
   Envoy::Event::SimulatedTimeSystem time_system;
   // Construct a 10/second paced rate limiter.
-  LinearRateLimiter rate_limiter(time_system, 100ms);
+  LinearRateLimiter rate_limiter(time_system, 10_Hz);
 
   EXPECT_FALSE(rate_limiter.tryAcquireOne());
 
@@ -34,7 +35,7 @@ TEST_F(RateLimiterTest, LinearRateLimiterTest) {
 
 TEST_F(RateLimiterTest, LinearRateLimiterInvalidArgumentTest) {
   Envoy::Event::SimulatedTimeSystem time_system;
-  ASSERT_THROW(LinearRateLimiter rate_limiter(time_system, -100ms), NighthawkException);
+  ASSERT_DEATH(LinearRateLimiter rate_limiter(time_system, 0_Hz), "Frequency must be > 0");
 }
 
 } // namespace Nighthawk
