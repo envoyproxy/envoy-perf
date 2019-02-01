@@ -7,19 +7,8 @@ licenses(["notice"])  # Apache 2
 
 envoy_cc_library(
     name = "nighthawk_common_lib",
-    srcs = [
-        "rate_limiter.cc",
-        "sequencer.cc",
-        "stream_decoder.cc",
-        "streaming_stats.cc",
-    ],
     hdrs = [
         "frequency.h",
-        "rate_limiter.h",
-        "sequencer.h",
-        "ssl.h",
-        "stream_decoder.h",
-        "streaming_stats.h",
     ],
     repository = "@envoy",
     visibility = ["//visibility:public"],
