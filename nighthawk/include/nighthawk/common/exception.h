@@ -5,8 +5,7 @@
 
 namespace Nighthawk {
 /**
- * @brief Base class for all Nighthawk exceptions.
- *
+ * Base class for all Nighthawk exceptions.
  */
 class NighthawkException : public std::runtime_error {
 public:
@@ -17,9 +16,8 @@ public:
 namespace Client {
 
 /**
- * @brief We translate certain exceptions thrown by TCLAP to NoServingException, for example when
+ * We translate certain exceptions thrown by TCLAP to NoServingException, for example when
  * help is invoked. This exception is then caught further up the stack and handled.
- *
  */
 class NoServingException : public NighthawkException {
 public:
@@ -27,8 +25,7 @@ public:
 };
 
 /**
- * @brief Thrown when an OptionsImpl was not constructed because the argv was invalid.
- *
+ * Thrown when an OptionsImpl was not constructed because the argv was invalid.
  */
 class MalformedArgvException : public NighthawkException {
 public:

@@ -14,10 +14,6 @@ api_proto_library_internal(
 
 envoy_cc_library(
     name = "nighthawk_client_lib",
-    srcs = [
-    ],
-    hdrs = [
-    ],
     repository = "@envoy",
     visibility = ["//visibility:public"],
     deps = [
