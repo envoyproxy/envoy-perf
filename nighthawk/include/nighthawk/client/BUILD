@@ -10,7 +10,5 @@ envoy_package()
 
 envoy_basic_cc_library(
     name = "client_includes",
-    hdrs = [
-    ],
     include_prefix = "nighthawk/client",
 )
