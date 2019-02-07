@@ -17,9 +17,9 @@ envoy_cc_library(
     repository = "@envoy",
     visibility = ["//visibility:public"],
     deps = [
-        "//include/nighthawk/client:client_includes",
-        "//include/nighthawk/common:base_includes",
-        "//source/common:nighthawk_common_lib",
+        "//nighthawk/include/nighthawk/client:client_includes",
+        "//nighthawk/include/nighthawk/common:base_includes",
+        "//nighthawk/source/common:nighthawk_common_lib",
         "@envoy//source/common/common:compiler_requirements_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",
         "@envoy//source/exe:envoy_common_lib",

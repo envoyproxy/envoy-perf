@@ -1,6 +1,6 @@
 #include "gtest/gtest.h"
 
-#include "common/frequency.h"
+#include "nighthawk/source/common/frequency.h"
 
 namespace Nighthawk {
 

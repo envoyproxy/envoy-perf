@@ -9,6 +9,6 @@ envoy_cc_binary(
     name = "nighthawk_client",
     repository = "@envoy",
     deps = [
-        "//source/exe:nighthawk_client_entry_lib",
+        "//nighthawk/source/exe:nighthawk_client_entry_lib",
     ],
 )
