@@ -20,6 +20,9 @@ function do_test() {
 [ -z "$CIRCLECI" ] || export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --local_resources=8192,4,1"
 [ -z "$CIRCLECI" ] || export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --local_resources=8192,4,1 --local_test_jobs=4"
 
+# TODO(oschaaf): hack, this should be done in .circleci/config.yml	# TODO(oschaaf): To avoid OOM kicking in, we throttle resources here. Revisit this later
+git submodule update --init --recursive
+
 case "$1" in
   build)
     do_build
