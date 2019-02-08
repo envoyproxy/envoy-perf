@@ -20,11 +20,13 @@ git submodule update --init --recursive
 # to see how this was finally resolved in Envoy's code base. There is a TODO for when
 # when a later bazel version is deployed in CI here:
 # https://github.com/lizan/envoy/blob/2eb772ac7518c8fbf2a8c7acbc1bf89e548d9c86/ci/do_ci.sh#L86
-[ -z "$CIRCLECI" ] || export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --local_resources=4096,2,1"
-[ -z "$CIRCLECI" ] || export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --local_resources=4096,2,1 --local_test_jobs=4"
-[ -z "$CIRCLECI" ] || export PATH=/usr/lib/llvm-7/bin:$PATH
-[ -z "$CIRCLECI" ] || export CC=clang
-[ -z "$CIRCLECI" ] || export CXX=clang++
+if [ -z "$CIRCLECI" ]; then
+  export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --local_resources=4096,2,1"
+  export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --local_resources=4096,2,1 --local_test_jobs=4"
+  export PATH=/usr/lib/llvm-7/bin:$PATH
+  export CC=clang
+  export CXX=clang++
+fi
 
 case "$1" in
   build)

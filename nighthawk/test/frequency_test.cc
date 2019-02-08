@@ -4,13 +4,7 @@
 
 namespace Nighthawk {
 
-class FrequencyTest : public testing::Test {
-
-public:
-  FrequencyTest() {}
-  void SetUp() {}
-  void TearDown() {}
-};
+class FrequencyTest : public testing::Test {};
 
 TEST_F(FrequencyTest, BasicTest) {
   Frequency f1 = 1_Hz;
