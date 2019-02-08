@@ -1,0 +1,5 @@
+bazel-*
+.DS_Store
+._.DS_Store
+res.txt
+compile_commands.json
