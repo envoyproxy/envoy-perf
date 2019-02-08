@@ -5,22 +5,19 @@
 namespace Nighthawk {
 
 /**
- * @brief Abstract rate limiter interface
- *
+ * Abstract rate limiter interface.
  */
 class RateLimiter {
 public:
   virtual ~RateLimiter() = default;
   /**
-   * @brief RateLimiter allows controlled acquiring of resources.
-   *
+   * Acquire a controlled resource.
    * @return true Indicates success.
    * @return false Indicates failure to acquire.
    */
   virtual bool tryAcquireOne() PURE;
   /**
-   * @brief allows explicitly releasing of a controlled resource.
-   *
+   * Releases a controlled resource.
    */
   virtual void releaseOne() PURE;
 };

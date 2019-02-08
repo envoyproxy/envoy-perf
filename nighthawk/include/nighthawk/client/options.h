@@ -13,8 +13,7 @@ namespace Client {
 typedef std::unique_ptr<nighthawk::client::CommandLineOptions> CommandLineOptionsPtr;
 
 /**
- * @brief Options interface
- *
+ * Abstract options interface.
  */
 class Options {
 public:
@@ -28,7 +27,11 @@ public:
   virtual bool h2() const PURE;
   virtual std::string concurrency() const PURE;
   virtual std::string verbosity() const PURE;
-
+  /**
+   * Converts an Options instance to an equivalent CommandLineOptions instance in terms of option
+   * values.
+   * @return CommandLineOptionsPtr
+   */
   virtual CommandLineOptionsPtr toCommandLineOptions() const PURE;
 };
 
