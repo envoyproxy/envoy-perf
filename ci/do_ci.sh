@@ -44,7 +44,7 @@ case "$1" in
         do_clang_tidy
     ;;
     *)
-        echo "must be one of [build,test]"
+        echo "must be one of [build,test,clang_tidy]"
         exit 1
     ;;
 esac

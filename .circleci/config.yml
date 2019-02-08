@@ -18,6 +18,13 @@ jobs:
     steps:
       - checkout
       - run: ci/do_ci.sh test
+  clang_tidy:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh clang_tidy
 
 workflows:
   version: 2
@@ -25,3 +32,4 @@ workflows:
     jobs:
       - build
       - test
+      - clang_tidy
