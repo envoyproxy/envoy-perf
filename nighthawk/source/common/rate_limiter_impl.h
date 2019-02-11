@@ -1,9 +1,9 @@
 #pragma once
 
+#include "nighthawk/common/rate_limiter.h"
+
 #include "common/common/logger.h"
 #include "envoy/event/timer.h"
-
-#include "nighthawk/common/rate_limiter.h"
 
 #include "frequency.h"
 

@@ -19,7 +19,7 @@ bool LinearRateLimiter::tryAcquireOne() {
     return true;
   }
 
-  auto elapsed_since_start = time_source_.monotonicTime() - started_at_;
+  const auto elapsed_since_start = time_source_.monotonicTime() - started_at_;
   acquireable_count_ = (elapsed_since_start / frequency_.interval()) - acquired_count_;
   return acquireable_count_ > 0 ? tryAcquireOne() : false;
 }
