@@ -8,6 +8,7 @@ package(default_visibility = ["//visibility:public"])
 envoy_cc_test(
     name = "nighthawk_test",
     srcs = [
+        "frequency_test.cc",
         "options_test.cc",
         "rate_limiter_test.cc",
         "utility_test.cc",
