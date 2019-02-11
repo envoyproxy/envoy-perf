@@ -27,10 +27,11 @@ if [ -n "$CIRCLECI" ]; then
     fi
     export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --local_resources=4096,2,1"
     export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --local_resources=4096,2,1 --local_test_jobs=4"
-    export PATH=/usr/lib/llvm-7/bin:$PATH
-    export CC=clang
-    export CXX=clang++
 fi
+
+export PATH=/usr/lib/llvm-7/bin:$PATH
+export CC=clang
+export CXX=clang++
 
 case "$1" in
     build)
