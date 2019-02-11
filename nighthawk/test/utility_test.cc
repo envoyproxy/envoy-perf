@@ -19,15 +19,7 @@ public:
     EXPECT_TRUE(uri.isValid());
   }
 
-  int32_t getCpuCountFromSet(cpu_set_t& set) {
-    int32_t count = 0;
-    for (int i = 0; i < CPU_SETSIZE; i++) {
-      if (CPU_ISSET(i, &set)) {
-        ++count;
-      }
-    }
-    return count;
-  }
+  int32_t getCpuCountFromSet(cpu_set_t& set) { return CPU_COUNT(&set); }
 };
 
 TEST_F(UtilityTest, PerfectlyFineUrl) {

@@ -9,6 +9,7 @@ envoy_cc_library(
     name = "nighthawk_common_lib",
     srcs = [
         "rate_limiter_impl.cc",
+        "utility.cc",
     ],
     hdrs = [
         "frequency.h",

@@ -1,5 +1,7 @@
 #include "nighthawk/source/client/options_impl.h"
 
+#include <cmath>
+
 #include "tclap/CmdLine.h"
 
 #include "nighthawk/source/common/utility.h"
@@ -83,22 +85,23 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   concurrency_ = concurrency.getValue();
   verbosity_ = verbosity.getValue();
 
-  uint64_t pretty_large_value = 1000 * 1000 * 1000;
   // We cap on negative values. TCLAP accepts negative values which we will get here as very
-  // large values. We just cap values to a very large maximum.
-  if (requests_per_second_ == 0 || requests_per_second_ > pretty_large_value) {
+  // large values. We just cap values to 2^63.
+  const uint64_t largest_acceptable_uint64_option_value = std::pow(2ull, 63ull);
+
+  if (requests_per_second_ == 0 || requests_per_second_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --requests_per_second");
   }
-  if (connections_ == 0 || connections_ > pretty_large_value) {
+  if (connections_ == 0 || connections_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --connections");
   }
-  if (duration_ == 0 || duration_ > pretty_large_value) {
+  if (duration_ == 0 || duration_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --duration");
   }
-  if (timeout_ == 0 || timeout_ > pretty_large_value) {
+  if (timeout_ == 0 || timeout_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --timeout");
   }
-  if (requests_per_second_ == 0 || requests_per_second_ > pretty_large_value) {
+  if (requests_per_second_ == 0 || requests_per_second_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --requests_per_second");
   }
 

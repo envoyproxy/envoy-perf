@@ -16,7 +16,6 @@ envoy_cc_library(
     name = "nighthawk_client_lib",
     srcs = [
         "options_impl.cc",
-        "utility.cc",
     ],
     hdrs = [
         "options_impl.h",

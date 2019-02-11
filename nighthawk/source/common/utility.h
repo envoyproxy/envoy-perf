@@ -32,7 +32,6 @@ private:
   std::string path_;
   uint64_t port_;
   std::string scheme_;
-  bool is_https_;
 };
 
 } // namespace Nighthawk

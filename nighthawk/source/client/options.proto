@@ -4,6 +4,8 @@ package nighthawk.client;
 
 import "google/protobuf/duration.proto";
 
+// TODO(oschaaf): Ultimately this will be a load test specification. The fact that it
+// can arrive via CLI is just a concrete detail. Change this to reflect that.
 message CommandLineOptions {
   // See :option:`--rps` for details.
   uint64 requests_per_second = 1;
@@ -19,6 +21,6 @@ message CommandLineOptions {
   string concurrency = 6;
   // See :option:`--verbosity` for details.
   string verbosity = 7;
-
+  // See :option:`--uri` for details.
   string uri = 8;
 }
