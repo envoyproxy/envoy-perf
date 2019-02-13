@@ -10,7 +10,7 @@ public:
   void checkUriParsing(const std::string& uri_to_test, const std::string& host_and_port,
                        const std::string& host_without_port, const uint64_t port,
                        const std::string& scheme, const std::string& path) {
-    Uri uri = Uri::Parse(uri_to_test);
+    const Uri uri = Uri::Parse(uri_to_test);
     EXPECT_EQ(host_and_port, uri.host_and_port());
     EXPECT_EQ(host_without_port, uri.host_without_port());
     EXPECT_EQ(port, uri.port());
@@ -33,24 +33,24 @@ TEST_F(UtilityTest, Defaults) {
 }
 
 TEST_F(UtilityTest, SchemeIsLowerCased) {
-  Uri uri = Uri::Parse("HTTP://a");
+  const Uri uri = Uri::Parse("HTTP://a");
   EXPECT_EQ("http", uri.scheme());
 }
 
 TEST_F(UtilityTest, ExplicitPort) {
-  Uri u1 = Uri::Parse("HTTP://a:111");
+  const Uri u1 = Uri::Parse("HTTP://a:111");
   EXPECT_EQ(111, u1.port());
 
-  Uri u2 = Uri::Parse("HTTP://a:-111");
+  const Uri u2 = Uri::Parse("HTTP://a:-111");
   EXPECT_EQ(4294967185, u2.port());
   EXPECT_FALSE(u2.isValid());
 
-  Uri u3 = Uri::Parse("HTTP://a:0");
+  const Uri u3 = Uri::Parse("HTTP://a:0");
   EXPECT_FALSE(u2.isValid());
 }
 
 TEST_F(UtilityTest, SchemeWeDontUnderstand) {
-  Uri u = Uri::Parse("foo://a");
+  const Uri u = Uri::Parse("foo://a");
   EXPECT_FALSE(u.isValid());
 }
 

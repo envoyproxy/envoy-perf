@@ -18,12 +18,12 @@ public:
   uint64_t port() const { return port_; }
   const std::string& scheme() const { return scheme_; }
 
-  bool isValid() {
+  bool isValid() const {
     return (scheme_ == "http" || scheme_ == "https") && (port_ > 0 && port_ <= 65535);
   }
 
 private:
-  Uri(std::string uri);
+  Uri(const std::string& uri);
 
   // TODO(oschaaf): username, password, etc. But we may want to look at
   // pulling in a mature uri parser.

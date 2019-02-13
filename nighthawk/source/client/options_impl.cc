@@ -40,12 +40,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       "and --connections values.Default : 1. ",
       false, "1", "string", cmd);
 
-  std::vector<std::string> log_levels;
-  log_levels.emplace_back("trace");
-  log_levels.emplace_back("debug");
-  log_levels.emplace_back("info");
-  log_levels.emplace_back("warn");
-  log_levels.emplace_back("error");
+  std::vector<std::string> log_levels = {"trace", "debug", "info", "warn", "error"};
   TCLAP::ValuesConstraint<std::string> verbosities_allowed(log_levels);
 
   TCLAP::ValueArg<std::string> verbosity(
@@ -90,7 +85,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   const uint64_t largest_acceptable_uint64_option_value = std::pow(2ull, 63ull);
 
   if (requests_per_second_ == 0 || requests_per_second_ > largest_acceptable_uint64_option_value) {
-    throw MalformedArgvException("Invalid value for --requests_per_second");
+    throw MalformedArgvException("Invalid value for --rps");
   }
   if (connections_ == 0 || connections_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --connections");
@@ -101,9 +96,6 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   if (timeout_ == 0 || timeout_ > largest_acceptable_uint64_option_value) {
     throw MalformedArgvException("Invalid value for --timeout");
   }
-  if (requests_per_second_ == 0 || requests_per_second_ > largest_acceptable_uint64_option_value) {
-    throw MalformedArgvException("Invalid value for --requests_per_second");
-  }
 
   // concurrency must be either 'auto' or a positive integer.
   if (concurrency_ != "auto") {
@@ -113,10 +105,10 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
     } catch (const std::invalid_argument& ia) {
       throw MalformedArgvException("Invalid value for --concurrency");
     } catch (const std::out_of_range& oor) {
-      throw MalformedArgvException("Invalid value for --concurrency");
+      throw MalformedArgvException("Value out of range: --concurrency");
     }
     if (parsed_concurrency <= 0) {
-      throw MalformedArgvException("Invalid value for --concurrency");
+      throw MalformedArgvException("Value for --concurrency should be greater then 0.");
     }
   }
   if (!Uri::Parse(uri_).isValid()) {

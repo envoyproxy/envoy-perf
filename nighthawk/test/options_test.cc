@@ -29,8 +29,14 @@ public:
   std::string no_arg_match_;
 };
 
+class OptionsImplIntTest : public OptionsImplTest,
+                           public testing::WithParamInterface<const char*> {};
+
 TEST_F(OptionsImplTest, BogusInput) {
   // TODO(oschaaf): enable this test after we have host name validation.
+  // When just passing the non-existing argument --foo it would be interpreted as a
+  // hostname. However, hostnames shouldn't start with '-', and hence this test should
+  // not pass.
   // EXPECT_THROW_WITH_REGEX(createOptionsImpl(fmt::format("{} --foo", client_name_)),
   //                        MalformedArgvException, no_arg_match_);
 }
@@ -62,68 +68,39 @@ TEST_F(OptionsImplTest, All) {
   EXPECT_EQ(cmd->uri(), options->uri());
 }
 
-// TODO(oschaaf): A couple of the tests below are pretty repetitive. They perform
-// the same sanity checking with just the argument name changing.
-// Figure out how to deduplicate.
-TEST_F(OptionsImplTest, BadRpsValuesThrow) {
+TEST_F(OptionsImplTest, Help) {
+  EXPECT_THROW_WITH_REGEX(createOptionsImpl(fmt::format("{}  --help", client_name_)),
+                          NoServingException, "NoServingException");
+}
+
+TEST_F(OptionsImplTest, Version) {
+  EXPECT_THROW_WITH_REGEX(createOptionsImpl(fmt::format("{}  --version", client_name_)),
+                          NoServingException, "NoServingException");
+}
+
+TEST_F(OptionsImplTest, NoArguments) {
+  EXPECT_THROW_WITH_REGEX(createOptionsImpl(fmt::format("{}", client_name_)),
+                          MalformedArgvException, "Required argument missing: uri");
+}
+
+TEST_P(OptionsImplIntTest, IntOptionsBadValuesThrow) {
+  const char* option_name = GetParam();
   EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --rps 0", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --requests_per_second");
+      createOptionsImpl(fmt::format("{} {} --{} 0", client_name_, good_test_uri_, option_name)),
+      MalformedArgvException, fmt::format("Invalid value for --{}", option_name));
   EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --rps -1", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --requests_per_second");
+      createOptionsImpl(fmt::format("{} {} --{} -1", client_name_, good_test_uri_, option_name)),
+      MalformedArgvException, fmt::format("Invalid value for --{}", option_name));
   EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --rps", client_name_, good_test_uri_)),
+      createOptionsImpl(fmt::format("{} {} --{}", client_name_, good_test_uri_, option_name)),
       MalformedArgvException, "Missing a value for this argument");
   EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --rps foo", client_name_, good_test_uri_)),
+      createOptionsImpl(fmt::format("{} {} --{} foo", client_name_, good_test_uri_, option_name)),
       MalformedArgvException, "Couldn't read argument value");
 }
 
-TEST_F(OptionsImplTest, BadConnectionsValuesThrow) {
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --connections 0", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --connections");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --connections -1", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --connections");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --connections", client_name_, good_test_uri_)),
-      MalformedArgvException, "Missing a value for this argument");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --connections foo", client_name_, good_test_uri_)),
-      MalformedArgvException, "Couldn't read argument value");
-}
-
-TEST_F(OptionsImplTest, BadDurationValuesThrow) {
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --duration 0", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --duration");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --duration -1", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --duration");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --duration", client_name_, good_test_uri_)),
-      MalformedArgvException, "Missing a value for this argument");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --duration foo", client_name_, good_test_uri_)),
-      MalformedArgvException, "Couldn't read argument value");
-}
-
-TEST_F(OptionsImplTest, BadTimeoutValuesThrow) {
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --timeout 0", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --timeout");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --timeout -1", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --timeout");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --timeout", client_name_, good_test_uri_)),
-      MalformedArgvException, "Missing a value for this argument");
-  EXPECT_THROW_WITH_REGEX(
-      createOptionsImpl(fmt::format("{} {} --timeout foo", client_name_, good_test_uri_)),
-      MalformedArgvException, "Couldn't read argument value");
-}
+INSTANTIATE_TEST_SUITE_P(IntOptionTests, OptionsImplIntTest,
+                         testing::Values("rps", "connections", "duration", "timeout"));
 
 TEST_F(OptionsImplTest, BadH2FlagThrows) {
   EXPECT_THROW_WITH_REGEX(
@@ -137,10 +114,10 @@ TEST_F(OptionsImplTest, BadH2FlagThrows) {
 TEST_F(OptionsImplTest, BadConcurrencyValuesThrow) {
   EXPECT_THROW_WITH_REGEX(
       createOptionsImpl(fmt::format("{} {} --concurrency 0", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --concurrency");
+      MalformedArgvException, "Value for --concurrency should be greater then 0.");
   EXPECT_THROW_WITH_REGEX(
       createOptionsImpl(fmt::format("{} {} --concurrency -1", client_name_, good_test_uri_)),
-      MalformedArgvException, "Invalid value for --concurrency");
+      MalformedArgvException, "Value for --concurrency should be greater then 0.");
   EXPECT_THROW_WITH_REGEX(
       createOptionsImpl(fmt::format("{} {} --concurrency", client_name_, good_test_uri_)),
       MalformedArgvException, "Missing a value for this argument");

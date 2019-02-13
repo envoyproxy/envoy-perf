@@ -15,9 +15,10 @@ namespace PlatformUtils {
 // that the current thread has affinity with.
 // TODO(oschaaf): mull over what to do w/regard to hyperthreading.
 uint32_t determineCpuCoresWithAffinity() {
-  int i;
-  pthread_t thread = pthread_self();
+  const pthread_t thread = pthread_self();
   cpu_set_t cpuset;
+  int i;
+
   CPU_ZERO(&cpuset);
   i = pthread_getaffinity_np(thread, sizeof(cpu_set_t), &cpuset);
   if (i == 0) {
@@ -28,16 +29,14 @@ uint32_t determineCpuCoresWithAffinity() {
 
 } // namespace PlatformUtils
 
-Uri::Uri(std::string uri) : scheme_("http") {
+Uri::Uri(const std::string& uri) : scheme_("http") {
   absl::string_view host, path;
   Envoy::Http::Utility::extractHostPathFromUri(uri, host, path);
   host_and_port_ = std::string(host);
   path_ = std::string(path);
-
   const size_t colon_index = host_and_port_.find(':');
-  bool is_https = absl::StartsWith(uri, "https://");
-
-  size_t scheme_end = uri.find("://", 0);
+  const bool is_https = absl::StartsWith(uri, "https://");
+  const size_t scheme_end = uri.find("://", 0);
 
   if (scheme_end != std::string::npos) {
     scheme_ = absl::AsciiStrToLower(uri.substr(0, scheme_end));

@@ -10,12 +10,14 @@ namespace Nighthawk {
 class RateLimiter {
 public:
   virtual ~RateLimiter() = default;
+
   /**
    * Acquire a controlled resource.
    * @return true Indicates success.
    * @return false Indicates failure to acquire.
    */
   virtual bool tryAcquireOne() PURE;
+
   /**
    * Releases a controlled resource.
    */
