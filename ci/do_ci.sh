@@ -1,16 +1,28 @@
 #!/bin/bash -e
 
 function do_build () {
-    bazel build --verbose_failures=true //nighthawk:nighthawk_client
+    bazel build $BAZEL_BUILD_OPTIONS --verbose_failures=true //nighthawk:nighthawk_client
 }
 
 function do_test() {
-    bazel test --test_output=all --test_env=ENVOY_IP_TEST_VERSIONS=v4only \
+    bazel test $BAZEL_BUILD_OPTIONS $BAZEL_TEST_OPTIONS --test_output=all --test_env=ENVOY_IP_TEST_VERSIONS=v4only \
     //nighthawk/test:nighthawk_test
+}
+
+function do_test_with_valgrind() {
+    apt-get update && apt-get install valgrind && \
+    bazel build $BAZEL_BUILD_OPTIONS -c dbg //nighthawk/test:nighthawk_test && \
+    nighthawk/tools/valgrind-tests.sh
 }
 
 function do_clang_tidy() {
     ci/run_clang_tidy.sh
+}
+
+function do_coverage() {
+    gcc -v && \
+    gcov -v && \
+    bazel coverage $BAZEL_BUILD_OPTIONS --test_output=all --verbose_failures --experimental_cc_coverage nighthawk/test/...  --instrumentation_filter=//nighthawk/...,. --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main --combined_report=lcov; genhtml bazel-out/_coverage/_coverage_report.dat
 }
 
 # TODO(oschaaf): hack, this should be done in .circleci/config.yml
@@ -25,13 +37,16 @@ if [ -n "$CIRCLECI" ]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
     fi
-    export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --local_resources=4096,2,1"
-    export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --local_resources=4096,2,1 --local_test_jobs=4"
+    export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs 8"
+    export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs 8 --local_test_jobs=8"
+    export MAKEFLAGS="-j 8"
 fi
 
-export PATH=/usr/lib/llvm-7/bin:$PATH
-export CC=clang
-export CXX=clang++
+if [ "$1" != "coverage" ]; then
+    export PATH=/usr/lib/llvm-7/bin:$PATH
+    export CC=clang
+    export CXX=clang++
+fi
 
 case "$1" in
     build)
@@ -40,12 +55,18 @@ case "$1" in
     test)
         do_test
     ;;
+    test_with_valgrind)
+        do_test_with_valgrind
+    ;;
     clang_tidy)
         export RUN_FULL_CLANG_TIDY=1
         do_clang_tidy
     ;;
+    coverage)
+        do_coverage
+    ;;
     *)
-        echo "must be one of [build,test,clang_tidy]"
+        echo "must be one of [build,test,clang_tidy,test_with_valgrind,coverage]"
         exit 1
     ;;
 esac
