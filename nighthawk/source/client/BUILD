@@ -14,9 +14,16 @@ api_proto_library_internal(
 
 envoy_cc_library(
     name = "nighthawk_client_lib",
+    srcs = [
+        "options_impl.cc",
+    ],
+    hdrs = [
+        "options_impl.h",
+    ],
     repository = "@envoy",
     visibility = ["//visibility:public"],
     deps = [
+        ":benchmark_options_cc",
         "//nighthawk/include/nighthawk/client:client_includes",
         "//nighthawk/include/nighthawk/common:base_includes",
         "//nighthawk/source/common:nighthawk_common_lib",
