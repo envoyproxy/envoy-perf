@@ -11,12 +11,11 @@ import "nighthawk/source/client/options.proto";
 message Percentile {
     google.protobuf.Duration latency = 1;
     double percentile = 2;
-    int64 count = 3;
-    double inverted_percentile = 4;
+    uint64 count = 3;
 }
 
 message Output {
-  google.protobuf.Timestamp timestamp= 1;
+  google.protobuf.Timestamp timestamp = 1;
   nighthawk.client.CommandLineOptions options = 2;
   google.protobuf.Duration mean = 3;
   google.protobuf.Duration stdev = 4;

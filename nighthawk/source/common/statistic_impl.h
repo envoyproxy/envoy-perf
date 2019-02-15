@@ -14,7 +14,7 @@ namespace Nighthawk {
 
 class StatisticImpl : public Statistic, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
-  void dumpToStdOut(const std::string& header) const override;
+  std::string toString() const override;
   void toProtoOutput(nighthawk::client::Output& output) override;
 };
 
@@ -30,7 +30,7 @@ public:
   double mean() const override;
   double variance() const override;
   double stdev() const override;
-  std::unique_ptr<Statistic> combine(const Statistic& a) override;
+  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
 
 private:
   uint64_t count_;
@@ -51,7 +51,7 @@ public:
   double mean() const override;
   double variance() const override;
   double stdev() const override;
-  std::unique_ptr<Statistic> combine(const Statistic& a) override;
+  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
 
 private:
   std::vector<int64_t> samples_;
@@ -71,12 +71,7 @@ public:
   double variance() const override;
   double stdev() const override;
 
-  /**
-   * HdrStatistic is a little less precise then StreamingStatistics.
-   * @returns false when precision is 'high' compared to HdrHistogram.
-   * For testing purposes only.
-   */
-  std::unique_ptr<Statistic> combine(const Statistic& a) override;
+  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
 
   /**
    * Gets a HdrStatistic instance with corrections for coordinated omission applied.
@@ -86,9 +81,9 @@ public:
    * @returns HdrStatistic unique_ptr.
    */
   std::unique_ptr<HdrStatistic> getCorrected(const Frequency& frequency);
-  void dumpToStdOut(const std::string& header) const override;
+  std::string toString() const override;
   void toProtoOutput(nighthawk::client::Output& output) override;
-  virtual uint64_t significant_digits() const override { return SIGNIFICANT_DIGITS; }
+  virtual uint64_t significantDigits() const override { return SIGNIFICANT_DIGITS; }
 
 private:
   static const int SIGNIFICANT_DIGITS;

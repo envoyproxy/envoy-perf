@@ -1,16 +1,19 @@
 #include "nighthawk/source/common/statistic_impl.h"
 
 #include <cmath>
+#include <sstream>
 #include <stdio.h>
 
 #include "common/common/assert.h"
 
 namespace Nighthawk {
 
-void StatisticImpl::dumpToStdOut(const std::string& header) const {
-  ENVOY_LOG(info, "{}", header);
-  ENVOY_LOG(info, "#Completed: {}. Mean: {:.{}f}μs. Stdev: {:.{}f}μs.", count(), mean() / 1000, 2,
-            stdev() / 1000, 2);
+std::string StatisticImpl::toString() const {
+  std::stringstream stream;
+  stream << fmt::format("#Completed: {}. Mean: {:.{}f}μs. Stdev: {:.{}f}μs.", count(),
+                        mean() / 1000, 2, stdev() / 1000, 2)
+         << std::endl;
+  return stream.str();
 }
 
 void StatisticImpl::toProtoOutput(nighthawk::client::Output& output) {
@@ -170,15 +173,16 @@ std::unique_ptr<HdrStatistic> HdrStatistic::getCorrected(const Frequency& freque
   return h;
 }
 
-void HdrStatistic::dumpToStdOut(const std::string& header) const {
-  StatisticImpl::dumpToStdOut(header);
+std::string HdrStatistic::toString() const {
+  std::stringstream stream;
+  stream << StatisticImpl::toString();
 
   if (histogram_ == nullptr) {
     ENVOY_LOG(warn, "HdrHistogram latencies could not be printed.");
-    return;
+    return stream.str();
   }
 
-  ENVOY_LOG(info, "{:>12} {:>14} (us)", "Percentile", "Latency");
+  stream << fmt::format("{:>12} {:>14} (us)", "Percentile", "Latency") << std::endl;
 
   std::vector<double> percentiles{50.0, 75.0, 90.0, 99.0, 99.9, 99.99, 99.999, 100.0};
   for (uint64_t i = 0; i < percentiles.size(); i++) {
@@ -186,8 +190,9 @@ void HdrStatistic::dumpToStdOut(const std::string& header) const {
     int64_t n = hdr_value_at_percentile(histogram_, p);
 
     // We scale from nanoseconds to microseconds in the output.
-    ENVOY_LOG(info, "{:>12}% {:>14}", p, n / 1000.0);
+    stream << fmt::format("{:>12}% {:>14}", p, n / 1000.0) << std::endl;
   }
+  return stream.str();
 }
 
 void HdrStatistic::toProtoOutput(nighthawk::client::Output& output) {
@@ -205,7 +210,6 @@ void HdrStatistic::toProtoOutput(nighthawk::client::Output& output) {
     percentile->mutable_latency()->set_nanos(iter.highest_equivalent_value);
     percentile->set_percentile(percentiles->percentile / 100.0);
     percentile->set_count(iter.cumulative_count);
-    percentile->set_inverted_percentile(1.0 / (1.0 - (percentiles->percentile / 100.0)));
   }
 }
 

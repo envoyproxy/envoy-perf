@@ -32,12 +32,12 @@ public:
    * Only used in tests to match expectations to the right precision level.
    * @return Number of significant digits. 0 is assumed to be max precision.
    */
-  virtual uint64_t significant_digits() const { return 0; }
+  virtual uint64_t significantDigits() const { return 0; }
 
   /**
-   * Dumps a representation of the statistic in plain text to stdout.
+   * Gets a representation of the statistic as a std::string.
    */
-  virtual void dumpToStdOut(const std::string& header) const PURE;
+  virtual std::string toString() const PURE;
 
   /**
    * Updates the proto output to reflect the contents of the statistic.
@@ -47,11 +47,12 @@ public:
   /**
    * Combines two Statistics into one, and returns a new, merged, Statistic.
    * This is useful for computing results from multiple workers into a
-   * single global view.
-   * @param a The Statistic that should be combined with this instance.
+   * single global view. Types of the Statistics objects that will be combined
+   * must be the same, or else a std::bad_cast exception will be raised.
+   * @param statistic The Statistic that should be combined with this instance.
    * @return T Merged Statistic instance.
    */
-  virtual std::unique_ptr<Statistic> combine(const Statistic& a) PURE;
+  virtual std::unique_ptr<Statistic> combine(const Statistic& statistic) PURE;
 };
 
 } // namespace Nighthawk

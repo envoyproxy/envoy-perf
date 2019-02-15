@@ -1,14 +1,15 @@
-#include "nighthawk/source/common/statistic_impl.h"
-
-#include "nighthawk/common/statistic.h"
+#include <typeinfo> // std::bad_cast
 
 #include "gtest/gtest.h"
+
+#include "nighthawk/common/statistic.h"
+#include "nighthawk/source/common/statistic_impl.h"
 
 namespace Nighthawk {
 
 using MyTypes = ::testing::Types<InMemoryStatistic, HdrStatistic, StreamingStatistic>;
 
-template <typename T> class StatisticTest : public testing::Test {};
+template <typename T> class TypedStatisticTest : public testing::Test {};
 
 class Helper {
 public:
@@ -33,9 +34,9 @@ private:
   Helper() = default;
 };
 
-TYPED_TEST_SUITE(StatisticTest, MyTypes);
+TYPED_TEST_SUITE(TypedStatisticTest, MyTypes);
 
-TYPED_TEST(StatisticTest, Simple) {
+TYPED_TEST(TypedStatisticTest, Simple) {
   TypeParam a;
   TypeParam b;
 
@@ -52,21 +53,33 @@ TYPED_TEST(StatisticTest, Simple) {
   }
   EXPECT_EQ(3, b.count());
 
-  Helper::expect_near(2, a.mean(), a.significant_digits());
-  Helper::expect_near(1, a.variance(), a.significant_digits());
-  Helper::expect_near(1, a.stdev(), a.significant_digits());
+  Helper::expect_near(2, a.mean(), a.significantDigits());
+  Helper::expect_near(1, a.variance(), a.significantDigits());
+  Helper::expect_near(1, a.stdev(), a.significantDigits());
 
-  Helper::expect_near(2295675, b.mean(), a.significant_digits());
-  Helper::expect_near(13561820041021, b.variance(), a.significant_digits());
-  Helper::expect_near(3682637.6472605884, b.stdev(), a.significant_digits());
+  Helper::expect_near(2295675, b.mean(), a.significantDigits());
+  Helper::expect_near(13561820041021, b.variance(), a.significantDigits());
+  Helper::expect_near(3682637.6472605884, b.stdev(), a.significantDigits());
 
   auto c = a.combine(b);
   EXPECT_EQ(6, c->count());
-  Helper::expect_near(1147838.5, c->mean(), c->significant_digits());
-  Helper::expect_near(7005762373287.5, c->variance(), c->significant_digits());
-  Helper::expect_near(2646840.0732359141, c->stdev(), c->significant_digits());
+  Helper::expect_near(1147838.5, c->mean(), c->significantDigits());
+  Helper::expect_near(7005762373287.5, c->variance(), c->significantDigits());
+  Helper::expect_near(2646840.0732359141, c->stdev(), c->significantDigits());
 }
 
-// TODO(oschaaf): This needs tests for the proto output updates.
+class StatisticTest : public testing::Test {};
+
+TEST(StatisticTest, CombineAcrossTypesFails) {
+  HdrStatistic a;
+  InMemoryStatistic b;
+  StreamingStatistic c;
+  EXPECT_THROW(a.combine(b), std::bad_cast);
+  EXPECT_THROW(a.combine(c), std::bad_cast);
+  EXPECT_THROW(b.combine(a), std::bad_cast);
+  EXPECT_THROW(b.combine(c), std::bad_cast);
+  EXPECT_THROW(c.combine(a), std::bad_cast);
+  EXPECT_THROW(c.combine(b), std::bad_cast);
+}
 
 } // namespace Nighthawk

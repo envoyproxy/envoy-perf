@@ -46,6 +46,9 @@ if [ "$1" != "coverage" ]; then
     export PATH=/usr/lib/llvm-7/bin:$PATH
     export CC=clang
     export CXX=clang++
+else
+    export CC=gcc
+    export CXX=g++
 fi
 
 case "$1" in
