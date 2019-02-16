@@ -83,10 +83,10 @@ public:
   std::unique_ptr<HdrStatistic> getCorrected(const Frequency& frequency);
   std::string toString() const override;
   void toProtoOutput(nighthawk::client::Output& output) override;
-  virtual uint64_t significantDigits() const override { return SIGNIFICANT_DIGITS; }
+  virtual uint64_t significantDigits() const override { return SignificantDigits; }
 
 private:
-  static const int SIGNIFICANT_DIGITS;
+  static const int SignificantDigits;
   struct hdr_histogram* histogram_;
 };
 

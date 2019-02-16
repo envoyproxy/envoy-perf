@@ -9,11 +9,8 @@
 namespace Nighthawk {
 
 std::string StatisticImpl::toString() const {
-  std::stringstream stream;
-  stream << fmt::format("#Completed: {}. Mean: {:.{}f}μs. Stdev: {:.{}f}μs.", count(),
-                        mean() / 1000, 2, stdev() / 1000, 2)
-         << std::endl;
-  return stream.str();
+  return fmt::format("#Completed: {}. Mean: {:.{}f}μs. Stdev: {:.{}f}μs.\n", count(), mean() / 1000,
+                     2, stdev() / 1000, 2);
 }
 
 void StatisticImpl::toProtoOutput(nighthawk::client::Output& output) {
@@ -79,13 +76,13 @@ std::unique_ptr<Statistic> InMemoryStatistic::combine(const Statistic& statistic
   return combined;
 }
 
-const int HdrStatistic::SIGNIFICANT_DIGITS = 4;
+const int HdrStatistic::SignificantDigits = 4;
 
 HdrStatistic::HdrStatistic() : histogram_(nullptr) {
   // Upper bound of 60 seconds (tracking in nanoseconds).
   const uint64_t max_latency = 1000L * 1000 * 1000 * 60;
 
-  int status = hdr_init(1 /* min trackable value */, max_latency, HdrStatistic::SIGNIFICANT_DIGITS,
+  int status = hdr_init(1 /* min trackable value */, max_latency, HdrStatistic::SignificantDigits,
                         &histogram_);
   if (status != 0) {
     ENVOY_LOG(error, "Failed to initialize HdrHistogram.");
@@ -103,6 +100,8 @@ HdrStatistic::~HdrStatistic() {
 
 void HdrStatistic::addValue(int64_t value) {
   if (histogram_ != nullptr) {
+    // Failure to record a value can happen when it exceeds the configured minimum
+    // or maximum value we passed when initializing histogram_.
     if (!hdr_record_value(histogram_, value)) {
       ENVOY_LOG(warn, "Failed to record value into HdrHistogram.");
     }
@@ -150,6 +149,8 @@ std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {
     return combined;
   }
 
+  // Dropping a value can happen when it exceeds the configured minimum
+  // or maximum value we passed when initializing histogram_.
   int dropped;
   dropped = hdr_add(combined->histogram_, this->histogram_);
   dropped += hdr_add(combined->histogram_, b.histogram_);
@@ -186,8 +187,8 @@ std::string HdrStatistic::toString() const {
 
   std::vector<double> percentiles{50.0, 75.0, 90.0, 99.0, 99.9, 99.99, 99.999, 100.0};
   for (uint64_t i = 0; i < percentiles.size(); i++) {
-    double p = percentiles[i];
-    int64_t n = hdr_value_at_percentile(histogram_, p);
+    const double p = percentiles[i];
+    const int64_t n = hdr_value_at_percentile(histogram_, p);
 
     // We scale from nanoseconds to microseconds in the output.
     stream << fmt::format("{:>12}% {:>14}", p, n / 1000.0) << std::endl;
