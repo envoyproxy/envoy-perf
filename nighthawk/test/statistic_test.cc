@@ -23,8 +23,8 @@ public:
    */
   static void expectNear(double expected_value, double tested_value, uint64_t significant) {
     if (significant > 0) {
-      expectNear(expected_value, tested_value,
-                 std::pow(10, std::ceil(std::log10(tested_value)) - 1 - significant));
+      EXPECT_NEAR(expected_value, tested_value,
+                  std::pow(10, std::ceil(std::log10(tested_value)) - 1 - significant));
     } else {
       EXPECT_DOUBLE_EQ(expected_value, tested_value);
     }
