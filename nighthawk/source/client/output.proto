@@ -9,7 +9,7 @@ import "nighthawk/source/client/options.proto";
 
 
 message Percentile {
-    google.protobuf.Duration latency = 1;
+    google.protobuf.Duration duration = 1;
     double percentile = 2;
     uint64 count = 3;
 }
@@ -17,8 +17,12 @@ message Percentile {
 message Output {
   google.protobuf.Timestamp timestamp = 1;
   nighthawk.client.CommandLineOptions options = 2;
-  google.protobuf.Duration mean = 3;
-  google.protobuf.Duration stdev = 4;
-  uint64 request_count = 5;
-  repeated Percentile latency_percentiles = 6;
+  Statistic latency = 3;
+}
+
+message Statistic {
+  uint64 count = 1;
+  google.protobuf.Duration mean = 2;
+  google.protobuf.Duration stdev = 3;
+  repeated Percentile percentiles = 4;
 }

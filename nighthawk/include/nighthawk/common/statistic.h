@@ -40,9 +40,9 @@ public:
   virtual std::string toString() const PURE;
 
   /**
-   * Updates the proto output to reflect the contents of the statistic.
+   * Gets a proto Output reflecting the contents of the statistic.
    */
-  virtual void toProtoOutput(nighthawk::client::Output& output) PURE;
+  virtual nighthawk::client::Statistic toProto() PURE;
 
   /**
    * Combines two Statistics into one, and returns a new, merged, Statistic.

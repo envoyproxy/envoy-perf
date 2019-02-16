@@ -15,7 +15,7 @@ namespace Nighthawk {
 class StatisticImpl : public Statistic, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   std::string toString() const override;
-  void toProtoOutput(nighthawk::client::Output& output) override;
+  nighthawk::client::Statistic toProto() override;
 };
 
 /**
@@ -72,17 +72,8 @@ public:
   double stdev() const override;
 
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
-
-  /**
-   * Gets a HdrStatistic instance with corrections for coordinated omission applied.
-   * This should be done only once.
-   * @param frequency The frequency at which latencies ought to have been measured.
-   * NOTE: this is neither used nor tested at the moment.
-   * @returns HdrStatistic unique_ptr.
-   */
-  std::unique_ptr<HdrStatistic> getCorrected(const Frequency& frequency);
   std::string toString() const override;
-  void toProtoOutput(nighthawk::client::Output& output) override;
+  nighthawk::client::Statistic toProto() override;
   virtual uint64_t significantDigits() const override { return SignificantDigits; }
 
 private:

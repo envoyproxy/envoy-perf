@@ -13,10 +13,12 @@ std::string StatisticImpl::toString() const {
                      2, stdev() / 1000, 2);
 }
 
-void StatisticImpl::toProtoOutput(nighthawk::client::Output& output) {
-  output.set_request_count(count());
-  output.mutable_mean()->set_nanos(mean());
-  output.mutable_stdev()->set_nanos(stdev());
+nighthawk::client::Statistic StatisticImpl::toProto() {
+  nighthawk::client::Statistic statistic;
+  statistic.set_count(count());
+  statistic.mutable_mean()->set_nanos(mean());
+  statistic.mutable_stdev()->set_nanos(stdev());
+  return statistic;
 }
 
 StreamingStatistic::StreamingStatistic() : count_(0), mean_(0), sum_of_squares_(0) {}
@@ -160,20 +162,6 @@ std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {
   return combined;
 }
 
-std::unique_ptr<HdrStatistic> HdrStatistic::getCorrected(const Frequency& frequency) {
-  auto h = std::make_unique<HdrStatistic>();
-  if (this->histogram_ == nullptr) {
-    return h;
-  }
-  int dropped = hdr_add_while_correcting_for_coordinated_omission(
-      h->histogram_, this->histogram_,
-      std::chrono::duration_cast<std::chrono::nanoseconds>(frequency.interval()).count());
-  if (dropped > 0) {
-    ENVOY_LOG(warn, "Dropped values while getting the corrected HdrStatistics.");
-  }
-  return h;
-}
-
 std::string HdrStatistic::toString() const {
   std::stringstream stream;
   stream << StatisticImpl::toString();
@@ -196,8 +184,8 @@ std::string HdrStatistic::toString() const {
   return stream.str();
 }
 
-void HdrStatistic::toProtoOutput(nighthawk::client::Output& output) {
-  StatisticImpl::toProtoOutput(output);
+nighthawk::client::Statistic HdrStatistic::toProto() {
+  nighthawk::client::Statistic proto = StatisticImpl::toProto();
 
   struct hdr_iter iter;
   struct hdr_iter_percentiles* percentiles;
@@ -207,11 +195,13 @@ void HdrStatistic::toProtoOutput(nighthawk::client::Output& output) {
   while (hdr_iter_next(&iter)) {
     nighthawk::client::Percentile* percentile;
 
-    percentile = output.add_latency_percentiles();
-    percentile->mutable_latency()->set_nanos(iter.highest_equivalent_value);
+    percentile = proto.add_percentiles();
+    percentile->mutable_duration()->set_nanos(iter.highest_equivalent_value);
     percentile->set_percentile(percentiles->percentile / 100.0);
     percentile->set_count(iter.cumulative_count);
   }
+
+  return proto;
 }
 
 } // namespace Nighthawk
