@@ -9,15 +9,15 @@
 namespace Nighthawk {
 
 std::string StatisticImpl::toString() const {
-  return fmt::format("#Completed: {}. Mean: {:.{}f}μs. Stdev: {:.{}f}μs.\n", count(), mean() / 1000,
-                     2, stdev() / 1000, 2);
+  return fmt::format("#Completed: {}. Mean: {:.{}f}μs. pstdev: {:.{}f}μs.\n", count(),
+                     mean() / 1000, 2, pstdev() / 1000, 2);
 }
 
 nighthawk::client::Statistic StatisticImpl::toProto() {
   nighthawk::client::Statistic statistic;
   statistic.set_count(count());
   statistic.mutable_mean()->set_nanos(mean());
-  statistic.mutable_stdev()->set_nanos(stdev());
+  statistic.mutable_pstdev()->set_nanos(pstdev());
   return statistic;
 }
 
@@ -36,9 +36,9 @@ uint64_t StreamingStatistic::count() const { return count_; }
 
 double StreamingStatistic::mean() const { return mean_; }
 
-double StreamingStatistic::variance() const { return sum_of_squares_ / (count_ - 1.0); }
+double StreamingStatistic::pvariance() const { return sum_of_squares_ / count_; }
 
-double StreamingStatistic::stdev() const { return sqrt(variance()); }
+double StreamingStatistic::pstdev() const { return sqrt(pvariance()); }
 
 std::unique_ptr<Statistic> StreamingStatistic::combine(const Statistic& statistic) {
   const StreamingStatistic& a = *this;
@@ -65,8 +65,8 @@ uint64_t InMemoryStatistic::count() const {
   return streaming_stats_->count();
 }
 double InMemoryStatistic::mean() const { return streaming_stats_->mean(); }
-double InMemoryStatistic::variance() const { return streaming_stats_->variance(); }
-double InMemoryStatistic::stdev() const { return streaming_stats_->stdev(); }
+double InMemoryStatistic::pvariance() const { return streaming_stats_->pvariance(); }
+double InMemoryStatistic::pstdev() const { return streaming_stats_->pstdev(); }
 
 std::unique_ptr<Statistic> InMemoryStatistic::combine(const Statistic& statistic) {
   auto combined = std::make_unique<InMemoryStatistic>();
@@ -112,35 +112,15 @@ void HdrStatistic::addValue(int64_t value) {
 
 uint64_t HdrStatistic::count() const { return histogram_->total_count; }
 double HdrStatistic::mean() const { return hdr_mean(histogram_); }
-double HdrStatistic::variance() const {
-  return stdev() * stdev();
+double HdrStatistic::pvariance() const {
+  return pstdev() * pstdev();
   ;
 }
-double HdrStatistic::stdev() const {
-  // HdrHistogram_c's stdev actually gives us the population standard deviation.
-  // So we compute the sample standard deviation ourselves instead.
-  // TODO(oschaaf): this fixes some of the test expectations, but figure out if
-  // stdev or pstdev is preferrable. Looks like wrk2 uses pstdev which would produce
-  // (slightly) better numbers, though that probably isn't a reason for us to decice
-  // which one to use here. Switching to pstdev would get rid of having to do this
-  // ourselves.
+double HdrStatistic::pstdev() const {
   if (histogram_ == nullptr) {
     return 0;
   }
-  double mean = hdr_mean(histogram_);
-  double geometric_dev_total = 0.0;
-
-  struct hdr_iter iter;
-  hdr_iter_init(&iter, histogram_);
-
-  while (hdr_iter_next(&iter)) {
-    if (0 != iter.count) {
-      double dev = (hdr_median_equivalent_value(histogram_, iter.value) * 1.0) - mean;
-      geometric_dev_total += (dev * dev) * iter.count;
-    }
-  }
-
-  return sqrt(geometric_dev_total / (histogram_->total_count - 1));
+  return hdr_stddev(histogram_);
 }
 
 std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {

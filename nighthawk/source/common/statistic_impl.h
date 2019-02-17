@@ -19,7 +19,7 @@ public:
 };
 
 /**
- * Simple statistic that keeps track of count/mean/var/stdev with low memory
+ * Simple statistic that keeps track of count/mean/pvariance/pstdev with low memory
  * requirements.
  */
 class StreamingStatistic : public StatisticImpl {
@@ -28,8 +28,8 @@ public:
   void addValue(int64_t value) override;
   uint64_t count() const override;
   double mean() const override;
-  double variance() const override;
-  double stdev() const override;
+  double pvariance() const override;
+  double pstdev() const override;
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
 
 private:
@@ -49,8 +49,8 @@ public:
   void addValue(int64_t sample_value) override;
   uint64_t count() const override;
   double mean() const override;
-  double variance() const override;
-  double stdev() const override;
+  double pvariance() const override;
+  double pstdev() const override;
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
 
 private:
@@ -68,8 +68,8 @@ public:
   void addValue(int64_t sample_value) override;
   uint64_t count() const override;
   double mean() const override;
-  double variance() const override;
-  double stdev() const override;
+  double pvariance() const override;
+  double pstdev() const override;
 
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
   std::string toString() const override;

@@ -25,8 +25,8 @@ public:
 
   virtual uint64_t count() const PURE;
   virtual double mean() const PURE;
-  virtual double variance() const PURE;
-  virtual double stdev() const PURE;
+  virtual double pvariance() const PURE;
+  virtual double pstdev() const PURE;
 
   /**
    * Only used in tests to match expectations to the right precision level.

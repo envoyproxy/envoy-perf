@@ -23,6 +23,6 @@ message Output {
 message Statistic {
   uint64 count = 1;
   google.protobuf.Duration mean = 2;
-  google.protobuf.Duration stdev = 3;
+  google.protobuf.Duration pstdev = 3;
   repeated Percentile percentiles = 4;
 }

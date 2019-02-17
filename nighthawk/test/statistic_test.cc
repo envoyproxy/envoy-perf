@@ -50,19 +50,19 @@ TYPED_TEST(TypedStatisticTest, Simple) {
   }
   EXPECT_EQ(3, b.count());
 
-  Helper::expectNear(2, a.mean(), a.significantDigits());
-  Helper::expectNear(1, a.variance(), a.significantDigits());
-  Helper::expectNear(1, a.stdev(), a.significantDigits());
+  Helper::expectNear(2.0, a.mean(), a.significantDigits());
+  Helper::expectNear(0.6666666666666666, a.pvariance(), a.significantDigits());
+  Helper::expectNear(0.816496580927726, a.pstdev(), a.significantDigits());
 
-  Helper::expectNear(2295675, b.mean(), a.significantDigits());
-  Helper::expectNear(13561820041021, b.variance(), a.significantDigits());
-  Helper::expectNear(3682637.6472605884, b.stdev(), a.significantDigits());
+  Helper::expectNear(2295675.0, b.mean(), a.significantDigits());
+  Helper::expectNear(9041213360680.666, b.pvariance(), a.significantDigits());
+  Helper::expectNear(3006861.0477839955, b.pstdev(), a.significantDigits());
 
   auto c = a.combine(b);
   EXPECT_EQ(6, c->count());
   Helper::expectNear(1147838.5, c->mean(), c->significantDigits());
-  Helper::expectNear(7005762373287.5, c->variance(), c->significantDigits());
-  Helper::expectNear(2646840.0732359141, c->stdev(), c->significantDigits());
+  Helper::expectNear(5838135311072.917, c->pvariance(), c->significantDigits());
+  Helper::expectNear(2416223.357033227, c->pstdev(), c->significantDigits());
 }
 
 class StatisticTest : public testing::Test {};
