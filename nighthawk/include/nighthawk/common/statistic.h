@@ -35,6 +35,13 @@ public:
   virtual uint64_t significantDigits() const { return 0; }
 
   /**
+   * Indicates if the implementation is subject to catastrophic cancellation.
+   * Used in tests.
+   * @return True iff catastrophic cancellation should not occur.
+   */
+  virtual bool resistsCatastrophicCancellation() const { return false; }
+
+  /**
    * Gets a representation of the statistic as a std::string.
    */
   virtual std::string toString() const PURE;

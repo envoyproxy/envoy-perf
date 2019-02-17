@@ -21,6 +21,33 @@ nighthawk::client::Statistic StatisticImpl::toProto() {
   return statistic;
 }
 
+SimpleStatistic::SimpleStatistic() : count_(0), sum_x_(0), sum_x2_(0) {}
+
+void SimpleStatistic::addValue(int64_t value) {
+  count_++;
+  sum_x_ += value;
+  sum_x2_ += value * value;
+}
+
+uint64_t SimpleStatistic::count() const { return count_; }
+
+double SimpleStatistic::mean() const { return count_ == 0 ? std::nan("") : sum_x_ / count_; }
+
+double SimpleStatistic::pvariance() const { return (sum_x2_ / count_) - (mean() * mean()); }
+
+double SimpleStatistic::pstdev() const { return sqrt(pvariance()); }
+
+std::unique_ptr<Statistic> SimpleStatistic::combine(const Statistic& statistic) {
+  const SimpleStatistic& a = *this;
+  const SimpleStatistic& b = dynamic_cast<const SimpleStatistic&>(statistic);
+  auto combined = std::make_unique<SimpleStatistic>();
+
+  combined->count_ = a.count() + b.count();
+  combined->sum_x_ = a.sum_x_ + b.sum_x_;
+  combined->sum_x2_ = a.sum_x2_ + b.sum_x2_;
+  return combined;
+}
+
 StreamingStatistic::StreamingStatistic() : count_(0), mean_(0), sum_of_squares_(0) {}
 
 void StreamingStatistic::addValue(int64_t value) {
@@ -34,7 +61,7 @@ void StreamingStatistic::addValue(int64_t value) {
 
 uint64_t StreamingStatistic::count() const { return count_; }
 
-double StreamingStatistic::mean() const { return mean_; }
+double StreamingStatistic::mean() const { return count_ == 0 ? std::nan("") : mean_; }
 
 double StreamingStatistic::pvariance() const { return sum_of_squares_ / count_; }
 

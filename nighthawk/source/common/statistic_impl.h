@@ -22,6 +22,26 @@ public:
  * Simple statistic that keeps track of count/mean/pvariance/pstdev with low memory
  * requirements.
  */
+class SimpleStatistic : public StatisticImpl {
+public:
+  SimpleStatistic();
+  void addValue(int64_t value) override;
+  uint64_t count() const override;
+  double mean() const override;
+  double pvariance() const override;
+  double pstdev() const override;
+  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+
+private:
+  uint64_t count_;
+  double sum_x_;
+  double sum_x2_;
+};
+
+/**
+ * Simple statistic that keeps track of count/mean/pvariance/pstdev with low memory
+ * requirements.
+ */
 class StreamingStatistic : public StatisticImpl {
 public:
   StreamingStatistic();
@@ -31,6 +51,7 @@ public:
   double pvariance() const override;
   double pstdev() const override;
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  bool resistsCatastrophicCancellation() const override { return true; }
 
 private:
   uint64_t count_;
@@ -52,6 +73,9 @@ public:
   double pvariance() const override;
   double pstdev() const override;
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  bool resistsCatastrophicCancellation() const override {
+    return streaming_stats_->resistsCatastrophicCancellation();
+  }
 
 private:
   std::vector<int64_t> samples_;
