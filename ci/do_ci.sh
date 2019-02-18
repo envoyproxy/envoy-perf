@@ -22,7 +22,7 @@ function do_clang_tidy() {
 function do_coverage() {
     gcc -v && \
     gcov -v && \
-    bazel coverage $BAZEL_BUILD_OPTIONS --test_output=all --verbose_failures --experimental_cc_coverage nighthawk/test/...  --instrumentation_filter=//nighthawk/...,. --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main --combined_report=lcov; genhtml bazel-out/_coverage/_coverage_report.dat
+    bazel coverage $BAZEL_TEST_OPTIONS --test_output=all --verbose_failures --experimental_cc_coverage nighthawk/test/...  --instrumentation_filter=//nighthawk/...,. --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main --combined_report=lcov; genhtml bazel-out/_coverage/_coverage_report.dat
 }
 
 # TODO(oschaaf): hack, this should be done in .circleci/config.yml
