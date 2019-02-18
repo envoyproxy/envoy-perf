@@ -14,6 +14,7 @@ envoy_cc_test(
         "statistic_test.cc",
         "utility_test.cc",
     ],
+    data = ["hdr_proto_json.gold"],
     repository = "@envoy",
     deps = [
         "//nighthawk/source/client:nighthawk_client_lib",

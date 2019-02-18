@@ -16,8 +16,8 @@ std::string StatisticImpl::toString() const {
 nighthawk::client::Statistic StatisticImpl::toProto() {
   nighthawk::client::Statistic statistic;
   statistic.set_count(count());
-  statistic.mutable_mean()->set_nanos(mean());
-  statistic.mutable_pstdev()->set_nanos(pstdev());
+  statistic.mutable_mean()->set_nanos(std::round(mean()));
+  statistic.mutable_pstdev()->set_nanos(std::round(pstdev()));
   return statistic;
 }
 

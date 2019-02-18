@@ -1,7 +1,11 @@
+#include <fstream>
+#include <iostream>
 #include <random>
 #include <typeinfo> // std::bad_cast
 
 #include "gtest/gtest.h"
+
+#include <google/protobuf/util/json_util.h>
 
 #include "nighthawk/common/statistic.h"
 #include "nighthawk/source/common/statistic_impl.h"
@@ -124,20 +128,6 @@ TYPED_TEST(TypedStatisticTest, CatastrophicalCancellation) {
   }
 }
 
-class StatisticTest : public testing::Test {};
-
-TEST(StatisticTest, CombineAcrossTypesFails) {
-  HdrStatistic a;
-  InMemoryStatistic b;
-  StreamingStatistic c;
-  EXPECT_THROW(a.combine(b), std::bad_cast);
-  EXPECT_THROW(a.combine(c), std::bad_cast);
-  EXPECT_THROW(b.combine(a), std::bad_cast);
-  EXPECT_THROW(b.combine(c), std::bad_cast);
-  EXPECT_THROW(c.combine(a), std::bad_cast);
-  EXPECT_THROW(c.combine(b), std::bad_cast);
-}
-
 TYPED_TEST(TypedStatisticTest, OneMillionRandomSamples) {
   std::random_device rd;
   std::mt19937 mt(rd());
@@ -159,6 +149,51 @@ TYPED_TEST(TypedStatisticTest, OneMillionRandomSamples) {
                      testStatistic.significantDigits());
   Helper::expectNear(referenceStatistic.pstdev(), testStatistic.pstdev(),
                      testStatistic.significantDigits());
+}
+
+TYPED_TEST(TypedStatisticTest, ProtoOutput) {
+  TypeParam a;
+
+  a.addValue(6543456);
+  a.addValue(342335);
+
+  const nighthawk::client::Statistic proto = a.toProto();
+
+  EXPECT_EQ(proto.count(), 2);
+  EXPECT_EQ(proto.mean().nanos(), std::round(a.mean()));
+  EXPECT_EQ(proto.pstdev().nanos(), std::round(a.pstdev()));
+}
+
+class StatisticTest : public testing::Test {};
+
+TEST(StatisticTest, HdrStatisticPercentilesProto) {
+  HdrStatistic statistic;
+  int max = 10;
+
+  for (int i = 1; i <= max; i++) {
+    statistic.addValue(i);
+  }
+
+  std::string str;
+  google::protobuf::util::JsonPrintOptions options;
+  google::protobuf::util::MessageToJsonString(statistic.toProto(), &str, options);
+  std::ifstream myfile;
+  myfile.open("nighthawk/test/hdr_proto_json.gold");
+  std::string gold;
+  myfile >> gold;
+  EXPECT_EQ(gold, str);
+}
+
+TEST(StatisticTest, CombineAcrossTypesFails) {
+  HdrStatistic a;
+  InMemoryStatistic b;
+  StreamingStatistic c;
+  EXPECT_THROW(a.combine(b), std::bad_cast);
+  EXPECT_THROW(a.combine(c), std::bad_cast);
+  EXPECT_THROW(b.combine(a), std::bad_cast);
+  EXPECT_THROW(b.combine(c), std::bad_cast);
+  EXPECT_THROW(c.combine(a), std::bad_cast);
+  EXPECT_THROW(c.combine(b), std::bad_cast);
 }
 
 } // namespace Nighthawk
