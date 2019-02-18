@@ -120,7 +120,11 @@ HdrStatistic::HdrStatistic() : histogram_(nullptr) {
 }
 
 // TODO(oschaaf): valgrind complains when a Histogram is created but never used.
-HdrStatistic::~HdrStatistic() { ASSERT(histogram_ != nullptr); }
+HdrStatistic::~HdrStatistic() {
+  ASSERT(histogram_ != nullptr);
+  hdr_close(histogram_);
+  histogram_ = nullptr;
+}
 
 void HdrStatistic::addValue(int64_t value) {
   // Failure to record a value can happen when it exceeds the configured minimum
