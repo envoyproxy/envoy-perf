@@ -40,8 +40,9 @@ private:
 };
 
 /**
- * Simple statistic that keeps track of count/mean/pvariance/pstdev with low memory
- * requirements.
+ * Statistic that keeps track of count/mean/pvariance/pstdev with low memory
+ * requirements. Resistant to catastrophic cancellation and pretty accurate.
+ * Based on Donald Knuth's online variance computation algorithm.
  */
 class StreamingStatistic : public StatisticImpl {
 public:
@@ -57,7 +58,7 @@ public:
 private:
   uint64_t count_;
   double mean_;
-  double sum_of_squares_;
+  double accumulated_variance_;
 };
 
 /**

@@ -48,7 +48,7 @@ std::unique_ptr<Statistic> SimpleStatistic::combine(const Statistic& statistic) 
   return combined;
 }
 
-StreamingStatistic::StreamingStatistic() : count_(0), mean_(0), sum_of_squares_(0) {}
+StreamingStatistic::StreamingStatistic() : count_(0), mean_(0), accumulated_variance_(0) {}
 
 void StreamingStatistic::addValue(int64_t value) {
   double delta, delta_n;
@@ -56,14 +56,14 @@ void StreamingStatistic::addValue(int64_t value) {
   delta = value - mean_;
   delta_n = delta / count_;
   mean_ += delta_n;
-  sum_of_squares_ += delta * delta_n * (count_ - 1);
+  accumulated_variance_ += delta * delta_n * (count_ - 1);
 }
 
 uint64_t StreamingStatistic::count() const { return count_; }
 
 double StreamingStatistic::mean() const { return count_ == 0 ? std::nan("") : mean_; }
 
-double StreamingStatistic::pvariance() const { return sum_of_squares_ / count_; }
+double StreamingStatistic::pvariance() const { return accumulated_variance_ / count_; }
 
 double StreamingStatistic::pstdev() const { return sqrt(pvariance()); }
 
@@ -74,8 +74,8 @@ std::unique_ptr<Statistic> StreamingStatistic::combine(const Statistic& statisti
 
   combined->count_ = a.count() + b.count();
   combined->mean_ = ((a.count() * a.mean()) + (b.count() * b.mean())) / combined->count_;
-  combined->sum_of_squares_ =
-      a.sum_of_squares_ + b.sum_of_squares_ +
+  combined->accumulated_variance_ =
+      a.accumulated_variance_ + b.accumulated_variance_ +
       pow(a.mean() - b.mean(), 2) * a.count() * b.count() / combined->count();
   return combined;
 }
@@ -117,6 +117,8 @@ HdrStatistic::HdrStatistic() : histogram_(nullptr) {
     ENVOY_LOG(error, "Failed to initialize HdrHistogram: {}.", status);
     throw StatisticException();
   }
+
+  ASSERT(histogram_ != nullptr);
 }
 
 // TODO(oschaaf): valgrind complains when a Histogram is created but never used.
@@ -142,10 +144,6 @@ double HdrStatistic::pstdev() const { return hdr_stddev(histogram_); }
 std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {
   auto combined = std::make_unique<HdrStatistic>();
   const HdrStatistic& b = dynamic_cast<const HdrStatistic&>(statistic);
-
-  if (histogram_ == nullptr || b.histogram_ == nullptr) {
-    return combined;
-  }
 
   // Dropping a value can happen when it exceeds the configured minimum
   // or maximum value we passed when initializing histogram_.
