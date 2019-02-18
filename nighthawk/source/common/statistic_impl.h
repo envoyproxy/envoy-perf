@@ -20,7 +20,7 @@ public:
 
 /**
  * Simple statistic that keeps track of count/mean/pvariance/pstdev with low memory
- * requirements.
+ * requirements, but the potential for errors due to catastrophic cancellation.
  */
 class SimpleStatistic : public StatisticImpl {
 public:

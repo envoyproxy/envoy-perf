@@ -114,47 +114,32 @@ HdrStatistic::HdrStatistic() : histogram_(nullptr) {
   int status = hdr_init(1 /* min trackable value */, max_latency, HdrStatistic::SignificantDigits,
                         &histogram_);
   if (status != 0) {
-    ENVOY_LOG(error, "Failed to initialize HdrHistogram.");
-    histogram_ = nullptr;
+    ENVOY_LOG(error, "Failed to initialize HdrHistogram: {}.", status);
+    throw StatisticException();
   }
 }
 
 // TODO(oschaaf): valgrind complains when a Histogram is created but never used.
-HdrStatistic::~HdrStatistic() {
-  if (histogram_ != nullptr) {
-    hdr_close(histogram_);
-    histogram_ = nullptr;
-  }
-}
+HdrStatistic::~HdrStatistic() { ASSERT(histogram_ != nullptr); }
 
 void HdrStatistic::addValue(int64_t value) {
-  if (histogram_ != nullptr) {
-    // Failure to record a value can happen when it exceeds the configured minimum
-    // or maximum value we passed when initializing histogram_.
-    if (!hdr_record_value(histogram_, value)) {
-      ENVOY_LOG(warn, "Failed to record value into HdrHistogram.");
-    }
+  // Failure to record a value can happen when it exceeds the configured minimum
+  // or maximum value we passed when initializing histogram_.
+  if (!hdr_record_value(histogram_, value)) {
+    ENVOY_LOG(warn, "Failed to record value into HdrHistogram.");
   }
 }
 
 uint64_t HdrStatistic::count() const { return histogram_->total_count; }
 double HdrStatistic::mean() const { return hdr_mean(histogram_); }
-double HdrStatistic::pvariance() const {
-  return pstdev() * pstdev();
-  ;
-}
-double HdrStatistic::pstdev() const {
-  if (histogram_ == nullptr) {
-    return 0;
-  }
-  return hdr_stddev(histogram_);
-}
+double HdrStatistic::pvariance() const { return pstdev() * pstdev(); }
+double HdrStatistic::pstdev() const { return hdr_stddev(histogram_); }
 
 std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {
   auto combined = std::make_unique<HdrStatistic>();
   const HdrStatistic& b = dynamic_cast<const HdrStatistic&>(statistic);
 
-  if (this->histogram_ == nullptr || b.histogram_ == nullptr) {
+  if (histogram_ == nullptr || b.histogram_ == nullptr) {
     return combined;
   }
 
@@ -171,13 +156,8 @@ std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {
 
 std::string HdrStatistic::toString() const {
   std::stringstream stream;
+
   stream << StatisticImpl::toString();
-
-  if (histogram_ == nullptr) {
-    ENVOY_LOG(warn, "HdrHistogram latencies could not be printed.");
-    return stream.str();
-  }
-
   stream << fmt::format("{:>12} {:>14} (us)", "Percentile", "Latency") << std::endl;
 
   std::vector<double> percentiles{50.0, 75.0, 90.0, 99.0, 99.9, 99.99, 99.999, 100.0};

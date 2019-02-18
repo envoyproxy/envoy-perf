@@ -107,7 +107,7 @@ TYPED_TEST(TypedStatisticTest, CatastrophicalCancellation) {
   // of two similar numbers at the final stage of the algorithm.
   std::vector<int> values{4, 7, 13, 16};
   int exponential = 0;
-  for (exponential = 3; exponential < 6; exponential++) {
+  for (exponential = 3; exponential < 16; exponential++) {
     TypeParam a;
     double offset = std::pow(10, exponential);
     for (int value : values) {

@@ -5,11 +5,17 @@
 #include <string>
 
 #include "common/common/non_copyable.h"
+#include "envoy/common/exception.h"
 #include "envoy/common/pure.h"
 
 #include "nighthawk/source/client/output.pb.h"
 
 namespace Nighthawk {
+
+class StatisticException : public Envoy::EnvoyException {
+public:
+  StatisticException() : Envoy::EnvoyException("StatisticException") {}
+};
 
 /**
  * Abstract interface for a statistic.
