@@ -1,3 +1,4 @@
+#include <random>
 #include <typeinfo> // std::bad_cast
 
 #include "gtest/gtest.h"
@@ -135,6 +136,29 @@ TEST(StatisticTest, CombineAcrossTypesFails) {
   EXPECT_THROW(b.combine(c), std::bad_cast);
   EXPECT_THROW(c.combine(a), std::bad_cast);
   EXPECT_THROW(c.combine(b), std::bad_cast);
+}
+
+TYPED_TEST(TypedStatisticTest, OneMillionRandomSamples) {
+  std::random_device rd;
+  std::mt19937 mt(rd());
+  // TODO(oschaaf): Actually the range we want to test is a factor 1000 higher, but
+  // then catastrophical cancellation make SimpleStatistic fail expectations.
+  // For now, we use values that shouldn't trigger the phenomena. Revisit this later.
+  std::uniform_real_distribution<double> dist(1ULL, 1000ULL * 1000 * 60);
+
+  StreamingStatistic referenceStatistic;
+  TypeParam testStatistic;
+  for (int i = 0; i < 999999; ++i) {
+    auto value = dist(mt);
+    referenceStatistic.addValue(value);
+    testStatistic.addValue(value);
+  }
+  Helper::expectNear(referenceStatistic.mean(), testStatistic.mean(),
+                     testStatistic.significantDigits());
+  Helper::expectNear(referenceStatistic.pvariance(), testStatistic.pvariance(),
+                     testStatistic.significantDigits());
+  Helper::expectNear(referenceStatistic.pstdev(), testStatistic.pstdev(),
+                     testStatistic.significantDigits());
 }
 
 } // namespace Nighthawk

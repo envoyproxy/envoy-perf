@@ -31,6 +31,7 @@ public:
   double pvariance() const override;
   double pstdev() const override;
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  uint64_t significantDigits() const override { return 8; }
 
 private:
   uint64_t count_;
@@ -76,6 +77,7 @@ public:
   bool resistsCatastrophicCancellation() const override {
     return streaming_stats_->resistsCatastrophicCancellation();
   }
+  uint64_t significantDigits() const override { return streaming_stats_->significantDigits(); }
 
 private:
   std::vector<int64_t> samples_;
@@ -98,7 +100,7 @@ public:
   std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
   std::string toString() const override;
   nighthawk::client::Statistic toProto() override;
-  virtual uint64_t significantDigits() const override { return SignificantDigits; }
+  uint64_t significantDigits() const override { return SignificantDigits; }
 
 private:
   static const int SignificantDigits;
