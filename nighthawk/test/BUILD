@@ -11,6 +11,7 @@ envoy_cc_test(
         "frequency_test.cc",
         "options_test.cc",
         "rate_limiter_test.cc",
+        "sequencer_test.cc",
         "statistic_test.cc",
         "utility_test.cc",
     ],

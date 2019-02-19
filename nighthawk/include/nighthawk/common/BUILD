@@ -13,6 +13,7 @@ envoy_basic_cc_library(
     hdrs = [
         "exception.h",
         "rate_limiter.h",
+        "sequencer.h",
         "statistic.h",
     ],
     include_prefix = "nighthawk/common",
