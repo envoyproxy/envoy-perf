@@ -14,11 +14,14 @@ envoy_cc_test(
         "statistic_test.cc",
         "utility_test.cc",
     ],
-    data = ["hdr_proto_json.gold"],
+    data = ["test_data/hdr_proto_json.gold"],
     repository = "@envoy",
     deps = [
         "//nighthawk/source/client:nighthawk_client_lib",
-        "@envoy//test/integration:integration_lib",
-        "@envoy//test/server:utility_lib",
+        "//nighthawk/test/test_common:environment_lib",
+        "@envoy//source/common/filesystem:filesystem_lib",
+        "@envoy//source/common/protobuf:utility_lib",
+        "@envoy//source/common/stats:isolated_store_lib",
+        "@envoy//test/test_common:simulated_time_system_lib",
     ],
 )

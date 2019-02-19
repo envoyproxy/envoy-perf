@@ -1,5 +1,4 @@
-#include <fstream>
-#include <iostream>
+#include <chrono>
 #include <random>
 #include <typeinfo> // std::bad_cast
 
@@ -7,10 +6,17 @@
 
 #include <google/protobuf/util/json_util.h>
 
-#include "test/test_common/environment.h"
+#include "common/filesystem/filesystem_impl.h"
+#include "common/protobuf/utility.h"
+#include "common/stats/isolated_store_impl.h"
+
+#include "test/test_common/utility.h"
 
 #include "nighthawk/common/statistic.h"
 #include "nighthawk/source/common/statistic_impl.h"
+#include "nighthawk/test/test_common/environment.h"
+
+using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
@@ -173,25 +179,21 @@ TYPED_TEST(TypedStatisticTest, ProtoOutput) {
 class StatisticTest : public testing::Test {};
 
 TEST(StatisticTest, HdrStatisticPercentilesProto) {
+  Envoy::Thread::ThreadFactory& thread_factory = Envoy::Thread::threadFactoryForTest();
+  Envoy::Stats::IsolatedStoreImpl store;
+  Envoy::Filesystem::InstanceImpl filesystem(100ms, thread_factory, store);
+  nighthawk::client::Statistic parsed_json_proto;
   HdrStatistic statistic;
-  int max = 10;
 
-  for (int i = 1; i <= max; i++) {
+  for (int i = 1; i <= 10; i++) {
     statistic.addValue(i);
   }
 
-  std::string str;
-  google::protobuf::util::JsonPrintOptions options;
-  google::protobuf::util::MessageToJsonString(statistic.toProto(), &str, options);
-  std::ifstream myfile;
-  // TODO(oschaaf): If this is confirmed to work in Google's environment, wrap
-  // Envoy::TestEnvironment::runfilesPath in a call within the Nighthawk namespace for re-use.
-  // TODO(oschaaf): Set up reusable helpers for .gold file testing, we'll probably get more of that.
-  // Also, move out the test data into its own directory.
-  myfile.open(Envoy::TestEnvironment::runfilesPath("nighthawk/test/hdr_proto_json.gold"));
-  std::string gold;
-  myfile >> gold;
-  EXPECT_EQ(gold, str);
+  Envoy::MessageUtil util;
+  util.loadFromJson(filesystem.fileReadToEnd(TestEnvironment::runfilesPath(
+                        "nighthawk/test/test_data/hdr_proto_json.gold")),
+                    parsed_json_proto);
+  EXPECT_TRUE(util(parsed_json_proto, statistic.toProto()));
 }
 
 TEST(StatisticTest, CombineAcrossTypesFails) {
