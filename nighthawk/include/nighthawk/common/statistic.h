@@ -53,7 +53,7 @@ public:
   virtual std::string toString() const PURE;
 
   /**
-   * Gets a proto Output reflecting the contents of the statistic.
+   * Gets proto outputs reflecting the contents of the statistic.
    */
   virtual nighthawk::client::Statistic toProto() PURE;
 
@@ -63,7 +63,7 @@ public:
    * single global view. Types of the Statistics objects that will be combined
    * must be the same, or else a std::bad_cast exception will be raised.
    * @param statistic The Statistic that should be combined with this instance.
-   * @return T Merged Statistic instance.
+   * @return std::unique_ptr<Statistic> instance.
    */
   virtual std::unique_ptr<Statistic> combine(const Statistic& statistic) PURE;
 };

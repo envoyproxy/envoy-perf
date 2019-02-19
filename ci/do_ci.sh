@@ -42,13 +42,13 @@ if [ -n "$CIRCLECI" ]; then
     export MAKEFLAGS="-j 8"
 fi
 
-if [ "$1" != "coverage" ]; then
+if [ "$1" -eq "coverage" ]; then
+    export CC=gcc
+    export CXX=g++
+else
     export PATH=/usr/lib/llvm-7/bin:$PATH
     export CC=clang
     export CXX=clang++
-else
-    export CC=gcc
-    export CXX=g++
 fi
 
 case "$1" in

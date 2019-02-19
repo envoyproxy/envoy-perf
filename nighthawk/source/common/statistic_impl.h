@@ -42,7 +42,10 @@ private:
 /**
  * Statistic that keeps track of count/mean/pvariance/pstdev with low memory
  * requirements. Resistant to catastrophic cancellation and pretty accurate.
- * Based on Donald Knuth's online variance computation algorithm.
+ * Based on Donald Knuth's online variance computation algorithm:
+ * (Art of Computer Programming, Vol 2, page 232).
+ * Knuth attributes this algorithm to B. P. Welford.
+ * (Technometrics, Vol 4, No 3, Aug 1962 pp 419-420).
  */
 class StreamingStatistic : public StatisticImpl {
 public:
