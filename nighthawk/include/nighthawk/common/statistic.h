@@ -36,7 +36,7 @@ public:
 
   /**
    * Only used in tests to match expectations to the right precision level.
-   * @return Number of significant digits. 0 is assumed to be max precision.
+   * @return uint64_t the number of significant digits. 0 is assumed to be max precision.
    */
   virtual uint64_t significantDigits() const { return 0; }
 
@@ -48,12 +48,12 @@ public:
   virtual bool resistsCatastrophicCancellation() const { return false; }
 
   /**
-   * Gets a representation of the statistic as a std::string.
+   * @return std::string a representation of the statistic as a std::string.
    */
   virtual std::string toString() const PURE;
 
   /**
-   * Gets proto outputs reflecting the contents of the statistic.
+   * @return nighthawk::client::Statistic a representation of the statistic as a protobuf message.
    */
   virtual nighthawk::client::Statistic toProto() PURE;
 
