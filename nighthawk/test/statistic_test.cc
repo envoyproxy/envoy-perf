@@ -7,6 +7,8 @@
 
 #include <google/protobuf/util/json_util.h>
 
+#include "test/test_common/environment.h"
+
 #include "nighthawk/common/statistic.h"
 #include "nighthawk/source/common/statistic_impl.h"
 
@@ -182,7 +184,11 @@ TEST(StatisticTest, HdrStatisticPercentilesProto) {
   google::protobuf::util::JsonPrintOptions options;
   google::protobuf::util::MessageToJsonString(statistic.toProto(), &str, options);
   std::ifstream myfile;
-  myfile.open("nighthawk/test/hdr_proto_json.gold");
+  // TODO(oschaaf): If this is confirmed to work in Google's environment, wrap
+  // Envoy::TestEnvironment::runfilesPath in a call within the Nighthawk namespace for re-use.
+  // TODO(oschaaf): Set up reusable helpers for .gold file testing, we'll probably get more of that.
+  // Also, move out the test data into its own directory.
+  myfile.open(Envoy::TestEnvironment::runfilesPath("nighthawk/test/hdr_proto_json.gold"));
   std::string gold;
   myfile >> gold;
   EXPECT_EQ(gold, str);
