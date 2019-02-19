@@ -1,3 +1,6 @@
 [submodule "nighthawk/envoy"]
 	path = nighthawk/envoy
 	url = https://github.com/envoyproxy/envoy.git
+[submodule "nighthawk/hdrhistogram_c"]
+	path = nighthawk/hdrhistogram_c
+	url = https://github.com/HdrHistogram/HdrHistogram_c.git
