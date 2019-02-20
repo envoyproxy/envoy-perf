@@ -59,7 +59,6 @@ private:
   Envoy::MonotonicTime start_;
   uint64_t targets_initiated_;
   uint64_t targets_completed_;
-  bool spin_when_idle_;
 };
 
 } // namespace Nighthawk

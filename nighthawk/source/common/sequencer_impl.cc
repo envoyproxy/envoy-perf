@@ -18,7 +18,7 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
     : Sequencer(target), platform_util_(platform_util), dispatcher_(dispatcher),
       time_source_(time_source), rate_limiter_(rate_limiter), duration_(duration),
       grace_timeout_(grace_timeout), start_(time_source.monotonicTime().min()),
-      targets_initiated_(0), targets_completed_(0), spin_when_idle_(true) {
+      targets_initiated_(0), targets_completed_(0) {
   ASSERT(target_ != nullptr, "No SequencerTarget");
   periodic_timer_ = dispatcher_.createTimer([this]() { run(true); });
   incidental_timer_ = dispatcher_.createTimer([this]() { run(false); });
@@ -75,10 +75,13 @@ void SequencerImpl::run(bool from_timer) {
   }
 
   while (rate_limiter_.tryAcquireOne()) {
+    // The rate limiter says it's OK to proceed and call the target. Let's see if the target is OK
+    // with that as well.
     const bool ok = target_([this, now]() {
       auto dur = time_source_.monotonicTime() - now;
       latencyStatistic_.addValue(dur.count());
       targets_completed_++;
+      // Immediately schedule us to check again, as chances are we can get on with the next task.
       incidental_timer_->enableTimer(0ms);
     });
     if (ok) {
@@ -88,23 +91,25 @@ void SequencerImpl::run(bool from_timer) {
       // time of writing this.
       // TODO(oschaaf): Create a specific statistic for tracking time spend here and report.
       // Measurements will be skewed.
+      // The target wasn't able to proceed. Update the rate limiter, we'll try again later.
       rate_limiter_.releaseOne();
       break;
     }
   }
 
   if (!from_timer) {
-    if (spin_when_idle_ && targets_initiated_ == targets_completed_) {
-      // TODO(oschaaf): Ideally we would have much finer grained timers instead.
-      // TODO(oschaaf): Optionize performing this spin loop.
+    if (targets_initiated_ == targets_completed_) {
       // We saturated the rate limiter, and there's no outstanding work.
       // That means it looks like we are idle. Spin this event to improve
       // accuracy. As a side-effect, this may help prevent CPU frequency scaling
       // due to c-state. But on the other hand it may cause thermal throttling.
+      // TODO(oschaaf): Ideally we would have much finer grained timers instead.
+      // TODO(oschaaf): Optionize performing this spin loop.
       platform_util_.yieldCurrentThread();
       incidental_timer_->enableTimer(0ms);
     }
   } else {
+    // Re-schedule the periodic timer if it was responsible for waking up this code.
     scheduleRun();
   }
 }
