@@ -34,20 +34,20 @@ public:
   /**
    * @return double an up-to-date completions per second rate.
    */
-  virtual double completions_per_second() PURE;
+  virtual double completionsPerSecond() const PURE;
 
   /**
    * @return const Statistic& tracks time spend waiting on SequencerTarget while it returns false.
    * (In other words, time spend while the Sequencer is idle and not blocked by other factors, like
    * a rate limiter)
    */
-  virtual const Statistic& blocked_statistic() PURE;
+  virtual const Statistic& blockedStatistic() const PURE;
 
   /**
    * @return const Statistic& tracks latency between calling the SequencerTarget and observing its
    * callback.
    */
-  virtual const Statistic& latency_statistic() PURE;
+  virtual const Statistic& latencyStatistic() const PURE;
 
 protected:
   SequencerTarget& target_;

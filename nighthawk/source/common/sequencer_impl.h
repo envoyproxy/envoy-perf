@@ -5,8 +5,9 @@
 #include "envoy/common/pure.h"
 #include "envoy/event/dispatcher.h"
 #include "envoy/event/timer.h"
-#include "envoy/runtime/runtime.h"
+#include "envoy/thread/thread.h"
 
+#include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/rate_limiter.h"
 #include "nighthawk/common/sequencer.h"
 
@@ -16,15 +17,15 @@ namespace Nighthawk {
 
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
-  SequencerImpl(Envoy::Event::Dispatcher& dispatcher, Envoy::TimeSource& time_source,
-                RateLimiter& rate_limiter, SequencerTarget& target,
+  SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
+                Envoy::TimeSource& time_source, RateLimiter& rate_limiter, SequencerTarget& target,
                 std::chrono::microseconds duration, std::chrono::microseconds grace_timeout);
   void start() override;
   void waitForCompletion() override;
 
   // TODO(oschaaf): calling this after stop() will return broken/unexpected results.
-  double completions_per_second() override {
-    double us =
+  double completionsPerSecond() const override {
+    const double us =
         std::chrono::duration_cast<std::chrono::microseconds>(time_source_.monotonicTime() - start_)
             .count();
 
@@ -34,11 +35,8 @@ public:
   // TODO(oschaaf): we want to track time we wait between the rate limiter
   // indicating we should call target_() but target returs false, meaning
   // we are blocked / have entered closed loop mode.
-  const HdrStatistic& blocked_statistic() override { return blocked_statistic_; }
-  const HdrStatistic& latency_statistic() override { return latency_statistic_; }
-
-  // Spinning makes tests hang when simulated time is used.
-  void disable_idle_spin_for_tests() { spin_when_idle_ = false; }
+  const HdrStatistic& blockedStatistic() const override { return blockedStatistic_; }
+  const HdrStatistic& latencyStatistic() const override { return latencyStatistic_; }
 
 protected:
   void run(bool from_timer);
@@ -47,10 +45,12 @@ protected:
 
 private:
   static const std::chrono::milliseconds EnvoyTimerMinResolution;
+
+  PlatformUtil& platform_util_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;
-  HdrStatistic blocked_statistic_;
-  HdrStatistic latency_statistic_;
+  HdrStatistic blockedStatistic_;
+  HdrStatistic latencyStatistic_;
   Envoy::Event::TimerPtr periodic_timer_;
   Envoy::Event::TimerPtr incidental_timer_;
   RateLimiter& rate_limiter_;
