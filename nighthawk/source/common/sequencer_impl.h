@@ -15,6 +15,8 @@
 
 namespace Nighthawk {
 
+using SequencerTarget = std::function<bool(std::function<void()>)>;
+
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
@@ -46,6 +48,7 @@ protected:
 private:
   static const std::chrono::milliseconds EnvoyTimerMinResolution;
 
+  SequencerTarget& target_;
   PlatformUtil& platform_util_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;

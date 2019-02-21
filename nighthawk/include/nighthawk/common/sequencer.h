@@ -8,8 +8,6 @@
 
 namespace Nighthawk {
 
-using SequencerTarget = std::function<bool(std::function<void()>)>;
-
 /**
  * Abstract Sequencer interface. The Sequencer will drive calls to the SequencerTarget.
  * The contract with the target is that it will call the provided callback when it is ready.
@@ -18,7 +16,6 @@ using SequencerTarget = std::function<bool(std::function<void()>)>;
  */
 class Sequencer {
 public:
-  Sequencer(SequencerTarget& target) : target_(target) {}
   virtual ~Sequencer() = default;
 
   /**
@@ -48,9 +45,6 @@ public:
    * callback.
    */
   virtual const Statistic& latencyStatistic() const PURE;
-
-protected:
-  SequencerTarget& target_;
 };
 
 } // namespace Nighthawk

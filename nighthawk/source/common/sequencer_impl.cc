@@ -15,7 +15,7 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
                              Envoy::TimeSource& time_source, RateLimiter& rate_limiter,
                              SequencerTarget& target, std::chrono::microseconds duration,
                              std::chrono::microseconds grace_timeout)
-    : Sequencer(target), platform_util_(platform_util), dispatcher_(dispatcher),
+    : target_(target), platform_util_(platform_util), dispatcher_(dispatcher),
       time_source_(time_source), rate_limiter_(rate_limiter), duration_(duration),
       grace_timeout_(grace_timeout), start_(time_source.monotonicTime().min()),
       targets_initiated_(0), targets_completed_(0) {
