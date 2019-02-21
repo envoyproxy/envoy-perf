@@ -19,7 +19,7 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
     : target_(target), platform_util_(platform_util), dispatcher_(dispatcher),
       time_source_(time_source), rate_limiter_(rate_limiter), duration_(duration),
       grace_timeout_(grace_timeout), start_(time_source.monotonicTime().min()),
-      targets_initiated_(0), targets_completed_(0), running_(false) {
+      targets_initiated_(0), targets_completed_(0), running_(false), blocked_(false) {
   ASSERT(target_ != nullptr, "No SequencerTarget");
   periodic_timer_ = dispatcher_.createTimer([this]() { run(true); });
   adhoc_timer_ = dispatcher_.createTimer([this]() { run(false); });
@@ -44,6 +44,10 @@ void SequencerImpl::stop() {
   periodic_timer_.reset(nullptr);
   adhoc_timer_.reset(nullptr);
   dispatcher_.exit();
+  if (blocked_) {
+    blocked_ = false;
+    blockedStatistic_.addValue((time_source_.monotonicTime() - blocked_start_).count());
+  }
 }
 
 void SequencerImpl::run(bool from_periodic_timer) {
@@ -93,8 +97,16 @@ void SequencerImpl::run(bool from_periodic_timer) {
       adhoc_timer_->enableTimer(0ms);
     });
     if (ok) {
+      if (blocked_) {
+        blocked_ = false;
+        blockedStatistic_.addValue((now - blocked_start_).count());
+      }
       targets_initiated_++;
     } else {
+      if (!blocked_) {
+        blocked_start_ = now;
+        blocked_ = true;
+      }
       // This should only happen when we are running in closed-loop mode, which is always at the
       // time of writing this.
       // TODO(oschaaf): Create a specific statistic for tracking time spend here and report.

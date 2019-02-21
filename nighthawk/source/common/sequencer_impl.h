@@ -72,6 +72,8 @@ private:
   uint64_t targets_initiated_;
   uint64_t targets_completed_;
   bool running_;
+  bool blocked_;
+  Envoy::MonotonicTime blocked_start_;
 };
 
 } // namespace Nighthawk

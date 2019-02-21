@@ -53,6 +53,7 @@ public:
     // We don't call f(); which will cause the sequencer to think there is in-flight work.
     return true;
   }
+  bool saturated_test(std::function<void()> /* f */) { return false; }
 
   MockPlatformUtil platform_util_;
   Envoy::Stats::IsolatedStoreImpl store_;
@@ -173,6 +174,26 @@ TEST_F(SequencerIntegrationTest, BasicTest) {
 
   EXPECT_EQ(test_number_of_intervals_, callback_test_count_);
   EXPECT_EQ(test_number_of_intervals_, sequencer.latencyStatistic().count());
+  EXPECT_EQ(0, sequencer.blockedStatistic().count());
+}
+
+TEST_F(SequencerIntegrationTest, AlwaysSaturatedTargetTest) {
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
+
+  SequencerTarget callback =
+      std::bind(&SequencerIntegrationTest::saturated_test, this, std::placeholders::_1);
+  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
+                          test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
+                          1ms /* Sequencer timeout. */);
+  sequencer.start();
+
+  for (uint64_t i = 0; i < test_number_of_intervals_; i++) {
+    moveClockForwardOneInterval();
+  }
+
+  sequencer.waitForCompletion();
+  EXPECT_EQ(0, sequencer.latencyStatistic().count());
+  EXPECT_EQ(1, sequencer.blockedStatistic().count());
 }
 
 TEST_F(SequencerIntegrationTest, TimeoutTest) {
@@ -199,6 +220,7 @@ TEST_F(SequencerIntegrationTest, TimeoutTest) {
   EXPECT_EQ(5, callback_test_count_);
   // ... but they ought to have not arrived at the Sequencer.
   EXPECT_EQ(0, sequencer.latencyStatistic().count());
+  EXPECT_EQ(0, sequencer.blockedStatistic().count());
 }
 
 } // namespace Nighthawk
