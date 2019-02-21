@@ -18,9 +18,9 @@ namespace Nighthawk {
 using SequencerTarget = std::function<bool(std::function<void()>)>;
 
 /**
- * The Sequencer will drive calls to the SequencerTarget.
- * The contract with the target is that it will call the provided callback when it is ready.
- * The target will return true if it was able to proceed, or false if a retry is warranted at
+ * The Sequencer will drive calls to the SequencerTarget at a pace indicated by the assocated
+ * RateLimiter. The contract with the target is that it will call the provided callback when it is
+ * ready. The target will return true if it was able to proceed, or false if a retry is warranted at
  * a later time (because of being out of required resources, for example).
  */
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
