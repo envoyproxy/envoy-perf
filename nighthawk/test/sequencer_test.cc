@@ -58,6 +58,7 @@ public:
   Envoy::Stats::IsolatedStoreImpl store_;
   Envoy::Event::SimulatedTimeSystem time_system_;
   Envoy::Api::Impl api_;
+  // TODO(oschaaf): test with MockDispatcher?
   Envoy::Event::DispatcherPtr dispatcher_;
   int callback_test_count_;
   const Frequency frequency_;
@@ -84,36 +85,53 @@ TEST_F(SequencerTest, EmptyCallbackAsserts) {
 }
 
 TEST_F(SequencerTest, RateLimiterInteraction) {
-  SequencerImpl sequencer(
-      platform_util_, *dispatcher_, time_system_, *rate_limiter_, sequencer_target_,
-      test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 0ms /* Sequencer timeout. */);
+  MockSequencerTarget target;
 
-  EXPECT_CALL(platform_util_, yieldCurrentThread());
+  SequencerTarget callback =
+      std::bind(&MockSequencerTarget::callback, &target, std::placeholders::_1);
+  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
+                          test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
+                          1ms /* Sequencer timeout. */);
 
-  // Have the mock rate limiter gate three calls, and block everything else.
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
+
+  // Have the mock rate limiter gate two calls, and block everything else.
   EXPECT_CALL(getRateLimiter(), tryAcquireOne())
-      .Times(testing::AtLeast(3))
+      .Times(3)
       .WillOnce(testing::Return(true))
       .WillOnce(testing::Return(true))
-      .WillOnce(testing::Return(true))
-      .WillRepeatedly(testing::Return(false));
+      .WillOnce(testing::Return(false));
 
-  EXPECT_EQ(0, callback_test_count_);
-  EXPECT_EQ(0, sequencer.latencyStatistic().count());
+  EXPECT_CALL(target, callback(testing::_))
+      .Times(2)
+      .WillOnce(testing::Return(true))
+      .WillOnce(testing::Return(true));
 
   sequencer.start();
-
-  EXPECT_EQ(3, callback_test_count_);
-  EXPECT_EQ(3, sequencer.latencyStatistic().count());
-
-  for (uint64_t i = 0; i < test_number_of_intervals_; i++) {
-    moveClockForwardOneInterval();
-  }
-
   sequencer.waitForCompletion();
+}
 
-  EXPECT_EQ(3, callback_test_count_);
-  EXPECT_EQ(3, sequencer.latencyStatistic().count());
+TEST_F(SequencerTest, RateLimiterSaturatedTargetInteraction) {
+  MockSequencerTarget target;
+
+  SequencerTarget callback =
+      std::bind(&MockSequencerTarget::callback, &target, std::placeholders::_1);
+  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
+                          test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
+                          1ms /* Sequencer timeout. */);
+
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
+
+  // The sequencer should call RateLimiter::releaseOne() when the target returns false.
+  EXPECT_CALL(getRateLimiter(), tryAcquireOne()).Times(2).WillRepeatedly(testing::Return(true));
+  EXPECT_CALL(target, callback(testing::_))
+      .Times(2)
+      .WillOnce(testing::Return(true))
+      .WillOnce(testing::Return(false));
+  EXPECT_CALL(getRateLimiter(), releaseOne()).Times(1);
+
+  sequencer.start();
+  sequencer.waitForCompletion();
 }
 
 class SequencerIntegrationTest : public SequencerTestBase {
@@ -129,6 +147,10 @@ TEST_F(SequencerIntegrationTest, BasicTest) {
       test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 1ms /* Sequencer timeout. */);
   EXPECT_CALL(platform_util_, yieldCurrentThread())
       .Times(1 + ((test_number_of_intervals_ * interval_) - interval_) / TimeResolution);
+
+  EXPECT_EQ(0, callback_test_count_);
+  EXPECT_EQ(0, sequencer.latencyStatistic().count());
+
   sequencer.start();
 
   // This test only needs a single update to the simulated time, after which

@@ -61,4 +61,15 @@ public:
   MOCK_METHOD0(releaseOne, void());
 };
 
+class FakeSequencerTarget {
+public:
+  virtual ~FakeSequencerTarget() = default;
+  virtual bool callback(std::function<void()>) PURE;
+};
+
+class MockSequencerTarget : public FakeSequencerTarget {
+public:
+  MOCK_METHOD1(callback, bool(std::function<void()>));
+};
+
 } // namespace Nighthawk
