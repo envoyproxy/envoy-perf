@@ -23,19 +23,20 @@ using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
-class SequencerIntegrationTest : public testing::Test {
+class SequencerTestBase : public testing::Test {
 public:
-  SequencerIntegrationTest()
+  SequencerTestBase()
       : api_(1000ms /*flush interval*/, Envoy::Thread::ThreadFactorySingleton::get(), store_,
              time_system_),
         dispatcher_(api_.allocateDispatcher()), callback_test_count_(0), frequency_(10_Hz),
         interval_(std::chrono::duration_cast<std::chrono::milliseconds>(frequency_.interval())),
-        test_number_of_intervals_(5), rate_limiter_(time_system_, frequency_),
-        sequencer_target_(
-            std::bind(&SequencerIntegrationTest::callback_test, this, std::placeholders::_1)),
+        test_number_of_intervals_(5), sequencer_target_(std::bind(&SequencerTestBase::callback_test,
+                                                                  this, std::placeholders::_1)),
         clock_updates_(0) {
     platform_util_.setTimeSystem(this->time_system_);
   }
+
+  virtual ~SequencerTestBase() = default;
 
   void moveClockForwardOneInterval() {
     time_system_.setMonotonicTime(time_system_.monotonicTime() + interval_);
@@ -62,14 +63,69 @@ public:
   const Frequency frequency_;
   const std::chrono::milliseconds interval_;
   const uint64_t test_number_of_intervals_;
-  LinearRateLimiter rate_limiter_;
+  std::unique_ptr<RateLimiter> rate_limiter_;
   SequencerTarget sequencer_target_;
   uint64_t clock_updates_;
 };
 
+class SequencerTest : public SequencerTestBase {
+public:
+  SequencerTest() { rate_limiter_ = std::make_unique<MockRateLimiter>(); }
+  MockRateLimiter& getRateLimiter() const { return dynamic_cast<MockRateLimiter&>(*rate_limiter_); }
+};
+
+TEST_F(SequencerTest, EmptyCallbackAsserts) {
+  LinearRateLimiter rate_limiter(time_system_, 10_Hz);
+  SequencerTarget callback_empty;
+
+  ASSERT_DEATH(SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, rate_limiter,
+                                       callback_empty, 1s, 1s),
+               "No SequencerTarget");
+}
+
+TEST_F(SequencerTest, RateLimiterInteraction) {
+  SequencerImpl sequencer(
+      platform_util_, *dispatcher_, time_system_, *rate_limiter_, sequencer_target_,
+      test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 0ms /* Sequencer timeout. */);
+
+  EXPECT_CALL(platform_util_, yieldCurrentThread());
+
+  // Have the mock rate limiter gate three calls, and block everything else.
+  EXPECT_CALL(getRateLimiter(), tryAcquireOne())
+      .Times(testing::AtLeast(3))
+      .WillOnce(testing::Return(true))
+      .WillOnce(testing::Return(true))
+      .WillOnce(testing::Return(true))
+      .WillRepeatedly(testing::Return(false));
+
+  EXPECT_EQ(0, callback_test_count_);
+  EXPECT_EQ(0, sequencer.latencyStatistic().count());
+
+  sequencer.start();
+
+  EXPECT_EQ(3, callback_test_count_);
+  EXPECT_EQ(3, sequencer.latencyStatistic().count());
+
+  for (uint64_t i = 0; i < test_number_of_intervals_; i++) {
+    moveClockForwardOneInterval();
+  }
+
+  sequencer.waitForCompletion();
+
+  EXPECT_EQ(3, callback_test_count_);
+  EXPECT_EQ(3, sequencer.latencyStatistic().count());
+}
+
+class SequencerIntegrationTest : public SequencerTestBase {
+public:
+  SequencerIntegrationTest() {
+    rate_limiter_ = std::make_unique<LinearRateLimiter>(time_system_, frequency_);
+  }
+};
+
 TEST_F(SequencerIntegrationTest, BasicTest) {
   SequencerImpl sequencer(
-      platform_util_, *dispatcher_, time_system_, rate_limiter_, sequencer_target_,
+      platform_util_, *dispatcher_, time_system_, *rate_limiter_, sequencer_target_,
       test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 1ms /* Sequencer timeout. */);
   EXPECT_CALL(platform_util_, yieldCurrentThread())
       .Times(1 + ((test_number_of_intervals_ * interval_) - interval_) / TimeResolution);
@@ -92,7 +148,7 @@ TEST_F(SequencerIntegrationTest, TimeoutTest) {
 
   SequencerTarget callback =
       std::bind(&SequencerIntegrationTest::timeout_test, this, std::placeholders::_1);
-  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, rate_limiter_, callback,
+  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
                           test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
                           1ms /* Sequencer timeout. */);
   sequencer.start();
@@ -108,15 +164,6 @@ TEST_F(SequencerIntegrationTest, TimeoutTest) {
   EXPECT_EQ(5, callback_test_count_);
   // ... but they ought to have not arrived at the Sequencer.
   EXPECT_EQ(0, sequencer.latencyStatistic().count());
-}
-
-TEST_F(SequencerIntegrationTest, EmptyCallbackAsserts) {
-  LinearRateLimiter rate_limiter(time_system_, 10_Hz);
-  SequencerTarget callback_empty;
-
-  ASSERT_DEATH(SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, rate_limiter,
-                                       callback_empty, 1s, 1s),
-               "No SequencerTarget");
 }
 
 } // namespace Nighthawk
