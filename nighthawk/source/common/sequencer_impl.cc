@@ -1,9 +1,10 @@
-#include "nighthawk/common/exception.h"
+#include "nighthawk/source/common/sequencer_impl.h"
 
 #include "common/common/assert.h"
 
+#include "nighthawk/common/exception.h"
+
 #include "nighthawk/source/common/platform_util_impl.h"
-#include "nighthawk/source/common/sequencer_impl.h"
 
 using namespace std::chrono_literals;
 
@@ -18,13 +19,17 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
     : target_(target), platform_util_(platform_util), dispatcher_(dispatcher),
       time_source_(time_source), rate_limiter_(rate_limiter), duration_(duration),
       grace_timeout_(grace_timeout), start_(time_source.monotonicTime().min()),
-      targets_initiated_(0), targets_completed_(0) {
+      targets_initiated_(0), targets_completed_(0), running_(false) {
   ASSERT(target_ != nullptr, "No SequencerTarget");
   periodic_timer_ = dispatcher_.createTimer([this]() { run(true); });
-  incidental_timer_ = dispatcher_.createTimer([this]() { run(false); });
+  adhoc_timer_ = dispatcher_.createTimer([this]() { run(false); });
 }
 
+SequencerImpl::~SequencerImpl() {}
+
 void SequencerImpl::start() {
+  ASSERT(!running_);
+  running_ = true;
   start_ = time_source_.monotonicTime();
   run(true);
 }
@@ -32,14 +37,17 @@ void SequencerImpl::start() {
 void SequencerImpl::scheduleRun() { periodic_timer_->enableTimer(EnvoyTimerMinResolution); }
 
 void SequencerImpl::stop() {
+  ASSERT(running_);
+  running_ = false;
   periodic_timer_->disableTimer();
-  incidental_timer_->disableTimer();
+  adhoc_timer_->disableTimer();
   periodic_timer_.reset(nullptr);
-  incidental_timer_.reset(nullptr);
+  adhoc_timer_.reset(nullptr);
   dispatcher_.exit();
 }
 
-void SequencerImpl::run(bool from_timer) {
+void SequencerImpl::run(bool from_periodic_timer) {
+  ASSERT(running_);
   const auto now = time_source_.monotonicTime();
   const auto runtime = now - start_;
 
@@ -67,7 +75,7 @@ void SequencerImpl::run(bool from_timer) {
                   targets_initiated_, targets_completed_, rate);
         return;
       }
-      if (from_timer) {
+      if (from_periodic_timer) {
         scheduleRun();
       }
     }
@@ -82,7 +90,7 @@ void SequencerImpl::run(bool from_timer) {
       latencyStatistic_.addValue(dur.count());
       targets_completed_++;
       // Immediately schedule us to check again, as chances are we can get on with the next task.
-      incidental_timer_->enableTimer(0ms);
+      adhoc_timer_->enableTimer(0ms);
     });
     if (ok) {
       targets_initiated_++;
@@ -97,16 +105,16 @@ void SequencerImpl::run(bool from_timer) {
     }
   }
 
-  if (!from_timer) {
+  if (!from_periodic_timer) {
     if (targets_initiated_ == targets_completed_) {
       // We saturated the rate limiter, and there's no outstanding work.
       // That means it looks like we are idle. Spin this event to improve
       // accuracy. As a side-effect, this may help prevent CPU frequency scaling
-      // due to c-state. But on the other hand it may cause thermal throttling.
+      // due to c-state changes. But on the other hand it may cause thermal throttling.
       // TODO(oschaaf): Ideally we would have much finer grained timers instead.
       // TODO(oschaaf): Optionize performing this spin loop.
       platform_util_.yieldCurrentThread();
-      incidental_timer_->enableTimer(0ms);
+      adhoc_timer_->enableTimer(0ms);
     }
   } else {
     // Re-schedule the periodic timer if it was responsible for waking up this code.
@@ -115,7 +123,11 @@ void SequencerImpl::run(bool from_timer) {
 }
 
 void SequencerImpl::waitForCompletion() {
+  ASSERT(running_);
   dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
+  if (running_) {
+    stop();
+  }
 }
 
 } // namespace Nighthawk

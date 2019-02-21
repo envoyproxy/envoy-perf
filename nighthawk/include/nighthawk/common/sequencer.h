@@ -9,10 +9,7 @@
 namespace Nighthawk {
 
 /**
- * Abstract Sequencer interface. The Sequencer will drive calls to the SequencerTarget.
- * The contract with the target is that it will call the provided callback when it is ready.
- * The target will return true if it was able to proceed, or false if a retry is warranted at
- * a later time (because of being out of required resources, for example).
+ * Abstract Sequencer interface.
  */
 class Sequencer {
 public:
@@ -35,8 +32,7 @@ public:
 
   /**
    * @return const Statistic& tracks time spend waiting on SequencerTarget while it returns false.
-   * (In other words, time spend while the Sequencer is idle and not blocked by other factors, like
-   * a rate limiter)
+   * (In other words, time spend while the Sequencer is idle and not blocked by a rate limiter)
    */
   virtual const Statistic& blockedStatistic() const PURE;
 

@@ -17,11 +17,20 @@ namespace Nighthawk {
 
 using SequencerTarget = std::function<bool(std::function<void()>)>;
 
+/**
+ * The Sequencer will drive calls to the SequencerTarget.
+ * The contract with the target is that it will call the provided callback when it is ready.
+ * The target will return true if it was able to proceed, or false if a retry is warranted at
+ * a later time (because of being out of required resources, for example).
+ */
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
                 Envoy::TimeSource& time_source, RateLimiter& rate_limiter, SequencerTarget& target,
                 std::chrono::microseconds duration, std::chrono::microseconds grace_timeout);
+
+  ~SequencerImpl() override;
+
   void start() override;
   void waitForCompletion() override;
 
@@ -35,13 +44,13 @@ public:
   }
 
   // TODO(oschaaf): we want to track time we wait between the rate limiter
-  // indicating we should call target_() but target returs false, meaning
+  // indicating we should call target_() but target returns false, meaning
   // we are blocked / have entered closed loop mode.
   const HdrStatistic& blockedStatistic() const override { return blockedStatistic_; }
   const HdrStatistic& latencyStatistic() const override { return latencyStatistic_; }
 
 protected:
-  void run(bool from_timer);
+  void run(bool from_periodic_timer);
   void scheduleRun();
   void stop();
 
@@ -55,13 +64,14 @@ private:
   HdrStatistic blockedStatistic_;
   HdrStatistic latencyStatistic_;
   Envoy::Event::TimerPtr periodic_timer_;
-  Envoy::Event::TimerPtr incidental_timer_;
+  Envoy::Event::TimerPtr adhoc_timer_;
   RateLimiter& rate_limiter_;
   std::chrono::microseconds duration_;
   std::chrono::microseconds grace_timeout_;
   Envoy::MonotonicTime start_;
   uint64_t targets_initiated_;
   uint64_t targets_completed_;
+  bool running_;
 };
 
 } // namespace Nighthawk

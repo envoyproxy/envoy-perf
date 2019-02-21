@@ -76,12 +76,25 @@ public:
 };
 
 TEST_F(SequencerTest, EmptyCallbackAsserts) {
-  LinearRateLimiter rate_limiter(time_system_, 10_Hz);
   SequencerTarget callback_empty;
 
-  ASSERT_DEATH(SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, rate_limiter,
+  ASSERT_DEATH(SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
                                        callback_empty, 1s, 1s),
                "No SequencerTarget");
+}
+
+TEST_F(SequencerTest, StartingTwiceAsserts) {
+  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
+                          sequencer_target_, 1s, 1s);
+  EXPECT_CALL(getRateLimiter(), tryAcquireOne());
+  sequencer.start();
+  ASSERT_DEATH(sequencer.start(), "");
+}
+
+TEST_F(SequencerTest, WaitButNotStartedAsserts) {
+  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
+                          sequencer_target_, 1s, 1s);
+  ASSERT_DEATH(sequencer.waitForCompletion(), "");
 }
 
 TEST_F(SequencerTest, RateLimiterInteraction) {
