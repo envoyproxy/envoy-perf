@@ -34,7 +34,7 @@ private:
 
 class MockPlatformUtil : public PlatformUtil {
 public:
-  MockPlatformUtil() { DelegateToSimulatedTimeAwarePlatformUtil(); }
+  MockPlatformUtil() { delegateToSimulatedTimeAwarePlatformUtil(); }
 
   MOCK_CONST_METHOD0(yieldCurrentThread, void());
 
@@ -43,7 +43,7 @@ public:
   }
 
 private:
-  void DelegateToSimulatedTimeAwarePlatformUtil() {
+  void delegateToSimulatedTimeAwarePlatformUtil() {
     // When this is called we are in a tight spin loop. SimulatedTimeAwarePlatformUtil moves the
     // simulated time forward, avoiding the tests hanging.
     ON_CALL(*this, yieldCurrentThread())

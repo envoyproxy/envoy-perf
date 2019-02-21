@@ -10,8 +10,6 @@ using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
-constexpr std::chrono::milliseconds SequencerImpl::EnvoyTimerMinResolution = 1ms;
-
 SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
                              Envoy::TimeSource& time_source, RateLimiter& rate_limiter,
                              SequencerTarget& target, std::chrono::microseconds duration,
@@ -36,17 +34,44 @@ void SequencerImpl::start() {
 
 void SequencerImpl::scheduleRun() { periodic_timer_->enableTimer(EnvoyTimerMinResolution); }
 
-void SequencerImpl::stop() {
+void SequencerImpl::stop(bool timed_out) {
+  const double rate = completionsPerSecond();
+
   ASSERT(running_);
   running_ = false;
   periodic_timer_->disableTimer();
   adhoc_timer_->disableTimer();
-  periodic_timer_.reset(nullptr);
-  adhoc_timer_.reset(nullptr);
+  periodic_timer_.reset();
+  adhoc_timer_.reset();
   dispatcher_.exit();
+  updateStatisticOnUnblockIfNeeded(time_source_.monotonicTime());
+
+  if (timed_out) {
+    ENVOY_LOG(warn,
+              "Timeout waiting for inbound completions. Initiated: {} / Completed: {}. "
+              "(Completion rate was {} per second.)",
+              targets_initiated_, targets_completed_, rate);
+
+  } else {
+    ENVOY_LOG(
+        trace, "Processed {} operations in {} ms. ({} per second)", targets_completed_,
+        std::chrono::duration_cast<std::chrono::milliseconds>(time_source_.monotonicTime() - start_)
+            .count(),
+        rate);
+  }
+}
+
+void SequencerImpl::updateStatisticOnUnblockIfNeeded(const Envoy::MonotonicTime& now) {
   if (blocked_) {
     blocked_ = false;
-    blockedStatistic_.addValue((time_source_.monotonicTime() - blocked_start_).count());
+    blockedStatistic_.addValue((now - blocked_start_).count());
+  }
+}
+
+void SequencerImpl::updateStartBlockingTimeIfNeeded() {
+  if (!blocked_) {
+    blocked_ = true;
+    blocked_start_ = time_source_.monotonicTime();
   }
 }
 
@@ -57,26 +82,14 @@ void SequencerImpl::run(bool from_periodic_timer) {
 
   // If we exceed the benchmark duration.
   if (runtime > duration_) {
-    const double rate = completionsPerSecond();
-
     if (targets_completed_ == targets_initiated_) {
       // All work has completed. Stop this sequencer.
-      stop();
-      ENVOY_LOG(
-          trace,
-          "SequencerImpl done processing {} operations in {} ms. (completion rate {} per second)",
-          targets_completed_,
-          std::chrono::duration_cast<std::chrono::milliseconds>(now - start_).count(), rate);
-      return;
+      stop(false);
     } else {
       // After the benchmark duration has exceeded, we wait for a grace period for outstanding work
       // to wrap up. If that takes too long we warn about it and quit.
       if (runtime - duration_ > grace_timeout_) {
-        stop();
-        ENVOY_LOG(warn,
-                  "SequencerImpl timeout waiting for due responses. Initiated: {} / Completed: {}. "
-                  "(completion ~ rate {} per second.)",
-                  targets_initiated_, targets_completed_, rate);
+        stop(true);
         return;
       }
       if (from_periodic_timer) {
@@ -89,29 +102,22 @@ void SequencerImpl::run(bool from_periodic_timer) {
   while (rate_limiter_.tryAcquireOne()) {
     // The rate limiter says it's OK to proceed and call the target. Let's see if the target is OK
     // with that as well.
-    const bool ok = target_([this, now]() {
-      auto dur = time_source_.monotonicTime() - now;
+    const bool target_could_start = target_([this, now]() {
+      const auto dur = time_source_.monotonicTime() - now;
       latencyStatistic_.addValue(dur.count());
       targets_completed_++;
       // Immediately schedule us to check again, as chances are we can get on with the next task.
       adhoc_timer_->enableTimer(0ms);
     });
-    if (ok) {
-      if (blocked_) {
-        blocked_ = false;
-        blockedStatistic_.addValue((now - blocked_start_).count());
-      }
+
+    if (target_could_start) {
+      updateStatisticOnUnblockIfNeeded(now);
       targets_initiated_++;
     } else {
-      if (!blocked_) {
-        blocked_start_ = now;
-        blocked_ = true;
-      }
       // This should only happen when we are running in closed-loop mode, which is always at the
-      // time of writing this.
-      // TODO(oschaaf): Create a specific statistic for tracking time spend here and report.
-      // Measurements will be skewed.
-      // The target wasn't able to proceed. Update the rate limiter, we'll try again later.
+      // time of writing this. The target wasn't able to proceed. Update the rate limiter, we'll try
+      // again later.
+      updateStartBlockingTimeIfNeeded();
       rate_limiter_.releaseOne();
       break;
     }
@@ -138,7 +144,7 @@ void SequencerImpl::waitForCompletion() {
   ASSERT(running_);
   dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
   if (running_) {
-    stop();
+    stop(false);
   }
 }
 

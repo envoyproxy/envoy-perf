@@ -15,6 +15,14 @@
 
 namespace Nighthawk {
 
+namespace {
+
+using namespace std::chrono_literals;
+
+constexpr std::chrono::milliseconds EnvoyTimerMinResolution = 1ms;
+
+} // namespace
+
 using SequencerTarget = std::function<bool(std::function<void()>)>;
 
 /**
@@ -22,6 +30,7 @@ using SequencerTarget = std::function<bool(std::function<void()>)>;
  * RateLimiter. The contract with the target is that it will call the provided callback when it is
  * ready. The target will return true if it was able to proceed, or false if a retry is warranted at
  * a later time (because of being out of required resources, for example).
+ * Note that owner of SequencerTarget must outlive the SequencerImpl to avoid use-after-free!
  */
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
@@ -36,27 +45,24 @@ public:
 
   // TODO(oschaaf): calling this after stop() will return broken/unexpected results.
   double completionsPerSecond() const override {
-    const double us =
+    const double usec =
         std::chrono::duration_cast<std::chrono::microseconds>(time_source_.monotonicTime() - start_)
             .count();
 
-    return us == 0 ? 0 : ((targets_completed_ / us) * 1000000);
+    return usec == 0 ? 0 : ((targets_completed_ / usec) * 1000000);
   }
 
-  // TODO(oschaaf): we want to track time we wait between the rate limiter
-  // indicating we should call target_() but target returns false, meaning
-  // we are blocked / have entered closed loop mode.
   const HdrStatistic& blockedStatistic() const override { return blockedStatistic_; }
   const HdrStatistic& latencyStatistic() const override { return latencyStatistic_; }
 
 protected:
   void run(bool from_periodic_timer);
   void scheduleRun();
-  void stop();
+  void stop(bool timed_out);
+  void updateStatisticOnUnblockIfNeeded(const Envoy::MonotonicTime& now);
+  void updateStartBlockingTimeIfNeeded();
 
 private:
-  static const std::chrono::milliseconds EnvoyTimerMinResolution;
-
   SequencerTarget& target_;
   PlatformUtil& platform_util_;
   Envoy::Event::Dispatcher& dispatcher_;

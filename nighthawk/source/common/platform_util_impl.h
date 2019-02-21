@@ -8,9 +8,6 @@ namespace Nighthawk {
 
 class PlatformUtilImpl : public PlatformUtil {
 public:
-  PlatformUtilImpl() = default;
-
-  // TODO(oschaaf): would be nice to test this.
   void yieldCurrentThread() const override { pthread_yield(); }
 };
 
