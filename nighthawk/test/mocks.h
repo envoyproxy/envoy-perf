@@ -60,7 +60,6 @@ public:
 class MockSequencerTarget : public FakeSequencerTarget {
 public:
   MockSequencerTarget();
-  virtual ~MockSequencerTarget();
 
   MOCK_METHOD1(callback, bool(std::function<void()>));
 };

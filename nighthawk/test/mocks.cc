@@ -46,6 +46,4 @@ FakeSequencerTarget::~FakeSequencerTarget() = default;
 
 MockSequencerTarget::MockSequencerTarget() = default;
 
-MockSequencerTarget::~MockSequencerTarget() = default;
-
 } // namespace Nighthawk
