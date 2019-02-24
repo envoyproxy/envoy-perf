@@ -19,6 +19,7 @@ constexpr std::chrono::milliseconds TimeResolution = 10ms;
 class SimulatedTimeAwarePlatformUtil : public PlatformUtil {
 public:
   SimulatedTimeAwarePlatformUtil() : time_system_(nullptr) {}
+  virtual ~SimulatedTimeAwarePlatformUtil() = default;
 
   void yieldCurrentThread() const override {
     ASSERT(time_system_ != nullptr);
@@ -32,26 +33,19 @@ private:
   Envoy::Event::SimulatedTimeSystem* time_system_;
 };
 
-class MockPlatformUtil : public PlatformUtil {
+class MockPlatformUtil : public SimulatedTimeAwarePlatformUtil {
 public:
   MockPlatformUtil() { delegateToSimulatedTimeAwarePlatformUtil(); }
-
   MOCK_CONST_METHOD0(yieldCurrentThread, void());
-
-  void setTimeSystem(Envoy::Event::SimulatedTimeSystem& time_system) {
-    simulated_time_aware_platform_util_.setTimeSystem(time_system);
-  }
+  void yieldFromBaseClass() const { SimulatedTimeAwarePlatformUtil::yieldCurrentThread(); }
 
 private:
   void delegateToSimulatedTimeAwarePlatformUtil() {
     // When this is called we are in a tight spin loop. SimulatedTimeAwarePlatformUtil moves the
     // simulated time forward, avoiding the tests hanging.
     ON_CALL(*this, yieldCurrentThread())
-        .WillByDefault(testing::Invoke(&simulated_time_aware_platform_util_,
-                                       &SimulatedTimeAwarePlatformUtil::yieldCurrentThread));
+        .WillByDefault(testing::Invoke(this, &MockPlatformUtil::yieldFromBaseClass));
   }
-
-  SimulatedTimeAwarePlatformUtil simulated_time_aware_platform_util_;
 };
 
 class MockRateLimiter : public RateLimiter {
