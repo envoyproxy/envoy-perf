@@ -12,22 +12,17 @@
 
 using namespace std::chrono_literals;
 
-namespace Nighthawk {
-
 constexpr std::chrono::milliseconds TimeResolution = 10ms;
+
+namespace Nighthawk {
 
 class SimulatedTimeAwarePlatformUtil : public PlatformUtil {
 public:
-  SimulatedTimeAwarePlatformUtil() : time_system_(nullptr) {}
-  virtual ~SimulatedTimeAwarePlatformUtil() = default;
+  SimulatedTimeAwarePlatformUtil();
+  virtual ~SimulatedTimeAwarePlatformUtil();
 
-  void yieldCurrentThread() const override {
-    ASSERT(time_system_ != nullptr);
-    time_system_->setMonotonicTime(time_system_->monotonicTime() + TimeResolution);
-  }
-  void setTimeSystem(Envoy::Event::SimulatedTimeSystem& time_system) {
-    time_system_ = &time_system;
-  }
+  void yieldCurrentThread() const override;
+  void setTimeSystem(Envoy::Event::SimulatedTimeSystem& time_system);
 
 private:
   Envoy::Event::SimulatedTimeSystem* time_system_;
@@ -35,34 +30,38 @@ private:
 
 class MockPlatformUtil : public SimulatedTimeAwarePlatformUtil {
 public:
-  MockPlatformUtil() { delegateToSimulatedTimeAwarePlatformUtil(); }
+  MockPlatformUtil();
+  virtual ~MockPlatformUtil();
+
   MOCK_CONST_METHOD0(yieldCurrentThread, void());
-  void yieldFromBaseClass() const { SimulatedTimeAwarePlatformUtil::yieldCurrentThread(); }
+  void yieldFromBaseClass() const;
 
 private:
-  void delegateToSimulatedTimeAwarePlatformUtil() {
-    // When this is called we are in a tight spin loop. SimulatedTimeAwarePlatformUtil moves the
-    // simulated time forward, avoiding the tests hanging.
-    ON_CALL(*this, yieldCurrentThread())
-        .WillByDefault(testing::Invoke(this, &MockPlatformUtil::yieldFromBaseClass));
-  }
+  void delegateToSimulatedTimeAwarePlatformUtil();
 };
 
 class MockRateLimiter : public RateLimiter {
 public:
-  MockRateLimiter() = default;
+  MockRateLimiter();
+  virtual ~MockRateLimiter();
+
   MOCK_METHOD0(tryAcquireOne, bool());
   MOCK_METHOD0(releaseOne, void());
 };
 
 class FakeSequencerTarget {
 public:
-  virtual ~FakeSequencerTarget() = default;
+  FakeSequencerTarget();
+  virtual ~FakeSequencerTarget();
+  // A fake method that matches the sequencer target signature.
   virtual bool callback(std::function<void()>) PURE;
 };
 
 class MockSequencerTarget : public FakeSequencerTarget {
 public:
+  MockSequencerTarget();
+  virtual ~MockSequencerTarget();
+
   MOCK_METHOD1(callback, bool(std::function<void()>));
 };
 

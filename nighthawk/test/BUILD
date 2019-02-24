@@ -8,6 +8,7 @@ package(default_visibility = ["//visibility:public"])
 
 envoy_cc_mock(
     name = "nighthawk_mocks",
+    srcs = ["mocks.cc"],
     hdrs = ["mocks.h"],
     repository = "@envoy",
     deps = [
