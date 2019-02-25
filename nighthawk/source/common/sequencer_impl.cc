@@ -20,7 +20,7 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
       targets_initiated_(0), targets_completed_(0), running_(false), blocked_(false) {
   ASSERT(target_ != nullptr, "No SequencerTarget");
   periodic_timer_ = dispatcher_.createTimer([this]() { run(true); });
-  adhoc_timer_ = dispatcher_.createTimer([this]() { run(false); });
+  spin_timer_ = dispatcher_.createTimer([this]() { run(false); });
 }
 
 SequencerImpl::~SequencerImpl() {}
@@ -40,9 +40,9 @@ void SequencerImpl::stop(bool timed_out) {
   ASSERT(running_);
   running_ = false;
   periodic_timer_->disableTimer();
-  adhoc_timer_->disableTimer();
+  spin_timer_->disableTimer();
   periodic_timer_.reset();
-  adhoc_timer_.reset();
+  spin_timer_.reset();
   dispatcher_.exit();
   updateStatisticOnUnblockIfNeeded(time_source_.monotonicTime());
 
@@ -64,7 +64,7 @@ void SequencerImpl::stop(bool timed_out) {
 void SequencerImpl::updateStatisticOnUnblockIfNeeded(const Envoy::MonotonicTime& now) {
   if (blocked_) {
     blocked_ = false;
-    blockedStatistic_.addValue((now - blocked_start_).count());
+    blocked_statistic_.addValue((now - blocked_start_).count());
   }
 }
 
@@ -104,26 +104,30 @@ void SequencerImpl::run(bool from_periodic_timer) {
     // with that as well.
     const bool target_could_start = target_([this, now]() {
       const auto dur = time_source_.monotonicTime() - now;
-      latencyStatistic_.addValue(dur.count());
+      latency_statistic_.addValue(dur.count());
       targets_completed_++;
       // Immediately schedule us to check again, as chances are we can get on with the next task.
-      adhoc_timer_->enableTimer(0ms);
+      spin_timer_->enableTimer(0ms);
     });
 
     if (target_could_start) {
       updateStatisticOnUnblockIfNeeded(now);
       targets_initiated_++;
     } else {
-      // This should only happen when we are running in closed-loop mode, which is always at the
-      // time of writing this. The target wasn't able to proceed. Update the rate limiter, we'll try
-      // again later.
+      // This should only happen when we are running in closed-loop mode.The target wasn't able to
+      // proceed. Update the rate limiter.
       updateStartBlockingTimeIfNeeded();
       rate_limiter_.releaseOne();
+      // Retry later. When all target_ calls have completed we are going to spin until target_
+      // stops returning false. Otherwise the periodic timer will wake us up to re-check.
       break;
     }
   }
 
-  if (!from_periodic_timer) {
+  if (from_periodic_timer) {
+    // Re-schedule the periodic timer if it was responsible for waking up this code.
+    scheduleRun();
+  } else {
     if (targets_initiated_ == targets_completed_) {
       // We saturated the rate limiter, and there's no outstanding work.
       // That means it looks like we are idle. Spin this event to improve
@@ -132,11 +136,8 @@ void SequencerImpl::run(bool from_periodic_timer) {
       // TODO(oschaaf): Ideally we would have much finer grained timers instead.
       // TODO(oschaaf): Optionize performing this spin loop.
       platform_util_.yieldCurrentThread();
-      adhoc_timer_->enableTimer(0ms);
+      spin_timer_->enableTimer(0ms);
     }
-  } else {
-    // Re-schedule the periodic timer if it was responsible for waking up this code.
-    scheduleRun();
   }
 }
 

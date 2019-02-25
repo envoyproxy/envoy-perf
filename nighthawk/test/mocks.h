@@ -19,7 +19,7 @@ namespace Nighthawk {
 class SimulatedTimeAwarePlatformUtil : public PlatformUtil {
 public:
   SimulatedTimeAwarePlatformUtil();
-  virtual ~SimulatedTimeAwarePlatformUtil();
+  ~SimulatedTimeAwarePlatformUtil();
 
   void yieldCurrentThread() const override;
   void setTimeSystem(Envoy::Event::SimulatedTimeSystem& time_system);
@@ -31,7 +31,7 @@ private:
 class MockPlatformUtil : public SimulatedTimeAwarePlatformUtil {
 public:
   MockPlatformUtil();
-  virtual ~MockPlatformUtil();
+  ~MockPlatformUtil();
 
   MOCK_CONST_METHOD0(yieldCurrentThread, void());
   void yieldFromBaseClass() const;
@@ -43,7 +43,7 @@ private:
 class MockRateLimiter : public RateLimiter {
 public:
   MockRateLimiter();
-  virtual ~MockRateLimiter();
+  ~MockRateLimiter();
 
   MOCK_METHOD0(tryAcquireOne, bool());
   MOCK_METHOD0(releaseOne, void());
@@ -60,7 +60,7 @@ public:
 class MockSequencerTarget : public FakeSequencerTarget {
 public:
   MockSequencerTarget();
-  virtual ~MockSequencerTarget();
+  ~MockSequencerTarget();
 
   MOCK_METHOD1(callback, bool(std::function<void()>));
 };

@@ -52,8 +52,8 @@ public:
     return usec == 0 ? 0 : ((targets_completed_ / usec) * 1000000);
   }
 
-  const HdrStatistic& blockedStatistic() const override { return blockedStatistic_; }
-  const HdrStatistic& latencyStatistic() const override { return latencyStatistic_; }
+  const HdrStatistic& blockedStatistic() const override { return blocked_statistic_; }
+  const HdrStatistic& latencyStatistic() const override { return latency_statistic_; }
 
 protected:
   void run(bool from_periodic_timer);
@@ -67,10 +67,10 @@ private:
   PlatformUtil& platform_util_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;
-  HdrStatistic blockedStatistic_;
-  HdrStatistic latencyStatistic_;
+  HdrStatistic blocked_statistic_;
+  HdrStatistic latency_statistic_;
   Envoy::Event::TimerPtr periodic_timer_;
-  Envoy::Event::TimerPtr adhoc_timer_;
+  Envoy::Event::TimerPtr spin_timer_;
   RateLimiter& rate_limiter_;
   std::chrono::microseconds duration_;
   std::chrono::microseconds grace_timeout_;
