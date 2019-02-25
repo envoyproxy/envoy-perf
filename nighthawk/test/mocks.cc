@@ -25,16 +25,11 @@ MockPlatformUtil::MockPlatformUtil() { delegateToSimulatedTimeAwarePlatformUtil(
 
 MockPlatformUtil::~MockPlatformUtil() = default;
 
-void MockPlatformUtil::yieldFromBaseClass() const {
+void MockPlatformUtil::yieldWithSimulatedTime() const {
   SimulatedTimeAwarePlatformUtil::yieldCurrentThread();
 }
 
-void MockPlatformUtil::delegateToSimulatedTimeAwarePlatformUtil() {
-  // When this is called we are in a tight spin loop. SimulatedTimeAwarePlatformUtil moves the
-  // simulated time forward, avoiding the tests hanging.
-  ON_CALL(*this, yieldCurrentThread())
-      .WillByDefault(testing::Invoke(this, &MockPlatformUtil::yieldFromBaseClass));
-}
+void MockPlatformUtil::delegateToSimulatedTimeAwarePlatformUtil() {}
 
 MockRateLimiter::MockRateLimiter() = default;
 

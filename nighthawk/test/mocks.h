@@ -34,7 +34,7 @@ public:
   ~MockPlatformUtil();
 
   MOCK_CONST_METHOD0(yieldCurrentThread, void());
-  void yieldFromBaseClass() const;
+  void yieldWithSimulatedTime() const;
 
 private:
   void delegateToSimulatedTimeAwarePlatformUtil();

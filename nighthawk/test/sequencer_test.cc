@@ -33,6 +33,10 @@ public:
                                                                   this, std::placeholders::_1)),
         clock_updates_(0) {
     platform_util_.setTimeSystem(this->time_system_);
+    // When yieldCurrentThread() is called we are in a tight spin loop.
+    // SimulatedTimeAwarePlatformUtil moves the simulated time forward, avoiding the tests hanging.
+    ON_CALL(platform_util_, yieldCurrentThread())
+        .WillByDefault(testing::Invoke(&platform_util_, &MockPlatformUtil::yieldWithSimulatedTime));
   }
 
   virtual ~SequencerTestBase() = default;
@@ -132,7 +136,6 @@ TEST_F(SequencerTest, RateLimiterSaturatedTargetInteraction) {
   SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
                           test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
                           1ms /* Sequencer timeout. */);
-
   EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
 
   // The sequencer should call RateLimiter::releaseOne() when the target returns false.
