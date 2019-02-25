@@ -26,9 +26,9 @@ namespace Nighthawk {
 class SequencerTestBase : public testing::Test {
 public:
   SequencerTestBase()
-      : api_(1000ms /*flush interval*/, Envoy::Thread::ThreadFactorySingleton::get(), store_,
-             time_system_),
-        dispatcher_(api_.allocateDispatcher()), callback_test_count_(0), frequency_(10_Hz),
+      : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_),
+        dispatcher_(
+          api_.allocateDispatcher()), callback_test_count_(0), frequency_(10_Hz),
         interval_(std::chrono::duration_cast<std::chrono::milliseconds>(frequency_.interval())),
         test_number_of_intervals_(5), sequencer_target_(std::bind(&SequencerTestBase::callback_test,
                                                                   this, std::placeholders::_1)),
