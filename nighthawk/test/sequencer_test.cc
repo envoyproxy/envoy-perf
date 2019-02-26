@@ -73,12 +73,14 @@ public:
   uint64_t clock_updates_;
 };
 
+// For testing interaction with MockRateLimiter.
 class SequencerTest : public SequencerTestBase {
 public:
   SequencerTest() { rate_limiter_ = std::make_unique<MockRateLimiter>(); }
   MockRateLimiter& getRateLimiter() const { return dynamic_cast<MockRateLimiter&>(*rate_limiter_); }
 };
 
+// Test we get defined behaviour with bad input
 TEST_F(SequencerTest, EmptyCallbackAsserts) {
   SequencerTarget callback_empty;
 
@@ -87,6 +89,7 @@ TEST_F(SequencerTest, EmptyCallbackAsserts) {
                "No SequencerTarget");
 }
 
+// As today the Sequencer supports a single run only, we cannot start twice.
 TEST_F(SequencerTest, StartingTwiceAsserts) {
   SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
                           sequencer_target_, 1s, 1s);
@@ -95,6 +98,7 @@ TEST_F(SequencerTest, StartingTwiceAsserts) {
   ASSERT_DEATH(sequencer.start(), "");
 }
 
+// Test the interaction with the rate limiter.
 TEST_F(SequencerTest, RateLimiterInteraction) {
   MockSequencerTarget target;
 
@@ -126,6 +130,7 @@ TEST_F(SequencerTest, RateLimiterInteraction) {
   sequencer.waitForCompletion();
 }
 
+// Test the interaction with a saturated rate limiter.
 TEST_F(SequencerTest, RateLimiterSaturatedTargetInteraction) {
   MockSequencerTarget target;
 
@@ -164,9 +169,9 @@ public:
 TEST_F(SequencerIntegrationTest, BasicTest) {
   SequencerImpl sequencer(
       platform_util_, *dispatcher_, time_system_, *rate_limiter_, sequencer_target_,
-      test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 1ms /* Sequencer timeout. */);
+      test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 0ms /* Sequencer timeout. */);
   EXPECT_CALL(platform_util_, yieldCurrentThread())
-      .Times(1 + ((test_number_of_intervals_ * interval_) - interval_) / TimeResolution);
+      .Times(2 + ((test_number_of_intervals_ * interval_) - interval_) / TimeResolution);
 
   EXPECT_EQ(0, callback_test_count_);
   EXPECT_EQ(0, sequencer.latencyStatistic().count());
@@ -199,7 +204,7 @@ TEST_F(SequencerIntegrationTest, AlwaysSaturatedTargetTest) {
     moveClockForwardOneInterval();
   }
 
-  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(1);
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(2);
   sequencer.waitForCompletion();
   EXPECT_EQ(0, sequencer.latencyStatistic().count());
   EXPECT_EQ(1, sequencer.blockedStatistic().count());
@@ -215,7 +220,7 @@ TEST_F(SequencerIntegrationTest, GraceTimeoutTest) {
   // Hence, no spinning, and no calls to yieldCurrentThread.
   EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
 
-  auto grace_timeout = 12345ms;
+  auto grace_timeout = 12340ms;
 
   SequencerTarget callback =
       std::bind(&SequencerIntegrationTest::timeout_test, this, std::placeholders::_1);
@@ -239,7 +244,11 @@ TEST_F(SequencerIntegrationTest, GraceTimeoutTest) {
 
   auto diff = time_system_.monotonicTime() - pre_timeout;
 
-  EXPECT_GE((grace_timeout + 10ms).count(),
+  // + 20ms, because:
+  // -- we're positioned at (test_number_of_intervals_ * interval_).
+  //    the sequencer needs one more cycle to go into timeout mode, which will add 10ms.
+  // -- yield() in waitForCompletion() adds 10.
+  EXPECT_EQ((grace_timeout + 20ms).count(),
             std::chrono::duration_cast<std::chrono::milliseconds>(diff).count());
 
   // The test is actually that we get here. We would hang if the timeout didn't work. In any case,
