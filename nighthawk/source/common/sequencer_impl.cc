@@ -142,10 +142,7 @@ void SequencerImpl::run(bool from_periodic_timer) {
 }
 
 void SequencerImpl::waitForCompletion() {
-  while (running_) {
-    dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
-    platform_util_.yieldCurrentThread();
-  }
+  dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
 }
 
 } // namespace Nighthawk

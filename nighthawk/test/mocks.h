@@ -12,7 +12,7 @@
 
 using namespace std::chrono_literals;
 
-constexpr std::chrono::milliseconds TimeResolution = 10ms;
+constexpr std::chrono::milliseconds TimeResolution = 1ms;
 
 namespace Nighthawk {
 

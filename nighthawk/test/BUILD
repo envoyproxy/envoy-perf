@@ -21,13 +21,13 @@ envoy_cc_mock(
 envoy_cc_test(
     name = "nighthawk_test",
     srcs = [
-        "frequency_test.cc",
-        "options_test.cc",
-        "platform_util_test.cc",
-        "rate_limiter_test.cc",
+        #        "frequency_test.cc",
+        #        "options_test.cc",
+        #        "platform_util_test.cc",
+        #        "rate_limiter_test.cc",
         "sequencer_test.cc",
-        "statistic_test.cc",
-        "utility_test.cc",
+        #        "statistic_test.cc",
+        #        "utility_test.cc",
     ],
     data = ["test_data/hdr_proto_json.gold"],
     repository = "@envoy",
@@ -38,6 +38,7 @@ envoy_cc_test(
         "@envoy//source/common/filesystem:filesystem_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/stats:isolated_store_lib",
+        "@envoy//test/mocks/event:event_mocks",
         "@envoy//test/test_common:simulated_time_system_lib",
     ],
 )
