@@ -78,17 +78,17 @@ void SequencerImpl::updateStartBlockingTimeIfNeeded() {
 void SequencerImpl::run(bool from_periodic_timer) {
   ASSERT(running_);
   const auto now = time_source_.monotonicTime();
-  const auto runtime = now - start_;
+  const auto running_duration = now - start_;
 
   // If we exceed the benchmark duration.
-  if (runtime > duration_) {
+  if (running_duration > duration_) {
     if (targets_completed_ == targets_initiated_) {
       // All work has completed. Stop this sequencer.
       stop(false);
     } else {
-      // After the benchmark duration has exceeded, we wait for a grace period for outstanding work
+      // After the benchmark duration has passed, we wait for a grace period for outstanding work
       // to wrap up. If that takes too long we warn about it and quit.
-      if (runtime - duration_ > grace_timeout_) {
+      if (running_duration - duration_ > grace_timeout_) {
         stop(true);
         return;
       }
@@ -142,10 +142,11 @@ void SequencerImpl::run(bool from_periodic_timer) {
 }
 
 void SequencerImpl::waitForCompletion() {
-  ASSERT(running_);
-  dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
-  if (running_) {
-    stop(false);
+  while (running_) {
+    dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
+    if (running_) {
+      platform_util_.yieldCurrentThread();
+    }
   }
 }
 

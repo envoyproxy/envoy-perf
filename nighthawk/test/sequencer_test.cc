@@ -95,12 +95,6 @@ TEST_F(SequencerTest, StartingTwiceAsserts) {
   ASSERT_DEATH(sequencer.start(), "");
 }
 
-TEST_F(SequencerTest, WaitButNotStartedAsserts) {
-  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
-                          sequencer_target_, 1s, 1s);
-  ASSERT_DEATH(sequencer.waitForCompletion(), "");
-}
-
 TEST_F(SequencerTest, RateLimiterInteraction) {
   MockSequencerTarget target;
 
@@ -125,6 +119,10 @@ TEST_F(SequencerTest, RateLimiterInteraction) {
       .WillOnce(testing::Return(true));
 
   sequencer.start();
+
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(testing::AtLeast(1));
+  EXPECT_CALL(getRateLimiter(), tryAcquireOne()).Times(testing::AtLeast(1));
+
   sequencer.waitForCompletion();
 }
 
@@ -135,7 +133,7 @@ TEST_F(SequencerTest, RateLimiterSaturatedTargetInteraction) {
       std::bind(&MockSequencerTarget::callback, &target, std::placeholders::_1);
   SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
                           test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
-                          1ms /* Sequencer timeout. */);
+                          0ms /* Sequencer timeout. */);
   EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
 
   // The sequencer should call RateLimiter::releaseOne() when the target returns false.
@@ -147,9 +145,14 @@ TEST_F(SequencerTest, RateLimiterSaturatedTargetInteraction) {
   EXPECT_CALL(getRateLimiter(), releaseOne()).Times(1);
 
   sequencer.start();
+
+  EXPECT_CALL(getRateLimiter(), tryAcquireOne()).Times(testing::AtLeast(1));
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(testing::AtLeast(1));
+
   sequencer.waitForCompletion();
 }
 
+// The integration tests use a LinearRateLimiter.
 class SequencerIntegrationTest : public SequencerTestBase {
 public:
   SequencerIntegrationTest() {
@@ -157,6 +160,7 @@ public:
   }
 };
 
+// Test the happy flow
 TEST_F(SequencerIntegrationTest, BasicTest) {
   SequencerImpl sequencer(
       platform_util_, *dispatcher_, time_system_, *rate_limiter_, sequencer_target_,
@@ -179,6 +183,8 @@ TEST_F(SequencerIntegrationTest, BasicTest) {
   EXPECT_EQ(0, sequencer.blockedStatistic().count());
 }
 
+// Test an always saturated sequencer target. A concrete example would be a http benchmark client
+// not being able to start any requests, for example due to misconfiguration or system conditions.
 TEST_F(SequencerIntegrationTest, AlwaysSaturatedTargetTest) {
   EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
 
@@ -193,29 +199,48 @@ TEST_F(SequencerIntegrationTest, AlwaysSaturatedTargetTest) {
     moveClockForwardOneInterval();
   }
 
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(1);
   sequencer.waitForCompletion();
   EXPECT_EQ(0, sequencer.latencyStatistic().count());
   EXPECT_EQ(1, sequencer.blockedStatistic().count());
 }
 
-TEST_F(SequencerIntegrationTest, TimeoutTest) {
+// Test the (grace-)-timeout feature of the Sequencer. The used sequencer target
+// (SequencerIntegrationTest::timeout_test()) will never call back, effectively simulated a hanging
+// benchmark client. The actual test is that we get past sequencer.waitForCompletion(), which would
+// only work when the timeout is respected.
+TEST_F(SequencerIntegrationTest, GraceTimeoutTest) {
   // We will be stepping in time at precisely the rate limiter frequency below.
   // As the callbacks won't complete, the sequencer will never consider itself idle.
   // Hence, no spinning, and no calls to yieldCurrentThread.
   EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(0);
 
+  auto grace_timeout = 12345ms;
+
   SequencerTarget callback =
       std::bind(&SequencerIntegrationTest::timeout_test, this, std::placeholders::_1);
   SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, *rate_limiter_, callback,
                           test_number_of_intervals_ * interval_ /* Sequencer run time.*/,
-                          1ms /* Sequencer timeout. */);
+                          grace_timeout);
   sequencer.start();
 
   for (uint64_t i = 0; i < test_number_of_intervals_; i++) {
     moveClockForwardOneInterval();
+    dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
+    EXPECT_EQ(i + 1, callback_test_count_);
+    EXPECT_EQ(0, sequencer.latencyStatistic().count());
+    EXPECT_EQ(0, sequencer.blockedStatistic().count());
   }
 
+  auto pre_timeout = time_system_.monotonicTime();
+
+  EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(testing::AtLeast(1));
   sequencer.waitForCompletion();
+
+  auto diff = time_system_.monotonicTime() - pre_timeout;
+
+  EXPECT_GE((grace_timeout + 10ms).count(),
+            std::chrono::duration_cast<std::chrono::milliseconds>(diff).count());
 
   // The test is actually that we get here. We would hang if the timeout didn't work. In any case,
   // the test itself should have seen all callbacks...
