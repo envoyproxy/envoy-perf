@@ -92,7 +92,7 @@ TEST_F(SequencerTest, SingleShotStartingTwiceAsserts) {
   ASSERT_DEATH(sequencer.start(), "");
 }
 
-// Waiting on a sequencer flow that isn't started asserts.
+// Waiting on a sequencer flow that isn't started.
 TEST_F(SequencerTest, WaitWithoutStartAsserts) {
   EXPECT_CALL(getRateLimiter(), tryAcquireOne()).Times(0);
   EXPECT_CALL(*dispatcher_, createTimer_(_)).Times(2);

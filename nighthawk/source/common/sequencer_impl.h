@@ -67,7 +67,7 @@ public:
 
 protected:
   /**
-   * Run is called initiailly by start() and thereafter by two timers:
+   * Run is called initially by start() and thereafter by two timers:
    *  - a periodic one running at a 1 ms resolution (the current minimum)
    *  - one to spin on calls to run().
    *
