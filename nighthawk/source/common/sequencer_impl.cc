@@ -23,8 +23,6 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
   spin_timer_ = dispatcher_.createTimer([this]() { run(false); });
 }
 
-SequencerImpl::~SequencerImpl() {}
-
 void SequencerImpl::start() {
   ASSERT(!running_);
   running_ = true;
@@ -142,7 +140,10 @@ void SequencerImpl::run(bool from_periodic_timer) {
 }
 
 void SequencerImpl::waitForCompletion() {
+  ASSERT(running_);
   dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
+  // We should guarantee the flow terminates, so:
+  ASSERT(!running_);
 }
 
 } // namespace Nighthawk

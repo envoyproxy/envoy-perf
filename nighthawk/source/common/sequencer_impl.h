@@ -26,11 +26,15 @@ constexpr std::chrono::milliseconds EnvoyTimerMinResolution = 1ms;
 using SequencerTarget = std::function<bool(std::function<void()>)>;
 
 /**
- * The Sequencer will drive calls to the SequencerTarget at a pace indicated by the assocated
+ * The Sequencer will drive calls to the SequencerTarget at a pace indicated by the associated
  * RateLimiter. The contract with the target is that it will call the provided callback when it is
  * ready. The target will return true if it was able to proceed, or false if a retry is warranted at
  * a later time (because of being out of required resources, for example).
- * Note that owner of SequencerTarget must outlive the SequencerImpl to avoid use-after-free!
+ * Note that owner of SequencerTarget must outlive the SequencerImpl to avoid use-after-free.
+ * Also, the Sequencer implementation is a single-shot design. The general usage pattern is:
+ *   SequencerImpl sequencer(...)
+ *   sequencer.start();
+ *   sequencer.waitForCompletion();
  */
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
@@ -38,9 +42,15 @@ public:
                 Envoy::TimeSource& time_source, RateLimiter& rate_limiter, SequencerTarget& target,
                 std::chrono::microseconds duration, std::chrono::microseconds grace_timeout);
 
-  ~SequencerImpl() override;
-
+  /**
+   * Starts the Sequencer. Should be followed up with a call to waitForCompletion().
+   */
   void start() override;
+
+  /**
+   * Blocking call that waits for the Sequencer flow to terminate. Start() must have been called
+   * before this.
+   */
   void waitForCompletion() override;
 
   // TODO(oschaaf): calling this after stop() will return broken/unexpected results.
@@ -56,6 +66,26 @@ public:
   const HdrStatistic& latencyStatistic() const override { return latency_statistic_; }
 
 protected:
+  /**
+   * Run is called initiailly by start() and thereafter by two timers:
+   *  - a periodic one running at a 1 ms resolution (the current minimum)
+   *  - one to spin on calls to run().
+   *
+   * Spinning is performed when the Sequencer implementation considers itself idle, where "idle" is
+   * defined as:
+   * - All benchmark target calls have reported back
+   * - Either the rate limiter or the benchmark target is prohibiting initiation of the next
+   * benchmark target call.
+   *
+   * The spinning is performed to improve timelyness when initiating
+   * calls to the benchmark targets, and observational data also shows significant improvement of
+   * actually latency measurement (most pronounced on non-tuned systems). As a side-effect, spinning
+   * keeps the CPU busy, preventing C-state frequency changes. Systems with appropriately cooled
+   * processors should not be impacted by thermal throttling. When thermal throttling does occur, it
+   * makes sense to first warm up the system to get it into a steady state regarding processor
+   * frequency.
+   * @param from_periodic_timer
+   */
   void run(bool from_periodic_timer);
   void scheduleRun();
   void stop(bool timed_out);
