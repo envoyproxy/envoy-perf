@@ -63,36 +63,6 @@ public:
   }
 };
 
-// Test for defined behaviour with bad input
-TEST_F(SequencerTest, EmptyCallbackAsserts) {
-  SequencerTarget callback_empty;
-
-  ASSERT_DEATH(SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
-                                       callback_empty, 1s, 1s),
-               "No SequencerTarget");
-}
-
-// As today the Sequencer supports a single run only, we cannot start twice.
-TEST_F(SequencerTest, SingleShotStartingTwiceAsserts) {
-  EXPECT_CALL(getRateLimiter(), tryAcquireOne());
-  EXPECT_CALL(*dispatcher_, createTimer_(_)).Times(2);
-
-  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
-                          sequencer_target_, 1s, 1s);
-  sequencer.start();
-  ASSERT_DEATH(sequencer.start(), "");
-}
-
-// Waiting on a sequencer flow that isn't started.
-TEST_F(SequencerTest, WaitWithoutStartAsserts) {
-  EXPECT_CALL(getRateLimiter(), tryAcquireOne()).Times(0);
-  EXPECT_CALL(*dispatcher_, createTimer_(_)).Times(2);
-
-  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, getRateLimiter(),
-                          sequencer_target_, 1s, 1s);
-  ASSERT_DEATH(sequencer.waitForCompletion(), "");
-}
-
 class SequencerTestWithTimerEmulation : public SequencerTest {
 public:
   SequencerTestWithTimerEmulation() : timer1_set_(false), timer2_set_(false), stopped_(false) {
