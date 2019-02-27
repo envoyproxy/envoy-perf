@@ -16,28 +16,12 @@ constexpr std::chrono::milliseconds TimeResolution = 1ms;
 
 namespace Nighthawk {
 
-class SimulatedTimeAwarePlatformUtil : public PlatformUtil {
-public:
-  SimulatedTimeAwarePlatformUtil();
-  ~SimulatedTimeAwarePlatformUtil();
-
-  void yieldCurrentThread() const override;
-  void setTimeSystem(Envoy::Event::SimulatedTimeSystem& time_system);
-
-private:
-  Envoy::Event::SimulatedTimeSystem* time_system_;
-};
-
-class MockPlatformUtil : public SimulatedTimeAwarePlatformUtil {
+class MockPlatformUtil : public PlatformUtil {
 public:
   MockPlatformUtil();
   ~MockPlatformUtil();
 
   MOCK_CONST_METHOD0(yieldCurrentThread, void());
-  void yieldWithSimulatedTime() const;
-
-private:
-  void delegateToSimulatedTimeAwarePlatformUtil();
 };
 
 class MockRateLimiter : public RateLimiter {

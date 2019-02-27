@@ -32,17 +32,9 @@ public:
         frequency_(10_Hz),
         interval_(std::chrono::duration_cast<std::chrono::milliseconds>(frequency_.interval())),
         test_number_of_intervals_(5), sequencer_target_(std::bind(&SequencerTestBase::callback_test,
-                                                                  this, std::placeholders::_1)),
-        clock_updates_(0) {
-    platform_util_.setTimeSystem(this->time_system_);
-  }
+                                                                  this, std::placeholders::_1)) {}
 
   virtual ~SequencerTestBase() = default;
-
-  void moveClockForwardOneInterval() {
-    time_system_.setMonotonicTime(time_system_.monotonicTime() + interval_);
-    clock_updates_++;
-  }
 
   bool callback_test(std::function<void()> f) {
     callback_test_count_++;
@@ -61,7 +53,6 @@ public:
   const uint64_t test_number_of_intervals_;
   std::unique_ptr<RateLimiter> rate_limiter_;
   SequencerTarget sequencer_target_;
-  uint64_t clock_updates_;
 };
 
 class SequencerTest : public SequencerTestBase {
