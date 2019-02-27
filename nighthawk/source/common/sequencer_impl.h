@@ -84,7 +84,12 @@ protected:
    * processors should not be impacted by thermal throttling. When thermal throttling does occur, it
    * makes sense to first warm up the system to get it into a steady state regarding processor
    * frequency.
-   * @param from_periodic_timer
+   *
+   * For more context on the current implementation of how we spin, see the the review discussion:
+   * https://github.com/envoyproxy/envoy-perf/pull/49#discussion_r259133387
+   *
+   * @param from_periodic_timer Indicates if we this is called from the periodic timer.
+   * Used to determine if re-enablement of the periodic timer should be performed before returning.
    */
   void run(bool from_periodic_timer);
   void scheduleRun();
