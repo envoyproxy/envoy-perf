@@ -94,7 +94,7 @@ protected:
   void run(bool from_periodic_timer);
   void scheduleRun();
   void stop(bool timed_out);
-  void updateStatisticOnUnblockIfNeeded(const Envoy::MonotonicTime& now);
+  void unblockAndUpdateStatisticIfNeeded(const Envoy::MonotonicTime& now);
   void updateStartBlockingTimeIfNeeded();
 
 private:

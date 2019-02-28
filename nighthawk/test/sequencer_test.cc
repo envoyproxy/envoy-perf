@@ -94,7 +94,7 @@ public:
     EXPECT_CALL(*dispatcher_, exit()).WillOnce(Invoke([&]() { stopped_ = true; }));
     EXPECT_CALL(*dispatcher_, run(_))
         .WillOnce(Invoke([&](Envoy::Event::DispatcherImpl::RunType type) {
-          assert(type == Envoy::Event::DispatcherImpl::RunType::Block);
+          ASSERT_EQ(Envoy::Event::DispatcherImpl::RunType::Block, type);
           simulateTimerLoop();
         }));
   }
