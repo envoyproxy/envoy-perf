@@ -176,6 +176,15 @@ TYPED_TEST(TypedStatisticTest, ProtoOutput) {
   EXPECT_EQ(proto.pstdev().nanos(), std::round(a.pstdev()));
 }
 
+TYPED_TEST(TypedStatisticTest, ProtoOutputEmptyStats) {
+  TypeParam a;
+  const nighthawk::client::Statistic proto = a.toProto();
+
+  EXPECT_EQ(proto.count(), 0);
+  EXPECT_EQ(proto.mean().nanos(), 0);
+  EXPECT_EQ(proto.pstdev().nanos(), 0);
+}
+
 class StatisticTest : public testing::Test {};
 
 TEST(StatisticTest, HdrStatisticPercentilesProto) {
