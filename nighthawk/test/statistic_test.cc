@@ -216,4 +216,13 @@ TEST(StatisticTest, CombineAcrossTypesFails) {
   EXPECT_THROW(c.combine(b), std::bad_cast);
 }
 
+TEST(StatisticTest, IdFieldWorks) {
+  StreamingStatistic c;
+  std::string id = "fooid";
+
+  EXPECT_EQ("", c.id());
+  c.setId(id);
+  EXPECT_EQ(id, c.id());
+}
+
 } // namespace Nighthawk

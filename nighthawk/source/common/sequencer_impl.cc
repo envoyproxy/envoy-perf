@@ -3,19 +3,21 @@
 #include "common/common/assert.h"
 
 #include "nighthawk/common/exception.h"
-
-#include "nighthawk/source/common/platform_util_impl.h"
+#include "nighthawk/common/platform_util.h"
 
 using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
 SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
-                             Envoy::TimeSource& time_source, RateLimiter& rate_limiter,
-                             SequencerTarget& target, std::chrono::microseconds duration,
+                             Envoy::TimeSource& time_source, RateLimiterPtr&& rate_limiter,
+                             SequencerTarget target, StatisticPtr&& latency_statistic,
+                             StatisticPtr&& blocked_statistic, std::chrono::microseconds duration,
                              std::chrono::microseconds grace_timeout)
     : target_(target), platform_util_(platform_util), dispatcher_(dispatcher),
-      time_source_(time_source), rate_limiter_(rate_limiter), duration_(duration),
+      time_source_(time_source), rate_limiter_(std::move(rate_limiter)),
+      latency_statistic_(std::move(latency_statistic)),
+      blocked_statistic_(std::move(blocked_statistic)), duration_(duration),
       grace_timeout_(grace_timeout), start_(time_source.monotonicTime().min()),
       targets_initiated_(0), targets_completed_(0), running_(false), blocked_(false) {
   ASSERT(target_ != nullptr, "No SequencerTarget");
@@ -62,7 +64,7 @@ void SequencerImpl::stop(bool timed_out) {
 void SequencerImpl::unblockAndUpdateStatisticIfNeeded(const Envoy::MonotonicTime& now) {
   if (blocked_) {
     blocked_ = false;
-    blocked_statistic_.addValue((now - blocked_start_).count());
+    blocked_statistic_->addValue((now - blocked_start_).count());
   }
 }
 
@@ -97,12 +99,12 @@ void SequencerImpl::run(bool from_periodic_timer) {
     return;
   }
 
-  while (rate_limiter_.tryAcquireOne()) {
+  while (rate_limiter_->tryAcquireOne()) {
     // The rate limiter says it's OK to proceed and call the target. Let's see if the target is OK
     // with that as well.
     const bool target_could_start = target_([this, now]() {
       const auto dur = time_source_.monotonicTime() - now;
-      latency_statistic_.addValue(dur.count());
+      latency_statistic_->addValue(dur.count());
       targets_completed_++;
       // Immediately schedule us to check again, as chances are we can get on with the next task.
       spin_timer_->enableTimer(0ms);
@@ -115,7 +117,7 @@ void SequencerImpl::run(bool from_periodic_timer) {
       // This should only happen when we are running in closed-loop mode.The target wasn't able to
       // proceed. Update the rate limiter.
       updateStartBlockingTimeIfNeeded();
-      rate_limiter_.releaseOne();
+      rate_limiter_->releaseOne();
       // Retry later. When all target_ calls have completed we are going to spin until target_
       // stops returning false. Otherwise the periodic timer will wake us up to re-check.
       break;
@@ -145,5 +147,12 @@ void SequencerImpl::waitForCompletion() {
   // We should guarantee the flow terminates, so:
   ASSERT(!running_);
 }
+
+StatisticPtrVector SequencerImpl::statistics() const {
+  StatisticPtrVector statistics;
+  statistics.push_back(latency_statistic_.get());
+  statistics.push_back(blocked_statistic_.get());
+  return statistics;
+};
 
 } // namespace Nighthawk

@@ -2,8 +2,9 @@
 
 #include "nighthawk/common/rate_limiter.h"
 
+#include "envoy/common/time.h"
+
 #include "common/common/logger.h"
-#include "envoy/event/timer.h"
 
 #include "frequency.h"
 
