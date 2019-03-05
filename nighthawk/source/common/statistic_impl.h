@@ -16,6 +16,9 @@ class StatisticImpl : public Statistic, public Envoy::Logger::Loggable<Envoy::Lo
 public:
   std::string toString() const override;
   nighthawk::client::Statistic toProto() override;
+  std::string id() const override;
+  void setId(const std::string& id) override;
+  std::string id_;
 };
 
 /**
@@ -30,7 +33,7 @@ public:
   double mean() const override;
   double pvariance() const override;
   double pstdev() const override;
-  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  StatisticPtr combine(const Statistic& statistic) const override;
   uint64_t significantDigits() const override { return 8; }
 
 private:
@@ -55,7 +58,7 @@ public:
   double mean() const override;
   double pvariance() const override;
   double pstdev() const override;
-  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  StatisticPtr combine(const Statistic& statistic) const override;
   bool resistsCatastrophicCancellation() const override { return true; }
 
 private:
@@ -77,7 +80,7 @@ public:
   double mean() const override;
   double pvariance() const override;
   double pstdev() const override;
-  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  StatisticPtr combine(const Statistic& statistic) const override;
   bool resistsCatastrophicCancellation() const override {
     return streaming_stats_->resistsCatastrophicCancellation();
   }
@@ -85,7 +88,7 @@ public:
 
 private:
   std::vector<int64_t> samples_;
-  std::unique_ptr<Statistic> streaming_stats_;
+  StatisticPtr streaming_stats_;
 };
 
 /**
@@ -101,7 +104,7 @@ public:
   double pvariance() const override;
   double pstdev() const override;
 
-  std::unique_ptr<Statistic> combine(const Statistic& statistic) override;
+  StatisticPtr combine(const Statistic& statistic) const override;
   std::string toString() const override;
   nighthawk::client::Statistic toProto() override;
   uint64_t significantDigits() const override { return SignificantDigits; }

@@ -1,12 +1,12 @@
 load(
     "@envoy//bazel:envoy_build_system.bzl",
+    "envoy_basic_cc_library",
     "envoy_cc_binary",
-    "envoy_cc_library",
 )
 
 package(default_visibility = ["//visibility:public"])
 
-envoy_cc_library(
+envoy_basic_cc_library(
     name = "hdrhistogram_c",
     srcs = [
         "hdrhistogram_c/src/hdr_encoding.c",
@@ -34,7 +34,6 @@ envoy_cc_library(
         "-Wno-implicit-function-declaration",
         "-Wno-error",
     ],
-    repository = "@envoy",
 )
 
 envoy_cc_binary(
