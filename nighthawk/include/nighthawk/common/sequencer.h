@@ -32,14 +32,14 @@ public:
   virtual double completionsPerSecond() const PURE;
 
   /**
-   * Gets a vector of associated Statistics.
+   * Gets the statistics, keyed by id.
    *
-   * @return StatisticPtrVector A vector of Statistics.
+   * @return StatisticPtrMap A map of Statistics keyed by id.
    * Will contain statistics for latency (between calling the SequencerTarget and observing its
    * callback) and blocking (tracks time spend waiting on SequencerTarget while it returns false, In
    * other words, time spend while the Sequencer is idle and not blocked by a rate limiter).
    */
-  virtual StatisticPtrVector statistics() const PURE;
+  virtual StatisticPtrMap statistics() const PURE;
 };
 
 } // namespace Nighthawk

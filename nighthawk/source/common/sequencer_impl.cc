@@ -23,6 +23,8 @@ SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatch
   ASSERT(target_ != nullptr, "No SequencerTarget");
   periodic_timer_ = dispatcher_.createTimer([this]() { run(true); });
   spin_timer_ = dispatcher_.createTimer([this]() { run(false); });
+  latency_statistic_->setId("sequencer.callback");
+  blocked_statistic_->setId("sequencer.blocking");
 }
 
 void SequencerImpl::start() {
@@ -148,10 +150,10 @@ void SequencerImpl::waitForCompletion() {
   ASSERT(!running_);
 }
 
-StatisticPtrVector SequencerImpl::statistics() const {
-  StatisticPtrVector statistics;
-  statistics.push_back(latency_statistic_.get());
-  statistics.push_back(blocked_statistic_.get());
+StatisticPtrMap SequencerImpl::statistics() const {
+  StatisticPtrMap statistics;
+  statistics[latency_statistic_->id()] = latency_statistic_.get();
+  statistics[blocked_statistic_->id()] = blocked_statistic_.get();
   return statistics;
 };
 

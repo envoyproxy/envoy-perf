@@ -18,8 +18,15 @@ nighthawk::client::Statistic StatisticImpl::toProto() {
 
   statistic.set_id(id());
   statistic.set_count(count());
-  statistic.mutable_mean()->set_nanos(count() == 0 ? 0 : std::round(mean()));
-  statistic.mutable_pstdev()->set_nanos(count() == 0 ? 0 : std::round(pstdev()));
+
+  int64_t nanos = count() == 0 ? 0 : std::round(mean());
+  statistic.mutable_mean()->set_seconds(nanos / 1000000000);
+  statistic.mutable_mean()->set_nanos(nanos % 1000000000);
+
+  nanos = count() == 0 ? 0 : std::round(pstdev());
+  statistic.mutable_pstdev()->set_seconds(nanos / 1000000000);
+  statistic.mutable_pstdev()->set_nanos(nanos % 1000000000);
+
   return statistic;
 }
 
@@ -191,7 +198,10 @@ nighthawk::client::Statistic HdrStatistic::toProto() {
     nighthawk::client::Percentile* percentile;
 
     percentile = proto.add_percentiles();
-    percentile->mutable_duration()->set_nanos(iter.highest_equivalent_value);
+
+    percentile->mutable_duration()->set_seconds(iter.highest_equivalent_value / 1000000000);
+    percentile->mutable_duration()->set_nanos(iter.highest_equivalent_value % 1000000000);
+
     percentile->set_percentile(percentiles->percentile / 100.0);
     percentile->set_count(iter.cumulative_count);
   }

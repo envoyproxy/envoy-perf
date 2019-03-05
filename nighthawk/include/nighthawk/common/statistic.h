@@ -17,6 +17,11 @@ public:
   StatisticException() : Envoy::EnvoyException("StatisticException") {}
 };
 
+class Statistic;
+
+typedef std::unique_ptr<Statistic> StatisticPtr;
+typedef std::map<std::string, Statistic const*> StatisticPtrMap;
+
 /**
  * Abstract interface for a statistic.
  */
@@ -65,7 +70,7 @@ public:
    * @param statistic The Statistic that should be combined with this instance.
    * @return StatisticPtr instance.
    */
-  virtual std::unique_ptr<Statistic> combine(const Statistic& statistic) const PURE;
+  virtual StatisticPtr combine(const Statistic& statistic) const PURE;
 
   /**
    * Gets the id of the Statistic instance, which is an empty string when not set.
@@ -79,8 +84,5 @@ public:
    */
   virtual void setId(const std::string& id) PURE;
 };
-
-typedef std::unique_ptr<Statistic> StatisticPtr;
-typedef std::vector<Statistic const*> StatisticPtrVector;
 
 } // namespace Nighthawk
