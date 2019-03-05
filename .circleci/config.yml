@@ -48,4 +48,4 @@ workflows:
       - test
       - clang_tidy
 #      - test_with_valgrind
-#      - coverage
+      - coverage
