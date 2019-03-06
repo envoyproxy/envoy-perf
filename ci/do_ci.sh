@@ -43,7 +43,7 @@ if [ -n "$CIRCLECI" ]; then
     export MAKEFLAGS="-j 8"
 fi
 
-if [ "$1" -eq "coverage" ]; then
+if [ "$1" == "coverage" ]; then
     export CC=gcc
     export CXX=g++
 else
