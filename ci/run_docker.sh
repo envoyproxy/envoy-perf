@@ -2,8 +2,7 @@
 
 set -e
 
-#. ci/envoy_build_sha.sh
-
+# TODO(oschaaf): pull this sha
 ENVOY_BUILD_SHA=b3995b7c5e3846f80f6f09436043ec4c8c8f762a
 
 # We run as root and later drop permissions. This is required to setup the USER
