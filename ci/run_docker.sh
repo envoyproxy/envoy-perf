@@ -5,7 +5,7 @@ set -e
 #. ci/envoy_build_sha.sh
 
 ENVOY_BUILD_SHA=b3995b7c5e3846f80f6f09436043ec4c8c8f762a
-set -x
+
 # We run as root and later drop permissions. This is required to setup the USER
 # in useradd below, which is need for correct Python execution in the Docker
 # environment.

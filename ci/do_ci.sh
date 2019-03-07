@@ -23,13 +23,10 @@ function do_clang_tidy() {
 
 
 function do_coverage() {
-    set -x
-    set -e
-    
-    #bazel clean --expunge
     [[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
     [[ -z "${BAZEL_COVERAGE}" ]] && BAZEL_COVERAGE=bazel
     [[ -z "${VALIDATE_COVERAGE}" ]] && VALIDATE_COVERAGE=true
+    
     # This is the target that will be run to generate coverage data. It can be overridden by consumer
     # projects that want to run coverage on a different/combined target.
     [[ -z "${COVERAGE_TARGET}" ]] && COVERAGE_TARGET="//nighthawk/test/..."
@@ -38,10 +35,9 @@ function do_coverage() {
     "${BAZEL_COVERAGE}" coverage ${BAZEL_TEST_OPTIONS} \
     "${COVERAGE_TARGET}"  \
     --experimental_cc_coverage \
-    --instrumentation_filter=//nighthawk/source/...,//nighthawk/include/... \
+    --instrumentation_filter=//nighthawk/source/...,//nighthawk/include/...,-//nighthawk/hdrhistogram_c/...,-//nighthawk/envoy/... \
     --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main \
     --combined_report=lcov
-    #--define ENVOY_CONFIG_COVERAGE=1 --cxxopt="-DENVOY_CONFIG_COVERAGE=1" --copt=-DNDEBUG
     
     # Generate HTML
     declare -r COVERAGE_DIR="${SRCDIR}"/generated/coverage
@@ -57,7 +53,6 @@ function do_coverage() {
         COVERAGE_THRESHOLD=97.5
         COVERAGE_FAILED=$(echo "${COVERAGE_VALUE}<${COVERAGE_THRESHOLD}" | bc)
         
-        cat ${COVERAGE_DIR}/coverage.html
         echo "HTML coverage report is in ${COVERAGE_DIR}/coverage.html"
         
         if test ${COVERAGE_FAILED} -eq 1; then
