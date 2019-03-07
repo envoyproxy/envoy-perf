@@ -187,6 +187,18 @@ TYPED_TEST(TypedStatisticTest, ProtoOutputEmptyStats) {
   EXPECT_EQ(proto.pstdev().nanos(), 0);
 }
 
+TYPED_TEST(TypedStatisticTest, StringOutput) {
+  TypeParam a;
+
+  a.addValue(6543456);
+  a.addValue(342335);
+
+  std::string s = a.toString();
+  EXPECT_NE(std::string::npos, s.find("Count: 2."));
+  EXPECT_NE(std::string::npos, s.find("Mean: 3442.9"));
+  EXPECT_NE(std::string::npos, s.find("pstdev: 3100.5"));
+}
+
 class StatisticTest : public testing::Test {};
 
 // Note that we explicitly subject SimpleStatistic to the large
