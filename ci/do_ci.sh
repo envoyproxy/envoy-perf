@@ -19,21 +19,63 @@ function do_clang_tidy() {
     ci/run_clang_tidy.sh
 }
 
-function do_coverage() {
-    gcc -v && \
-    gcov -v && \
-    env && \
-    bazel coverage $BAZEL_TEST_OPTIONS -s --test_output=all --verbose_failures --experimental_cc_coverage nighthawk/test/...  --instrumentation_filter=//nighthawk/...,. --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main --combined_report=lcov; genhtml bazel-out/_coverage/_coverage_report.dat
-}
+#BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} -c dbg --copt=-DNDEBUG"
 
-# TODO(oschaaf): hack, this should be done in .circleci/config.yml
-git submodule update --init --recursive
+
+function do_coverage() {
+    set -x
+    set -e
+    
+    #bazel clean --expunge
+    [[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
+    [[ -z "${BAZEL_COVERAGE}" ]] && BAZEL_COVERAGE=bazel
+    [[ -z "${VALIDATE_COVERAGE}" ]] && VALIDATE_COVERAGE=true
+    # This is the target that will be run to generate coverage data. It can be overridden by consumer
+    # projects that want to run coverage on a different/combined target.
+    [[ -z "${COVERAGE_TARGET}" ]] && COVERAGE_TARGET="//nighthawk/test/..."
+    
+    # Generate coverage data.
+    "${BAZEL_COVERAGE}" coverage ${BAZEL_TEST_OPTIONS} \
+    "${COVERAGE_TARGET}"  \
+    --experimental_cc_coverage \
+    --instrumentation_filter=//nighthawk/source/...,//nighthawk/include/... \
+    --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main \
+    --combined_report=lcov
+    #--define ENVOY_CONFIG_COVERAGE=1 --cxxopt="-DENVOY_CONFIG_COVERAGE=1" --copt=-DNDEBUG
+    
+    # Generate HTML
+    declare -r COVERAGE_DIR="${SRCDIR}"/generated/coverage
+    declare -r COVERAGE_SUMMARY="${COVERAGE_DIR}/coverage_summary.txt"
+    mkdir -p "${COVERAGE_DIR}"
+    genhtml bazel-out/_coverage/_coverage_report.dat --output-directory="${COVERAGE_DIR}" | tee "${COVERAGE_SUMMARY}"
+    
+    [[ -z "${ENVOY_COVERAGE_DIR}" ]] || rsync -av "${COVERAGE_DIR}"/ "${ENVOY_COVERAGE_DIR}"
+    
+    if [ "$VALIDATE_COVERAGE" == "true" ]
+    then
+        COVERAGE_VALUE=$(grep -Po '.*lines[.]*: \K(\d|\.)*' "${COVERAGE_SUMMARY}")
+        COVERAGE_THRESHOLD=97.5
+        COVERAGE_FAILED=$(echo "${COVERAGE_VALUE}<${COVERAGE_THRESHOLD}" | bc)
+        
+        cat ${COVERAGE_DIR}/coverage.html
+        echo "HTML coverage report is in ${COVERAGE_DIR}/coverage.html"
+        
+        if test ${COVERAGE_FAILED} -eq 1; then
+            echo Code coverage ${COVERAGE_VALUE} is lower than limit of ${COVERAGE_THRESHOLD}
+            exit 1
+        else
+            echo Code coverage ${COVERAGE_VALUE} is good and higher than limit of ${COVERAGE_THRESHOLD}
+        fi
+    fi
+}
 
 # TODO(oschaaf): To avoid OOM kicking in, we throttle resources here. Revisit this later
 # to see how this was finally resolved in Envoy's code base. There is a TODO for when
 # when a later bazel version is deployed in CI here:
 # https://github.com/lizan/envoy/blob/2eb772ac7518c8fbf2a8c7acbc1bf89e548d9c86/ci/do_ci.sh#L86
 if [ -n "$CIRCLECI" ]; then
+    # TODO(oschaaf): hack, this should be done in .circleci/config.yml
+    git submodule update --init --recursive
     if [[ -f "${HOME:-/root}/.gitconfig" ]]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
