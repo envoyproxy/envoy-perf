@@ -10,6 +10,8 @@ set -e
 # projects that want to run coverage on a different/combined target.
 [[ -z "${COVERAGE_TARGET}" ]] && COVERAGE_TARGET="//nighthawk/test/..."
 
+bazel clean
+
 # Generate coverage data.
 "${BAZEL_COVERAGE}" coverage ${BAZEL_TEST_OPTIONS} \
 "${COVERAGE_TARGET}"  \
