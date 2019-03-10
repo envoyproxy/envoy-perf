@@ -21,6 +21,7 @@ envoy_cc_mock(
 envoy_cc_test(
     name = "nighthawk_test",
     srcs = [
+        "benchmark_http_client_test.cc",
         "frequency_test.cc",
         "options_test.cc",
         "platform_util_test.cc",
@@ -43,7 +44,11 @@ envoy_cc_test(
         "@envoy//source/common/filesystem:filesystem_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/stats:isolated_store_lib",
+        "@envoy//test/integration:http_integration_lib",
+        "@envoy//test/integration:integration_lib",
         "@envoy//test/mocks/event:event_mocks",
+        "@envoy//test/mocks/thread_local:thread_local_mocks",
+        "@envoy//test/server:utility_lib",
         "@envoy//test/test_common:simulated_time_system_lib",
     ],
 )
