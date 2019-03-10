@@ -125,8 +125,8 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
         *ssl_context_manager_);
 
     // TODO(oschaaf): We perform some bootstrapping ourselves here, to avoid an assert during the
-    // integration test because of a runtime/tls conflict when the message gets validated. Ideally
-    // we'd just re-use Tls::Upstream::createTransforFactory()
+    // integration test because of a runtime/tls conflict with the integration test server, when
+    // the message gets validated. Ideally we'd just re-use Tls::Upstream::createTransportFactory()
 
     auto client_config =
         std::make_unique<Envoy::Extensions::TransportSockets::Tls::ClientContextConfigImpl>(

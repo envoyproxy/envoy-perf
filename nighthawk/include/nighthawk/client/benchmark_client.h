@@ -35,9 +35,6 @@ public:
    */
   virtual StatisticPtrMap statistics() const PURE;
 
-  // TODO(oschaaf): Consider where this belongs. E.g. "Sequenceable" ?
-  // In this interface we would then have "bool startRequest()" or some such, which the sequenceable
-  // interface implementation should then redirect to.
   /**
    * @brief Tries to start a request. In open-loop mode this MUST always return true.
    *
