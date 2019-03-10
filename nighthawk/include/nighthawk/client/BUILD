@@ -21,5 +21,6 @@ envoy_basic_cc_library(
         "@envoy//source/common/common:minimal_logger_lib",
         "@envoy//source/common/common:non_copyable",
         "@envoy//source/common/protobuf",
+        "@envoy//source/common/runtime:runtime_lib",
     ],
 )
