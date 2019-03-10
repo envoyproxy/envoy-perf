@@ -284,4 +284,10 @@ TEST(StatisticTest, IdFieldWorks) {
   EXPECT_EQ(id, c.id());
 }
 
+TEST(StatisticTest, HdrStatisticOutOfRange) {
+  HdrStatistic a;
+  a.addValue(INT64_MAX);
+  EXPECT_EQ(0, a.count());
+}
+
 } // namespace Nighthawk

@@ -9,6 +9,8 @@ using namespace std::chrono_literals;
 namespace Nighthawk {
 namespace Client {
 
+static std::streambuf* buf;
+
 class OptionsImplTest : public testing::Test {
 public:
   OptionsImplTest()
@@ -23,6 +25,14 @@ public:
     }
     return std::make_unique<OptionsImpl>(argv.size(), argv.data());
   }
+
+  // We suppress stderr because errors send by tclap mess up the google test output.
+  static void SetUpTestSuite() {
+    buf = std::cerr.rdbuf();
+    std::cerr.rdbuf(nullptr);
+  }
+
+  static void TearDownTestSuite() { std::cerr.rdbuf(buf); }
 
   std::string client_name_;
   std::string good_test_uri_;
@@ -124,6 +134,9 @@ TEST_F(OptionsImplTest, BadConcurrencyValuesThrow) {
   EXPECT_THROW_WITH_REGEX(
       createOptionsImpl(fmt::format("{} {} --concurrency foo", client_name_, good_test_uri_)),
       MalformedArgvException, "Invalid value for --concurrency");
+  EXPECT_THROW_WITH_REGEX(createOptionsImpl(fmt::format("{} {} --concurrency 999999999999999999999",
+                                                        client_name_, good_test_uri_)),
+                          MalformedArgvException, "Value out of range: --concurrency");
 }
 
 TEST_F(OptionsImplTest, AutoConcurrencyValueParsedOK) {

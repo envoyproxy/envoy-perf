@@ -2,6 +2,7 @@
 #pragma once
 
 #include <functional>
+#include <memory>
 
 #include "envoy/common/pure.h"
 
@@ -41,5 +42,7 @@ public:
    */
   virtual StatisticPtrMap statistics() const PURE;
 };
+
+typedef std::unique_ptr<Sequencer> SequencerPtr;
 
 } // namespace Nighthawk
