@@ -1,7 +1,5 @@
 #include "nighthawk/source/client/stream_decoder.h"
 
-#include "nighthawk/source/client/benchmark_client_impl.h"
-
 #include "common/http/http1/codec_impl.h"
 #include "common/http/utility.h"
 

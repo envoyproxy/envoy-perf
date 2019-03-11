@@ -27,7 +27,4 @@ MockSequencer::~MockSequencer() = default;
 MockOptions::MockOptions() = default;
 MockOptions::~MockOptions() = default;
 
-MockBenchmarkClient::MockBenchmarkClient() = default;
-MockBenchmarkClient::~MockBenchmarkClient() = default;
-
 } // namespace Nighthawk
