@@ -27,12 +27,12 @@ class StreamDecoderTest : public testing::Test, public StreamDecoderCompletionCa
 public:
   StreamDecoderTest()
       : api_(thread_factory_, store_, time_system_), dispatcher_(api_.allocateDispatcher()),
-        stream_decoder_completion_callbacks_(0) {}
+        stream_decoder_completion_callbacks_(0), pool_failures_(0) {}
 
   void onComplete(bool, const Envoy::Http::HeaderMap&) override {
     stream_decoder_completion_callbacks_++;
   }
-  void onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason) override {}
+  void onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason) override { pool_failures_++; }
 
   Envoy::Thread::ThreadFactoryImplPosix thread_factory_;
   Envoy::Event::RealTimeSystem time_system_;
@@ -43,6 +43,7 @@ public:
   StreamingStatistic latency_statistic_;
   Envoy::Http::HeaderMapImpl request_headers_;
   uint64_t stream_decoder_completion_callbacks_;
+  uint64_t pool_failures_;
 };
 
 TEST_F(StreamDecoderTest, HeaderOnlyTest) {
@@ -119,6 +120,16 @@ TEST_F(StreamDecoderTest, StreamResetTest) {
   decoder->onResetStream(Envoy::Http::StreamResetReason::LocalReset);
   EXPECT_FALSE(is_complete); // these do not get reported.
   EXPECT_EQ(1, stream_decoder_completion_callbacks_);
+}
+
+TEST_F(StreamDecoderTest, PoolFailureTest) {
+  bool is_complete = false;
+  auto decoder =
+      new StreamDecoder(*dispatcher_, time_system_, *this, [&is_complete]() { is_complete = true; },
+                        connect_statistic_, latency_statistic_, request_headers_, false);
+  Envoy::Upstream::HostDescriptionConstSharedPtr ptr;
+  decoder->onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason::Overflow, ptr);
+  EXPECT_EQ(1, pool_failures_);
 }
 
 } // namespace Client
