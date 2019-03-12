@@ -1,5 +1,7 @@
 #include "nighthawk/source/client/stream_decoder.h"
 
+#include <memory>
+
 #include "common/http/http1/codec_impl.h"
 #include "common/http/utility.h"
 
@@ -23,16 +25,22 @@ void StreamDecoder::decodeData(Envoy::Buffer::Instance&, bool end_stream) {
   }
 }
 
-void StreamDecoder::decodeTrailers(Envoy::Http::HeaderMapPtr&&) { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
+void StreamDecoder::decodeTrailers(Envoy::Http::HeaderMapPtr&&) {
+  ASSERT(!complete_);
+  complete_ = true;
+  onComplete(true);
+}
 
 void StreamDecoder::onComplete(bool success) {
   if (success && measure_latencies_) {
     latency_statistic_.addValue((time_source_.monotonicTime() - request_start_).count());
   }
-  ASSERT(complete_);
+  ASSERT(!success || complete_);
   decoder_completion_callback_.onComplete(success, *response_headers_);
-  caller_completion_callback_();
-  delete this;
+  if (success) {
+    caller_completion_callback_();
+  }
+  dispatcher_.deferredDelete(std::unique_ptr<StreamDecoder>(this));
 }
 
 void StreamDecoder::onResetStream(Envoy::Http::StreamResetReason) { onComplete(false); }

@@ -3,6 +3,8 @@
 #include <functional>
 
 #include "envoy/common/time.h"
+#include "envoy/event/deferred_deletable.h"
+#include "envoy/event/dispatcher.h"
 #include "envoy/http/conn_pool.h"
 
 #include "nighthawk/common/statistic.h"
@@ -24,20 +26,20 @@ public:
  */
 class StreamDecoder : public Envoy::Http::StreamDecoder,
                       public Envoy::Http::StreamCallbacks,
-                      public Envoy::Http::ConnectionPool::Callbacks {
+                      public Envoy::Http::ConnectionPool::Callbacks,
+                      public Envoy::Event::DeferredDeletable {
 public:
-  StreamDecoder(Envoy::TimeSource& time_source,
+  StreamDecoder(Envoy::Event::Dispatcher& dispatcher, Envoy::TimeSource& time_source,
                 StreamDecoderCompletionCallback& decoder_completion_callback,
                 std::function<void()> caller_completion_callback, Statistic& connect_statistic,
                 Statistic& latency_statistic, const Envoy::Http::HeaderMap& request_headers,
                 bool measure_latencies)
-      : time_source_(time_source), decoder_completion_callback_(decoder_completion_callback),
+      : dispatcher_(dispatcher), time_source_(time_source),
+        decoder_completion_callback_(decoder_completion_callback),
         caller_completion_callback_(std::move(caller_completion_callback)),
         connect_statistic_(connect_statistic), latency_statistic_(latency_statistic),
         request_headers_(request_headers), connect_start_(time_source_.monotonicTime()),
         complete_(false), measure_latencies_(measure_latencies) {}
-
-  bool complete() { return complete_; }
 
   // Http::StreamDecoder
   void decode100ContinueHeaders(Envoy::Http::HeaderMapPtr&&) override {
@@ -62,6 +64,7 @@ public:
 private:
   void onComplete(bool success);
 
+  Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;
   StreamDecoderCompletionCallback& decoder_completion_callback_;
   std::function<void()> caller_completion_callback_;
@@ -69,8 +72,7 @@ private:
   Statistic& latency_statistic_;
   const Envoy::Http::HeaderMap& request_headers_;
   Envoy::Http::HeaderMapPtr response_headers_;
-
-  Envoy::MonotonicTime connect_start_;
+  const Envoy::MonotonicTime connect_start_;
   Envoy::MonotonicTime request_start_;
   bool complete_;
   bool measure_latencies_;
