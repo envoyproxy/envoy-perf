@@ -117,7 +117,7 @@ TEST_F(StreamDecoderTest, StreamResetTest) {
       new StreamDecoder(*dispatcher_, time_system_, *this, [&is_complete]() { is_complete = true; },
                         connect_statistic_, latency_statistic_, request_headers_, false);
   auto trailers = std::make_unique<Envoy::Http::HeaderMapImpl>();
-  decoder->onResetStream(Envoy::Http::StreamResetReason::LocalReset);
+  decoder->onResetStream(Envoy::Http::StreamResetReason::LocalReset, "fooreason");
   EXPECT_FALSE(is_complete); // these do not get reported.
   EXPECT_EQ(1, stream_decoder_completion_callbacks_);
 }
@@ -128,7 +128,9 @@ TEST_F(StreamDecoderTest, PoolFailureTest) {
       new StreamDecoder(*dispatcher_, time_system_, *this, [&is_complete]() { is_complete = true; },
                         connect_statistic_, latency_statistic_, request_headers_, false);
   Envoy::Upstream::HostDescriptionConstSharedPtr ptr;
-  decoder->onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason::Overflow, ptr);
+  decoder->onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason::Overflow, "fooreason",
+                         ptr);
+  delete decoder;
   EXPECT_EQ(1, pool_failures_);
 }
 

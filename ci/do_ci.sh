@@ -50,7 +50,6 @@ fi
 
 export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs ${CONCURRENCY}"
 export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
-export MAKEFLAGS="-j ${CONCURRENCY}"
 
 case "$1" in
     build)

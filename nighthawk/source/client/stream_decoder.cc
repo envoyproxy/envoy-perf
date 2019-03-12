@@ -43,9 +43,13 @@ void StreamDecoder::onComplete(bool success) {
   dispatcher_.deferredDelete(std::unique_ptr<StreamDecoder>(this));
 }
 
-void StreamDecoder::onResetStream(Envoy::Http::StreamResetReason) { onComplete(false); }
+void StreamDecoder::onResetStream(Envoy::Http::StreamResetReason,
+                                  absl::string_view /* transport_failure_reason */) {
+  onComplete(false);
+}
 
 void StreamDecoder::onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason reason,
+                                  absl::string_view /* transport_failure_reason */,
                                   Envoy::Upstream::HostDescriptionConstSharedPtr) {
   decoder_completion_callback_.onPoolFailure(reason);
 }

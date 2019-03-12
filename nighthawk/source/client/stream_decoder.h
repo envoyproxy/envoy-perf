@@ -51,12 +51,14 @@ public:
   void decodeMetadata(Envoy::Http::MetadataMapPtr&&) override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
 
   // Http::StreamCallbacks
-  void onResetStream(Envoy::Http::StreamResetReason reason) override;
+  void onResetStream(Envoy::Http::StreamResetReason reason,
+                     absl::string_view transport_failure_reason) override;
   void onAboveWriteBufferHighWatermark() override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
   void onBelowWriteBufferLowWatermark() override { NOT_IMPLEMENTED_GCOVR_EXCL_LINE; }
 
   // ConnectionPool::Callbacks
   void onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason reason,
+                     absl::string_view transport_failure_reason,
                      Envoy::Upstream::HostDescriptionConstSharedPtr host) override;
   void onPoolReady(Envoy::Http::StreamEncoder& encoder,
                    Envoy::Upstream::HostDescriptionConstSharedPtr host) override;
