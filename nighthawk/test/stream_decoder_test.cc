@@ -78,6 +78,8 @@ TEST_F(StreamDecoderTest, TrailerTest) {
   auto decoder =
       new StreamDecoder(*dispatcher_, time_system_, *this, [&is_complete]() { is_complete = true; },
                         connect_statistic_, latency_statistic_, request_headers_, false);
+  auto headers = std::make_unique<Envoy::Http::HeaderMapImpl>();
+  decoder->decodeHeaders(std::move(headers), false);
   auto trailers = std::make_unique<Envoy::Http::HeaderMapImpl>();
   decoder->decodeTrailers(std::move(trailers));
   EXPECT_TRUE(is_complete);
@@ -116,6 +118,8 @@ TEST_F(StreamDecoderTest, StreamResetTest) {
   auto decoder =
       new StreamDecoder(*dispatcher_, time_system_, *this, [&is_complete]() { is_complete = true; },
                         connect_statistic_, latency_statistic_, request_headers_, false);
+  auto headers = std::make_unique<Envoy::Http::HeaderMapImpl>();
+  decoder->decodeHeaders(std::move(headers), false);
   auto trailers = std::make_unique<Envoy::Http::HeaderMapImpl>();
   decoder->onResetStream(Envoy::Http::StreamResetReason::LocalReset, "fooreason");
   EXPECT_FALSE(is_complete); // these do not get reported.
@@ -130,7 +134,6 @@ TEST_F(StreamDecoderTest, PoolFailureTest) {
   Envoy::Upstream::HostDescriptionConstSharedPtr ptr;
   decoder->onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason::Overflow, "fooreason",
                          ptr);
-  delete decoder;
   EXPECT_EQ(1, pool_failures_);
 }
 
