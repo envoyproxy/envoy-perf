@@ -6,5 +6,7 @@ compile_commands.json
 .cache
 generated/
 .local
+.cmake
+.rnd
 bazel.output.txt
 measurements/

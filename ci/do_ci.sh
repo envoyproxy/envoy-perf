@@ -37,6 +37,12 @@ function setup_clang_toolchain() {
   echo "$CC/$CXX toolchain configured"
 }
 
+function override_linker_with_lld() {
+  WORK_DIR=`mktemp -d -p "$DIR"`
+  export PATH="$WORK_DIR:/usr/lib/llvm-7/bin:$PATH"
+  ln -s $(which ld.lld) "$WORK_DIR/ld"
+}
+
 function run_bazel() {
   declare -r BAZEL_OUTPUT="${SRCDIR}"/bazel.output.txt
   bazel $* | tee "${BAZEL_OUTPUT}"
@@ -56,10 +62,7 @@ function run_bazel() {
 function do_asan() {
   echo "bazel ASAN/UBSAN debug build with tests"
   echo "Building and testing envoy tests..."
-  #clang -v
-  #touch foo.c
-  #lang -ccc-print-bindings foo.c
-  #exit
+  override_linker_with_lld
   cd "${SRCDIR}"
   run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-asan //nighthawk/test:nighthawk_test
 }
@@ -68,6 +71,7 @@ function do_asan() {
 function do_tsan() {
   echo "bazel TSAN debug build with tests"
   echo "Building and testing envoy tests..."
+  override_linker_with_lld
   cd "${SRCDIR}"
   run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-tsan //nighthawk/test:nighthawk_test
 }
@@ -87,7 +91,7 @@ fi
 
 [[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
 NUM_CPUS=32
-
+export BAZEL_BUILD_EXTRA_OPTIONS="${BAZEL_BUILD_EXTRA_OPTIONS}"
 export BAZEL_BUILD_OPTIONS=" \
   --verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
   --jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"

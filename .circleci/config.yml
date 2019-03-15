@@ -62,5 +62,5 @@ workflows:
       - clang_tidy
       #      - test_with_valgrind
       - coverage
-      # - asan
-      # - tsan
+      - asan
+      - tsan
