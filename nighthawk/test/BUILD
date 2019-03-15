@@ -27,9 +27,12 @@ envoy_cc_test(
         "rate_limiter_test.cc",
         "sequencer_test.cc",
         "statistic_test.cc",
+        "stream_decoder_test.cc",
         "utility_test.cc",
     ],
-    data = ["test_data/hdr_proto_json.gold"],
+    data = [
+        "test_data/hdr_proto_json.gold",
+    ],
     repository = "@envoy",
     deps = [
         "//nighthawk/source/client:nighthawk_client_lib",
@@ -38,7 +41,11 @@ envoy_cc_test(
         "@envoy//source/common/filesystem:filesystem_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/stats:isolated_store_lib",
+        "@envoy//test/integration:http_integration_lib",
+        "@envoy//test/integration:integration_lib",
         "@envoy//test/mocks/event:event_mocks",
+        "@envoy//test/mocks/thread_local:thread_local_mocks",
+        "@envoy//test/server:utility_lib",
         "@envoy//test/test_common:simulated_time_system_lib",
     ],
 )

@@ -23,6 +23,8 @@ function do_coverage() {
     ci/run_coverage.sh
 }
 
+CONCURRENCY=8
+
 # TODO(oschaaf): To avoid OOM kicking in, we throttle resources here. Revisit this later
 # to see how this was finally resolved in Envoy's code base. There is a TODO for when
 # when a later bazel version is deployed in CI here:
@@ -34,19 +36,20 @@ if [ -n "$CIRCLECI" ]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
     fi
-    export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs 8"
-    export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs 8 --local_test_jobs=8"
-    export MAKEFLAGS="-j 8"
 fi
 
 if [ "$1" == "coverage" ]; then
     export CC=gcc
     export CXX=g++
+    CONCURRENCY=6
 else
     export PATH=/usr/lib/llvm-7/bin:$PATH
     export CC=clang
     export CXX=clang++
 fi
+
+export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs ${CONCURRENCY}"
+export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
 
 case "$1" in
     build)
