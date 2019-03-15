@@ -21,7 +21,11 @@ envoy_cc_mock(
 envoy_cc_test(
     name = "nighthawk_test",
     srcs = [
+        "benchmark_http_client_test.cc",
+        "client_test.cc",
+        "client_worker_test.cc",
         "frequency_test.cc",
+        "option_interpreter_test.cc",
         "options_test.cc",
         "platform_util_test.cc",
         "rate_limiter_test.cc",
@@ -31,7 +35,10 @@ envoy_cc_test(
         "utility_test.cc",
     ],
     data = [
+        "certs.sh",
+        "test_data/benchmark_http_client_test_envoy.yaml",
         "test_data/hdr_proto_json.gold",
+        "test_data/lorem_ipsum.txt",
     ],
     repository = "@envoy",
     deps = [

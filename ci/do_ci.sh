@@ -23,7 +23,54 @@ function do_coverage() {
     ci/run_coverage.sh
 }
 
-CONCURRENCY=8
+function setup_gcc_toolchain() {
+  export CC=gcc
+  export CXX=g++
+  echo "$CC/$CXX toolchain configured"
+}
+
+function setup_clang_toolchain() {
+  export PATH=/usr/lib/llvm-7/bin:$PATH
+  export CC=clang
+  export CXX=clang++
+  export ASAN_SYMBOLIZER_PATH=/usr/lib/llvm-7/bin/llvm-symbolizer
+  echo "$CC/$CXX toolchain configured"
+}
+
+function run_bazel() {
+  declare -r BAZEL_OUTPUT="${SRCDIR}"/bazel.output.txt
+  bazel $* | tee "${BAZEL_OUTPUT}"
+  declare BAZEL_STATUS="${PIPESTATUS[0]}"
+  if [ "${BAZEL_STATUS}" != "0" ]
+  then
+    declare -r FAILED_TEST_LOGS="$(grep "  /build.*test.log" "${BAZEL_OUTPUT}" | sed -e 's/  \/build.*\/testlogs\/\(.*\)/\1/')"
+    cd bazel-testlogs
+    for f in ${FAILED_TEST_LOGS}
+    do
+      cp --parents -f $f "${ENVOY_FAILED_TEST_LOGS}"
+    done
+    exit "${BAZEL_STATUS}"
+  fi
+}
+
+function do_asan() {
+  echo "bazel ASAN/UBSAN debug build with tests"
+  echo "Building and testing envoy tests..."
+  #clang -v
+  #touch foo.c
+  #lang -ccc-print-bindings foo.c
+  #exit
+  cd "${SRCDIR}"
+  run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-asan //nighthawk/test:nighthawk_test
+}
+
+
+function do_tsan() {
+  echo "bazel TSAN debug build with tests"
+  echo "Building and testing envoy tests..."
+  cd "${SRCDIR}"
+  run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-tsan //nighthawk/test:nighthawk_test
+}
 
 # TODO(oschaaf): To avoid OOM kicking in, we throttle resources here. Revisit this later
 # to see how this was finally resolved in Envoy's code base. There is a TODO for when
@@ -38,18 +85,23 @@ if [ -n "$CIRCLECI" ]; then
     fi
 fi
 
-if [ "$1" == "coverage" ]; then
-    export CC=gcc
-    export CXX=g++
-    CONCURRENCY=6
-else
-    export PATH=/usr/lib/llvm-7/bin:$PATH
-    export CC=clang
-    export CXX=clang++
-fi
+[[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
+NUM_CPUS=32
 
-export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs ${CONCURRENCY}"
-export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
+export BAZEL_BUILD_OPTIONS=" \
+  --verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
+  --jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"
+export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
+  --test_env=UBSAN_OPTIONS=print_stacktrace=1 \
+  --cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
+
+
+setup_clang_toolchain
+
+if [ "$1" == "coverage" ]; then
+    setup_gcc_toolchain
+    CONCURRENCY=6
+fi
 
 case "$1" in
     build)
@@ -68,8 +120,14 @@ case "$1" in
     coverage)
         do_coverage
     ;;
+    asan)
+        do_asan
+    ;;
+    tsan)
+        do_tsan
+    ;;
     *)
-        echo "must be one of [build,test,clang_tidy,test_with_valgrind,coverage]"
+        echo "must be one of [build,test,clang_tidy,test_with_valgrind,coverage,asan,tsan]"
         exit 1
     ;;
 esac

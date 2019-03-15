@@ -1,6 +1,5 @@
 references:
-  envoy-build-image: &envoy-build-image
-    envoyproxy/envoy-build:b3995b7c5e3846f80f6f09436043ec4c8c8f762a
+  envoy-build-image: &envoy-build-image envoyproxy/envoy-build:b3995b7c5e3846f80f6f09436043ec4c8c8f762a
 
 version: 2
 jobs:
@@ -39,6 +38,20 @@ jobs:
     steps:
       - checkout
       - run: ci/do_ci.sh coverage
+  asan:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh asan
+  tsan:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh tsan
 
 workflows:
   version: 2
@@ -47,5 +60,7 @@ workflows:
       - build
       - test
       - clang_tidy
-#      - test_with_valgrind
+      #      - test_with_valgrind
       - coverage
+      # - asan
+      # - tsan

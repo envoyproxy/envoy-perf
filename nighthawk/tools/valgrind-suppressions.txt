@@ -10,3 +10,143 @@
    fun:__libc_csu_init
    fun:(below main)
 }
+# TODO(oschaaf): check out these protobuf suppressions. 
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:CreateInternal<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:DoCreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateNoMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:Create<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:_ZN6google8protobuf8internal29InternalMetadataWithArenaBaseINS0_15UnknownFieldSetENS1_25InternalMetadataWithArenaEE27mutable_unknown_fields_slowEv
+   fun:mutable_unknown_fields
+   fun:_ZN6google8protobuf12FieldOptions27MergePartialFromCodedStreamEPNS0_2io16CodedInputStreamE
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineMergePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineParsePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_120InlineParseFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf11MessageLite15ParseFromStringERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   ...
+   fun:_ZN6google8protobuf17DescriptorBuilder15AllocateOptionsINS0_15FieldDescriptorEEEvRKNT_11OptionsTypeEPS4_i
+   fun:_ZN6google8protobuf17DescriptorBuilder21BuildFieldOrExtensionERKNS0_20FieldDescriptorProtoEPKNS0_10DescriptorEPNS0_15FieldDescriptorEb
+   fun:_ZN6google8protobuf17DescriptorBuilder10BuildFieldERKNS0_20FieldDescriptorProtoEPKNS0_10DescriptorEPNS0_15FieldDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder12BuildMessageERKNS0_15DescriptorProtoEPKNS0_10DescriptorEPS5_
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:CreateInternal<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:DoCreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateNoMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:Create<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:_ZN6google8protobuf8internal29InternalMetadataWithArenaBaseINS0_15UnknownFieldSetENS1_25InternalMetadataWithArenaEE27mutable_unknown_fields_slowEv
+   fun:mutable_unknown_fields
+   fun:_ZN6google8protobuf13MethodOptions27MergePartialFromCodedStreamEPNS0_2io16CodedInputStreamE
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineMergePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineParsePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_120InlineParseFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf11MessageLite15ParseFromStringERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6google8protobuf17DescriptorBuilder19AllocateOptionsImplINS0_16MethodDescriptorEEEvRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESB_RKNT_11OptionsTypeEPSC_RKSt6vectorIiSaIiEE
+   fun:_ZN6google8protobuf17DescriptorBuilder15AllocateOptionsINS0_16MethodDescriptorEEEvRKNT_11OptionsTypeEPS4_i
+   fun:_ZN6google8protobuf17DescriptorBuilder11BuildMethodERKNS0_21MethodDescriptorProtoEPKNS0_17ServiceDescriptorEPNS0_16MethodDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder12BuildServiceERKNS0_22ServiceDescriptorProtoEPKvPNS0_17ServiceDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder13BuildFileImplERKNS0_19FileDescriptorProtoE
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:CreateInternal<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:DoCreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateNoMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:Create<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:_ZN6google8protobuf8internal29InternalMetadataWithArenaBaseINS0_15UnknownFieldSetENS1_25InternalMetadataWithArenaEE27mutable_unknown_fields_slowEv
+   fun:mutable_unknown_fields
+   fun:_ZN6google8protobuf11FileOptions27MergePartialFromCodedStreamEPNS0_2io16CodedInputStreamE
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineMergePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineParsePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_120InlineParseFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf11MessageLite15ParseFromStringERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6google8protobuf17DescriptorBuilder19AllocateOptionsImplINS0_14FileDescriptorEEEvRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESB_RKNT_11OptionsTypeEPSC_RKSt6vectorIiSaIiEE
+   fun:_ZN6google8protobuf17DescriptorBuilder15AllocateOptionsERKNS0_11FileOptionsEPNS0_14FileDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder13BuildFileImplERKNS0_19FileDescriptorProtoE
+   fun:_ZN6google8protobuf17DescriptorBuilder9BuildFileERKNS0_19FileDescriptorProtoE
+   fun:_ZNK6google8protobuf14DescriptorPool21BuildFileFromDatabaseERKNS0_19FileDescriptorProtoE
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:CreateInternal<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:DoCreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateNoMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:Create<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:_ZN6google8protobuf8internal29InternalMetadataWithArenaBaseINS0_15UnknownFieldSetENS1_25InternalMetadataWithArenaEE27mutable_unknown_fields_slowEv
+   fun:mutable_unknown_fields
+   fun:_ZN6google8protobuf11EnumOptions27MergePartialFromCodedStreamEPNS0_2io16CodedInputStreamE
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineMergePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineParsePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_120InlineParseFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf11MessageLite15ParseFromStringERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6google8protobuf17DescriptorBuilder19AllocateOptionsImplINS0_14EnumDescriptorEEEvRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESB_RKNT_11OptionsTypeEPSC_RKSt6vectorIiSaIiEE
+   fun:_ZN6google8protobuf17DescriptorBuilder15AllocateOptionsINS0_14EnumDescriptorEEEvRKNT_11OptionsTypeEPS4_i
+   fun:_ZN6google8protobuf17DescriptorBuilder9BuildEnumERKNS0_19EnumDescriptorProtoEPKNS0_10DescriptorEPNS0_14EnumDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder12BuildMessageERKNS0_15DescriptorProtoEPKNS0_10DescriptorEPS5_
+   fun:_ZN6google8protobuf17DescriptorBuilder13BuildFileImplERKNS0_19FileDescriptorProtoE
+}
+
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:CreateInternal<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:DoCreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateNoMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:Create<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:_ZN6google8protobuf8internal29InternalMetadataWithArenaBaseINS0_15UnknownFieldSetENS1_25InternalMetadataWithArenaEE27mutable_unknown_fields_slowEv
+   fun:mutable_unknown_fields
+   fun:_ZN6google8protobuf12OneofOptions27MergePartialFromCodedStreamEPNS0_2io16CodedInputStreamE
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineMergePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineParsePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_120InlineParseFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf11MessageLite15ParseFromStringERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6google8protobuf17DescriptorBuilder19AllocateOptionsImplINS0_15OneofDescriptorEEEvRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESB_RKNT_11OptionsTypeEPSC_RKSt6vectorIiSaIiEE
+   fun:_ZN6google8protobuf17DescriptorBuilder15AllocateOptionsINS0_15OneofDescriptorEEEvRKNT_11OptionsTypeEPS4_i
+   fun:_ZN6google8protobuf17DescriptorBuilder10BuildOneofERKNS0_20OneofDescriptorProtoEPNS0_10DescriptorEPNS0_15OneofDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder12BuildMessageERKNS0_15DescriptorProtoEPKNS0_10DescriptorEPS5_
+   fun:_ZN6google8protobuf17DescriptorBuilder12BuildMessageERKNS0_15DescriptorProtoEPKNS0_10DescriptorEPS5_
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:CreateInternal<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:DoCreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateMaybeMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:CreateNoMessage<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:Create<google::protobuf::internal::InternalMetadataWithArenaBase<google::protobuf::UnknownFieldSet, google::protobuf::internal::InternalMetadataWithArena>::Container>
+   fun:_ZN6google8protobuf8internal29InternalMetadataWithArenaBaseINS0_15UnknownFieldSetENS1_25InternalMetadataWithArenaEE27mutable_unknown_fields_slowEv
+   fun:mutable_unknown_fields
+   fun:_ZN6google8protobuf12OneofOptions27MergePartialFromCodedStreamEPNS0_2io16CodedInputStreamE
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineMergePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_127InlineParsePartialFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf12_GLOBAL__N_120InlineParseFromArrayEPKviPNS0_11MessageLiteEb
+   fun:_ZN6google8protobuf11MessageLite15ParseFromStringERKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEE
+   fun:_ZN6google8protobuf17DescriptorBuilder19AllocateOptionsImplINS0_15OneofDescriptorEEEvRKNSt7__cxx1112basic_stringIcSt11char_traitsIcESaIcEEESB_RKNT_11OptionsTypeEPSC_RKSt6vectorIiSaIiEE
+   fun:_ZN6google8protobuf17DescriptorBuilder15AllocateOptionsINS0_15OneofDescriptorEEEvRKNT_11OptionsTypeEPS4_i
+   fun:_ZN6google8protobuf17DescriptorBuilder10BuildOneofERKNS0_20OneofDescriptorProtoEPNS0_10DescriptorEPNS0_15OneofDescriptorE
+   fun:_ZN6google8protobuf17DescriptorBuilder12BuildMessageERKNS0_15DescriptorProtoEPKNS0_10DescriptorEPS5_
+   fun:_ZN6google8protobuf17DescriptorBuilder13BuildFileImplERKNS0_19FileDescriptorProtoE
+}
