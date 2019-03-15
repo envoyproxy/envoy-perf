@@ -18,10 +18,12 @@ api_proto_library_internal(
 envoy_cc_library(
     name = "nighthawk_client_lib",
     srcs = [
+        "benchmark_client_impl.cc",
         "options_impl.cc",
         "stream_decoder.cc",
     ],
     hdrs = [
+        "benchmark_client_impl.h",
         "options_impl.h",
         "stream_decoder.h",
     ],

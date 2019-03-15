@@ -37,7 +37,7 @@ using SequencerTarget = std::function<bool(std::function<void()>)>;
  */
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
-  SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
+  SequencerImpl(const PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
                 Envoy::TimeSource& time_source, RateLimiterPtr&& rate_limiter,
                 SequencerTarget target, StatisticPtr&& latency_statistic,
                 StatisticPtr&& blocked_statistic, std::chrono::microseconds duration,
@@ -102,7 +102,7 @@ protected:
 
 private:
   SequencerTarget target_;
-  PlatformUtil& platform_util_;
+  const PlatformUtil& platform_util_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;
   std::unique_ptr<RateLimiter> rate_limiter_;
