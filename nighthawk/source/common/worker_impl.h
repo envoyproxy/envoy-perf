@@ -1,0 +1,39 @@
+#pragma once
+
+#include "envoy/api/api.h"
+#include "envoy/common/time.h"
+#include "envoy/runtime/runtime.h"
+#include "envoy/stats/store.h"
+#include "envoy/thread/thread.h"
+
+#include "common/common/logger.h"
+
+#include "nighthawk/common/worker.h"
+
+namespace Nighthawk {
+
+class WorkerImpl : virtual public Worker {
+public:
+  WorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
+             Envoy::Stats::StorePtr&& store);
+  ~WorkerImpl() override;
+
+  void start() override;
+  void waitForCompletion() override;
+
+protected:
+  Envoy::Thread::ThreadFactory& thread_factory_;
+  Envoy::Event::DispatcherPtr dispatcher_;
+  Envoy::ThreadLocal::Instance& tls_;
+  Envoy::Stats::StorePtr store_;
+  std::unique_ptr<Envoy::Runtime::Loader> runtime_;
+  std::unique_ptr<Envoy::Runtime::RandomGenerator> generator_;
+  Envoy::TimeSource& time_source_;
+
+private:
+  Envoy::Thread::ThreadPtr thread_;
+  bool started_;
+  bool completed_;
+};
+
+} // namespace Nighthawk
