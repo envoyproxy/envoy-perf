@@ -39,8 +39,9 @@ function setup_clang_toolchain() {
 
 function override_linker_with_lld() {
   WORK_DIR=`mktemp -d -p "$DIR"`
-  export PATH="$WORK_DIR:/usr/lib/llvm-7/bin:$PATH"
+  export PATH="$WORK_DIR:$PATH"
   ln -s $(which ld.lld) "$WORK_DIR/ld"
+  ln -s $(which ld.lld) "$WORK_DIR/ld.gold"
 }
 
 function run_bazel() {
