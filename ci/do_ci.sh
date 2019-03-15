@@ -91,15 +91,8 @@ if [ -n "$CIRCLECI" ]; then
 fi
 
 [[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
-NUM_CPUS=32
-export BAZEL_BUILD_EXTRA_OPTIONS="${BAZEL_BUILD_EXTRA_OPTIONS}"
-export BAZEL_BUILD_OPTIONS=" \
-  --verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
-  --jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"
-export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
-  --test_env=UBSAN_OPTIONS=print_stacktrace=1 \
-  --cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
 
+NUM_CPUS=12
 
 setup_clang_toolchain
 
@@ -107,6 +100,14 @@ if [ "$1" == "coverage" ]; then
     setup_gcc_toolchain
     CONCURRENCY=6
 fi
+
+export BAZEL_BUILD_EXTRA_OPTIONS="${BAZEL_BUILD_EXTRA_OPTIONS}"
+export BAZEL_BUILD_OPTIONS=" \
+  --verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
+  --jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"
+export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
+  --test_env=UBSAN_OPTIONS=print_stacktrace=1 \
+  --cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
 
 case "$1" in
     build)
