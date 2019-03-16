@@ -39,9 +39,23 @@ TEST_F(ClientTest, NormalRun) {
   EXPECT_TRUE(program.run());
 }
 
-// TODO(oschaaf): bubble up failures and make sure false gets returned.
-TEST_F(ClientTest, DISABLED_BadRun) {
-  Main program(createOptionsImpl("foo --duration 1 --rps 1 --h2 https://127.0.0.1:5/"));
+TEST_F(ClientTest, AutoConcurrencyRun) {
+  std::vector<const char*> argv;
+  argv.push_back("foo");
+  argv.push_back("--concurrency");
+  argv.push_back("auto");
+  argv.push_back("--duration");
+  argv.push_back("1");
+  argv.push_back("--rps");
+  argv.push_back("1");
+  argv.push_back("https://www.google.com/");
+
+  Main program(argv.size(), argv.data());
+  EXPECT_TRUE(program.run());
+}
+
+TEST_F(ClientTest, BadRun) {
+  Main program(createOptionsImpl("foo --duration 1 --rps 1 --h2 https://unresolveable.host/"));
   EXPECT_FALSE(program.run());
 }
 

@@ -23,7 +23,8 @@ public:
 private:
   uint32_t determineConcurrency() const;
   void configureComponentLogLevels(spdlog::level::level_enum level);
-  std::vector<StatisticPtr> runWorkers() const;
+  bool runWorkers(OptionInterpreter& option_interpreter,
+                  std::vector<StatisticPtr>& merged_statistics) const;
   std::vector<StatisticPtr>
   mergeWorkerStatistics(const OptionInterpreter& option_interpreter,
                         const std::vector<ClientWorkerPtr>& workers) const;

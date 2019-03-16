@@ -21,6 +21,7 @@ public:
                    int worker_number, uint64_t start_delay_usec);
 
   StatisticPtrMap statistics() const override;
+  bool success() const override { return success_; }
 
 protected:
   void work() override;
@@ -34,6 +35,7 @@ private:
   std::unique_ptr<Sequencer> sequencer_;
   const int worker_number_;
   const uint64_t start_delay_usec_;
+  bool success_;
 };
 
 typedef std::unique_ptr<ClientWorkerImpl> ClientWorkerImplPtr;

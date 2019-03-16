@@ -9,7 +9,7 @@ ClientWorkerImpl::ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy:
                                    Envoy::Stats::StorePtr&& store, int worker_number,
                                    uint64_t start_delay_usec)
     : WorkerImpl(api, tls, std::move(store)), worker_number_(worker_number),
-      start_delay_usec_(start_delay_usec) {
+      start_delay_usec_(start_delay_usec), success_(false) {
   benchmark_client_ = option_interpreter.createBenchmarkClient(api, *dispatcher_);
   sequencer_ = option_interpreter.createSequencer(time_source_, *dispatcher_, *benchmark_client_);
 }
@@ -62,6 +62,7 @@ void ClientWorkerImpl::work() {
     sequencer_->waitForCompletion();
     logResult();
     benchmark_client_->terminate();
+    success_ = true;
   }
   dispatcher_->exit();
 }

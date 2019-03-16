@@ -33,6 +33,7 @@ envoy_cc_test(
         "statistic_test.cc",
         "stream_decoder_test.cc",
         "utility_test.cc",
+        "worker_test.cc",
     ],
     data = [
         "certs.sh",

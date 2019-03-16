@@ -126,11 +126,7 @@ HdrStatistic::HdrStatistic() : histogram_(nullptr) {
 
   int status = hdr_init(1 /* min trackable value */, max_latency, HdrStatistic::SignificantDigits,
                         &histogram_);
-  if (status != 0) {
-    ENVOY_LOG(error, "Failed to initialize HdrHistogram: {}.", status);
-    throw StatisticException();
-  }
-
+  ASSERT(status == 0);
   ASSERT(histogram_ != nullptr);
 }
 

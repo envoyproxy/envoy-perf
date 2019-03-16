@@ -14,8 +14,6 @@
 
 #include "envoy/network/transport_socket.h"
 
-#include "openssl/ssl.h" // TLS1_2_VERSION etc
-
 namespace Nighthawk {
 namespace Ssl {
 

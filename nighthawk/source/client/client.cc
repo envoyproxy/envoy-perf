@@ -115,16 +115,8 @@ Main::mergeWorkerStatistics(const OptionInterpreter& option_interpreter,
   return merged_statistics;
 }
 
-std::vector<StatisticPtr> Main::runWorkers() const {
-  uint32_t concurrency = determineConcurrency();
-  // We try to offset the start of each thread so that workers will execute tasks evenly
-  // spaced in time.
-  // E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100 usec).
-  // We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
-  double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
-
-  OptionInterpreterImpl option_interpreter(*options_);
-
+bool Main::runWorkers(OptionInterpreter& option_interpreter,
+                      std::vector<StatisticPtr>& merged_statistics) const {
   auto thread_factory = Envoy::Thread::ThreadFactoryImplPosix();
   Envoy::Stats::StorePtr store = option_interpreter.createStatsStore();
   Envoy::Event::RealTimeSystem time_system;
@@ -135,6 +127,13 @@ std::vector<StatisticPtr> Main::runWorkers() const {
   tls.registerThread(*main_dispatcher, true);
   Envoy::Runtime::RandomGeneratorImpl generator;
   Envoy::Runtime::LoaderImpl runtime(generator, *store, tls);
+
+  uint32_t concurrency = determineConcurrency();
+  // We try to offset the start of each thread so that workers will execute tasks evenly
+  // spaced in time.
+  // E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100 usec).
+  // We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
+  double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
 
   // We're going to fire up #concurrency benchmark loops and wait for them to complete.
   std::vector<ClientWorkerPtr> workers;
@@ -148,15 +147,17 @@ std::vector<StatisticPtr> Main::runWorkers() const {
     w->start();
   }
 
+  bool ok = true;
+
   for (auto& w : workers) {
     w->waitForCompletion();
+    ok = ok && w->success();
   }
-
-  auto merged_statistics = mergeWorkerStatistics(option_interpreter, workers);
-
-  // Compute the merged statistics.
   tls.shutdownGlobalThreading();
-  return merged_statistics;
+  if (ok) {
+    merged_statistics = mergeWorkerStatistics(option_interpreter, workers);
+  }
+  return ok;
 }
 
 bool Main::run() {
@@ -164,34 +165,41 @@ bool Main::run() {
   auto logging_context = std::make_unique<Envoy::Logger::Context>(
       spdlog::level::from_str(options_->verbosity()), "[%T.%f][%t][%L] %v", log_lock);
 
-  auto merged_statistics = runWorkers();
+  OptionInterpreterImpl option_interpreter(*options_);
 
-  outputCliStats(merged_statistics);
-  // Output the statistics to the proto
-  nighthawk::client::Output output;
-  output.set_allocated_options(options_->toCommandLineOptions().release());
+  std::vector<StatisticPtr> merged_statistics;
+  bool ok = runWorkers(option_interpreter, merged_statistics);
+  if (ok) {
+    outputCliStats(merged_statistics);
+    // Output the statistics to the proto
+    nighthawk::client::Output output;
+    output.set_allocated_options(options_->toCommandLineOptions().release());
 
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  output.mutable_timestamp()->set_seconds(tv.tv_sec);
-  output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    output.mutable_timestamp()->set_seconds(tv.tv_sec);
+    output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
 
-  for (auto& statistic : merged_statistics) {
-    *(output.add_statistics()) = statistic->toProto();
+    for (auto& statistic : merged_statistics) {
+      *(output.add_statistics()) = statistic->toProto();
+    }
+
+    std::string str;
+    google::protobuf::util::JsonPrintOptions options;
+    google::protobuf::util::MessageToJsonString(output, &str, options);
+
+    mkdir("measurements", 0777);
+    std::ofstream stream;
+    int64_t epoch_seconds = std::chrono::system_clock::now().time_since_epoch().count();
+    std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
+    stream.open(filename);
+    stream << str;
+    ENVOY_LOG(info, "Done. Wrote {}.", filename);
+  } else {
+    ENVOY_LOG(error, "Error occurred.");
   }
 
-  std::string str;
-  google::protobuf::util::JsonPrintOptions options;
-  google::protobuf::util::MessageToJsonString(output, &str, options);
-
-  mkdir("measurements", 0777);
-  std::ofstream stream;
-  int64_t epoch_seconds = std::chrono::system_clock::now().time_since_epoch().count();
-  std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
-  stream.open(filename);
-  stream << str;
-  ENVOY_LOG(info, "Done. Wrote {}.", filename);
-  return true;
+  return ok;
 }
 
 } // namespace Client

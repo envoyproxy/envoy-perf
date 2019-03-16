@@ -20,6 +20,14 @@ public:
    * @return StatisticPtrMap A map of Statistics keyed by id.
    */
   virtual StatisticPtrMap statistics() const PURE;
+
+  /**
+   * @brief Returns true iff the worker ran and completed successfully.
+   *
+   * @return true If the work that was performed was successfully completed.
+   * @return false If the work that was performed was not succesfully completed.
+   */
+  virtual bool success() const PURE;
 };
 
 typedef std::unique_ptr<ClientWorker> ClientWorkerPtr;
