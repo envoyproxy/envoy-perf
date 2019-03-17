@@ -35,7 +35,8 @@ public:
 };
 
 TEST_F(ClientTest, NormalRun) {
-  Main program(createOptionsImpl("foo --duration 1 --rps 1 --h2 https://www.google.com/"));
+  Main program(
+      createOptionsImpl("foo --duration 1 --rps 1 --verbosity error --h2 https://www.google.com/"));
   EXPECT_TRUE(program.run());
 }
 
@@ -48,6 +49,8 @@ TEST_F(ClientTest, AutoConcurrencyRun) {
   argv.push_back("1");
   argv.push_back("--rps");
   argv.push_back("1");
+  argv.push_back("--verbosity");
+  argv.push_back("error");
   argv.push_back("https://www.google.com/");
 
   Main program(argv.size(), argv.data());
@@ -55,7 +58,8 @@ TEST_F(ClientTest, AutoConcurrencyRun) {
 }
 
 TEST_F(ClientTest, BadRun) {
-  Main program(createOptionsImpl("foo --duration 1 --rps 1 --h2 https://unresolveable.host/"));
+  Main program(createOptionsImpl(
+      "foo --duration 1 --rps 1 --verbosity error --h2 https://unresolveable.host/"));
   EXPECT_FALSE(program.run());
 }
 

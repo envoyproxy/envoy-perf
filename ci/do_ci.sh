@@ -37,16 +37,20 @@ function setup_clang_toolchain() {
     echo "$CC/$CXX toolchain configured"
 }
 
+# This overrides both ld and ld.gold with llvm's ld.lld.
 function override_linker_with_lld() {
     WORK_DIR=`mktemp -d -p "$DIR"`
     export PATH="$WORK_DIR:$PATH"
     ln -s $(which ld.lld) "$WORK_DIR/ld"
+    # We write a script to call ld.lld as 'ld' because it objects to being
+    # called `ld.gold` on some systems.
     script="#!/bin/bash
 $WORK_DIR/ld \$@
 "
     echo "$script" > "$WORK_DIR/ld.gold"
     chmod +x "$WORK_DIR/ld.gold"
     echo "lld linker override in place:"
+    # As a test, we output the version of ld.lld, which has some diagnostic value as well.
     $WORK_DIR/ld.gold -v
 }
 
@@ -60,6 +64,7 @@ function run_bazel() {
         cd bazel-testlogs
         for f in ${FAILED_TEST_LOGS}
         do
+            echo "Failed test log ${f}"
             cp --parents -f $f "${ENVOY_FAILED_TEST_LOGS}"
         done
         exit "${BAZEL_STATUS}"

@@ -1,17 +1,71 @@
 #include "nighthawk/source/client/options_impl.h"
 
 #include <cmath>
+#include <sstream>
 
 #include "tclap/CmdLine.h"
+
+#include "common/common/assert.h"
+#include "common/common/logger.h"
 
 #include "nighthawk/source/common/utility.h"
 
 namespace Nighthawk {
 namespace Client {
 
+// TODO(oschaaf): Add direct test coverage for this one.
+/**
+ * Forwards TCLAP output to Envoys logging system.
+ * Basically this wraps TCLAP's StdOutput implementation but forwards to a different stream.
+ * https://github.com/maddouri/tclap/blob/1e1cc4fb9abbc4bfcd62c73085c3c446fca681dd/include/tclap/StdOutput.h
+ */
+class ClientCmdLineOutputImpl : public TCLAP::StdOutput,
+                                public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
+public:
+  void version(TCLAP::CmdLineInterface& cmd) override {
+    ENVOY_LOG(info, "{} version: {}\n\n", cmd.getProgramName(), cmd.getVersion());
+  }
+
+  void usage(TCLAP::CmdLineInterface& cmd) override {
+    std::stringstream s;
+    s << std::endl << "USAGE: " << std::endl << std::endl;
+    _shortUsage(cmd, s);
+    s << std::endl << std::endl << "Where: " << std::endl << std::endl;
+    _longUsage(cmd, s);
+    s << std::endl;
+    ENVOY_LOG(info, "{}", s.str());
+  }
+
+  void failure(TCLAP::CmdLineInterface& cmd, TCLAP::ArgException& e) override {
+    std::string progName = cmd.getProgramName();
+    std::stringstream s;
+
+    s << "PARSE ERROR: " << e.argId() << std::endl
+      << "             " << e.error() << std::endl
+      << std::endl;
+    ASSERT(cmd.hasHelpAndVersion());
+
+    s << "Brief USAGE: " << std::endl;
+
+    _shortUsage(cmd, s);
+
+    s << std::endl
+      << "For complete USAGE and HELP type: " << std::endl
+      << "   " << progName << " " << TCLAP::Arg::nameStartString() << "help" << std::endl
+      << std::endl;
+    ENVOY_LOG(critical, "{}", s.str());
+
+    throw TCLAP::ExitException(1);
+  }
+};
+
 OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   const char* descr = "Nighthawk, a L7 HTTP protocol family benchmarking tool based on Envoy.";
+
   TCLAP::CmdLine cmd(descr, ' ', "PoC"); // NOLINT
+
+  ClientCmdLineOutputImpl output;
+  cmd.setOutput(&output);
 
   TCLAP::ValueArg<uint64_t> requests_per_second("", "rps",
                                                 "The target requests-per-second rate. Default: 5.",
@@ -40,7 +94,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       "and --connections values.Default : 1. ",
       false, "1", "string", cmd);
 
-  std::vector<std::string> log_levels = {"trace", "debug", "info", "warn", "error"};
+  std::vector<std::string> log_levels = {"trace", "debug", "info", "warn", "error", "critical"};
   TCLAP::ValuesConstraint<std::string> verbosities_allowed(log_levels);
 
   TCLAP::ValueArg<std::string> verbosity(
