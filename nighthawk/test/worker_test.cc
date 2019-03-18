@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "common/api/api_impl.h"
+#include "common/runtime/runtime_impl.h"
 #include "common/stats/isolated_store_impl.h"
 
 #include "test/mocks/thread_local/mocks.h"
@@ -35,16 +36,21 @@ public:
   Envoy::ThreadLocal::MockInstance tls_;
   Envoy::Stats::IsolatedStoreImpl store_;
   Envoy::Event::RealTimeSystem time_system_;
+  Envoy::Runtime::RandomGeneratorImpl rand_;
 };
 
 TEST_F(WorkerTest, WorkerExecutesOnThread) {
   ::testing::InSequence in_sequence;
+
   EXPECT_CALL(tls_, registerThread(_, false)).Times(1);
   EXPECT_CALL(tls_, allocateSlot()).Times(1);
 
   TestWorker worker(api_, tls_);
+  Envoy::Runtime::ScopedLoaderSingleton loader(
+      Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(rand_, store_, tls_)});
   worker.start();
   worker.waitForCompletion();
+
   EXPECT_CALL(tls_, shutdownThread()).Times(1);
   ASSERT_TRUE(worker.ran_);
 }
