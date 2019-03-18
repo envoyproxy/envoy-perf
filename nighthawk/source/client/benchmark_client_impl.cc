@@ -38,9 +38,7 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
     : api_(api), dispatcher_(dispatcher), store_(std::move(store)),
       connect_statistic_(std::move(connect_statistic)),
       response_statistic_(std::move(response_statistic)), use_h2_(use_h2),
-      uri_(std::make_unique<Uri>(Uri::Parse(uri))), timeout_(5s), connection_limit_(1),
-      max_pending_requests_(1), pool_overflow_failures_(0), stream_reset_count_(0),
-      requests_completed_(0), requests_initiated_(0), measure_latencies_(false) {
+      uri_(std::make_unique<Uri>(Uri::Parse(uri))) {
   ASSERT(uri_->isValid());
 
   connect_statistic_->setId("benchmark_http_client.queue_to_connect");
@@ -99,10 +97,9 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
     auto common_tls_context = cluster_config.mutable_tls_context()->mutable_common_tls_context();
     if (use_h2_) {
       common_tls_context->add_alpn_protocols("h2");
+    } else {
+      common_tls_context->add_alpn_protocols("http/1.1");
     }
-    common_tls_context->add_alpn_protocols("http/1.1");
-
-    //
     auto transport_socket = cluster_config.transport_socket();
     if (!cluster_config.has_transport_socket()) {
       ASSERT(cluster_config.has_tls_context());
@@ -127,7 +124,6 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
     // TODO(oschaaf): We perform some bootstrapping ourselves here, to avoid an assert during the
     // integration test because of a runtime/tls conflict with the integration test server, when
     // the message gets validated. Ideally we'd just re-use Tls::Upstream::createTransportFactory()
-
     auto client_config =
         std::make_unique<Envoy::Extensions::TransportSockets::Tls::ClientContextConfigImpl>(
             dynamic_cast<const envoy::api::v2::auth::UpstreamTlsContext&>(*message),
