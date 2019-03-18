@@ -109,6 +109,9 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
                                       *transport_socket.mutable_config());
     }
 
+    // TODO(oschaaf): Ideally we'd just re-use Tls::Upstream::createTransportFactory().
+    // But instead of doing that, we need to perform some of what that implements ourselves here,
+    // so we can skip message validation which may trigger an assert in integration tests.
     auto& config_factory = Envoy::Config::Utility::getAndCheckFactory<
         Envoy::Server::Configuration::UpstreamTransportSocketConfigFactory>(
         transport_socket.name());
@@ -121,9 +124,6 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
         store_->createScope("client."), dispatcher_, generator_, *store_, api_,
         *ssl_context_manager_);
 
-    // TODO(oschaaf): We perform some bootstrapping ourselves here, to avoid an assert during the
-    // integration test because of a runtime/tls conflict with the integration test server, when
-    // the message gets validated. Ideally we'd just re-use Tls::Upstream::createTransportFactory()
     auto client_config =
         std::make_unique<Envoy::Extensions::TransportSockets::Tls::ClientContextConfigImpl>(
             dynamic_cast<const envoy::api::v2::auth::UpstreamTlsContext&>(*message),

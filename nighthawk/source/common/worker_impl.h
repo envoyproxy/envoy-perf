@@ -2,7 +2,6 @@
 
 #include "envoy/api/api.h"
 #include "envoy/common/time.h"
-#include "envoy/runtime/runtime.h"
 #include "envoy/stats/store.h"
 #include "envoy/thread/thread.h"
 
@@ -26,14 +25,12 @@ protected:
   Envoy::Event::DispatcherPtr dispatcher_;
   Envoy::ThreadLocal::Instance& tls_;
   Envoy::Stats::StorePtr store_;
-  std::unique_ptr<Envoy::Runtime::Loader> runtime_;
-  std::unique_ptr<Envoy::Runtime::RandomGenerator> generator_;
   Envoy::TimeSource& time_source_;
 
 private:
   Envoy::Thread::ThreadPtr thread_;
-  bool started_;
-  bool completed_;
+  bool started_{};
+  bool completed_{};
 };
 
 } // namespace Nighthawk
