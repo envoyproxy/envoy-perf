@@ -51,7 +51,7 @@ void ClientWorkerImpl::delayStart() {
 }
 
 void ClientWorkerImpl::work() {
-  if (benchmark_client_->initialize(*runtime_)) {
+  if (benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting())) {
     simpleWarmup();
 
     benchmark_client_->setMeasureLatencies(true);

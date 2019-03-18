@@ -125,8 +125,6 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
   // TODO(oschaaf): later on, fire up and use a main dispatcher loop as need arises.
   tls.registerThread(*main_dispatcher, true);
-  Envoy::Runtime::RandomGeneratorImpl generator;
-  Envoy::Runtime::LoaderImpl runtime(generator, *store, tls);
 
   uint32_t concurrency = determineConcurrency();
   // We try to offset the start of each thread so that workers will execute tasks evenly
@@ -142,6 +140,9 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
         option_interpreter, api, tls, option_interpreter.createStatsStore(), worker_number,
         inter_worker_delay_usec * worker_number));
   }
+  Envoy::Runtime::RandomGeneratorImpl generator;
+  Envoy::Runtime::ScopedLoaderSingleton loader(
+      Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(generator, *store, tls)});
 
   for (auto& w : workers) {
     w->start();
