@@ -41,7 +41,7 @@ public:
   virtual StatisticPtrMap statistics() const PURE;
 
   /**
-   * @brief Tries to start a request. In open-loop mode this MUST always return true.
+   * Tries to start a request. In open-loop mode this MUST always return true.
    *
    * @param caller_completion_callback The callback the client must call back upon completion of a
    * successfully started request.
@@ -60,9 +60,8 @@ public:
    */
   virtual std::string countersToString(CounterFilter filter) const PURE;
 
-protected:
   /**
-   * @brief Determines if latency measurement is on.
+   * Determines if latency measurement is on.
    *
    * @return true if latency measurement is on.
    * @return false if latency measurement is off.

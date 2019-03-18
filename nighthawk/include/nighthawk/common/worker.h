@@ -25,7 +25,6 @@ public:
    */
   virtual void waitForCompletion() PURE;
 
-protected:
   /**
    * Perform the actual work on the associated thread initiated by start().
    */

@@ -25,6 +25,8 @@
 namespace Nighthawk {
 namespace Client {
 
+using namespace std::chrono_literals;
+
 class BenchmarkClientHttpImpl : public BenchmarkClient,
                                 public StreamDecoderCompletionCallback,
                                 public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
@@ -84,17 +86,17 @@ private:
   const bool use_h2_;
   const std::unique_ptr<Uri> uri_;
   Envoy::Network::Address::InstanceConstSharedPtr target_address_;
-  std::chrono::seconds timeout_;
-  uint64_t connection_limit_;
-  uint64_t max_pending_requests_;
-  uint64_t pool_overflow_failures_;
+  std::chrono::seconds timeout_{5s};
+  uint64_t connection_limit_{1};
+  uint64_t max_pending_requests_{1};
+  uint64_t pool_overflow_failures_{};
   Envoy::Http::ConnectionPool::InstancePtr pool_;
   Envoy::Event::TimerPtr timer_;
   Envoy::Runtime::RandomGeneratorImpl generator_;
-  uint64_t stream_reset_count_;
-  uint64_t requests_completed_;
-  uint64_t requests_initiated_;
-  bool measure_latencies_;
+  uint64_t stream_reset_count_{};
+  uint64_t requests_completed_{};
+  uint64_t requests_initiated_{};
+  bool measure_latencies_{};
 }; // namespace Client
 
 } // namespace Client
