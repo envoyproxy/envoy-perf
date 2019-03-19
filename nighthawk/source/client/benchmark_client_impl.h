@@ -36,7 +36,7 @@ public:
                           StatisticPtr&& response_statistic, const std::string& uri, bool use_h2);
 
   // TODO(oschaaf): can probably get rid of these.
-  uint64_t stream_reset_count() { return stream_reset_count_; }
+  uint64_t stream_reset_count() const { return stream_reset_count_; }
 
   void set_connection_limit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
   void set_connection_timeout(std::chrono::seconds timeout) { timeout_ = timeout; }

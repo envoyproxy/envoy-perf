@@ -34,12 +34,27 @@ Uri::Uri(const std::string& uri) : scheme_("http") {
   Envoy::Http::Utility::extractHostPathFromUri(uri, host, path);
   host_and_port_ = std::string(host);
   path_ = std::string(path);
-  const size_t colon_index = host_and_port_.find(':');
   const bool is_https = absl::StartsWith(uri, "https://");
   const size_t scheme_end = uri.find("://", 0);
-
   if (scheme_end != std::string::npos) {
     scheme_ = absl::AsciiStrToLower(uri.substr(0, scheme_end));
+  }
+
+  size_t colon_index = std::string::npos;
+  bool in_ipv6_address = false;
+
+  for (size_t i = 0; i < host_and_port_.size(); i++) {
+    char c = host_and_port_[i];
+    if (c == '[') {
+      in_ipv6_address = true;
+    } else if (in_ipv6_address && c == ']') {
+      in_ipv6_address = false;
+    } else {
+      if (!in_ipv6_address && c == ':') {
+        colon_index = i;
+        break;
+      }
+    }
   }
 
   if (colon_index == std::string::npos) {
@@ -47,8 +62,7 @@ Uri::Uri(const std::string& uri) : scheme_("http") {
     host_without_port_ = host_and_port_;
     host_and_port_ = fmt::format("{}:{}", host_and_port_, port_);
   } else {
-    const std::string tcp_url = fmt::format("tcp://{}", host_and_port_);
-    port_ = Envoy::Network::Utility::portFromTcpUrl(tcp_url);
+    port_ = std::stoi(host_and_port_.substr(colon_index + 1));
     host_without_port_ = host_and_port_.substr(0, colon_index);
   }
 }
