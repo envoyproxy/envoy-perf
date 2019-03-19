@@ -3,7 +3,7 @@
 #include <memory>
 #include <vector>
 
-#include "nighthawk/hdrhistogram_c/src/hdr_histogram.h"
+#include "external/dep_hdrhistogram_c/src/hdr_histogram.h"
 
 #include "common/common/logger.h"
 
