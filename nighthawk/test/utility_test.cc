@@ -42,7 +42,6 @@ TEST_F(UtilityTest, ExplicitPort) {
   EXPECT_EQ(111, u1.port());
 
   const Uri u2 = Uri::Parse("HTTP://a:-111");
-  EXPECT_EQ(4294967185, u2.port());
   EXPECT_FALSE(u2.isValid());
 
   const Uri u3 = Uri::Parse("HTTP://a:0");
@@ -52,6 +51,20 @@ TEST_F(UtilityTest, ExplicitPort) {
 TEST_F(UtilityTest, SchemeWeDontUnderstand) {
   const Uri u = Uri::Parse("foo://a");
   EXPECT_FALSE(u.isValid());
+}
+
+TEST_F(UtilityTest, Ipv6Address) {
+  const Uri u = Uri::Parse("http://[::1]:81/bar");
+  EXPECT_TRUE(u.isValid());
+  EXPECT_EQ("[::1]", u.host_without_port());
+  EXPECT_EQ("[::1]:81", u.host_and_port());
+  EXPECT_EQ(81, u.port());
+
+  const Uri u2 = Uri::Parse("http://[::1]/bar");
+  EXPECT_TRUE(u2.isValid());
+  EXPECT_EQ("[::1]", u2.host_without_port());
+  EXPECT_EQ("[::1]:80", u2.host_and_port());
+  EXPECT_EQ(80, u2.port());
 }
 
 // TODO(oschaaf): we probably want to move this out to another file.

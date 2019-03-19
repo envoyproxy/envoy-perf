@@ -9,14 +9,14 @@ static_resources:
     name: cluster_0
     hosts:
       socket_address:
-        address: 127.0.0.1
+        address: {{ ip_loopback_address }}
         port_value: 0
   listeners:
   # define an origin server on :10000 that always returns "lorem ipsum..."
     - name: listener_0
       address:
         socket_address:
-          address: 127.0.0.1
+          address: {{ ip_loopback_address }}
           port_value: 0
       filter_chains:
       - filters:
@@ -51,7 +51,7 @@ static_resources:
     - name: listener_1
       address:
         socket_address:
-          address: 127.0.0.1
+          address: {{ ip_loopback_address }}
           port_value: 0
       filter_chains:
       - filters:
