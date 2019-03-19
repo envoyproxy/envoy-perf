@@ -63,8 +63,7 @@ public:
   /**
    * Determines if latency measurement is on.
    *
-   * @return true if latency measurement is on.
-   * @return false if latency measurement is off.
+   * @return bool indicating if latency measurement is enabled.
    */
   virtual bool measureLatencies() const PURE;
 };

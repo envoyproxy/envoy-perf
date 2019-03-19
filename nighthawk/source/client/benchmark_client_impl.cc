@@ -2,8 +2,6 @@
 
 #include "absl/strings/str_split.h"
 
-#include "ares.h"
-
 #include "envoy/event/dispatcher.h"
 #include "envoy/thread_local/thread_local.h"
 
@@ -15,6 +13,7 @@
 #include "common/http/http1/conn_pool.h"
 #include "common/http/http2/conn_pool.h"
 #include "common/http/utility.h"
+#include "common/network/dns_impl.h"
 #include "common/network/raw_buffer_socket.h"
 #include "common/network/utility.h"
 #include "common/upstream/cluster_manager_impl.h"
@@ -55,8 +54,16 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
 bool BenchmarkClientHttpImpl::syncResolveDns() {
   bool dns_resolved = false;
   auto dns_resolver = dispatcher_.createDnsResolver({});
+  std::string to_resolve = uri_->host_without_port();
+
+  // TODO(oschaaf):
+  if (to_resolve[0] == '[') {
+    to_resolve = to_resolve.substr(1);
+    to_resolve = to_resolve.substr(0, to_resolve.size() - 1);
+  }
+
   Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
-      uri_->host_without_port(), Envoy::Network::DnsLookupFamily::V4Only,
+      to_resolve, Envoy::Network::DnsLookupFamily::Auto,
       [this, &dns_resolved, &active_dns_query_](
           const std::list<Envoy::Network::Address::InstanceConstSharedPtr>&& address_list) -> void {
         active_dns_query_ = nullptr;
