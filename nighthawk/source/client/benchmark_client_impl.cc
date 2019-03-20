@@ -219,15 +219,15 @@ void BenchmarkClientHttpImpl::onComplete(bool success, const Envoy::Http::Header
     ASSERT(headers.Status());
     const int64_t status = Envoy::Http::Utility::getResponseStatus(headers);
 
-    if (status > 99 && status < 199) {
+    if (status > 99 && status <= 199) {
       benchmark_client_stats_.http_1xx_.inc();
-    } else if (status > 199 && status < 299) {
+    } else if (status > 199 && status <= 299) {
       benchmark_client_stats_.http_2xx_.inc();
-    } else if (status > 299 && status < 399) {
+    } else if (status > 299 && status <= 399) {
       benchmark_client_stats_.http_3xx_.inc();
-    } else if (status > 399 && status < 499) {
+    } else if (status > 399 && status <= 499) {
       benchmark_client_stats_.http_4xx_.inc();
-    } else if (status > 499 && status < 599) {
+    } else if (status > 499 && status <= 599) {
       benchmark_client_stats_.http_5xx_.inc();
     } else {
       benchmark_client_stats_.http_xxx_.inc();
