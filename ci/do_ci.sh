@@ -121,6 +121,8 @@ export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYT
 --cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
 export TEST_TMPDIR=/build/tmp
 
+mkdir -p "$TEST_TMPDIR"
+
 case "$1" in
     build)
         do_build
