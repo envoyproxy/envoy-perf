@@ -160,8 +160,7 @@ public:
 std::string BenchmarkClientTest::lorem_ipsum_config;
 
 INSTANTIATE_TEST_CASE_P(IpVersions, BenchmarkClientTest,
-                        // testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
-                        testing::ValuesIn({Envoy::Network::Address::IpVersion::v6}),
+                        testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
                         Envoy::TestUtility::ipTestParamsToString);
 
 TEST_P(BenchmarkClientTest, BasicTestH1) {
