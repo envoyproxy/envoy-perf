@@ -182,7 +182,10 @@ bool Main::run() {
     output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
 
     for (auto& statistic : merged_statistics) {
-      *(output.add_statistics()) = statistic->toProto();
+      auto result = output.add_results();
+      result->set_name("global");
+      *(result->add_statistics()) = statistic->toProto();
+      // TODO(oschaaf): summed per-worker counters
     }
 
     std::string str;
