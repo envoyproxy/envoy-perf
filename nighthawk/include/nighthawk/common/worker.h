@@ -24,11 +24,6 @@ public:
    * Wait for the worker thread to complete its work.
    */
   virtual void waitForCompletion() PURE;
-
-  /**
-   * Perform the actual work on the associated thread initiated by start().
-   */
-  virtual void work() PURE;
 };
 
 typedef std::unique_ptr<Worker> WorkerPtr;
