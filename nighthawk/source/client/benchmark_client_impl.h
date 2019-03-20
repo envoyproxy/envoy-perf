@@ -7,6 +7,7 @@
 #include "envoy/runtime/runtime.h"
 #include "envoy/server/transport_socket_config.h"
 #include "envoy/ssl/context_manager.h"
+#include "envoy/stats/scope.h"
 #include "envoy/stats/store.h"
 #include "envoy/upstream/upstream.h"
 
@@ -27,6 +28,21 @@ namespace Client {
 
 using namespace std::chrono_literals;
 
+using namespace Envoy; // We need this because of macro expectations.
+
+#define ALL_BENCHMARK_CLIENT_STATS(COUNTER)                                                        \
+  COUNTER(stream_resets)                                                                           \
+  COUNTER(http_1xx)                                                                                \
+  COUNTER(http_2xx)                                                                                \
+  COUNTER(http_3xx)                                                                                \
+  COUNTER(http_4xx)                                                                                \
+  COUNTER(http_5xx)                                                                                \
+  COUNTER(http_xxx)
+
+struct BenchmarkClientStats {
+  ALL_BENCHMARK_CLIENT_STATS(GENERATE_COUNTER_STRUCT)
+};
+
 class BenchmarkClientHttpImpl : public BenchmarkClient,
                                 public StreamDecoderCompletionCallback,
                                 public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
@@ -34,8 +50,6 @@ public:
   BenchmarkClientHttpImpl(Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher,
                           Envoy::Stats::StorePtr&& store, StatisticPtr&& connect_statistic,
                           StatisticPtr&& response_statistic, const std::string& uri, bool use_h2);
-
-  uint64_t stream_reset_count() const { return stream_reset_count_; }
 
   void setConnectionLimit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
   void setConnectionTimeout(std::chrono::seconds timeout) { timeout_ = timeout; }
@@ -75,6 +89,7 @@ private:
   Envoy::Api::Api& api_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::Stats::StorePtr store_;
+  Envoy::Stats::ScopePtr scope_;
   Envoy::Http::HeaderMapImpl request_headers_;
   // These are declared order dependent. Changing orderering may trigger on assert upon
   // destruction when tls has been involved during usage.
@@ -91,15 +106,15 @@ private:
   std::chrono::seconds timeout_{5s};
   uint64_t connection_limit_{1};
   uint64_t max_pending_requests_{1};
-  uint64_t pool_overflow_failures_{};
   Envoy::Http::ConnectionPool::InstancePtr pool_;
   Envoy::Event::TimerPtr timer_;
   Envoy::Runtime::RandomGeneratorImpl generator_;
-  uint64_t stream_reset_count_{};
   uint64_t requests_completed_{};
   uint64_t requests_initiated_{};
   bool measure_latencies_{};
   Envoy::Network::DnsLookupFamily dns_lookup_family_{Envoy::Network::DnsLookupFamily::Auto};
+  BenchmarkClientStats benchmark_client_stats_;
+
 }; // namespace Client
 
 } // namespace Client
