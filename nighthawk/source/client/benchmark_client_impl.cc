@@ -63,18 +63,18 @@ bool BenchmarkClientHttpImpl::syncResolveDns() {
   }
 
   Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
-      to_resolve, Envoy::Network::DnsLookupFamily::Auto,
+      to_resolve, dns_lookup_family_,
       [this, &dns_resolved, &active_dns_query_](
           const std::list<Envoy::Network::Address::InstanceConstSharedPtr>&& address_list) -> void {
         active_dns_query_ = nullptr;
-        ENVOY_LOG(debug, "DNS resolution complete for {} ({} entries).", uri_->host_without_port(),
-                  address_list.size());
         if (!address_list.empty()) {
           target_address_ =
               Envoy::Network::Utility::getAddressWithPort(*address_list.front(), uri_->port());
+          ENVOY_LOG(debug, "DNS resolution complete for {} ({} entries, using {}).",
+                    uri_->host_without_port(), address_list.size(), target_address_->asString());
           dns_resolved = true;
         } else {
-          ENVOY_LOG(critical, "Could not resolve host [{}]", uri_->host_without_port());
+          ENVOY_LOG(critical, "Could not resolve host {}", uri_->host_without_port());
         }
         dispatcher_.exit();
       });
@@ -198,18 +198,16 @@ bool BenchmarkClientHttpImpl::tryStartOne(std::function<void()> caller_completio
   return true;
 }
 
-std::string BenchmarkClientHttpImpl::countersToString(CounterFilter filter) const {
-  auto counters = store_->counters();
-  std::vector<std::string> arr;
+std::map<std::string, uint64_t> BenchmarkClientHttpImpl::getCounters(CounterFilter filter) const {
+  std::map<std::string, uint64_t> results;
 
-  for (auto stat : counters) {
+  for (auto stat : store_->counters()) {
     if (filter(stat->name(), stat->value())) {
-      arr.push_back(fmt::format("{}:{}", stat->name(), stat->value()));
+      results[stat->name()] = stat->value();
     }
   }
 
-  std::sort(arr.begin(), arr.end());
-  return absl::StrJoin(arr, "\n");
+  return results;
 }
 
 void BenchmarkClientHttpImpl::onComplete(bool success, const Envoy::Http::HeaderMap& headers) {

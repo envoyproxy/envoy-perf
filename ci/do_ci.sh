@@ -119,6 +119,7 @@ export BAZEL_BUILD_OPTIONS=" \
 export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
 --test_env=UBSAN_OPTIONS=print_stacktrace=1 \
 --cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
+export TEST_TMPDIR=/build/tmp
 
 case "$1" in
     build)

@@ -37,10 +37,13 @@ public:
 
   uint64_t stream_reset_count() const { return stream_reset_count_; }
 
-  void set_connection_limit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
-  void set_connection_timeout(std::chrono::seconds timeout) { timeout_ = timeout; }
-  void set_max_pending_requests(uint64_t max_pending_requests) {
+  void setConnectionLimit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
+  void setConnectionTimeout(std::chrono::seconds timeout) { timeout_ = timeout; }
+  void setMaxPendingRequests(uint64_t max_pending_requests) {
     max_pending_requests_ = max_pending_requests;
+  }
+  void setDnsLookupFamily(Envoy::Network::DnsLookupFamily dns_lookup_family) {
+    dns_lookup_family_ = dns_lookup_family;
   }
 
   // BenchmarkClient
@@ -58,7 +61,7 @@ public:
 
   bool tryStartOne(std::function<void()> caller_completion_callback) override;
 
-  std::string countersToString(CounterFilter filter = [](std::string, uint64_t) {
+  std::map<std::string, uint64_t> getCounters(CounterFilter filter = [](std::string, uint64_t) {
     return true;
   }) const override;
 
@@ -96,6 +99,7 @@ private:
   uint64_t requests_completed_{};
   uint64_t requests_initiated_{};
   bool measure_latencies_{};
+  Envoy::Network::DnsLookupFamily dns_lookup_family_{Envoy::Network::DnsLookupFamily::Auto};
 }; // namespace Client
 
 } // namespace Client

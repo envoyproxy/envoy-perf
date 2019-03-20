@@ -29,8 +29,9 @@ void ClientWorkerImpl::logResult() {
   worker_percentiles = fmt::format(worker_percentiles, "", "");
 
   CounterFilter filter = [](std::string, uint64_t value) { return value > 0; };
-  ENVOY_LOG(info, "> worker {}\n{}\n{}", worker_number_,
-            benchmark_client_->countersToString(filter), worker_percentiles);
+  // TODO(oschaaf): output the counters.
+  // ENVOY_LOG(info, "> worker {}\n{}\n{}", worker_number_,
+  //          benchmark_client_->countersToString(filter), worker_percentiles);
 }
 
 void ClientWorkerImpl::simpleWarmup() {

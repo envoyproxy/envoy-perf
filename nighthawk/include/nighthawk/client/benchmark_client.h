@@ -52,13 +52,12 @@ public:
   virtual bool tryStartOne(std::function<void()> caller_completion_callback) PURE;
 
   /**
-   * Transforms statistics matching the filter argument into a string of statistic "name:value"
-   * pairs, one per line.
-   * @param filter function that returns true iff a statistic should be transformed, based on the
-   * named and value it gets passed.
-   * @return std::string containing zero or more lines containing "name:value\n".
+   * Gets a map of tracked counter values, keyed by name.
+   * @param filter function that returns true iff a counter should be included in the map,
+   * based on the named and value it gets passed. The default filter returns all counters.
+   * @return std::map<std::string, uint64_t> containing zero or more entries.
    */
-  virtual std::string countersToString(CounterFilter filter) const PURE;
+  virtual std::map<std::string, uint64_t> getCounters(CounterFilter filter) const PURE;
 
   /**
    * Determines if latency measurement is on.
