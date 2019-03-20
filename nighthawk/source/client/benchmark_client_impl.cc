@@ -35,9 +35,11 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
                                                  StatisticPtr&& response_statistic,
                                                  const std::string& uri, bool use_h2)
     : api_(api), dispatcher_(dispatcher), store_(std::move(store)),
+      scope_(store_->createScope("client.benchmark.")),
       connect_statistic_(std::move(connect_statistic)),
       response_statistic_(std::move(response_statistic)), use_h2_(use_h2),
-      uri_(std::make_unique<Uri>(Uri::Parse(uri))) {
+      uri_(std::make_unique<Uri>(Uri::Parse(uri))),
+      benchmark_client_stats_({ALL_BENCHMARK_CLIENT_STATS(POOL_COUNTER(*scope_))}) {
   ASSERT(uri_->isValid());
 
   connect_statistic_->setId("benchmark_http_client.queue_to_connect");
@@ -56,8 +58,7 @@ bool BenchmarkClientHttpImpl::syncResolveDns() {
   auto dns_resolver = dispatcher_.createDnsResolver({});
   std::string to_resolve = uri_->host_without_port();
 
-  // TODO(oschaaf):
-  if (to_resolve[0] == '[') {
+  if (to_resolve.size() > 0 && to_resolve[0] == '[') {
     to_resolve = to_resolve.substr(1);
     to_resolve = to_resolve.substr(0, to_resolve.size() - 1);
   }
@@ -213,14 +214,23 @@ std::map<std::string, uint64_t> BenchmarkClientHttpImpl::getCounters(CounterFilt
 void BenchmarkClientHttpImpl::onComplete(bool success, const Envoy::Http::HeaderMap& headers) {
   requests_completed_++;
   if (!success) {
-    // TODO(oschaaf): this information must bubble up!
-    stream_reset_count_++;
+    benchmark_client_stats_.stream_resets_.inc();
   } else {
     ASSERT(headers.Status());
     const int64_t status = Envoy::Http::Utility::getResponseStatus(headers);
-    if (status >= 400 && status <= 599) {
-      // TODO(oschaaf): Figure out why this isn't incremented for us.
-      store_->counter("client.upstream_cx_protocol_error").inc();
+
+    if (status > 99 && status < 199) {
+      benchmark_client_stats_.http_1xx_.inc();
+    } else if (status > 199 && status < 299) {
+      benchmark_client_stats_.http_2xx_.inc();
+    } else if (status > 299 && status < 399) {
+      benchmark_client_stats_.http_3xx_.inc();
+    } else if (status > 399 && status < 499) {
+      benchmark_client_stats_.http_4xx_.inc();
+    } else if (status > 499 && status < 599) {
+      benchmark_client_stats_.http_5xx_.inc();
+    } else {
+      benchmark_client_stats_.http_xxx_.inc();
     }
   }
 }
