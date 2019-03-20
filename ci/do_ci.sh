@@ -52,6 +52,8 @@ export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs ${CONCURRENCY}"
 export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
 export TEST_TMPDIR=/build/tmp
 
+mkdir -p "$TEST_TMPDIR"
+
 case "$1" in
     build)
         do_build
