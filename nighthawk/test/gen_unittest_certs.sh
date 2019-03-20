@@ -1,1 +1,0 @@
-../envoy/test/extensions/transport_sockets/tls/gen_unittest_certs.sh

@@ -81,9 +81,9 @@ static_resources:
           common_tls_context:
             tls_certificates:
               certificate_chain:
-                filename: "{{ test_tmpdir }}/unittestcert.pem"
+                filename: "{{ test_tmpdir }}/servercert.pem"
               private_key:
-                filename: "{{ test_tmpdir }}/unittestkey.pem"
+                filename: "{{ test_tmpdir }}/serverkey.pem"
             validation_context:
               trusted_ca:
-                filename: "{{ test_tmpdir }}/ca_cert.pem"
+                filename: "{{ test_tmpdir }}/cacert.pem"

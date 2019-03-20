@@ -41,27 +41,31 @@ class BenchmarkClientTest : public Envoy::BaseIntegrationTest,
                             public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:
   BenchmarkClientTest()
-      : Envoy::BaseIntegrationTest(GetParam(), realTime(), BenchmarkClientTest::lorem_ipsum_config),
+      : Envoy::BaseIntegrationTest(GetParam(), realTime(), BenchmarkClientTest::envoy_config),
         api_(thread_factory_, store_, timeSystem()), dispatcher_(api_.allocateDispatcher()) {}
 
-  static void SetUpTestCase() {
+  static void copyFileToWorkingDir(const std::string path, const std::string path_to) {
     Envoy::Filesystem::InstanceImpl filesystem;
+    const std::string content =
+        filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(path));
+    Envoy::TestEnvironment::writeStringToFileForTest(path_to, content);
+  }
 
+  static void SetUpTestCase() {
     ASSERT_NE("", Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR"));
+
+    copyFileToWorkingDir("nighthawk/test/test_data/lorem_ipsum.txt", "lorem_ipsum.txt");
+    copyFileToWorkingDir("nighthawk/test/test_data/certs/cacert.pem", "cacert.pem");
+    copyFileToWorkingDir("nighthawk/test/test_data/certs/servercert.pem", "servercert.pem");
+    copyFileToWorkingDir("nighthawk/test/test_data/certs/serverkey.pem", "serverkey.pem");
+
     std::cerr << Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR") << "@@\n";
-    const std::string lorem_ipsum_content = filesystem.fileReadToEnd(
-        Envoy::TestEnvironment::runfilesPath("nighthawk/test/test_data/lorem_ipsum.txt"));
-    Envoy::TestEnvironment::writeStringToFileForTest("lorem_ipsum.txt", lorem_ipsum_content);
 
-    Envoy::TestEnvironment::exec(
-        {Envoy::TestEnvironment::runfilesPath("nighthawk/test/gen_unittest_certs.sh")});
-    Envoy::TestEnvironment::exec(
-        {Envoy::TestEnvironment::runfilesPath("nighthawk/test/gen_unittest_ca.sh")});
-
-    lorem_ipsum_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
+    Envoy::Filesystem::InstanceImpl filesystem;
+    envoy_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
 
-    lorem_ipsum_config = Envoy::TestEnvironment::substitute(lorem_ipsum_config);
+    envoy_config = Envoy::TestEnvironment::substitute(envoy_config);
   }
 
   void SetUp() override {
@@ -154,10 +158,10 @@ public:
   ::testing::NiceMock<Envoy::ThreadLocal::MockInstance> tls_;
   ::testing::NiceMock<Envoy::Runtime::MockLoader> runtime_;
   std::unique_ptr<Client::BenchmarkClientHttpImpl> client_;
-  static std::string lorem_ipsum_config;
+  static std::string envoy_config;
 };
 
-std::string BenchmarkClientTest::lorem_ipsum_config;
+std::string BenchmarkClientTest::envoy_config;
 
 INSTANTIATE_TEST_CASE_P(IpVersions, BenchmarkClientTest,
                         testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
