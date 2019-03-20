@@ -102,6 +102,8 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
 
   if (uri_->scheme() == "https") {
     auto common_tls_context = cluster_config.mutable_tls_context()->mutable_common_tls_context();
+    // TODO(oschaaf): we should ensure that we fail when h2 is requested but not supported on the
+    // server-side in tests.
     if (use_h2_) {
       common_tls_context->add_alpn_protocols("h2");
     } else {

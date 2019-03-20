@@ -248,7 +248,7 @@ client.upstream_rq_total:10",
             getNonZeroValuedCounters());
 }
 
-TEST_P(BenchmarkClientTest, DISABLED_EnableLatencyMeasurement) {
+TEST_P(BenchmarkClientTest, EnableLatencyMeasurement) {
   setupBenchmarkClient("/", false, false);
   EXPECT_TRUE(client_->initialize(runtime_));
 
@@ -284,11 +284,11 @@ TEST_P(BenchmarkClientTest, DISABLED_EnableLatencyMeasurement) {
   EXPECT_EQ(1, client_->statistics()["benchmark_http_client.request_to_response"]->count());
 }
 
-TEST_P(BenchmarkClientTest, DISABLED_UnresolveableHostname) {
+TEST_P(BenchmarkClientTest, UnresolvableHostname) {
   client_ = std::make_unique<Client::BenchmarkClientHttpImpl>(
       api_, *dispatcher_, std::make_unique<Envoy::Stats::IsolatedStoreImpl>(),
       std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
-      fmt::format("http://unresolveablefoobarhost:80/"), false);
+      fmt::format("http://unresolvablefoobarhost:80/"), false);
 
   EXPECT_FALSE(client_->initialize(runtime_));
 }
