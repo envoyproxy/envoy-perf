@@ -59,8 +59,6 @@ public:
     copyFileToWorkingDir("nighthawk/test/test_data/certs/servercert.pem", "servercert.pem");
     copyFileToWorkingDir("nighthawk/test/test_data/certs/serverkey.pem", "serverkey.pem");
 
-    std::cerr << Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR") << "@@\n";
-
     Envoy::Filesystem::InstanceImpl filesystem;
     envoy_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
@@ -137,7 +135,7 @@ public:
 
     dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
 
-    EXPECT_EQ(0, client_->stream_reset_count());
+    EXPECT_EQ(0, getCounter("benchmark.stream_resets"));
   }
 
   uint64_t nonZeroValuedCounterCount() {
@@ -163,6 +161,8 @@ public:
 
 std::string BenchmarkClientTest::envoy_config;
 
+// TODO(oschaaf): test protocol violations, stream resets, etc.
+
 INSTANTIATE_TEST_CASE_P(IpVersions, BenchmarkClientTest,
                         testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
                         Envoy::TestUtility::ipTestParamsToString);
@@ -176,19 +176,21 @@ TEST_P(BenchmarkClientTest, BasicTestH1) {
   EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_total"));
-  EXPECT_EQ(6, nonZeroValuedCounterCount());
+  EXPECT_EQ(1, getCounter("benchmark.http_2xx"));
+  EXPECT_EQ(7, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestH1404) {
   testBasicFunctionality("/lorem-ipsum-status-404", 1, 1, false, false, 10);
 
   EXPECT_EQ(1, getCounter("upstream_cx_http1_total"));
-  EXPECT_EQ(1, getCounter("upstream_cx_protocol_error"));
+  EXPECT_EQ(0, getCounter("upstream_cx_protocol_error"));
   EXPECT_LE(97, getCounter("upstream_cx_rx_bytes_total"));
   EXPECT_EQ(1, getCounter("upstream_cx_total"));
   EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(1, getCounter("benchmark.http_4xx"));
   EXPECT_EQ(7, nonZeroValuedCounterCount());
 }
 
@@ -206,7 +208,8 @@ TEST_P(BenchmarkClientTest, BasicTestHttpsH1) {
   EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_total"));
-  EXPECT_EQ(11, nonZeroValuedCounterCount());
+  EXPECT_EQ(1, getCounter("benchmark.http_2xx"));
+  EXPECT_EQ(12, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestH2) {
@@ -223,7 +226,8 @@ TEST_P(BenchmarkClientTest, BasicTestH2) {
   EXPECT_LE(108, getCounter("upstream_cx_tx_bytes_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_total"));
-  EXPECT_EQ(11, nonZeroValuedCounterCount());
+  EXPECT_EQ(1, getCounter("benchmark.http_2xx"));
+  EXPECT_EQ(12, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestH2C) {
@@ -235,7 +239,23 @@ TEST_P(BenchmarkClientTest, BasicTestH2C) {
   EXPECT_LE(108, getCounter("upstream_cx_tx_bytes_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
   EXPECT_EQ(1, getCounter("upstream_rq_total"));
-  EXPECT_EQ(6, nonZeroValuedCounterCount());
+  EXPECT_EQ(1, getCounter("benchmark.http_2xx"));
+  EXPECT_EQ(7, nonZeroValuedCounterCount());
+}
+
+// TODO(oschaaf): can't configure envoy to emit a weird status, fix
+// this later.
+TEST_P(BenchmarkClientTest, DISABLED_WeirdStatus) {
+  testBasicFunctionality("/601", 1, 1, false, false, 10);
+
+  EXPECT_EQ(1, getCounter("upstream_cx_http1_total"));
+  EXPECT_LE(3621, getCounter("upstream_cx_rx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(1, getCounter("benchmark.http_xxx"));
+  EXPECT_EQ(7, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, H1ConnectionFailure) {
