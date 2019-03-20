@@ -21,6 +21,11 @@ public:
   void waitForCompletion() override;
 
 protected:
+  /**
+   * Perform the actual work on the associated thread initiated by start().
+   */
+  virtual void work() PURE;
+
   Envoy::Thread::ThreadFactory& thread_factory_;
   Envoy::Event::DispatcherPtr dispatcher_;
   Envoy::ThreadLocal::Instance& tls_;
