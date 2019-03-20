@@ -36,6 +36,9 @@ if [ -n "$CIRCLECI" ]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
     fi
+    export TEST_TMPDIR=/build/tmp
+    export TEST_CERT_DIR="$TEST_TMPDIR"
+    mkdir -p "$TEST_TMPDIR"
 fi
 
 if [ "$1" == "coverage" ]; then
@@ -50,9 +53,6 @@ fi
 
 export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs ${CONCURRENCY}"
 export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
-export TEST_TMPDIR=/build/tmp
-
-mkdir -p "$TEST_TMPDIR"
 
 case "$1" in
     build)
