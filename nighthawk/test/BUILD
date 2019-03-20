@@ -33,7 +33,6 @@ envoy_cc_test(
         "worker_test.cc",
     ],
     data = [
-        "certs.sh",
         "test_data/benchmark_http_client_test_envoy.yaml",
         "test_data/hdr_proto_json.gold",
         "test_data/lorem_ipsum.txt",

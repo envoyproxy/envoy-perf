@@ -97,7 +97,7 @@ public:
   MOCK_METHOD1(setMeasureLatencies, void(bool));
   MOCK_CONST_METHOD0(statistics, StatisticPtrMap());
   MOCK_METHOD1(tryStartOne, bool(std::function<void()>));
-  MOCK_CONST_METHOD1(countersToString, std::string(Client::CounterFilter));
+  MOCK_CONST_METHOD1(getCounters, std::map<std::string, uint64_t>(Client::CounterFilter));
 
 protected:
   MOCK_CONST_METHOD0(measureLatencies, bool());

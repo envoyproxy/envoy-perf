@@ -10,6 +10,7 @@
 #include "common/event/dispatcher_impl.h"
 #include "common/filesystem/filesystem_impl.h"
 #include "common/http/header_map_impl.h"
+#include "common/network/dns_impl.h"
 #include "common/network/utility.h"
 #include "common/runtime/runtime_impl.h"
 #include "common/stats/isolated_store_impl.h"
@@ -36,33 +37,29 @@ using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
-std::string lorem_ipsum_config;
-
 class BenchmarkClientTest : public Envoy::BaseIntegrationTest,
                             public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:
   BenchmarkClientTest()
-      : Envoy::BaseIntegrationTest(GetParam(), realTime(), lorem_ipsum_config),
+      : Envoy::BaseIntegrationTest(GetParam(), realTime(), BenchmarkClientTest::lorem_ipsum_config),
         api_(thread_factory_, store_, timeSystem()), dispatcher_(api_.allocateDispatcher()) {}
 
   static void SetUpTestCase() {
     Envoy::Filesystem::InstanceImpl filesystem;
 
-    Envoy::TestEnvironment::setEnvVar("TEST_TMPDIR", Envoy::TestEnvironment::temporaryDirectory(),
-                                      1);
+    ASSERT_NE("", Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR"));
 
     const std::string lorem_ipsum_content = filesystem.fileReadToEnd(
         Envoy::TestEnvironment::runfilesPath("nighthawk/test/test_data/lorem_ipsum.txt"));
     Envoy::TestEnvironment::writeStringToFileForTest("lorem_ipsum.txt", lorem_ipsum_content);
 
-    Envoy::TestEnvironment::exec({Envoy::TestEnvironment::runfilesPath("nighthawk/test/certs.sh")});
+    Envoy::TestEnvironment::exec({Envoy::TestEnvironment::runfilesPath(
+        "nighthawk/envoy/test/extensions/transport_sockets/tls/gen_unittest_certs.sh")});
 
     lorem_ipsum_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
+
     lorem_ipsum_config = Envoy::TestEnvironment::substitute(lorem_ipsum_config);
-    std::cerr << lorem_ipsum_config;
-    // std::string address =
-    //    GetParam() == Envoy::Network::Address::IpVersion::v4 ? "127.0.0.1" : "::1";
   }
 
   void SetUp() override {
@@ -98,6 +95,10 @@ public:
         api_, *dispatcher_, std::make_unique<Envoy::Stats::IsolatedStoreImpl>(),
         std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
         fmt::format("{}://{}:{}{}", use_https ? "https" : "http", address, port, uriPath), use_h2);
+
+    client_->setDnsLookupFamily(GetParam() == Envoy::Network::Address::IpVersion::v4
+                                    ? Envoy::Network::DnsLookupFamily::V4Only
+                                    : Envoy::Network::DnsLookupFamily::V6Only);
   }
 
   void testBasicFunctionality(const std::string uriPath, uint64_t max_pending,
@@ -105,9 +106,9 @@ public:
                               uint64_t amount_of_request) {
     setupBenchmarkClient(uriPath, use_https, use_h2);
 
-    client_->set_connection_timeout(10s);
-    client_->set_max_pending_requests(max_pending);
-    client_->set_connection_limit(connection_limit);
+    client_->setConnectionTimeout(10s);
+    client_->setMaxPendingRequests(max_pending);
+    client_->setConnectionLimit(connection_limit);
     EXPECT_TRUE(client_->initialize(runtime_));
 
     uint64_t amount = amount_of_request;
@@ -133,9 +134,14 @@ public:
     EXPECT_EQ(0, client_->stream_reset_count());
   }
 
-  std::string getNonZeroValuedCounters() {
+  uint64_t nonZeroValuedCounterCount() {
     Client::CounterFilter filter = [](std::string, uint64_t value) { return value > 0; };
-    return client_->countersToString(filter);
+    return client_->getCounters(filter).size();
+  }
+
+  uint64_t getCounter(std::string name) {
+    auto counters = client_->getCounters();
+    return counters["client." + name];
   }
 
   Envoy::Thread::ThreadFactoryImplPosix thread_factory_;
@@ -146,78 +152,85 @@ public:
   ::testing::NiceMock<Envoy::ThreadLocal::MockInstance> tls_;
   ::testing::NiceMock<Envoy::Runtime::MockLoader> runtime_;
   std::unique_ptr<Client::BenchmarkClientHttpImpl> client_;
+  static std::string lorem_ipsum_config;
 };
 
+std::string BenchmarkClientTest::lorem_ipsum_config;
+
 INSTANTIATE_TEST_CASE_P(IpVersions, BenchmarkClientTest,
-                        testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
+                        // testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
+                        testing::ValuesIn({Envoy::Network::Address::IpVersion::v6}),
                         Envoy::TestUtility::ipTestParamsToString);
 
 TEST_P(BenchmarkClientTest, BasicTestH1) {
   testBasicFunctionality("/lorem-ipsum-status-200", 1, 1, false, false, 10);
-  EXPECT_EQ("client.upstream_cx_http1_total:1\n\
-client.upstream_cx_rx_bytes_total:3625\n\
-client.upstream_cx_total:1\n\
-client.upstream_cx_tx_bytes_total:82\n\
-client.upstream_rq_pending_total:1\n\
-client.upstream_rq_total:1",
-            getNonZeroValuedCounters());
+
+  EXPECT_EQ(1, getCounter("upstream_cx_http1_total"));
+  EXPECT_LE(3621, getCounter("upstream_cx_rx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(6, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestH1404) {
   testBasicFunctionality("/lorem-ipsum-status-404", 1, 1, false, false, 10);
-  EXPECT_EQ("client.upstream_cx_http1_total:1\n\
-client.upstream_cx_protocol_error:1\n\
-client.upstream_cx_rx_bytes_total:97\n\
-client.upstream_cx_total:1\n\
-client.upstream_cx_tx_bytes_total:82\n\
-client.upstream_rq_pending_total:1\n\
-client.upstream_rq_total:1",
-            getNonZeroValuedCounters());
+
+  EXPECT_EQ(1, getCounter("upstream_cx_http1_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_protocol_error"));
+  EXPECT_LE(97, getCounter("upstream_cx_rx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(7, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestHttpsH1) {
   testBasicFunctionality("/lorem-ipsum-status-200", 1, 1, true, false, 10);
-  EXPECT_EQ("client.ssl.ciphers.ECDHE-RSA-AES128-GCM-SHA256:1\n\
-client.ssl.curves.X25519:1\n\
-client.ssl.handshake:1\n\
-client.ssl.sigalgs.rsa_pss_rsae_sha256:1\n\
-client.ssl.versions.TLSv1.2:1\n\
-client.upstream_cx_http1_total:1\n\
-client.upstream_cx_rx_bytes_total:3626\n\
-client.upstream_cx_total:1\n\
-client.upstream_cx_tx_bytes_total:82\n\
-client.upstream_rq_pending_total:1\n\
-client.upstream_rq_total:1",
-            getNonZeroValuedCounters());
+
+  EXPECT_EQ(1, getCounter("ssl.ciphers.ECDHE-RSA-AES128-GCM-SHA256"));
+  EXPECT_EQ(1, getCounter("ssl.curves.X25519"));
+  EXPECT_EQ(1, getCounter("ssl.handshake"));
+  EXPECT_EQ(1, getCounter("ssl.sigalgs.rsa_pss_rsae_sha256"));
+  EXPECT_EQ(1, getCounter("ssl.versions.TLSv1.2"));
+  EXPECT_EQ(1, getCounter("upstream_cx_http1_total"));
+  EXPECT_LE(3622, getCounter("upstream_cx_rx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(78, getCounter("upstream_cx_tx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(11, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestH2) {
   testBasicFunctionality("/lorem-ipsum-status-200", 1, 1, true, true, 10);
-  // upstream_cx_rx_bytes_total fluctuates 1 byte between tests.
 
-  EXPECT_THAT(getNonZeroValuedCounters(),
-              ::testing::MatchesRegex("client.ssl.ciphers.ECDHE-RSA-AES128-GCM-SHA256:1\n\
-client.ssl.curves.X25519:1\n\
-client.ssl.handshake:1\n\
-client.ssl.sigalgs.rsa_pss_rsae_sha256:1\n\
-client.ssl.versions.TLSv1.2:1\n\
-client.upstream_cx_http2_total:1\n\
-client.upstream_cx_rx_bytes_total:358[5-6]\n\
-client.upstream_cx_total:1\n\
-client.upstream_cx_tx_bytes_total:109\n\
-client.upstream_rq_pending_total:1\n\
-client.upstream_rq_total:1"));
+  EXPECT_EQ(1, getCounter("ssl.ciphers.ECDHE-RSA-AES128-GCM-SHA256"));
+  EXPECT_EQ(1, getCounter("ssl.curves.X25519"));
+  EXPECT_EQ(1, getCounter("ssl.handshake"));
+  EXPECT_EQ(1, getCounter("ssl.sigalgs.rsa_pss_rsae_sha256"));
+  EXPECT_EQ(1, getCounter("ssl.versions.TLSv1.2"));
+  EXPECT_EQ(1, getCounter("upstream_cx_http2_total"));
+  EXPECT_LE(3585, getCounter("upstream_cx_rx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(108, getCounter("upstream_cx_tx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(11, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, BasicTestH2C) {
   testBasicFunctionality("/lorem-ipsum-status-200", 1, 1, false, true, 10);
-  EXPECT_EQ("client.upstream_cx_http2_total:1\n\
-client.upstream_cx_rx_bytes_total:3585\n\
-client.upstream_cx_total:1\n\
-client.upstream_cx_tx_bytes_total:109\n\
-client.upstream_rq_pending_total:1\n\
-client.upstream_rq_total:1",
-            getNonZeroValuedCounters());
+
+  EXPECT_EQ(1, getCounter("upstream_cx_http2_total"));
+  EXPECT_LE(3584, getCounter("upstream_cx_rx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(108, getCounter("upstream_cx_tx_bytes_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(6, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, H1ConnectionFailure) {
@@ -225,13 +238,14 @@ TEST_P(BenchmarkClientTest, H1ConnectionFailure) {
   // We allow a single connection and no pending. We expect one connection failure.
   test_server_.reset();
   testBasicFunctionality("/lorem-ipsum-status-200", 1, 1, false, false, 10);
-  EXPECT_EQ("client.upstream_cx_connect_fail:1\n\
-client.upstream_cx_http1_total:1\n\
-client.upstream_cx_total:1\n\
-client.upstream_rq_pending_failure_eject:1\n\
-client.upstream_rq_pending_total:1\n\
-client.upstream_rq_total:1",
-            getNonZeroValuedCounters());
+
+  EXPECT_EQ(1, getCounter("upstream_cx_connect_fail"));
+  EXPECT_LE(1, getCounter("upstream_cx_http1_total"));
+  EXPECT_EQ(1, getCounter("upstream_cx_total"));
+  EXPECT_LE(1, getCounter("upstream_rq_pending_failure_eject"));
+  EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(6, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, H1MultiConnectionFailure) {
@@ -239,13 +253,14 @@ TEST_P(BenchmarkClientTest, H1MultiConnectionFailure) {
   // We allow ten connections and ten pending requests. We expect ten connection failures.
   test_server_.reset();
   testBasicFunctionality("/lorem-ipsum-status-200", 10, 10, false, false, 10);
-  EXPECT_EQ("client.upstream_cx_connect_fail:10\n\
-client.upstream_cx_http1_total:10\n\
-client.upstream_cx_total:10\n\
-client.upstream_rq_pending_failure_eject:10\n\
-client.upstream_rq_pending_total:10\n\
-client.upstream_rq_total:10",
-            getNonZeroValuedCounters());
+
+  EXPECT_EQ(10, getCounter("upstream_cx_connect_fail"));
+  EXPECT_LE(10, getCounter("upstream_cx_http1_total"));
+  EXPECT_EQ(10, getCounter("upstream_cx_total"));
+  EXPECT_LE(10, getCounter("upstream_rq_pending_failure_eject"));
+  EXPECT_EQ(10, getCounter("upstream_rq_pending_total"));
+  EXPECT_EQ(10, getCounter("upstream_rq_total"));
+  EXPECT_EQ(6, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientTest, EnableLatencyMeasurement) {
