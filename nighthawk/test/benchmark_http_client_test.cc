@@ -48,13 +48,15 @@ public:
     Envoy::Filesystem::InstanceImpl filesystem;
 
     ASSERT_NE("", Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR"));
-
+    std::cerr << Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR") << "@@\n";
     const std::string lorem_ipsum_content = filesystem.fileReadToEnd(
         Envoy::TestEnvironment::runfilesPath("nighthawk/test/test_data/lorem_ipsum.txt"));
     Envoy::TestEnvironment::writeStringToFileForTest("lorem_ipsum.txt", lorem_ipsum_content);
 
-    Envoy::TestEnvironment::exec({Envoy::TestEnvironment::runfilesPath(
-        "nighthawk/envoy/test/extensions/transport_sockets/tls/gen_unittest_certs.sh")});
+    Envoy::TestEnvironment::exec(
+        {Envoy::TestEnvironment::runfilesPath("nighthawk/test/gen_unittest_certs.sh")});
+    Envoy::TestEnvironment::exec(
+        {Envoy::TestEnvironment::runfilesPath("nighthawk/test/gen_unittest_ca.sh")});
 
     lorem_ipsum_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
