@@ -333,4 +333,46 @@ TEST_P(BenchmarkClientTest, UnresolvableHostname) {
   EXPECT_FALSE(client_->initialize(runtime_));
 }
 
+TEST_P(BenchmarkClientTest, StatusTrackingInOnComplete) {
+  client_ = std::make_unique<Client::BenchmarkClientHttpImpl>(
+      api_, *dispatcher_, std::make_unique<Envoy::Stats::IsolatedStoreImpl>(),
+      std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
+      fmt::format("http://foo/"), false);
+  Envoy::Http::HeaderMapImpl header;
+
+  auto& status = header.insertStatus();
+
+  status.value(1);
+  client_->onComplete(true, header);
+
+  status.value(100);
+  client_->onComplete(true, header);
+
+  status.value(200);
+  client_->onComplete(true, header);
+
+  status.value(300);
+  client_->onComplete(true, header);
+
+  status.value(400);
+  client_->onComplete(true, header);
+
+  status.value(500);
+  client_->onComplete(true, header);
+
+  status.value(600);
+  client_->onComplete(true, header);
+
+  status.value(200);
+  // Shouldn't be counted by status, should add to stream reset.
+  client_->onComplete(false, header);
+
+  EXPECT_EQ(1, getCounter("benchmark.http_2xx"));
+  EXPECT_EQ(1, getCounter("benchmark.http_3xx"));
+  EXPECT_EQ(1, getCounter("benchmark.http_4xx"));
+  EXPECT_EQ(1, getCounter("benchmark.http_5xx"));
+  EXPECT_EQ(2, getCounter("benchmark.http_xxx"));
+  EXPECT_EQ(1, getCounter("benchmark.stream_resets"));
+}
+
 } // namespace Nighthawk
