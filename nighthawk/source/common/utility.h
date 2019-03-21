@@ -51,7 +51,7 @@ private:
   std::string path_;
   uint64_t port_;
   std::string scheme_;
-  bool host_error_;
+  bool host_error_{};
 };
 
 } // namespace Nighthawk
