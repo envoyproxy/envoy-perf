@@ -37,11 +37,9 @@ envoy_cc_test(
     ],
     data = [
         "test_data/benchmark_http_client_test_envoy.yaml",
-        "test_data/certs/cacert.pem",
-        "test_data/certs/servercert.pem",
-        "test_data/certs/serverkey.pem",
         "test_data/hdr_proto_json.gold",
         "test_data/lorem_ipsum.txt",
+        "@envoy//test/config/integration/certs",
     ],
     repository = "@envoy",
     deps = [

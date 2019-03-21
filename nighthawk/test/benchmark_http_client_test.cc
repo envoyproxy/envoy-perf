@@ -52,17 +52,9 @@ public:
   }
 
   static void SetUpTestCase() {
-    ASSERT_NE("", Envoy::TestEnvironment::getCheckedEnvVar("TEST_TMPDIR"));
-
-    copyFileToWorkingDir("nighthawk/test/test_data/lorem_ipsum.txt", "lorem_ipsum.txt");
-    copyFileToWorkingDir("nighthawk/test/test_data/certs/cacert.pem", "cacert.pem");
-    copyFileToWorkingDir("nighthawk/test/test_data/certs/servercert.pem", "servercert.pem");
-    copyFileToWorkingDir("nighthawk/test/test_data/certs/serverkey.pem", "serverkey.pem");
-
     Envoy::Filesystem::InstanceImpl filesystem;
     envoy_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
-
     envoy_config = Envoy::TestEnvironment::substitute(envoy_config);
   }
 
