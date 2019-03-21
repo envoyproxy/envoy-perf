@@ -26,7 +26,7 @@ static_resources:
             codec_type: auto
             stat_prefix: ingress_http
             route_config:
-              name: local_route
+              name: local_route 
               virtual_hosts:
               - name: service
                 domains:
@@ -37,13 +37,13 @@ static_resources:
                   direct_response:
                     status: 200
                     body:
-                      filename: {{ test_tmpdir }}/lorem_ipsum.txt
+                      filename: nighthawk/test/test_data/lorem_ipsum.txt
                 - match:
                     prefix: /404
                   direct_response:
                     status: 404
                     body:
-                      filename: {{ test_tmpdir }}/lorem_ipsum.txt
+                      filename: nighthawk/test/test_data/lorem_ipsum.txt
             http_filters:
             - name: envoy.router
               config:
@@ -72,7 +72,7 @@ static_resources:
                   direct_response:
                     status: 200
                     body:
-                      filename: {{ test_tmpdir }}/lorem_ipsum.txt
+                      filename: nighthawk/test/test_data/lorem_ipsum.txt
             http_filters:
             - name: envoy.router
               config:
@@ -81,9 +81,10 @@ static_resources:
           common_tls_context:
             tls_certificates:
               certificate_chain:
-                filename: "{{ test_tmpdir }}/servercert.pem"
+                filename: "{{ test_rundir }}/external/envoy/test/config/integration/certs/servercert.pem"
+                #filename: "nighthawk/envoy/test/config/integration/certs/servercert.pem"
               private_key:
-                filename: "{{ test_tmpdir }}/serverkey.pem"
+                filename: "{{ test_rundir }}/external/envoy/test/config/integration/certs/serverkey.pem"
             validation_context:
               trusted_ca:
-                filename: "{{ test_tmpdir }}/cacert.pem"
+                filename: "{{ test_rundir }}/external/envoy/test/config/integration/certs/cacert.pem"
