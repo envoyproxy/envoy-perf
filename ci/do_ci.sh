@@ -101,6 +101,7 @@ if [ -n "$CIRCLECI" ]; then
     export TEST_TMPDIR=/build/tmp
     mkdir -p "$TEST_TMPDIR"
 
+    NUM_CPUS=8
     if [ "$1" == "coverage" ]; then
         NUM_CPUS=6
     fi
