@@ -56,8 +56,12 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
 bool BenchmarkClientHttpImpl::syncResolveDns() {
   bool dns_resolved = false;
   auto dns_resolver = dispatcher_.createDnsResolver({});
+
+  ASSERT(uri_->isValid());
   std::string to_resolve = uri_->host_without_port();
 
+  // '[' can only exist in the hostname to mark the start of an ipv6 address.
+  // We strip the brackets before passing on the host for resolving.
   if (to_resolve.size() > 0 && to_resolve[0] == '[') {
     to_resolve = to_resolve.substr(1);
     to_resolve = to_resolve.substr(0, to_resolve.size() - 1);

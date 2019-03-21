@@ -100,7 +100,6 @@ if [ -n "$CIRCLECI" ]; then
         echo 1
     fi
     export TEST_TMPDIR=/build/tmp
-    export TEST_CERT_DIR="$TEST_TMPDIR"
     mkdir -p "$TEST_TMPDIR"
     export BAZEL_EXTRA_TEST_OPTIONS="--test_env=ENVOY_IP_TEST_VERSIONS=v4only"    
 fi
