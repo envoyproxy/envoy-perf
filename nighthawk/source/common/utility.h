@@ -34,9 +34,10 @@ public:
 
   /**
    * Finds the position of the port separator in the uri authority component. Throws an
-   * InvalidHostException when bad input is provided.
+   * InvalidHostException when bad input is provided. The user:pass@ component is not (yet)
+   * supported.
    *
-   * @param authority valid "host[:port]" fragment.
+   * @param authority valid "host[:port]" string.
    * @return size_t the position of the port separator, or std::string::npos if none was found.
    */
   static size_t findPortSeparatorInAuthority(absl::string_view authority);
