@@ -92,7 +92,7 @@ public:
       port = use_https ? getTestServerHostAndSslPort() : getTestServerHostAndPort();
     }
 
-    std::string address =
+    const std::string address =
         GetParam() == Envoy::Network::Address::IpVersion::v4 ? "127.0.0.1" : "[::1]";
 
     client_ = std::make_unique<Client::BenchmarkClientHttpImpl>(
