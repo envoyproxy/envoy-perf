@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "common/api/api_impl.h"
+#include "common/runtime/runtime_impl.h"
 #include "common/stats/isolated_store_impl.h"
 
 #include "test/mocks/thread_local/mocks.h"
@@ -21,9 +22,11 @@ class ClientWorkerTest : public testing::Test {
 public:
   ClientWorkerTest()
       : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_),
-        thread_id_(std::this_thread::get_id()) {
+        thread_id_(std::this_thread::get_id()),
+        loader_(Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(rand_, store_, tls_)}) {
     benchmark_client_ = new MockBenchmarkClient();
     sequencer_ = new MockSequencer();
+
     EXPECT_CALL(option_interpreter_, createBenchmarkClient(_, _))
         .Times(1)
         .WillOnce(testing::Return(
@@ -56,6 +59,8 @@ public:
   Envoy::Event::RealTimeSystem time_system_;
   MockBenchmarkClient* benchmark_client_;
   MockSequencer* sequencer_;
+  Envoy::Runtime::RandomGeneratorImpl rand_;
+  Envoy::Runtime::ScopedLoaderSingleton loader_;
 };
 
 TEST_F(ClientWorkerTest, BasicTest) {

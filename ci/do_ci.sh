@@ -88,10 +88,8 @@ function do_tsan() {
     run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-tsan //nighthawk/test:nighthawk_test
 }
 
-# TODO(oschaaf): To avoid OOM kicking in, we throttle resources here. Revisit this later
-# to see how this was finally resolved in Envoy's code base. There is a TODO for when
-# when a later bazel version is deployed in CI here:
-# https://github.com/lizan/envoy/blob/2eb772ac7518c8fbf2a8c7acbc1bf89e548d9c86/ci/do_ci.sh#L86
+[ -z "${NUM_CPUS}" ] && NUM_CPUS=`grep -c ^processor /proc/cpuinfo`
+
 if [ -n "$CIRCLECI" ]; then
     # TODO(oschaaf): hack, this should be done in .circleci/config.yml
     git submodule update --init --recursive
@@ -99,32 +97,34 @@ if [ -n "$CIRCLECI" ]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
     fi
+
     export TEST_TMPDIR=/build/tmp
     mkdir -p "$TEST_TMPDIR"
-    export BAZEL_EXTRA_TEST_OPTIONS="--test_env=ENVOY_IP_TEST_VERSIONS=v4only"    
+
+    if [ "$1" == "coverage" ]; then
+        NUM_CPUS=6
+    fi
 fi
 
-[[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
+export BAZEL_BUILD_OPTIONS=" \
+--verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
+--jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"
 
-NUM_CPUS=12
+export BAZEL_EXTRA_TEST_OPTIONS="--test_env=ENVOY_IP_TEST_VERSIONS=v4only ${BAZEL_EXTRA_TEST_OPTIONS}"
+
+export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
+--test_env=UBSAN_OPTIONS=print_stacktrace=1 \
+--cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
+
+
+[[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
 
 setup_clang_toolchain
 
 if [ "$1" == "coverage" ]; then
     setup_gcc_toolchain
-    CONCURRENCY=6
 fi
 
-export BAZEL_BUILD_EXTRA_OPTIONS="${BAZEL_BUILD_EXTRA_OPTIONS}"
-export BAZEL_BUILD_OPTIONS=" \
---verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
---jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"
-export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
---test_env=UBSAN_OPTIONS=print_stacktrace=1 \
---cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
-export TEST_TMPDIR=/build/tmp
-
-mkdir -p "$TEST_TMPDIR"
 
 case "$1" in
     build)
