@@ -47,7 +47,7 @@ size_t Uri::findPortSeparatorInAuthority(absl::string_view authority) {
 
       // TODO(oschaaf): it's better then nothing, but this isn't fully correct/complete.
       bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
-                (c == '.') || (c == '-') || (in_ipv6_address && c == ':');
+                (i > 0 && (c == '.' || c == '-')) || (in_ipv6_address && c == ':');
       if (!ok) {
         throw InvalidHostException("Invalid hostname");
       }
