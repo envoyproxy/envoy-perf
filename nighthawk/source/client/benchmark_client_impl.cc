@@ -54,21 +54,21 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
 }
 
 bool BenchmarkClientHttpImpl::syncResolveDns() {
+  ASSERT(uri_->isValid());
+
+  // If the host can be parsed as an ipv4 or ipv6 address, we return that directly.
+  try {
+    target_address_ = Envoy::Network::Utility::parseInternetAddressAndPort(uri_->host_and_port());
+    return true;
+  } catch (EnvoyException) {
+  }
+
+  // We couldn't interpret the host as an ip-address, so lets attempt dns resolution.
   bool dns_resolved = false;
   auto dns_resolver = dispatcher_.createDnsResolver({});
 
-  ASSERT(uri_->isValid());
-  std::string to_resolve = uri_->host_without_port();
-
-  // '[' can only exist in the hostname to mark the start of an ipv6 address.
-  // We strip the brackets before passing on the host for resolving.
-  if (to_resolve.size() > 0 && to_resolve[0] == '[') {
-    to_resolve = to_resolve.substr(1);
-    to_resolve = to_resolve.substr(0, to_resolve.size() - 1);
-  }
-
   Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
-      to_resolve, dns_lookup_family_,
+      uri_->host_without_port(), dns_lookup_family_,
       [this, &dns_resolved, &active_dns_query_](
           const std::list<Envoy::Network::Address::InstanceConstSharedPtr>&& address_list) -> void {
         active_dns_query_ = nullptr;
@@ -83,6 +83,7 @@ bool BenchmarkClientHttpImpl::syncResolveDns() {
         }
         dispatcher_.exit();
       });
+
   // Wait for DNS resolution to complete before proceeding.
   dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
   return dns_resolved;
