@@ -29,6 +29,34 @@ uint32_t determineCpuCoresWithAffinity() {
 
 } // namespace PlatformUtils
 
+size_t Uri::findPortSeparatorInAuthority(absl::string_view authority) {
+  size_t colon_index = std::string::npos;
+  bool in_ipv6_address = false;
+
+  for (size_t i = 0; i < authority.size(); i++) {
+    char c = authority[i];
+    if (i == 0 && c == '[') {
+      in_ipv6_address = true;
+    } else if (in_ipv6_address && c == ']') {
+      in_ipv6_address = false;
+    } else {
+      if (!in_ipv6_address && i > 0 && c == ':') {
+        colon_index = i;
+        break;
+      }
+
+      // TODO(oschaaf): it's better then nothing, but this isn't fully correct/complete.
+      bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
+                (c == '.') || (c == '-') || (in_ipv6_address && c == ':');
+      if (!ok) {
+        throw InvalidHostException("Invalid hostname");
+      }
+    }
+  }
+
+  return colon_index;
+}
+
 Uri::Uri(const std::string& uri) : scheme_("http") {
   absl::string_view host, path;
   Envoy::Http::Utility::extractHostPathFromUri(uri, host, path);
@@ -40,21 +68,13 @@ Uri::Uri(const std::string& uri) : scheme_("http") {
     scheme_ = absl::AsciiStrToLower(uri.substr(0, scheme_end));
   }
 
-  size_t colon_index = std::string::npos;
-  bool in_ipv6_address = false;
+  size_t colon_index;
 
-  for (size_t i = 0; i < host_and_port_.size(); i++) {
-    char c = host_and_port_[i];
-    if (c == '[') {
-      in_ipv6_address = true;
-    } else if (in_ipv6_address && c == ']') {
-      in_ipv6_address = false;
-    } else {
-      if (!in_ipv6_address && c == ':') {
-        colon_index = i;
-        break;
-      }
-    }
+  try {
+    colon_index = findPortSeparatorInAuthority(host_and_port_);
+  } catch (InvalidHostException ex) {
+    host_error_ = true;
+    return;
   }
 
   if (colon_index == std::string::npos) {

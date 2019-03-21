@@ -1,3 +1,5 @@
+#include <string>
+
 #include "gtest/gtest.h"
 
 #include "nighthawk/source/common/utility.h"
@@ -65,6 +67,16 @@ TEST_F(UtilityTest, Ipv6Address) {
   EXPECT_EQ("[::1]", u2.host_without_port());
   EXPECT_EQ("[::1]:80", u2.host_and_port());
   EXPECT_EQ(80, u2.port());
+}
+
+TEST_F(UtilityTest, findPortSeparatorInAuthority) {
+  EXPECT_EQ(std::string::npos, Uri::findPortSeparatorInAuthority("127.0.0.1"));
+  EXPECT_EQ(5, Uri::findPortSeparatorInAuthority("[::1]:80"));
+  EXPECT_EQ(std::string::npos, Uri::findPortSeparatorInAuthority("[::1]"));
+  EXPECT_EQ(9, Uri::findPortSeparatorInAuthority("127.0.0.1:80"));
+
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("::1:81"), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("bad#host"), InvalidHostException);
 }
 
 // TODO(oschaaf): we probably want to move this out to another file.
