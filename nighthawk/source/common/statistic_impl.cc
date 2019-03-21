@@ -47,7 +47,7 @@ uint64_t SimpleStatistic::count() const { return count_; }
 double SimpleStatistic::mean() const { return count() == 0 ? std::nan("") : sum_x_ / count_; }
 
 double SimpleStatistic::pvariance() const {
-  count() == 0 ? std::nan("") : return (sum_x2_ / count_) - (mean() * mean());
+  return count() == 0 ? std::nan("") : (sum_x2_ / count_) - (mean() * mean());
 }
 
 double SimpleStatistic::pstdev() const { return count() == 0 ? std::nan("") : sqrt(pvariance()); }
