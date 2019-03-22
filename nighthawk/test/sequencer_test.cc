@@ -7,6 +7,7 @@
 #include "common/api/api_impl.h"
 #include "common/common/thread_impl.h"
 #include "common/event/dispatcher_impl.h"
+#include "common/filesystem/filesystem_impl.h"
 #include "common/stats/isolated_store_impl.h"
 
 #include "test/mocks/event/mocks.h"
@@ -28,7 +29,7 @@ namespace Nighthawk {
 class SequencerTestBase : public testing::Test {
 public:
   SequencerTestBase()
-      : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_),
+      : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_, file_system_),
         dispatcher_(std::make_unique<Envoy::Event::MockDispatcher>()), callback_test_count_(0),
         frequency_(10_Hz),
         interval_(std::chrono::duration_cast<std::chrono::milliseconds>(frequency_.interval())),
@@ -43,6 +44,7 @@ public:
     return true;
   }
 
+  Envoy::Filesystem::InstanceImplPosix file_system_;
   MockPlatformUtil platform_util_;
   Envoy::Stats::IsolatedStoreImpl store_;
   Envoy::Event::SimulatedTimeSystem time_system_;
