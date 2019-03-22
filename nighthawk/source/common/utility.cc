@@ -32,7 +32,10 @@ uint32_t determineCpuCoresWithAffinity() {
 size_t Uri::findPortSeparatorInAuthority(absl::string_view authority) {
   size_t colon_index = std::string::npos;
   bool in_ipv6_address = false;
+  bool last_seen_dot = true;
 
+  // TODO(oschaaf): We need to revisit this and improve. This performs some
+  // limited hostname validation.
   for (size_t i = 0; i < authority.size(); i++) {
     char c = authority[i];
     if (i == 0 && c == '[') {
@@ -43,15 +46,25 @@ size_t Uri::findPortSeparatorInAuthority(absl::string_view authority) {
       if (!in_ipv6_address && i > 0 && c == ':') {
         colon_index = i;
         break;
+      } else if (c == '.') {
+        if (last_seen_dot) {
+          throw InvalidHostException("Invalid hostname");
+        }
+        last_seen_dot = true;
+        continue;
+      } else {
+        last_seen_dot = false;
       }
 
-      // TODO(oschaaf): it's better then nothing, but this isn't fully correct/complete.
-      bool ok = (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || (c >= '0' && c <= '9') ||
-                (i > 0 && (c == '.' || c == '-')) || (in_ipv6_address && c == ':');
+      bool ok = std::isalnum(c) || (i > 0 && c == '-') || (in_ipv6_address && c == ':');
+
       if (!ok) {
         throw InvalidHostException("Invalid hostname");
       }
     }
+  }
+  if (in_ipv6_address) {
+    throw InvalidHostException("Invalid hostname (missing']')");
   }
 
   return colon_index;

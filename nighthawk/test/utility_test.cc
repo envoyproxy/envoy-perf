@@ -74,9 +74,20 @@ TEST_F(UtilityTest, findPortSeparatorInAuthority) {
   EXPECT_EQ(5, Uri::findPortSeparatorInAuthority("[::1]:80"));
   EXPECT_EQ(std::string::npos, Uri::findPortSeparatorInAuthority("[::1]"));
   EXPECT_EQ(9, Uri::findPortSeparatorInAuthority("127.0.0.1:80"));
+  EXPECT_EQ(std::string::npos, Uri::findPortSeparatorInAuthority("127.0.0.1"));
+
+  EXPECT_EQ(std::string::npos, Uri::findPortSeparatorInAuthority("foo.com"));
+  EXPECT_EQ(7, Uri::findPortSeparatorInAuthority("foo.com:80"));
+  EXPECT_EQ(8, Uri::findPortSeparatorInAuthority("8foo.com:80"));
 
   EXPECT_THROW(Uri::findPortSeparatorInAuthority("::1:81"), InvalidHostException);
   EXPECT_THROW(Uri::findPortSeparatorInAuthority("bad#host"), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("-foo.com"), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("[foo.com"), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("foo]"), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("."), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority(".."), InvalidHostException);
+  EXPECT_THROW(Uri::findPortSeparatorInAuthority("a..b"), InvalidHostException);
 }
 
 // TODO(oschaaf): we probably want to move this out to another file.
