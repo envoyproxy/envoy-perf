@@ -19,7 +19,7 @@ public:
 
 class Uri {
 public:
-  static Uri Parse(std::string uri) { return Uri(uri); }
+  static Uri Parse(absl::string_view uri) { return Uri(uri); }
 
   const std::string& host_and_port() const { return host_and_port_; }
   const std::string& host_without_port() const { return host_without_port_; }
@@ -43,7 +43,7 @@ public:
   static size_t findPortSeparatorInAuthority(absl::string_view authority);
 
 private:
-  Uri(const std::string& uri);
+  Uri(absl::string_view uri);
 
   // TODO(oschaaf): username, password, etc. But we may want to look at
   // pulling in a mature uri parser.

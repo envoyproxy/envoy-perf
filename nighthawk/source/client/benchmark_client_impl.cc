@@ -33,7 +33,7 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
                                                  Envoy::Stats::StorePtr&& store,
                                                  StatisticPtr&& connect_statistic,
                                                  StatisticPtr&& response_statistic,
-                                                 const std::string& uri, bool use_h2)
+                                                 absl::string_view uri, bool use_h2)
     : api_(api), dispatcher_(dispatcher), store_(std::move(store)),
       scope_(store_->createScope("client.benchmark.")),
       connect_statistic_(std::move(connect_statistic)),
