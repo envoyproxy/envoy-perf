@@ -120,8 +120,7 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
       ASSERT(cluster_config.has_tls_context());
       transport_socket.set_name(
           Envoy::Extensions::TransportSockets::TransportSocketNames::get().Tls);
-      Envoy::MessageUtil::jsonConvert(cluster_config.tls_context(),
-                                      *transport_socket.mutable_config());
+      transport_socket.mutable_typed_config()->PackFrom(cluster_config.tls_context());
     }
 
     // TODO(oschaaf): Ideally we'd just re-use Tls::Upstream::createTransportFactory().
