@@ -103,7 +103,7 @@ public:
   virtual void setupBenchmarkClient(const std::string uriPath, bool use_h2) = 0;
 
   void doSetupBenchmarkClient(const std::string uriPath, bool use_https, bool use_h2) {
-    std::string address =
+    const std::string address =
         GetParam() == Envoy::Network::Address::IpVersion::v4 ? "127.0.0.1" : "[::1]";
 
     client_ = std::make_unique<Client::BenchmarkClientHttpImpl>(
