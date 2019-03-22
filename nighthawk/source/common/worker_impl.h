@@ -2,6 +2,7 @@
 
 #include "envoy/api/api.h"
 #include "envoy/common/time.h"
+#include "envoy/filesystem/filesystem.h"
 #include "envoy/stats/store.h"
 #include "envoy/thread/thread.h"
 
@@ -31,6 +32,7 @@ protected:
   Envoy::ThreadLocal::Instance& tls_;
   Envoy::Stats::StorePtr store_;
   Envoy::TimeSource& time_source_;
+  Envoy::Filesystem::Instance& file_system_;
 
 private:
   Envoy::Thread::ThreadPtr thread_;

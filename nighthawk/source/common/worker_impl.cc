@@ -9,7 +9,7 @@ namespace Nighthawk {
 WorkerImpl::WorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
                        Envoy::Stats::StorePtr&& store)
     : thread_factory_(api.threadFactory()), dispatcher_(api.allocateDispatcher()), tls_(tls),
-      store_(std::move(store)), time_source_(api.timeSource()) {
+      store_(std::move(store)), time_source_(api.timeSource()), file_system_(api.fileSystem()) {
   tls.registerThread(*dispatcher_, false);
 }
 

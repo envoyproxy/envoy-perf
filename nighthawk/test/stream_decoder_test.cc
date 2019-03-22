@@ -26,8 +26,9 @@ namespace Client {
 class StreamDecoderTest : public testing::Test, public StreamDecoderCompletionCallback {
 public:
   StreamDecoderTest()
-      : api_(thread_factory_, store_, time_system_), dispatcher_(api_.allocateDispatcher()),
-        stream_decoder_completion_callbacks_(0), pool_failures_(0) {}
+      : api_(thread_factory_, store_, time_system_, file_system_),
+        dispatcher_(api_.allocateDispatcher()), stream_decoder_completion_callbacks_(0),
+        pool_failures_(0) {}
 
   void onComplete(bool, const Envoy::Http::HeaderMap&) override {
     stream_decoder_completion_callbacks_++;
@@ -42,6 +43,7 @@ public:
   StreamingStatistic connect_statistic_;
   StreamingStatistic latency_statistic_;
   Envoy::Http::HeaderMapImpl request_headers_;
+  Envoy::Filesystem::InstanceImplPosix file_system_;
   uint64_t stream_decoder_completion_callbacks_;
   uint64_t pool_failures_;
 };

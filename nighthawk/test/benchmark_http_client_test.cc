@@ -42,11 +42,12 @@ class BenchmarkClientTestBase : public Envoy::BaseIntegrationTest,
 public:
   BenchmarkClientTestBase()
       : Envoy::BaseIntegrationTest(GetParam(), realTime(), BenchmarkClientTestBase::envoy_config),
-        api_(thread_factory_, store_, timeSystem()), dispatcher_(api_.allocateDispatcher()) {}
+        api_(thread_factory_, store_, timeSystem(), file_system_),
+        dispatcher_(api_.allocateDispatcher()) {}
 
   static void SetUpTestCase() {
-    Envoy::Filesystem::InstanceImpl filesystem;
-    envoy_config = filesystem.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
+    Envoy::Filesystem::InstanceImplPosix file_system;
+    envoy_config = file_system.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
     envoy_config = Envoy::TestEnvironment::substitute(envoy_config);
   }
@@ -136,6 +137,7 @@ public:
   ::testing::NiceMock<Envoy::ThreadLocal::MockInstance> tls_;
   ::testing::NiceMock<Envoy::Runtime::MockLoader> runtime_;
   std::unique_ptr<Client::BenchmarkClientHttpImpl> client_;
+  Envoy::Filesystem::InstanceImplPosix file_system_;
   static std::string envoy_config;
 };
 
