@@ -57,7 +57,7 @@ size_t Uri::findPortSeparatorInAuthority(absl::string_view authority) {
   return colon_index;
 }
 
-Uri::Uri(const std::string& uri) : scheme_("http") {
+Uri::Uri(absl::string_view uri) : scheme_("http") {
   absl::string_view host, path;
   Envoy::Http::Utility::extractHostPathFromUri(uri, host, path);
   host_and_port_ = std::string(host);

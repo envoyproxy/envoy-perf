@@ -49,7 +49,7 @@ class BenchmarkClientHttpImpl : public BenchmarkClient,
 public:
   BenchmarkClientHttpImpl(Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher,
                           Envoy::Stats::StorePtr&& store, StatisticPtr&& connect_statistic,
-                          StatisticPtr&& response_statistic, const std::string& uri, bool use_h2);
+                          StatisticPtr&& response_statistic, absl::string_view uri, bool use_h2);
 
   void setConnectionLimit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
   void setConnectionTimeout(std::chrono::seconds timeout) { timeout_ = timeout; }
