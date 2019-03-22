@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 
 #include "common/api/api_impl.h"
+#include "common/filesystem/filesystem_impl.h"
 #include "common/runtime/runtime_impl.h"
 #include "common/stats/isolated_store_impl.h"
 
@@ -30,8 +31,10 @@ public:
 
 class WorkerTest : public testing::Test {
 public:
-  WorkerTest() : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_) {}
+  WorkerTest()
+      : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_, file_system_) {}
 
+  Envoy::Filesystem::InstanceImplPosix file_system_;
   Envoy::Api::Impl api_;
   Envoy::ThreadLocal::MockInstance tls_;
   Envoy::Stats::IsolatedStoreImpl store_;

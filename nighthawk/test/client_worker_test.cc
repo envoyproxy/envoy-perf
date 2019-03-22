@@ -5,6 +5,7 @@
 #include <thread>
 
 #include "common/api/api_impl.h"
+#include "common/filesystem/filesystem_impl.h"
 #include "common/runtime/runtime_impl.h"
 #include "common/stats/isolated_store_impl.h"
 
@@ -21,7 +22,7 @@ namespace Client {
 class ClientWorkerTest : public testing::Test {
 public:
   ClientWorkerTest()
-      : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_),
+      : api_(Envoy::Thread::ThreadFactorySingleton::get(), store_, time_system_, file_system_),
         thread_id_(std::this_thread::get_id()),
         loader_(Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(rand_, store_, tls_)}) {
     benchmark_client_ = new MockBenchmarkClient();
@@ -61,6 +62,7 @@ public:
   MockSequencer* sequencer_;
   Envoy::Runtime::RandomGeneratorImpl rand_;
   Envoy::Runtime::ScopedLoaderSingleton loader_;
+  Envoy::Filesystem::InstanceImplPosix file_system_;
 };
 
 TEST_F(ClientWorkerTest, BasicTest) {

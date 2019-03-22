@@ -15,6 +15,7 @@
 #include "common/common/thread_impl.h"
 #include "common/event/dispatcher_impl.h"
 #include "common/event/real_time_system.h"
+#include "common/filesystem/filesystem_impl.h"
 #include "common/network/utility.h"
 #include "common/runtime/runtime_impl.h"
 #include "common/thread_local/thread_local_impl.h"
@@ -120,7 +121,9 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   auto thread_factory = Envoy::Thread::ThreadFactoryImplPosix();
   Envoy::Stats::StorePtr store = option_interpreter.createStatsStore();
   Envoy::Event::RealTimeSystem time_system;
-  Envoy::Api::Impl api(thread_factory, *store, time_system);
+  Envoy::Filesystem::InstanceImplPosix filesystem;
+
+  Envoy::Api::Impl api(thread_factory, *store, time_system, filesystem);
   Envoy::ThreadLocal::InstanceImpl tls;
   Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
   // TODO(oschaaf): later on, fire up and use a main dispatcher loop as need arises.

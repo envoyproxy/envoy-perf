@@ -44,6 +44,7 @@ envoy_cc_library(
         "//nighthawk/source/common:nighthawk_common_lib",
         "@envoy//source/common/common:compiler_requirements_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",
+        "@envoy//source/common/filesystem:filesystem_lib",
         "@envoy//source/common/runtime:runtime_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
