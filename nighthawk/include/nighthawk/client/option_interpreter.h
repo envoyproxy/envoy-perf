@@ -15,6 +15,7 @@
 #include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/sequencer.h"
 #include "nighthawk/common/statistic.h"
+#include "nighthawk/source/common/utility.h"
 
 namespace Nighthawk {
 namespace Client {
@@ -29,7 +30,8 @@ class OptionInterpreter {
 public:
   virtual ~OptionInterpreter() = default;
   virtual BenchmarkClientPtr createBenchmarkClient(Envoy::Api::Api& api,
-                                                   Envoy::Event::Dispatcher& dispatcher) const PURE;
+                                                   Envoy::Event::Dispatcher& dispatcher,
+                                                   const Uri uri) const PURE;
 
   virtual Envoy::Stats::StorePtr createStatsStore() const PURE;
   virtual StatisticPtr createStatistic() const PURE;

@@ -7,6 +7,7 @@
 #include "nighthawk/client/option_interpreter.h"
 #include "nighthawk/common/sequencer.h"
 
+#include "nighthawk/source/common/utility.h"
 #include "nighthawk/source/common/worker_impl.h"
 
 namespace Nighthawk {
@@ -17,7 +18,7 @@ class ClientWorkerImpl : public WorkerImpl,
                          Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy::Api::Api& api,
-                   Envoy::ThreadLocal::Instance& tls, Envoy::Stats::StorePtr&& store,
+                   Envoy::ThreadLocal::Instance& tls, const Uri uri, Envoy::Stats::StorePtr&& store,
                    int worker_number, uint64_t start_delay_usec);
 
   StatisticPtrMap statistics() const override;
@@ -33,9 +34,10 @@ private:
 
   std::unique_ptr<BenchmarkClient> benchmark_client_;
   std::unique_ptr<Sequencer> sequencer_;
+  const Uri uri_;
   const int worker_number_;
   const uint64_t start_delay_usec_;
-  bool success_;
+  bool success_{};
 };
 
 typedef std::unique_ptr<ClientWorkerImpl> ClientWorkerImplPtr;

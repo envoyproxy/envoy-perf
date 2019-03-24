@@ -7,17 +7,17 @@
 #include "nighthawk/source/common/rate_limiter_impl.h"
 #include "nighthawk/source/common/sequencer_impl.h"
 #include "nighthawk/source/common/statistic_impl.h"
+#include "nighthawk/source/common/utility.h"
 
 namespace Nighthawk {
 namespace Client {
 
 OptionInterpreterImpl::OptionInterpreterImpl(const Options& options) : options_(options) {}
 
-BenchmarkClientPtr
-OptionInterpreterImpl::createBenchmarkClient(Envoy::Api::Api& api,
-                                             Envoy::Event::Dispatcher& dispatcher) const {
+BenchmarkClientPtr OptionInterpreterImpl::createBenchmarkClient(
+    Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher, const Uri uri) const {
   auto benchmark_client = std::make_unique<BenchmarkClientHttpImpl>(
-      api, dispatcher, createStatsStore(), createStatistic(), createStatistic(), options_.uri(),
+      api, dispatcher, createStatsStore(), createStatistic(), createStatistic(), uri,
       options_.h2());
   benchmark_client->setConnectionTimeout(options_.timeout());
   benchmark_client->setConnectionLimit(options_.connections());

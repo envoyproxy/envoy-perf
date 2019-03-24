@@ -126,6 +126,12 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   Envoy::Api::Impl api(thread_factory, *store, time_system, filesystem);
   Envoy::ThreadLocal::InstanceImpl tls;
   Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
+
+  // TODO(oschaaf): Fix this, this needs to run after registering the thread.
+  Envoy::Event::DispatcherPtr resolve_dispatcher(api.allocateDispatcher());
+  Uri uri = Uri::Parse(options_->uri());
+  uri.resolve(*resolve_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
+
   // TODO(oschaaf): later on, fire up and use a main dispatcher loop as need arises.
   tls.registerThread(*main_dispatcher, true);
 
@@ -140,7 +146,7 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   std::vector<ClientWorkerPtr> workers;
   for (uint32_t worker_number = 0; worker_number < concurrency; worker_number++) {
     workers.push_back(std::make_unique<ClientWorkerImpl>(
-        option_interpreter, api, tls, option_interpreter.createStatsStore(), worker_number,
+        option_interpreter, api, tls, uri, option_interpreter.createStatsStore(), worker_number,
         inter_worker_delay_usec * worker_number));
   }
   Envoy::Runtime::RandomGeneratorImpl generator;

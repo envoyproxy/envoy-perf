@@ -28,7 +28,7 @@ public:
     benchmark_client_ = new MockBenchmarkClient();
     sequencer_ = new MockSequencer();
 
-    EXPECT_CALL(option_interpreter_, createBenchmarkClient(_, _))
+    EXPECT_CALL(option_interpreter_, createBenchmarkClient(_, _, _))
         .Times(1)
         .WillOnce(testing::Return(
             testing::ByMove(std::unique_ptr<MockBenchmarkClient>(benchmark_client_))));
@@ -71,10 +71,8 @@ TEST_F(ClientWorkerTest, BasicTest) {
   {
     testing::InSequence dummy;
 
-    EXPECT_CALL(*benchmark_client_, initialize).Times(1).WillOnce(testing::Return(true));
-
+    EXPECT_CALL(*benchmark_client_, initialize).Times(1);
     EXPECT_CALL(*sequencer_, start).Times(1);
-
     EXPECT_CALL(*sequencer_, waitForCompletion).Times(1);
   }
 
@@ -101,8 +99,8 @@ TEST_F(ClientWorkerTest, BasicTest) {
 
   int worker_number = 12345;
   auto worker = std::make_unique<ClientWorkerImpl>(
-      option_interpreter_, api_, tls_, std::make_unique<Envoy::Stats::IsolatedStoreImpl>(),
-      worker_number, 0);
+      option_interpreter_, api_, tls_, Uri::Parse("http://foo"),
+      std::make_unique<Envoy::Stats::IsolatedStoreImpl>(), worker_number, 0);
 
   worker->start();
   worker->waitForCompletion();

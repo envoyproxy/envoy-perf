@@ -36,7 +36,8 @@ TEST_F(OptionsInterpreterTest, createBenchmarkClient) {
   EXPECT_CALL(options_, connections()).Times(1);
   EXPECT_CALL(options_, h2()).Times(1);
 
-  auto benchmark_client = interpreter.createBenchmarkClient(*api_, dispatcher_);
+  auto benchmark_client =
+      interpreter.createBenchmarkClient(*api_, dispatcher_, Uri::Parse("http://foo/"));
 }
 
 TEST_F(OptionsInterpreterTest, createSequencer) {

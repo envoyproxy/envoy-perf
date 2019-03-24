@@ -15,7 +15,8 @@ class OptionInterpreterImpl : public OptionInterpreter {
 public:
   OptionInterpreterImpl(const Options& options);
   BenchmarkClientPtr createBenchmarkClient(Envoy::Api::Api& api,
-                                           Envoy::Event::Dispatcher& dispatcher) const override;
+                                           Envoy::Event::Dispatcher& dispatcher,
+                                           const Uri uri) const override;
   SequencerPtr createSequencer(Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
                                BenchmarkClient& benchmark_client) const override;
 

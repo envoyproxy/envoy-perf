@@ -5,12 +5,12 @@ namespace Client {
 
 // TODO(oschaaf): const the stuff
 ClientWorkerImpl::ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy::Api::Api& api,
-                                   Envoy::ThreadLocal::Instance& tls,
+                                   Envoy::ThreadLocal::Instance& tls, const Uri uri,
                                    Envoy::Stats::StorePtr&& store, int worker_number,
                                    uint64_t start_delay_usec)
-    : WorkerImpl(api, tls, std::move(store)), worker_number_(worker_number),
-      start_delay_usec_(start_delay_usec), success_(false) {
-  benchmark_client_ = option_interpreter.createBenchmarkClient(api, *dispatcher_);
+    : WorkerImpl(api, tls, std::move(store)), uri_(uri), worker_number_(worker_number),
+      start_delay_usec_(start_delay_usec) {
+  benchmark_client_ = option_interpreter.createBenchmarkClient(api, *dispatcher_, uri);
   sequencer_ = option_interpreter.createSequencer(time_source_, *dispatcher_, *benchmark_client_);
 }
 
@@ -52,19 +52,15 @@ void ClientWorkerImpl::delayStart() {
 }
 
 void ClientWorkerImpl::work() {
-  if (benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting())) {
-    simpleWarmup();
-
-    benchmark_client_->setMeasureLatencies(true);
-
-    delayStart();
-
-    sequencer_->start();
-    sequencer_->waitForCompletion();
-    logResult();
-    benchmark_client_->terminate();
-    success_ = true;
-  }
+  benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
+  simpleWarmup();
+  benchmark_client_->setMeasureLatencies(true);
+  delayStart();
+  sequencer_->start();
+  sequencer_->waitForCompletion();
+  logResult();
+  benchmark_client_->terminate();
+  success_ = true;
   dispatcher_->exit();
 }
 

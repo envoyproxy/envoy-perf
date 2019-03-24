@@ -20,6 +20,8 @@
 #include "nighthawk/common/sequencer.h"
 #include "nighthawk/common/statistic.h"
 
+#include "nighthawk/source/common/utility.h"
+
 using namespace std::chrono_literals;
 
 constexpr std::chrono::milliseconds TimeResolution = 1ms;
@@ -77,9 +79,10 @@ public:
   MockOptionInterpreter();
   ~MockOptionInterpreter();
 
-  MOCK_CONST_METHOD2(createBenchmarkClient,
+  MOCK_CONST_METHOD3(createBenchmarkClient,
                      Client::BenchmarkClientPtr(Envoy::Api::Api& api,
-                                                Envoy::Event::Dispatcher& dispatcher));
+                                                Envoy::Event::Dispatcher& dispatcher,
+                                                const Uri uri));
   MOCK_CONST_METHOD3(createSequencer, SequencerPtr(Envoy::TimeSource& time_source,
                                                    Envoy::Event::Dispatcher& dispatcher,
                                                    Client::BenchmarkClient& benchmark_client));
