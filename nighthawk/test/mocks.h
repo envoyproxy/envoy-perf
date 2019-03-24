@@ -92,7 +92,7 @@ public:
   MockBenchmarkClient();
   ~MockBenchmarkClient();
 
-  MOCK_METHOD1(initialize, bool(Envoy::Runtime::Loader&));
+  MOCK_METHOD1(initialize, void(Envoy::Runtime::Loader&));
   MOCK_METHOD0(terminate, void());
   MOCK_METHOD1(setMeasureLatencies, void(bool));
   MOCK_CONST_METHOD0(statistics, StatisticPtrMap());
