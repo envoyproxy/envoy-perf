@@ -16,9 +16,9 @@ namespace PlatformUtils {
 uint32_t determineCpuCoresWithAffinity();
 }
 
-class InvalidUriException : public NighthawkException {
+class UriException : public NighthawkException {
 public:
-  InvalidUriException(const std::string& message) : NighthawkException(message) {}
+  UriException(const std::string& message) : NighthawkException(message) {}
 };
 
 class Uri : public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
@@ -26,7 +26,7 @@ public:
   static Uri Parse(absl::string_view uri) {
     auto r = Uri(uri);
     if (!r.isValid()) {
-      throw InvalidUriException("Invalid URI");
+      throw UriException("Invalid URI");
     }
     return r;
   }
@@ -50,20 +50,21 @@ public:
   resolve(Envoy::Event::Dispatcher& dispatcher,
           const Envoy::Network::DnsLookupFamily dns_lookup_family);
   Envoy::Network::Address::InstanceConstSharedPtr address() const {
-    ASSERT(!needs_resolve_, "resolve() must be called first.");
+    ASSERT(resolve_attempted_, "resolve() must be called first.");
     return address_;
   }
 
 private:
   Uri(absl::string_view uri);
   bool isValid() const {
-    // We check that we do not start with '-' because that overlaps with CLI argument parsing.
-    // For other validation, we defer to parseInternetAddressAndPort() and dns resolution later on.
     return (scheme_ == "http" || scheme_ == "https") && (port_ > 0 && port_ <= 65535) &&
+           // We check that we do not start with '-' because that overlaps with CLI argument
+           // parsing. For other hostname validation, we defer to parseInternetAddressAndPort() and
+           // dns resolution later on.
            host_without_port_.size() > 0 && host_without_port_[0] != '-';
   }
 
-  bool tryParseHostAsAddress(const Envoy::Network::DnsLookupFamily dns_lookup_family);
+  bool tryParseHostAsAddressAndPort(const Envoy::Network::DnsLookupFamily dns_lookup_family);
   bool performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
                         const Envoy::Network::DnsLookupFamily dns_lookup_family);
 
@@ -76,7 +77,7 @@ private:
   std::string scheme_;
 
   Envoy::Network::Address::InstanceConstSharedPtr address_;
-  bool needs_resolve_{true};
+  bool resolve_attempted_{};
 };
 
 } // namespace Nighthawk

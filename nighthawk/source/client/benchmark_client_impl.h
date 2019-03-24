@@ -75,8 +75,6 @@ public:
   void onPoolFailure(Envoy::Http::ConnectionPool::PoolFailureReason reason) override;
 
 private:
-  bool syncResolveDns();
-
   Envoy::Api::Api& api_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::Stats::StorePtr store_;
@@ -103,8 +101,7 @@ private:
   uint64_t requests_initiated_{};
   bool measure_latencies_{};
   BenchmarkClientStats benchmark_client_stats_;
-
-}; // namespace Client
+};
 
 } // namespace Client
 } // namespace Nighthawk
