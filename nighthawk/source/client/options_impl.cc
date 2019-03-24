@@ -168,7 +168,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
 
   try {
     Uri::Parse(uri_);
-  } catch (const InvalidUriException) {
+  } catch (const UriException) {
     throw MalformedArgvException("Invalid URI");
   }
 }

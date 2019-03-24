@@ -41,7 +41,7 @@ Uri::Uri(absl::string_view uri) : scheme_("http") {
   Envoy::Http::Utility::extractHostPathFromUri(uri, host, path);
 
   if (host.size() == 0) {
-    throw InvalidUriException("Invalid URI (no host)");
+    throw UriException("Invalid URI (no host)");
   }
 
   host_and_port_ = std::string(host);
@@ -64,7 +64,7 @@ Uri::Uri(absl::string_view uri) : scheme_("http") {
   }
 }
 
-bool Uri::tryParseHostAsAddress(const Envoy::Network::DnsLookupFamily dns_lookup_family) {
+bool Uri::tryParseHostAsAddressAndPort(const Envoy::Network::DnsLookupFamily dns_lookup_family) {
   try {
     address_ = Envoy::Network::Utility::parseInternetAddressAndPort(
         host_and_port_, dns_lookup_family == Envoy::Network::DnsLookupFamily::V6Only);
@@ -76,7 +76,6 @@ bool Uri::tryParseHostAsAddress(const Envoy::Network::DnsLookupFamily dns_lookup
 
 bool Uri::performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
                            const Envoy::Network::DnsLookupFamily dns_lookup_family) {
-  // We couldn't interpret the host as an ip-address, so attempt dns resolution.
   auto dns_resolver = dispatcher.createDnsResolver({});
 
   Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
@@ -100,25 +99,26 @@ bool Uri::performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
 Envoy::Network::Address::InstanceConstSharedPtr
 Uri::resolve(Envoy::Event::Dispatcher& dispatcher,
              const Envoy::Network::DnsLookupFamily dns_lookup_family) {
-  if (!needs_resolve_) {
+  if (resolve_attempted_) {
     return address_;
   }
+  resolve_attempted_ = true;
 
-  if (tryParseHostAsAddress(dns_lookup_family) || performDnsLookup(dispatcher, dns_lookup_family)) {
-    if ((dns_lookup_family == Envoy::Network::DnsLookupFamily::V6Only &&
-         address_->ip()->ipv6() == nullptr) ||
-        (dns_lookup_family == Envoy::Network::DnsLookupFamily::V4Only &&
-         address_->ip()->ipv4() == nullptr)) {
-      ENVOY_LOG(warn, "'{}' resolved to an unsupported address family {}", host_without_port());
-      throw InvalidUriException(
-          "Could not resolve to an address for the requested address family.");
-    }
-  } else {
-    ENVOY_LOG(warn, "Could not resolve host {}", host_without_port());
-    throw InvalidUriException("Could not determine address");
+  // First we attempt to parse the hostname as host:port. Iff that didn't work out, we try to
+  // resolve using dns.
+  bool ok = tryParseHostAsAddressAndPort(dns_lookup_family) ||
+            performDnsLookup(dispatcher, dns_lookup_family);
+
+  // Ensure that we figured out a fitting match for the requested dns lookup family.
+  ok = ok && !((dns_lookup_family == Envoy::Network::DnsLookupFamily::V6Only &&
+                address_->ip()->ipv6() == nullptr) ||
+               (dns_lookup_family == Envoy::Network::DnsLookupFamily::V4Only &&
+                address_->ip()->ipv4() == nullptr));
+  if (!ok) {
+    ENVOY_LOG(warn, "Could not resolve '{}'", host_without_port());
+    address_.reset();
+    throw UriException("Could not determine address");
   }
-
-  needs_resolve_ = false;
   return address_;
 }
 
