@@ -20,7 +20,7 @@ public:
    * Initialize will be called on the worker thread after it has started.
    * @param runtime to be used during initialization.
    */
-  virtual bool initialize(Envoy::Runtime::Loader& runtime) PURE;
+  virtual void initialize(Envoy::Runtime::Loader& runtime) PURE;
 
   /**
    * Terminate will be called on the worker thread before it ends.
@@ -46,8 +46,8 @@ public:
    * @param caller_completion_callback The callback the client must call back upon completion of a
    * successfully started request.
    *
-   * @return true if the request could be started.
-   * @return false if the request could not be started, for example due to resource limits.
+   * @return true if the request could be started, otherwise the request could not be started, for
+   * example due to resource limits
    */
   virtual bool tryStartOne(std::function<void()> caller_completion_callback) PURE;
 

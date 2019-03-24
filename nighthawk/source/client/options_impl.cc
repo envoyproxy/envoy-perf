@@ -165,7 +165,10 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       throw MalformedArgvException("Value for --concurrency should be greater then 0.");
     }
   }
-  if (!Uri::Parse(uri_).isValid()) {
+
+  try {
+    Uri::Parse(uri_);
+  } catch (const InvalidUriException) {
     throw MalformedArgvException("Invalid URI");
   }
 }

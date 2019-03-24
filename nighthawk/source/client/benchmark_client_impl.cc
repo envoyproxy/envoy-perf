@@ -32,68 +32,25 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
                                                  Envoy::Event::Dispatcher& dispatcher,
                                                  Envoy::Stats::StorePtr&& store,
                                                  StatisticPtr&& connect_statistic,
-                                                 StatisticPtr&& response_statistic,
-                                                 absl::string_view uri, bool use_h2)
+                                                 StatisticPtr&& response_statistic, const Uri& uri,
+                                                 bool use_h2)
     : api_(api), dispatcher_(dispatcher), store_(std::move(store)),
       scope_(store_->createScope("client.benchmark.")),
       connect_statistic_(std::move(connect_statistic)),
-      response_statistic_(std::move(response_statistic)), use_h2_(use_h2),
-      uri_(std::make_unique<Uri>(Uri::Parse(uri))),
+      response_statistic_(std::move(response_statistic)), use_h2_(use_h2), uri_(uri),
       benchmark_client_stats_({ALL_BENCHMARK_CLIENT_STATS(POOL_COUNTER(*scope_))}) {
-  ASSERT(uri_->isValid());
-
   connect_statistic_->setId("benchmark_http_client.queue_to_connect");
   response_statistic_->setId("benchmark_http_client.request_to_response");
 
   request_headers_.insertMethod().value(Envoy::Http::Headers::get().MethodValues.Get);
-  request_headers_.insertPath().value(uri_->path());
-  request_headers_.insertHost().value(uri_->host_and_port());
-  request_headers_.insertScheme().value(uri_->scheme() == "https"
+  request_headers_.insertPath().value(uri_.path());
+  request_headers_.insertHost().value(uri_.host_and_port());
+  request_headers_.insertScheme().value(uri_.scheme() == "https"
                                             ? Envoy::Http::Headers::get().SchemeValues.Https
                                             : Envoy::Http::Headers::get().SchemeValues.Http);
 }
 
-bool BenchmarkClientHttpImpl::syncResolveDns() {
-  ASSERT(uri_->isValid());
-
-  // If the host can be parsed as an ipv4 or ipv6 address, we return that directly.
-  try {
-    target_address_ = Envoy::Network::Utility::parseInternetAddressAndPort(uri_->host_and_port());
-    return true;
-  } catch (EnvoyException) {
-  }
-
-  // We couldn't interpret the host as an ip-address, so lets attempt dns resolution.
-  bool dns_resolved = false;
-  auto dns_resolver = dispatcher_.createDnsResolver({});
-
-  Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
-      uri_->host_without_port(), dns_lookup_family_,
-      [this, &dns_resolved, &active_dns_query_](
-          const std::list<Envoy::Network::Address::InstanceConstSharedPtr>&& address_list) -> void {
-        active_dns_query_ = nullptr;
-        if (!address_list.empty()) {
-          target_address_ =
-              Envoy::Network::Utility::getAddressWithPort(*address_list.front(), uri_->port());
-          ENVOY_LOG(debug, "DNS resolution complete for {} ({} entries, using {}).",
-                    uri_->host_without_port(), address_list.size(), target_address_->asString());
-          dns_resolved = true;
-        } else {
-          ENVOY_LOG(critical, "Could not resolve host {}", uri_->host_without_port());
-        }
-        dispatcher_.exit();
-      });
-
-  // Wait for DNS resolution to complete before proceeding.
-  dispatcher_.run(Envoy::Event::Dispatcher::RunType::Block);
-  return dns_resolved;
-}
-
-bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
-  if (!syncResolveDns()) {
-    return false;
-  }
-
+void BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
   envoy::api::v2::Cluster cluster_config;
   envoy::api::v2::core::BindConfig bind_config;
 
@@ -106,7 +63,7 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
 
   Envoy::Network::TransportSocketFactoryPtr socket_factory;
 
-  if (uri_->scheme() == "https") {
+  if (uri_.scheme() == "https") {
     auto common_tls_context = cluster_config.mutable_tls_context()->mutable_common_tls_context();
     // TODO(oschaaf): we should ensure that we fail when h2 is requested but not supported on the
     // server-side in tests.
@@ -154,8 +111,10 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
       cluster_config, bind_config, runtime, std::move(socket_factory),
       store_->createScope("client."), false /*added_via_api*/);
 
+  ASSERT(uri_.address().get() != nullptr);
+
   auto host = std::shared_ptr<Envoy::Upstream::Host>{new Envoy::Upstream::HostImpl(
-      cluster_, uri_->host_and_port(), target_address_,
+      cluster_, uri_.host_and_port(), uri_.address(),
       envoy::api::v2::core::Metadata::default_instance(), 1 /* weight */,
       envoy::api::v2::core::Locality(),
       envoy::api::v2::endpoint::Endpoint::HealthCheckConfig::default_instance(), 0,
@@ -170,7 +129,6 @@ bool BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
     pool_ = std::make_unique<Envoy::Http::Http1::ProdConnPoolImpl>(
         dispatcher_, host, Envoy::Upstream::ResourcePriority::Default, options);
   }
-  return true;
 }
 
 void BenchmarkClientHttpImpl::terminate() { pool_.reset(); }
@@ -183,7 +141,6 @@ StatisticPtrMap BenchmarkClientHttpImpl::statistics() const {
 };
 
 bool BenchmarkClientHttpImpl::tryStartOne(std::function<void()> caller_completion_callback) {
-  ASSERT(target_address_.get());
   if (!cluster_->resourceManager(Envoy::Upstream::ResourcePriority::Default)
            .pendingRequests()
            .canCreate() ||

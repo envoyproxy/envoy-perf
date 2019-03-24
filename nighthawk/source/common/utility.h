@@ -4,6 +4,10 @@
 
 #include "absl/strings/string_view.h"
 
+#include "common/common/logger.h"
+#include "common/network/dns_impl.h"
+#include "common/network/utility.h"
+
 #include "nighthawk/common/exception.h"
 
 namespace Nighthawk {
@@ -12,14 +16,20 @@ namespace PlatformUtils {
 uint32_t determineCpuCoresWithAffinity();
 }
 
-class InvalidHostException : public NighthawkException {
+class InvalidUriException : public NighthawkException {
 public:
-  InvalidHostException(const std::string& message) : NighthawkException(message) {}
+  InvalidUriException(const std::string& message) : NighthawkException(message) {}
 };
 
-class Uri {
+class Uri : public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
-  static Uri Parse(absl::string_view uri) { return Uri(uri); }
+  static Uri Parse(absl::string_view uri) {
+    auto r = Uri(uri);
+    if (!r.isValid()) {
+      throw InvalidUriException("Invalid URI");
+    }
+    return r;
+  }
 
   const std::string& host_and_port() const { return host_and_port_; }
   const std::string& host_without_port() const { return host_without_port_; }
@@ -27,32 +37,46 @@ public:
   uint64_t port() const { return port_; }
   const std::string& scheme() const { return scheme_; }
 
-  bool isValid() const {
-    return !host_error_ && (scheme_ == "http" || scheme_ == "https") &&
-           (port_ > 0 && port_ <= 65535);
-  }
-
   /**
-   * Finds the position of the port separator in the uri authority component. Throws an
-   * InvalidHostException when bad input is provided. The user:pass@ component is not (yet)
-   * supported.
+   * Finds the position of the port separator in the host:port fragment.
    *
-   * @param authority valid "host[:port]" string.
-   * @return size_t the position of the port separator, or std::string::npos if none was found.
+   * @param hostname valid "host[:port]" string.
+   * @return size_t the position of the port separator, or absl::string_view::npos if none was
+   * found.
    */
-  static size_t findPortSeparatorInAuthority(absl::string_view authority);
+  static size_t findPortSeparator(absl::string_view hostname);
+
+  Envoy::Network::Address::InstanceConstSharedPtr
+  resolve(Envoy::Event::Dispatcher& dispatcher,
+          const Envoy::Network::DnsLookupFamily dns_lookup_family);
+  Envoy::Network::Address::InstanceConstSharedPtr address() const {
+    ASSERT(!needs_resolve_, "resolve() must be called first.");
+    return address_;
+  }
 
 private:
   Uri(absl::string_view uri);
+  bool isValid() const {
+    // We check that we do not start with '-' because that overlaps with CLI argument parsing.
+    // For other validation, we defer to parseInternetAddressAndPort() and dns resolution later on.
+    return (scheme_ == "http" || scheme_ == "https") && (port_ > 0 && port_ <= 65535) &&
+           host_without_port_.size() > 0 && host_without_port_[0] != '-';
+  }
 
-  // TODO(oschaaf): username, password, etc. But we may want to look at
+  bool tryParseHostAsAddress(const Envoy::Network::DnsLookupFamily dns_lookup_family);
+  bool performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
+                        const Envoy::Network::DnsLookupFamily dns_lookup_family);
+
+  // TODO(oschaaf): username, password, query etc. But we may want to look at
   // pulling in a mature uri parser.
   std::string host_and_port_;
   std::string host_without_port_;
   std::string path_;
-  uint64_t port_;
+  uint64_t port_{};
   std::string scheme_;
-  bool host_error_{};
+
+  Envoy::Network::Address::InstanceConstSharedPtr address_;
+  bool needs_resolve_{true};
 };
 
 } // namespace Nighthawk
