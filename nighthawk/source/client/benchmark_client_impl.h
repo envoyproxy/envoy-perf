@@ -49,32 +49,23 @@ class BenchmarkClientHttpImpl : public BenchmarkClient,
 public:
   BenchmarkClientHttpImpl(Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher,
                           Envoy::Stats::StorePtr&& store, StatisticPtr&& connect_statistic,
-                          StatisticPtr&& response_statistic, absl::string_view uri, bool use_h2);
+                          StatisticPtr&& response_statistic, const Uri& uri, bool use_h2);
 
   void setConnectionLimit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
   void setConnectionTimeout(std::chrono::seconds timeout) { timeout_ = timeout; }
   void setMaxPendingRequests(uint64_t max_pending_requests) {
     max_pending_requests_ = max_pending_requests;
   }
-  void setDnsLookupFamily(Envoy::Network::DnsLookupFamily dns_lookup_family) {
-    dns_lookup_family_ = dns_lookup_family;
-  }
 
   // BenchmarkClient
-  bool initialize(Envoy::Runtime::Loader& runtime) override;
-
+  void initialize(Envoy::Runtime::Loader& runtime) override;
   void terminate() override;
-
   StatisticPtrMap statistics() const override;
-
   bool measureLatencies() const override { return measure_latencies_; }
-
   void setMeasureLatencies(bool measure_latencies) override {
     measure_latencies_ = measure_latencies;
   }
-
   bool tryStartOne(std::function<void()> caller_completion_callback) override;
-
   std::map<std::string, uint64_t> getCounters(CounterFilter filter = [](std::string, uint64_t) {
     return true;
   }) const override;
@@ -101,8 +92,7 @@ private:
   StatisticPtr connect_statistic_;
   StatisticPtr response_statistic_;
   const bool use_h2_;
-  const std::unique_ptr<Uri> uri_;
-  Envoy::Network::Address::InstanceConstSharedPtr target_address_;
+  const Uri uri_;
   std::chrono::seconds timeout_{5s};
   uint64_t connection_limit_{1};
   uint64_t max_pending_requests_{1};
@@ -112,7 +102,6 @@ private:
   uint64_t requests_completed_{};
   uint64_t requests_initiated_{};
   bool measure_latencies_{};
-  Envoy::Network::DnsLookupFamily dns_lookup_family_{Envoy::Network::DnsLookupFamily::Auto};
   BenchmarkClientStats benchmark_client_stats_;
 
 }; // namespace Client
