@@ -44,7 +44,7 @@ public:
    * @return size_t the position of the port separator, or absl::string_view::npos if none was
    * found.
    */
-  static size_t findPortSeparator(absl::string_view hostname);
+  static size_t FindPortSeparator(absl::string_view hostname);
 
   Envoy::Network::Address::InstanceConstSharedPtr
   resolve(Envoy::Event::Dispatcher& dispatcher,
