@@ -50,15 +50,11 @@ TEST_F(UtilityTest, ExplicitPort) {
   EXPECT_THROW(Uri::Parse("HTTP://a:0"), UriException);
 }
 
-TEST_F(UtilityTest, SchemeWeDontUnderstand) {
-  EXPECT_THROW(Uri::Parse("foo://a"), UriException);
-}
+TEST_F(UtilityTest, SchemeWeDontUnderstand) { EXPECT_THROW(Uri::Parse("foo://a"), UriException); }
 
 TEST_F(UtilityTest, Empty) { EXPECT_THROW(Uri::Parse(""), UriException); }
 
-TEST_F(UtilityTest, HostStartsWithMinus) {
-  EXPECT_THROW(Uri::Parse("http://-a"), UriException);
-}
+TEST_F(UtilityTest, HostStartsWithMinus) { EXPECT_THROW(Uri::Parse("http://-a"), UriException); }
 
 TEST_F(UtilityTest, Ipv6Address) {
   const Uri u = Uri::Parse("http://[::1]:81/bar");
@@ -72,7 +68,7 @@ TEST_F(UtilityTest, Ipv6Address) {
   EXPECT_EQ(80, u2.port());
 }
 
-TEST_F(UtilityTest, findPortSeparator) {
+TEST_F(UtilityTest, FindPortSeparator) {
   EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("127.0.0.1"));
   EXPECT_EQ(5, Uri::findPortSeparator("[::1]:80"));
   EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("[::1]"));
@@ -101,7 +97,7 @@ INSTANTIATE_TEST_SUITE_P(IpVersions, UtilityAddressResolutionTest,
                          testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
                          Envoy::TestUtility::ipTestParamsToString);
 
-TEST_P(UtilityAddressResolutionTest, addressResolution) {
+TEST_P(UtilityAddressResolutionTest, AddressResolution) {
   if (GetParam() == Envoy::Network::Address::IpVersion::v4) {
     Envoy::Network::DnsLookupFamily address_family = Envoy::Network::DnsLookupFamily::V4Only;
     EXPECT_EQ("127.0.0.1:80", testResolution("127.0.0.1", address_family)->asString());
@@ -120,7 +116,7 @@ TEST_P(UtilityAddressResolutionTest, addressResolution) {
     EXPECT_THROW(testResolution("127.0.0.1:80", address_family), UriException);
   }
 }
-TEST_P(UtilityAddressResolutionTest, addressResolutionBadAddresses) {
+TEST_P(UtilityAddressResolutionTest, AddressResolutionBadAddresses) {
   Envoy::Network::DnsLookupFamily address_family = Envoy::Network::DnsLookupFamily::Auto;
 
   EXPECT_THROW(testResolution("bad#host", address_family), UriException);

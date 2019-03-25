@@ -64,7 +64,6 @@ private:
            host_without_port_.size() > 0 && host_without_port_[0] != '-';
   }
 
-  bool tryParseHostAsAddressAndPort(const Envoy::Network::DnsLookupFamily dns_lookup_family);
   bool performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
                         const Envoy::Network::DnsLookupFamily dns_lookup_family);
 
