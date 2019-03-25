@@ -126,15 +126,14 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   Envoy::Api::Impl api(thread_factory, *store, time_system, filesystem);
   Envoy::ThreadLocal::InstanceImpl tls;
   Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
-
-  Envoy::Event::DispatcherPtr resolve_dispatcher(api.allocateDispatcher());
   Uri uri = Uri::Parse(options_->uri());
-  // TODO(oschaaf): Fix this, this needs to run after registering the thread, but doing so
-  // triggers a runtime assert.
-  // uri.resolve(*resolve_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
-
-  // TODO(oschaaf): later on, fire up and use a main dispatcher loop as need arises.
   tls.registerThread(*main_dispatcher, true);
+  try {
+    uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
+  } catch (const UriException) {
+    tls.shutdownGlobalThreading();
+    return false;
+  }
 
   uint32_t concurrency = determineConcurrency();
   // We try to offset the start of each thread so that workers will execute tasks evenly

@@ -52,13 +52,11 @@ void ClientWorkerImpl::delayStart() {
 }
 
 void ClientWorkerImpl::work() {
-  try {
-    benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
-  } catch (const UriException) {
-    success_ = false;
-    return;
-  }
-
+  // We need the dispatcher to run here to avoid a runtime assert triggering. This is effectively a
+  // no-op.
+  // TODO(oschaaf):
+  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
+  benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
   simpleWarmup();
   benchmark_client_->setMeasureLatencies(true);
   delayStart();

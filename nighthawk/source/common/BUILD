@@ -34,6 +34,7 @@ envoy_cc_library(
         "@envoy//source/common/common:compiler_requirements_lib",
         "@envoy//source/common/common:minimal_logger_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",
+        "@envoy//source/common/network:dns_lib",
         "@envoy//source/common/stats:stats_lib",
         "@envoy//source/exe:envoy_common_lib",
         "@envoy//source/server/config_validation:server_lib",
