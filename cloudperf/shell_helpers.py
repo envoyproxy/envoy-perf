@@ -1,4 +1,5 @@
 """The file contains some helper functions to the shell commands."""
+from __future__ import print_function
 
 import pexpect
 
@@ -130,7 +131,7 @@ def RunCommand(args, timeout=None, logfile=None):
   child.expect(pexpect.EOF)
   child.close()
   if child.exitstatus:
-    print args
+    print(args)
     raise RuntimeError(("Error: {}\nProblem running command. "
                         "Exit status: {}").format(child.before,
                                                   child.exitstatus))
