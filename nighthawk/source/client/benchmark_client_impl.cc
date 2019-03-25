@@ -51,6 +51,11 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
 }
 
 void BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
+  // TODO(oschaaf): This is a hack. We want to do this a single time before running the benchmark
+  // workers, but that the way this is set up right now this would trigger a runtime assert.
+  // Hence we temporarily keep doing this here it he worker.
+  const_cast<Uri*>(&uri_)->resolve(dispatcher_, Envoy::Network::DnsLookupFamily::Auto);
+
   envoy::api::v2::Cluster cluster_config;
   envoy::api::v2::core::BindConfig bind_config;
 

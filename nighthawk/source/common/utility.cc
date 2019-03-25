@@ -115,7 +115,7 @@ Uri::resolve(Envoy::Event::Dispatcher& dispatcher,
                (dns_lookup_family == Envoy::Network::DnsLookupFamily::V4Only &&
                 address_->ip()->ipv4() == nullptr));
   if (!ok) {
-    ENVOY_LOG(warn, "Could not resolve '{}'", host_without_port());
+    ENVOY_LOG(error, "Could not resolve '{}'", host_without_port());
     address_.reset();
     throw UriException("Could not determine address");
   }

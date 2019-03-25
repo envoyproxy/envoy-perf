@@ -127,10 +127,11 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   Envoy::ThreadLocal::InstanceImpl tls;
   Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
 
-  // TODO(oschaaf): Fix this, this needs to run after registering the thread.
   Envoy::Event::DispatcherPtr resolve_dispatcher(api.allocateDispatcher());
   Uri uri = Uri::Parse(options_->uri());
-  uri.resolve(*resolve_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
+  // TODO(oschaaf): Fix this, this needs to run after registering the thread, but doing so
+  // triggers a runtime assert.
+  // uri.resolve(*resolve_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
 
   // TODO(oschaaf): later on, fire up and use a main dispatcher loop as need arises.
   tls.registerThread(*main_dispatcher, true);
@@ -178,7 +179,12 @@ bool Main::run() {
   OptionInterpreterImpl option_interpreter(*options_);
 
   std::vector<StatisticPtr> merged_statistics;
-  bool ok = runWorkers(option_interpreter, merged_statistics);
+  bool ok;
+  try {
+    ok = runWorkers(option_interpreter, merged_statistics);
+  } catch (UriException) {
+    ok = false;
+  }
   if (ok) {
     outputCliStats(merged_statistics);
     // Output the statistics to the proto

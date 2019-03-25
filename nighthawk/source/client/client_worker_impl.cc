@@ -52,7 +52,13 @@ void ClientWorkerImpl::delayStart() {
 }
 
 void ClientWorkerImpl::work() {
-  benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
+  try {
+    benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
+  } catch (const UriException) {
+    success_ = false;
+    return;
+  }
+
   simpleWarmup();
   benchmark_client_->setMeasureLatencies(true);
   delayStart();

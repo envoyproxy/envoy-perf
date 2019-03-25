@@ -31,7 +31,6 @@ public:
 TEST_F(OptionsInterpreterTest, createBenchmarkClient) {
   OptionInterpreterImpl interpreter(options_);
 
-  EXPECT_CALL(options_, uri()).Times(1);
   EXPECT_CALL(options_, timeout()).Times(1);
   EXPECT_CALL(options_, connections()).Times(1);
   EXPECT_CALL(options_, h2()).Times(1);
