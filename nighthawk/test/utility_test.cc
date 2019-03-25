@@ -69,16 +69,16 @@ TEST_F(UtilityTest, Ipv6Address) {
 }
 
 TEST_F(UtilityTest, FindPortSeparator) {
-  EXPECT_EQ(absl::string_view::npos, Uri::FindPortSeparator("127.0.0.1"));
-  EXPECT_EQ(5, Uri::FindPortSeparator("[::1]:80"));
-  EXPECT_EQ(absl::string_view::npos, Uri::FindPortSeparator("[::1]"));
-  EXPECT_EQ(9, Uri::FindPortSeparator("127.0.0.1:80"));
-  EXPECT_EQ(absl::string_view::npos, Uri::FindPortSeparator("127.0.0.1"));
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("127.0.0.1"));
+  EXPECT_EQ(5, Uri::findPortSeparator("[::1]:80"));
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("[::1]"));
+  EXPECT_EQ(9, Uri::findPortSeparator("127.0.0.1:80"));
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("127.0.0.1"));
 
-  EXPECT_EQ(absl::string_view::npos, Uri::FindPortSeparator("foo.com"));
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("foo.com"));
 
-  EXPECT_EQ(7, Uri::FindPortSeparator("foo.com:80"));
-  EXPECT_EQ(8, Uri::FindPortSeparator("8foo.com:80"));
+  EXPECT_EQ(7, Uri::findPortSeparator("foo.com:80"));
+  EXPECT_EQ(8, Uri::findPortSeparator("8foo.com:80"));
 }
 
 class UtilityAddressResolutionTest

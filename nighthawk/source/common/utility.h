@@ -44,7 +44,7 @@ public:
    * @return size_t the position of the port separator, or absl::string_view::npos if none was
    * found.
    */
-  static size_t FindPortSeparator(absl::string_view hostname);
+  static size_t findPortSeparator(absl::string_view hostname);
 
   Envoy::Network::Address::InstanceConstSharedPtr
   resolve(Envoy::Event::Dispatcher& dispatcher,
@@ -64,7 +64,6 @@ private:
            host_without_port_.size() > 0 && host_without_port_[0] != '-';
   }
 
-  bool tryParseHostAsAddressAndPort(const Envoy::Network::DnsLookupFamily dns_lookup_family);
   bool performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
                         const Envoy::Network::DnsLookupFamily dns_lookup_family);
 
