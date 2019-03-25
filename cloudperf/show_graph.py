@@ -1,4 +1,5 @@
 """This file creates a graph for some metric in the Gcloud SQL database."""
+from __future__ import print_function
 
 import argparse
 
@@ -50,8 +51,8 @@ def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
       single_list = db_utils.SingleColumnToList(db_utils.GetFieldFromTable(
           connection, table_name, field=y_axis_field, cond=condition))
       if not single_list:
-        print "{} {} is not found in table for {} results.".format(
-            x_axis_field, x, category)
+        print("{} {} is not found in table for {} results.".format(
+            x_axis_field, x, category))
         single_list = [0]
 
       lists.append(single_list)
@@ -139,8 +140,8 @@ def DrawTimeSeriesGraph(connection, table_name, y_axis_field, time,
             y_axis_field, y_axis_field),
         cond=condition)
     if not single_list:
-      print "Values are not found in table for category {}.".format(
-          category)
+      print("Values are not found in table for category {}.".format(
+          category))
       return None
 
     return single_list
@@ -232,7 +233,7 @@ def main():
   connection = db_utils.AuthorizeMachineAndConnectDB(
       args.db_instance_name, args.project, args.username,
       args.database, logfile)
-  print "Connection to get data from DB is successful."
+  print("Connection to get data from DB is successful.")
 
   if args.runids:
     DrawBarGraph(connection, args.table_name, args.fieldname,
