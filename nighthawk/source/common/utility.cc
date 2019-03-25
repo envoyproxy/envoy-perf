@@ -29,7 +29,7 @@ uint32_t determineCpuCoresWithAffinity() {
 
 } // namespace PlatformUtils
 
-size_t Uri::findPortSeparator(absl::string_view hostname) {
+size_t Uri::FindPortSeparator(absl::string_view hostname) {
   if (hostname.size() > 0 && hostname[0] == '[') {
     return hostname.find(":", hostname.find(']'));
   }
@@ -40,7 +40,7 @@ Uri::Uri(absl::string_view uri) : scheme_("http") {
   absl::string_view host, path;
   Envoy::Http::Utility::extractHostPathFromUri(uri, host, path);
 
-  if (host.size() == 0) {
+  if (host.empty()) {
     throw UriException("Invalid URI (no host)");
   }
 
@@ -52,7 +52,7 @@ Uri::Uri(absl::string_view uri) : scheme_("http") {
     scheme_ = absl::AsciiStrToLower(uri.substr(0, scheme_end));
   }
 
-  const size_t colon_index = findPortSeparator(host_and_port_);
+  const size_t colon_index = FindPortSeparator(host_and_port_);
 
   if (colon_index == absl::string_view::npos) {
     port_ = is_https ? 443 : 80;
