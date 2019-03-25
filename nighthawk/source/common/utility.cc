@@ -1,5 +1,6 @@
 
 #include "absl/strings/match.h"
+#include "absl/strings/str_replace.h"
 #include "absl/strings/str_split.h"
 
 #include "common/http/utility.h"
@@ -29,7 +30,7 @@ uint32_t determineCpuCoresWithAffinity() {
 
 } // namespace PlatformUtils
 
-size_t Uri::FindPortSeparator(absl::string_view hostname) {
+size_t Uri::findPortSeparator(absl::string_view hostname) {
   if (hostname.size() > 0 && hostname[0] == '[') {
     return hostname.find(":", hostname.find(']'));
   }
@@ -52,7 +53,7 @@ Uri::Uri(absl::string_view uri) : scheme_("http") {
     scheme_ = absl::AsciiStrToLower(uri.substr(0, scheme_end));
   }
 
-  const size_t colon_index = FindPortSeparator(host_and_port_);
+  const size_t colon_index = findPortSeparator(host_and_port_);
 
   if (colon_index == absl::string_view::npos) {
     port_ = is_https ? 443 : 80;
@@ -64,22 +65,17 @@ Uri::Uri(absl::string_view uri) : scheme_("http") {
   }
 }
 
-bool Uri::tryParseHostAsAddressAndPort(const Envoy::Network::DnsLookupFamily dns_lookup_family) {
-  try {
-    address_ = Envoy::Network::Utility::parseInternetAddressAndPort(
-        host_and_port_, dns_lookup_family == Envoy::Network::DnsLookupFamily::V6Only);
-  } catch (Envoy::EnvoyException) {
-    // Could not parsed as a valid address:port
-  }
-  return address_.get() != nullptr;
-}
-
 bool Uri::performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
                            const Envoy::Network::DnsLookupFamily dns_lookup_family) {
   auto dns_resolver = dispatcher.createDnsResolver({});
+  auto hostname = host_without_port();
+
+  if (!hostname.empty() && hostname[0] == '[' && hostname[hostname.size() - 1] == ']') {
+    hostname = absl::StrReplaceAll(hostname, {{"[", ""}, {"]", ""}});
+  }
 
   Envoy::Network::ActiveDnsQuery* active_dns_query_ = dns_resolver->resolve(
-      host_without_port(), dns_lookup_family,
+      hostname, dns_lookup_family,
       [this, &dispatcher, &active_dns_query_](
           const std::list<Envoy::Network::Address::InstanceConstSharedPtr>&& address_list) -> void {
         active_dns_query_ = nullptr;
@@ -104,10 +100,7 @@ Uri::resolve(Envoy::Event::Dispatcher& dispatcher,
   }
   resolve_attempted_ = true;
 
-  // First we attempt to parse the hostname as host:port. Iff that didn't work out, we try to
-  // resolve using dns.
-  bool ok = tryParseHostAsAddressAndPort(dns_lookup_family) ||
-            performDnsLookup(dispatcher, dns_lookup_family);
+  bool ok = performDnsLookup(dispatcher, dns_lookup_family);
 
   // Ensure that we figured out a fitting match for the requested dns lookup family.
   ok = ok && !((dns_lookup_family == Envoy::Network::DnsLookupFamily::V6Only &&
