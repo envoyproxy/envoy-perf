@@ -1,4 +1,5 @@
 """This file consists of database helper functions."""
+from __future__ import print_function
 
 import re
 import subprocess
@@ -87,7 +88,7 @@ def AuthorizeMachineAndConnectDB(db_instance_name, project, username, database,
                              "--instance", db_instance_name, "--password",
                              password], project=project,
                             service="sql", logfile=logfile)
-  print "DB Usernames and passwords are set."
+  print("DB Usernames and passwords are set.")
   connection = MySQLdb.connect(host=hostname, user=username,
                                passwd=password, db=database)
   return connection
