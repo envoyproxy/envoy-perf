@@ -6,7 +6,7 @@ import string
 
 try:
   xrange          # Python 2
-except NameError
+except NameError:
   xrange = range  # Python 3
 
 
