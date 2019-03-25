@@ -14,26 +14,6 @@ ClientWorkerImpl::ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy:
   sequencer_ = option_interpreter.createSequencer(time_source_, *dispatcher_, *benchmark_client_);
 }
 
-void ClientWorkerImpl::logResult() {
-  std::string worker_percentiles = "{}\n{}";
-
-  for (auto statistic : benchmark_client_->statistics()) {
-    worker_percentiles =
-        fmt::format(worker_percentiles, statistic.first, statistic.second->toString() + "\n{}\n{}");
-  }
-  for (auto statistic : sequencer_->statistics()) {
-    worker_percentiles =
-        fmt::format(worker_percentiles, statistic.first, statistic.second->toString() + "\n{}\n{}");
-  }
-
-  worker_percentiles = fmt::format(worker_percentiles, "", "");
-
-  CounterFilter filter = [](std::string, uint64_t value) { return value > 0; };
-  // TODO(oschaaf): output the counters.
-  // ENVOY_LOG(info, "> worker {}\n{}\n{}", worker_number_,
-  //          benchmark_client_->countersToString(filter), worker_percentiles);
-}
-
 void ClientWorkerImpl::simpleWarmup() {
   ENVOY_LOG(debug, "> worker {}: warming up.", worker_number_);
   benchmark_client_->tryStartOne([this] { dispatcher_->exit(); });
@@ -62,7 +42,6 @@ void ClientWorkerImpl::work() {
   delayStart();
   sequencer_->start();
   sequencer_->waitForCompletion();
-  logResult();
   benchmark_client_->terminate();
   success_ = true;
   dispatcher_->exit();

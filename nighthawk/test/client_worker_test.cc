@@ -86,14 +86,6 @@ TEST_F(ClientWorkerTest, BasicTest) {
 
     // latency measurement will be initiated
     EXPECT_CALL(*benchmark_client_, setMeasureLatencies(true)).Times(1);
-
-    // worker will get to the statistics
-    EXPECT_CALL(*benchmark_client_, statistics())
-        .Times(1)
-        .WillOnce(testing::Return(createStatisticPtrMap()));
-    EXPECT_CALL(*sequencer_, statistics())
-        .Times(1)
-        .WillOnce(testing::Return(createStatisticPtrMap()));
     EXPECT_CALL(*benchmark_client_, terminate()).Times(1);
   }
 

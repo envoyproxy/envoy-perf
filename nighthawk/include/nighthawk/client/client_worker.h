@@ -4,6 +4,7 @@
 
 #include "envoy/common/pure.h"
 
+#include "nighthawk/client/benchmark_client.h"
 #include "nighthawk/common/statistic.h"
 #include "nighthawk/common/worker.h"
 
@@ -20,6 +21,8 @@ public:
    * @return StatisticPtrMap A map of Statistics keyed by id.
    */
   virtual StatisticPtrMap statistics() const PURE;
+
+  virtual const BenchmarkClient& benchmark_client() const PURE;
 
   /**
    * @brief Returns true iff the worker ran and completed successfully.

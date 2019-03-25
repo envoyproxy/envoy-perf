@@ -83,13 +83,19 @@ uint32_t Main::determineConcurrency() const {
   return concurrency;
 }
 
-void Main::outputCliStats(const std::vector<StatisticPtr>& merged_statistics) const {
+void Main::outputCliStats(const std::vector<StatisticPtr>& merged_statistics,
+                          const std::map<std::string, uint64_t>& merged_counters) const {
   std::string cli_result = "Merged statistics:\n{}";
   for (auto& statistic : merged_statistics) {
     cli_result = fmt::format(cli_result, statistic->id() + "\n{}");
     cli_result = fmt::format(cli_result, statistic->toString() + "\n{}");
   }
-  cli_result = fmt::format(cli_result, "");
+  cli_result = fmt::format(cli_result, "\nMerged counters\n");
+
+  for (auto counter : merged_counters) {
+    cli_result += fmt::format("counter {}:{}\n", counter.first, counter.second);
+  }
+
   ENVOY_LOG(info, "{}", cli_result);
 }
 
@@ -116,8 +122,28 @@ Main::mergeWorkerStatistics(const OptionInterpreter& option_interpreter,
   return merged_statistics;
 }
 
+std::map<std::string, uint64_t>
+Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
+  std::map<std::string, uint64_t> merged;
+
+  for (auto& w : workers) {
+    auto counters =
+        w->benchmark_client().getCounters([](std::string, uint64_t value) { return value > 0; });
+    for (auto counter : counters) {
+      if (merged.count(counter.first) == 0) {
+        merged[counter.first] = counter.second;
+      } else {
+        merged[counter.first] += counter.second;
+      }
+    }
+  }
+
+  return merged;
+}
+
 bool Main::runWorkers(OptionInterpreter& option_interpreter,
-                      std::vector<StatisticPtr>& merged_statistics) const {
+                      std::vector<StatisticPtr>& merged_statistics,
+                      std::map<std::string, uint64_t>& merged_counters) const {
   auto thread_factory = Envoy::Thread::ThreadFactoryImplPosix();
   Envoy::Stats::StorePtr store = option_interpreter.createStatsStore();
   Envoy::Event::RealTimeSystem time_system;
@@ -129,7 +155,9 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   Uri uri = Uri::Parse(options_->uri());
   tls.registerThread(*main_dispatcher, true);
   try {
-    uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
+    // TODO(oschaaf): must be able to select ipv6. We may prefer v4 when auto
+    // is selected.
+    uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::V4Only);
   } catch (const UriException) {
     tls.shutdownGlobalThreading();
     return false;
@@ -166,6 +194,7 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   tls.shutdownGlobalThreading();
   if (ok) {
     merged_statistics = mergeWorkerStatistics(option_interpreter, workers);
+    merged_counters = mergeWorkerCounters(workers);
   }
   return ok;
 }
@@ -178,14 +207,11 @@ bool Main::run() {
   OptionInterpreterImpl option_interpreter(*options_);
 
   std::vector<StatisticPtr> merged_statistics;
-  bool ok;
-  try {
-    ok = runWorkers(option_interpreter, merged_statistics);
-  } catch (UriException) {
-    ok = false;
-  }
+  std::map<std::string, uint64_t> merged_counters;
+  bool ok = runWorkers(option_interpreter, merged_statistics, merged_counters);
+
   if (ok) {
-    outputCliStats(merged_statistics);
+    outputCliStats(merged_statistics, merged_counters);
     // Output the statistics to the proto
     nighthawk::client::Output output;
     output.set_allocated_options(options_->toCommandLineOptions().release());

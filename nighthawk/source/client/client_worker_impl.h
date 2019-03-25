@@ -22,6 +22,8 @@ public:
                    int worker_number, uint64_t start_delay_usec);
 
   StatisticPtrMap statistics() const override;
+
+  const BenchmarkClient& benchmark_client() const override { return *benchmark_client_; }
   bool success() const override { return success_; }
 
 protected:
@@ -30,8 +32,6 @@ protected:
 private:
   void simpleWarmup();
   void delayStart();
-  void logResult();
-
   std::unique_ptr<BenchmarkClient> benchmark_client_;
   std::unique_ptr<Sequencer> sequencer_;
   const Uri uri_;
