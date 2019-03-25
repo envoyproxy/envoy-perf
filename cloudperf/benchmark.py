@@ -1,4 +1,5 @@
 """Top level python script to create VM, run benchmarking and get result."""
+from __future__ import print_function
 
 
 import argparse
@@ -33,7 +34,7 @@ def CheckStatus(args):
       args.zone], project=args.project, service="compute"))
   cur_status = re.search(r"status:\s+([A-Z]+)", status)
   if cur_status.group(1) == "RUNNING":
-    print "Instance is running successfully."
+    print("Instance is running successfully.")
     return None
   else:
     return ("Instance is not running"
@@ -72,13 +73,13 @@ def TryFunctionWithTimeout(func, error_handler, num_tries,
       if not ret_val:
         return
       else:
-        print ret_val
+        print(ret_val)
     except error_handler as e:
-      print e
-    print ("Problem running function, {}. Trying again after"
+      print(e)
+    print(("Problem running function, {}. Trying again after"
            " {}s. Total tries left: {}.").format(func,
                                                  sleep_between_attempt_secs,
-                                                 count)
+                                                 count))
     time.sleep(sleep_between_attempt_secs)
   raise BenchmarkError("All tries failed.")
 
@@ -129,9 +130,9 @@ def RunBenchmark(args, logfile):
                               logfile=logfile)
     # cloud-platform scope is used to authorize the VM to
     # do `gcloud sql` and other operations
-    print "Instance created successfully."
+    print("Instance created successfully.")
   else:
-    print "Instance creation is skipped due to --no-create_delete"
+    print("Instance creation is skipped due to --no-create_delete")
 
   TryFunctionWithTimeout(CheckStatus, BenchmarkError, args.num_retries,
                          args.sleep_between_retry, args)
@@ -142,13 +143,13 @@ def RunBenchmark(args, logfile):
                          args.vm_name, dest="./envoy-fastbuild",
                          logfile=logfile, zone=args.zone,
                          project=args.project)
-  print "Envoy binary transfer complete."
+  print("Envoy binary transfer complete.")
 
   sh_utils.RunSCPLocalToRemote(["{}/*".format(scripts_path)], args.username,
                                args.vm_name,
                                logfile=logfile,
                                zone=args.zone, project=args.project)
-  print "Script transfer complete."
+  print("Script transfer complete.")
 
   sh_utils.RunSSHCommand(args.username, args.vm_name,
                          args=["--command", "mkdir -p \"envoy-configs\""],
@@ -160,14 +161,14 @@ def RunBenchmark(args, logfile):
                                dest="./envoy-configs/",
                                logfile=logfile,
                                zone=args.zone, project=args.project)
-  print "Envoy configs transfer complete. Setting up the environment."
+  print("Envoy configs transfer complete. Setting up the environment.")
 
   nginx_start_core, nginx_end_core = args.nginx_cores.split(",")
   # total cores available are: int(nginx_end_core) - int(nginx_start_core) + 1
   # but one is master process, so that is not included in calculation below
   nginx_worker_proc_count = int(nginx_end_core) - int(nginx_start_core)
   if args.setup:
-    print "Setup started (this may take some time)..."
+    print("Setup started (this may take some time)...")
     sh_utils.RunSSHCommand(args.username, args.vm_name,
                            args=["--command", "sudo chmod +x *.sh", "--", "-t"],
                            logfile=logfile,
@@ -182,7 +183,7 @@ def RunBenchmark(args, logfile):
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
-    print "Setup complete. Running Benchmark."
+    print("Setup complete. Running Benchmark.")
   else:
     # even if setup is skipped, we need to change the ownership of nginx log
     sh_utils.RunSSHCommand(args.username, args.vm_name,
@@ -216,11 +217,11 @@ def RunBenchmark(args, logfile):
                                  "--", "-t"],
                            logfile=logfile,
                            zone=args.zone, project=args.project)
-    print "Setup is skipped due to --no-setup."
+    print("Setup is skipped due to --no-setup.")
 
   # TODO(sohamcodes): this currently takes a fixed config for Envoy. It needs
   # to be changed in future to take multiple configs and run independently.
-  print "Benchmarking is started."
+  print("Benchmarking is started.")
   sh_utils.RunSSHCommand(args.username, args.vm_name,
                          args=["--command",
                                ("python distribute_proc.py "
@@ -244,7 +245,7 @@ def RunBenchmark(args, logfile):
                                     ssl="--ssl" if args.ssl else "--no-ssl",
                                     http2="--h1" if args.h1 else "--no-h1")],
                          logfile=logfile, zone=args.zone, project=args.project)
-  print "Benchmarking done successfully."
+  print("Benchmarking done successfully.")
 
   ownip = StringIO.StringIO()
   sh_utils.RunSSHCommand(args.username, args.vm_name,
@@ -274,10 +275,10 @@ def RunBenchmark(args, logfile):
                          args=["--command",
                                data_store_command],
                          logfile=logfile, zone=args.zone, project=args.project)
-  print "Data stored into database."
+  print("Data stored into database.")
 
   if args.create_delete:
-    print "Deleting instance. Wait..."
+    print("Deleting instance. Wait...")
     # pexpect.run does not take argument as arrays
     pexpect.run(("gcloud compute --project {}"
                  " instances delete {} --zone {}").format(
@@ -285,9 +286,9 @@ def RunBenchmark(args, logfile):
                 events={"Do you want to continue (Y/n)?": "Y\n"},
                 logfile=logfile,
                 timeout=None)
-    print "Instance deleted."
+    print("Instance deleted.")
   else:
-    print "Instance deletion is skipped due to --no-create_delete."
+    print("Instance deletion is skipped due to --no-create_delete.")
 
 
 def main():
