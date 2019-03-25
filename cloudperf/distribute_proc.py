@@ -1,4 +1,5 @@
 """This module executes h2load, Nginx and Envoy on separate cores."""
+from __future__ import print_function
 
 import argparse
 from collections import defaultdict
@@ -200,7 +201,7 @@ def RunAndParseH2Load(h2load_command, h2load_timeout=None, logfile=None):
   }
 
   while child.isalive():
-    print "h2load is still alive, after parsing is complete."
+    print("h2load is still alive, after parsing is complete.")
     time.sleep(2)
 
   child.close()
@@ -328,7 +329,7 @@ def main():
                               h1=False)
 
   args = parser.parse_args()
-  print args.h1
+  print(args.h1)
 
   if args.nginx_cores:
     nginx_start_core, nginx_end_core = args.nginx_cores.split(",")
@@ -348,7 +349,7 @@ def main():
   nginx_process = AllocProcessToCores(nginx_start_core,
                                       nginx_end_core, output,
                                       nginx_command)
-  print "nginx process id is {}".format(nginx_process.pid)
+  print("nginx process id is {}".format(nginx_process.pid))
 
   # allocate envoy to designated cores
   envoy_thread_number = int(envoy_end_core) - int(envoy_start_core) + 1
@@ -358,7 +359,7 @@ def main():
   outfile = "envoy_out.log"  # this is envoy output file
   envoy_process = AllocProcessToCores(envoy_start_core, envoy_end_core,
                                       outfile, envoy_command)
-  print "envoy process id is {}".format(envoy_process.pid)
+  print("envoy process id is {}".format(envoy_process.pid))
 
   result_json = defaultdict(list)
   logfile = open("h2load_log.log", "ab+")
@@ -386,7 +387,7 @@ def main():
     result_json["direct-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     mpstat_direct.KillProcess("-SIGINT")
-    print "h2load direct is done."
+    print("h2load direct is done.")
 
     mpstat_envoy = Process("mpstat -P {} 1".format(
         cores_string), mplog_envoy)
@@ -403,7 +404,7 @@ def main():
     result_json["envoy-{}".format(args.arrangement)].append(RunAndParseH2Load(
         h2load_command, args.h2load_timeout, logfile=logfile))
     mpstat_envoy.KillProcess("-SIGINT")
-    print "h2load with envoy is done."
+    print("h2load with envoy is done.")
 
   # killing nginx, envoy processes
   nginx_process.KillProcess("-QUIT")
