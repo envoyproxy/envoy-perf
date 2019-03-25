@@ -30,6 +30,22 @@ uint32_t determineCpuCoresWithAffinity() {
 
 } // namespace PlatformUtils
 
+Uri Uri::Parse(absl::string_view uri) {
+  auto r = Uri(uri);
+  if (!r.isValid()) {
+    throw UriException("Invalid URI");
+  }
+  return r;
+}
+
+bool Uri::isValid() const {
+  return (scheme_ == "http" || scheme_ == "https") && (port_ > 0 && port_ <= 65535) &&
+         // We check that we do not start with '-' because that overlaps with CLI argument
+         // parsing. For other hostname validation, we defer to parseInternetAddressAndPort() and
+         // dns resolution later on.
+         host_without_port_.size() > 0 && host_without_port_[0] != '-';
+}
+
 size_t Uri::findPortSeparator(absl::string_view hostname) {
   if (hostname.size() > 0 && hostname[0] == '[') {
     return hostname.find(":", hostname.find(']'));

@@ -23,13 +23,7 @@ public:
 
 class Uri : public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
-  static Uri Parse(absl::string_view uri) {
-    auto r = Uri(uri);
-    if (!r.isValid()) {
-      throw UriException("Invalid URI");
-    }
-    return r;
-  }
+  static Uri Parse(absl::string_view uri);
 
   const std::string& host_and_port() const { return host_and_port_; }
   const std::string& host_without_port() const { return host_without_port_; }
@@ -56,14 +50,7 @@ public:
 
 private:
   Uri(absl::string_view uri);
-  bool isValid() const {
-    return (scheme_ == "http" || scheme_ == "https") && (port_ > 0 && port_ <= 65535) &&
-           // We check that we do not start with '-' because that overlaps with CLI argument
-           // parsing. For other hostname validation, we defer to parseInternetAddressAndPort() and
-           // dns resolution later on.
-           host_without_port_.size() > 0 && host_without_port_[0] != '-';
-  }
-
+  bool isValid() const;
   bool performDnsLookup(Envoy::Event::Dispatcher& dispatcher,
                         const Envoy::Network::DnsLookupFamily dns_lookup_family);
 
