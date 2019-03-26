@@ -21,7 +21,7 @@
 #include "common/thread_local/thread_local_impl.h"
 
 #include "nighthawk/source/client/client_worker_impl.h"
-#include "nighthawk/source/client/option_interpreter_impl.h"
+#include "nighthawk/source/client/factories_impl.h"
 #include "nighthawk/source/client/options_impl.h"
 #include "nighthawk/source/client/output.pb.h"
 #include "nighthawk/source/client/output_formatter_impl.h"
@@ -83,29 +83,55 @@ uint32_t Main::determineConcurrency() const {
   return concurrency;
 }
 
-void Main::outputCliStats(const std::vector<StatisticPtr>& merged_statistics,
-                          const std::map<std::string, uint64_t>& merged_counters) const {
-  std::string cli_result = "Merged statistics:\n{}";
+std::string Main::getOutputString(const std::vector<StatisticPtr>& merged_statistics,
+                                  const std::map<std::string, uint64_t>& merged_counters) const {
+  std::stringstream s;
+
+  s << "Merged statistics:\n";
   for (auto& statistic : merged_statistics) {
-    cli_result = fmt::format(cli_result, statistic->id() + "\n{}");
-    cli_result = fmt::format(cli_result, statistic->toString() + "\n{}");
+    if (statistic->count() > 0) {
+      s << fmt::format("{}: {}\n", statistic->id(), statistic->toString(), "\n");
+    }
   }
-  cli_result = fmt::format(cli_result, "\nMerged counters\n");
-
+  s << "\nMerged counters\n";
   for (auto counter : merged_counters) {
-    cli_result += fmt::format("counter {}:{}\n", counter.first, counter.second);
+    s << fmt::format("counter {}:{}\n", counter.first, counter.second);
   }
 
-  ENVOY_LOG(info, "{}", cli_result);
+  return s.str();
+}
+
+nighthawk::client::Output
+Main::getProtoOutput(const Options& options, const std::vector<StatisticPtr>& merged_statistics,
+                     const std::map<std::string, uint64_t>& merged_counters) const {
+  nighthawk::client::Output output;
+  output.set_allocated_options(options.toCommandLineOptions().release());
+
+  struct timeval tv;
+  gettimeofday(&tv, NULL);
+  output.mutable_timestamp()->set_seconds(tv.tv_sec);
+  output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
+
+  auto result = output.add_results();
+  result->set_name("global");
+  for (auto& statistic : merged_statistics) {
+    *(result->add_statistics()) = statistic->toProto();
+  }
+  for (auto counter : merged_counters) {
+    auto counters = result->add_counters();
+    counters->set_name(counter.first);
+    counters->set_value(counter.second);
+  }
+  return output;
 }
 
 std::vector<StatisticPtr>
-Main::mergeWorkerStatistics(const OptionInterpreter& option_interpreter,
+Main::mergeWorkerStatistics(const StatisticFactory& statistic_factory,
                             const std::vector<ClientWorkerPtr>& workers) const {
   std::vector<StatisticPtr> merged_statistics;
   StatisticPtrMap w0_statistics = workers[0]->statistics();
   for (auto w0_statistic : w0_statistics) {
-    auto new_statistic = option_interpreter.createStatistic();
+    auto new_statistic = statistic_factory.create();
     new_statistic->setId(w0_statistic.first);
     merged_statistics.push_back(std::move(new_statistic));
   }
@@ -141,11 +167,14 @@ Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   return merged;
 }
 
-bool Main::runWorkers(OptionInterpreter& option_interpreter,
+bool Main::runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
+                      const SequencerFactory& sequencer_factory,
                       std::vector<StatisticPtr>& merged_statistics,
                       std::map<std::string, uint64_t>& merged_counters) const {
   auto thread_factory = Envoy::Thread::ThreadFactoryImplPosix();
-  Envoy::Stats::StorePtr store = option_interpreter.createStatsStore();
+  StoreFactoryImpl store_factory(*options_);
+  StatisticFactoryImpl statistic_factory(*options_);
+  Envoy::Stats::StorePtr store = store_factory.create();
   Envoy::Event::RealTimeSystem time_system;
   Envoy::Filesystem::InstanceImplPosix filesystem;
 
@@ -174,9 +203,10 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   std::vector<ClientWorkerPtr> workers;
   for (uint32_t worker_number = 0; worker_number < concurrency; worker_number++) {
     workers.push_back(std::make_unique<ClientWorkerImpl>(
-        option_interpreter, api, tls, uri, option_interpreter.createStatsStore(), worker_number,
-        inter_worker_delay_usec * worker_number));
+        api, tls, benchmark_client_factory, sequencer_factory, uri, store_factory.create(),
+        worker_number, inter_worker_delay_usec * worker_number));
   }
+
   Envoy::Runtime::RandomGeneratorImpl generator;
   Envoy::Runtime::ScopedLoaderSingleton loader(
       Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(generator, *store, tls)});
@@ -186,52 +216,39 @@ bool Main::runWorkers(OptionInterpreter& option_interpreter,
   }
 
   bool ok = true;
-
   for (auto& w : workers) {
     w->waitForCompletion();
     ok = ok && w->success();
   }
-  tls.shutdownGlobalThreading();
   if (ok) {
-    merged_statistics = mergeWorkerStatistics(option_interpreter, workers);
+    merged_statistics = mergeWorkerStatistics(statistic_factory, workers);
     merged_counters = mergeWorkerCounters(workers);
   }
+
+  tls.shutdownGlobalThreading();
   return ok;
 }
 
 bool Main::run() {
   Envoy::Thread::MutexBasicLockable log_lock;
+  std::vector<StatisticPtr> merged_statistics;
+  std::map<std::string, uint64_t> merged_counters;
   auto logging_context = std::make_unique<Envoy::Logger::Context>(
       spdlog::level::from_str(options_->verbosity()), "[%T.%f][%t][%L] %v", log_lock);
 
-  OptionInterpreterImpl option_interpreter(*options_);
+  std::cout << "Nighthawk - A layer 7 protocol benchmarking tool\n";
+  BenchmarkClientFactoryImpl benchmark_client_factory(*options_);
+  SequencerFactoryImpl sequencer_factory(*options_);
 
-  std::vector<StatisticPtr> merged_statistics;
-  std::map<std::string, uint64_t> merged_counters;
-  bool ok = runWorkers(option_interpreter, merged_statistics, merged_counters);
+  bool ok =
+      runWorkers(benchmark_client_factory, sequencer_factory, merged_statistics, merged_counters);
 
   if (ok) {
-    outputCliStats(merged_statistics, merged_counters);
-    // Output the statistics to the proto
-    nighthawk::client::Output output;
-    output.set_allocated_options(options_->toCommandLineOptions().release());
+    std::string cli_output = getOutputString(merged_statistics, merged_counters);
+    std::cout << cli_output;
 
-    struct timeval tv;
-    gettimeofday(&tv, NULL);
-    output.mutable_timestamp()->set_seconds(tv.tv_sec);
-    output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
-
-    auto result = output.add_results();
-    result->set_name("global");
-    for (auto& statistic : merged_statistics) {
-      *(result->add_statistics()) = statistic->toProto();
-    }
-    for (auto counter : merged_counters) {
-      auto counters = result->add_counters();
-      counters->set_name(counter.first);
-      counters->set_value(counter.second);
-    }
-
+    nighthawk::client::Output output =
+        getProtoOutput(*options_, merged_statistics, merged_counters);
     std::string str;
     google::protobuf::util::JsonPrintOptions options;
     google::protobuf::util::MessageToJsonString(output, &str, options);

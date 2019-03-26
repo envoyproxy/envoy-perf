@@ -13,7 +13,7 @@ envoy_basic_cc_library(
     hdrs = [
         "benchmark_client.h",
         "client_worker.h",
-        "option_interpreter.h",
+        "factories.h",
         "options.h",
     ],
     include_prefix = "nighthawk/client",

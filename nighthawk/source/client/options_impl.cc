@@ -101,7 +101,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       "v", "verbosity",
       "Verbosity of the output. Possible values: [trace, debug, info, warn, error, critical]. The "
       "default level is 'info'.",
-      false, "info", &verbosities_allowed, cmd);
+      false, "warn", &verbosities_allowed, cmd);
 
   TCLAP::UnlabeledValueArg<std::string> uri("uri",
                                             "uri to benchmark. http:// and https:// are supported, "

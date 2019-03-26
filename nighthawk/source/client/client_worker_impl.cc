@@ -4,14 +4,15 @@ namespace Nighthawk {
 namespace Client {
 
 // TODO(oschaaf): const the stuff
-ClientWorkerImpl::ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy::Api::Api& api,
-                                   Envoy::ThreadLocal::Instance& tls, const Uri uri,
+ClientWorkerImpl::ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
+                                   const BenchmarkClientFactory& benchmark_client_factory,
+                                   const SequencerFactory& sequencer_factory, const Uri uri,
                                    Envoy::Stats::StorePtr&& store, int worker_number,
                                    uint64_t start_delay_usec)
     : WorkerImpl(api, tls, std::move(store)), uri_(uri), worker_number_(worker_number),
       start_delay_usec_(start_delay_usec) {
-  benchmark_client_ = option_interpreter.createBenchmarkClient(api, *dispatcher_, *store_, uri);
-  sequencer_ = option_interpreter.createSequencer(time_source_, *dispatcher_, *benchmark_client_);
+  benchmark_client_ = benchmark_client_factory.create(api, *dispatcher_, *store_, uri);
+  sequencer_ = sequencer_factory.create(time_source_, *dispatcher_, *benchmark_client_);
 }
 
 void ClientWorkerImpl::simpleWarmup() {
@@ -50,8 +51,9 @@ void ClientWorkerImpl::work() {
 StatisticPtrMap ClientWorkerImpl::statistics() const {
   StatisticPtrMap statistics(benchmark_client_->statistics());
 
-  // TODO(oschaaf): should check for duplicate id's and except.
   for (auto stat : sequencer_->statistics()) {
+    // TODO(oschaaf): check this one. asserts in a test (!!)
+    // ASSERT(!statistics.count(stat.first));
     statistics[stat.first] = stat.second;
   }
 

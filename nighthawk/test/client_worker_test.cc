@@ -28,12 +28,12 @@ public:
     benchmark_client_ = new MockBenchmarkClient();
     sequencer_ = new MockSequencer();
 
-    EXPECT_CALL(option_interpreter_, createBenchmarkClient(_, _, _, _))
+    EXPECT_CALL(benchmark_client_factory_, create(_, _, _, _))
         .Times(1)
         .WillOnce(testing::Return(
             testing::ByMove(std::unique_ptr<MockBenchmarkClient>(benchmark_client_))));
 
-    EXPECT_CALL(option_interpreter_, createSequencer(_, _, _))
+    EXPECT_CALL(sequencer_factory_, create(_, _, _))
         .Times(1)
         .WillOnce(testing::Return(testing::ByMove(std::unique_ptr<MockSequencer>(sequencer_))));
   }
@@ -54,7 +54,8 @@ public:
   Envoy::Api::Impl api_;
   std::thread::id thread_id_;
   MockOptions options_;
-  MockOptionInterpreter option_interpreter_;
+  MockBenchmarkClientFactory benchmark_client_factory_;
+  MockSequencerFactory sequencer_factory_;
   Envoy::Stats::IsolatedStoreImpl store_;
   ::testing::NiceMock<Envoy::ThreadLocal::MockInstance> tls_;
   Envoy::Event::RealTimeSystem time_system_;
@@ -91,7 +92,7 @@ TEST_F(ClientWorkerTest, BasicTest) {
 
   int worker_number = 12345;
   auto worker = std::make_unique<ClientWorkerImpl>(
-      option_interpreter_, api_, tls_, Uri::Parse("http://foo"),
+      api_, tls_, benchmark_client_factory_, sequencer_factory_, Uri::Parse("http://foo"),
       std::make_unique<Envoy::Stats::IsolatedStoreImpl>(), worker_number, 0);
 
   worker->start();

@@ -11,13 +11,14 @@
 
 #include "nighthawk/test/mocks.h"
 
-#include "nighthawk/source/client/option_interpreter_impl.h"
+#include "nighthawk/source/client/factories_impl.h"
 
 using namespace std::chrono_literals;
 
 namespace Nighthawk {
 namespace Client {
 
+/*
 class OptionsInterpreterTest : public testing::Test {
 public:
   OptionsInterpreterTest() : api_(Envoy::Api::createApiForTest(stats_store_)) {}
@@ -56,8 +57,8 @@ TEST_F(OptionsInterpreterTest, simpleInstantiations) {
   OptionInterpreterImpl interpreter(options_);
   interpreter.createStatsStore();
   interpreter.createStatistic();
-  interpreter.getPlatformUtil();
 }
+*/
 
 } // namespace Client
 } // namespace Nighthawk

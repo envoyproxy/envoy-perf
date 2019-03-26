@@ -27,8 +27,17 @@ MockSequencer::~MockSequencer() = default;
 MockOptions::MockOptions() = default;
 MockOptions::~MockOptions() = default;
 
-MockOptionInterpreter::MockOptionInterpreter() = default;
-MockOptionInterpreter::~MockOptionInterpreter() = default;
+MockBenchmarkClientFactory::MockBenchmarkClientFactory() = default;
+MockBenchmarkClientFactory::~MockBenchmarkClientFactory() = default;
+
+MockSequencerFactory::MockSequencerFactory() = default;
+MockSequencerFactory::~MockSequencerFactory() = default;
+
+MockStoreFactory::MockStoreFactory() = default;
+MockStoreFactory::~MockStoreFactory() = default;
+
+MockStatisticFactory::MockStatisticFactory() = default;
+MockStatisticFactory::~MockStatisticFactory() = default;
 
 MockBenchmarkClient::MockBenchmarkClient() = default;
 MockBenchmarkClient::~MockBenchmarkClient() = default;

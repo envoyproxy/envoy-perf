@@ -13,7 +13,7 @@
 #include "envoy/stats/store.h"
 
 #include "nighthawk/client/benchmark_client.h"
-#include "nighthawk/client/option_interpreter.h"
+#include "nighthawk/client/factories.h"
 #include "nighthawk/client/options.h"
 #include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/rate_limiter.h"
@@ -74,21 +74,36 @@ public:
   MOCK_CONST_METHOD0(toCommandLineOptions, Client::CommandLineOptionsPtr());
 };
 
-class MockOptionInterpreter : public Client::OptionInterpreter {
+class MockBenchmarkClientFactory : public Client::BenchmarkClientFactory {
 public:
-  MockOptionInterpreter();
-  ~MockOptionInterpreter();
+  MockBenchmarkClientFactory();
+  ~MockBenchmarkClientFactory();
+  MOCK_CONST_METHOD4(create, Client::BenchmarkClientPtr(Envoy::Api::Api& api,
+                                                        Envoy::Event::Dispatcher& dispatcher,
+                                                        Envoy::Stats::Store& store, const Uri uri));
+};
 
-  MOCK_CONST_METHOD4(createBenchmarkClient,
-                     Client::BenchmarkClientPtr(Envoy::Api::Api& api,
-                                                Envoy::Event::Dispatcher& dispatcher,
-                                                Envoy::Stats::Store& store, const Uri uri));
-  MOCK_CONST_METHOD3(createSequencer, SequencerPtr(Envoy::TimeSource& time_source,
-                                                   Envoy::Event::Dispatcher& dispatcher,
-                                                   Client::BenchmarkClient& benchmark_client));
-  MOCK_CONST_METHOD0(createStatsStore, Envoy::Stats::StorePtr());
-  MOCK_CONST_METHOD0(createStatistic, StatisticPtr());
-  MOCK_CONST_METHOD0(getPlatformUtil, PlatformUtilPtr());
+class MockSequencerFactory : public Client::SequencerFactory {
+public:
+  MockSequencerFactory();
+  ~MockSequencerFactory();
+  MOCK_CONST_METHOD3(create, SequencerPtr(Envoy::TimeSource& time_source,
+                                          Envoy::Event::Dispatcher& dispatcher,
+                                          Client::BenchmarkClient& benchmark_client));
+};
+
+class MockStoreFactory : public Client::StoreFactory {
+public:
+  MockStoreFactory();
+  ~MockStoreFactory();
+  MOCK_CONST_METHOD0(create, Envoy::Stats::StorePtr());
+};
+
+class MockStatisticFactory : public Client::StatisticFactory {
+public:
+  MockStatisticFactory();
+  ~MockStatisticFactory();
+  MOCK_CONST_METHOD0(create, StatisticPtr());
 };
 
 class FakeSequencerTarget {

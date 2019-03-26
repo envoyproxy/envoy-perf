@@ -12,7 +12,7 @@
 #include "nighthawk/test/mocks.h"
 
 #include "nighthawk/source/client/client.h"
-#include "nighthawk/source/client/option_interpreter_impl.h"
+#include "nighthawk/source/client/factories_impl.h"
 #include "nighthawk/source/client/options_impl.h"
 
 using namespace std::chrono_literals;

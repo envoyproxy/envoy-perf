@@ -4,7 +4,7 @@
 
 #include "nighthawk/client/benchmark_client.h"
 #include "nighthawk/client/client_worker.h"
-#include "nighthawk/client/option_interpreter.h"
+#include "nighthawk/client/factories.h"
 #include "nighthawk/common/sequencer.h"
 
 #include "nighthawk/source/common/utility.h"
@@ -17,9 +17,10 @@ class ClientWorkerImpl : public WorkerImpl,
                          virtual public ClientWorker,
                          Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
-  ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy::Api::Api& api,
-                   Envoy::ThreadLocal::Instance& tls, const Uri uri, Envoy::Stats::StorePtr&& store,
-                   int worker_number, uint64_t start_delay_usec);
+  ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
+                   const BenchmarkClientFactory& benchmark_client_factory,
+                   const SequencerFactory& sequencer_factory, const Uri uri,
+                   Envoy::Stats::StorePtr&& store, int worker_number, uint64_t start_delay_usec);
 
   StatisticPtrMap statistics() const override;
 
