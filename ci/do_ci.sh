@@ -5,7 +5,7 @@ function do_build () {
 }
 
 function do_test() {
-    bazel test $BAZEL_BUILD_OPTIONS $BAZEL_TEST_OPTIONS --test_output=all --test_env=ENVOY_IP_TEST_VERSIONS=v4only \
+    bazel test $BAZEL_BUILD_OPTIONS $BAZEL_TEST_OPTIONS --test_output=all \
     //nighthawk/test:nighthawk_test
 }
 
@@ -41,7 +41,7 @@ function setup_clang_toolchain() {
 function override_linker_with_lld() {
     WORK_DIR=`mktemp -d -p "$DIR"`
     export PATH="$WORK_DIR:$PATH"
-    ln -s $(which ld.lld) "$WORK_DIR/ld"
+    ln -s "$(which ld.lld)" "$WORK_DIR/ld"
     # We write a script to call ld.lld as 'ld' because it objects to being
     # called `ld.gold` on some systems.
     script="#!/bin/bash
@@ -79,7 +79,6 @@ function do_asan() {
     run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-asan //nighthawk/test:nighthawk_test
 }
 
-
 function do_tsan() {
     echo "bazel TSAN debug build with tests"
     echo "Building and testing envoy tests..."
@@ -98,26 +97,19 @@ if [ -n "$CIRCLECI" ]; then
         echo 1
     fi
 
-    export TEST_TMPDIR=/build/tmp
-    mkdir -p "$TEST_TMPDIR"
-
     NUM_CPUS=8
     if [ "$1" == "coverage" ]; then
         NUM_CPUS=6
     fi
 fi
 
+export BAZEL_EXTRA_TEST_OPTIONS="--test_env=ENVOY_IP_TEST_VERSIONS=v4only ${BAZEL_EXTRA_TEST_OPTIONS}"
 export BAZEL_BUILD_OPTIONS=" \
 --verbose_failures ${BAZEL_OPTIONS} --action_env=HOME --action_env=PYTHONUSERBASE \
 --jobs=${NUM_CPUS} --show_task_finish --experimental_generate_json_trace_profile ${BAZEL_BUILD_EXTRA_OPTIONS}"
-
-export BAZEL_EXTRA_TEST_OPTIONS="--test_env=ENVOY_IP_TEST_VERSIONS=v4only ${BAZEL_EXTRA_TEST_OPTIONS}"
-
 export BAZEL_TEST_OPTIONS="${BAZEL_BUILD_OPTIONS} --test_env=HOME --test_env=PYTHONUSERBASE \
 --test_env=UBSAN_OPTIONS=print_stacktrace=1 \
 --cache_test_results=no --test_output=all ${BAZEL_EXTRA_TEST_OPTIONS}"
-
-
 [[ -z "${SRCDIR}" ]] && SRCDIR="${PWD}"
 
 setup_clang_toolchain
@@ -125,7 +117,6 @@ setup_clang_toolchain
 if [ "$1" == "coverage" ]; then
     setup_gcc_toolchain
 fi
-
 
 case "$1" in
     build)
