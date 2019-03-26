@@ -79,10 +79,10 @@ public:
   MockOptionInterpreter();
   ~MockOptionInterpreter();
 
-  MOCK_CONST_METHOD3(createBenchmarkClient,
+  MOCK_CONST_METHOD4(createBenchmarkClient,
                      Client::BenchmarkClientPtr(Envoy::Api::Api& api,
                                                 Envoy::Event::Dispatcher& dispatcher,
-                                                const Uri uri));
+                                                Envoy::Stats::Store& store, const Uri uri));
   MOCK_CONST_METHOD3(createSequencer, SequencerPtr(Envoy::TimeSource& time_source,
                                                    Envoy::Event::Dispatcher& dispatcher,
                                                    Client::BenchmarkClient& benchmark_client));

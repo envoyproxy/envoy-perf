@@ -28,7 +28,7 @@ public:
     benchmark_client_ = new MockBenchmarkClient();
     sequencer_ = new MockSequencer();
 
-    EXPECT_CALL(option_interpreter_, createBenchmarkClient(_, _, _))
+    EXPECT_CALL(option_interpreter_, createBenchmarkClient(_, _, _, _))
         .Times(1)
         .WillOnce(testing::Return(
             testing::ByMove(std::unique_ptr<MockBenchmarkClient>(benchmark_client_))));

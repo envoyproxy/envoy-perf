@@ -14,11 +14,12 @@ namespace Client {
 
 OptionInterpreterImpl::OptionInterpreterImpl(const Options& options) : options_(options) {}
 
-BenchmarkClientPtr OptionInterpreterImpl::createBenchmarkClient(
-    Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher, const Uri uri) const {
+BenchmarkClientPtr
+OptionInterpreterImpl::createBenchmarkClient(Envoy::Api::Api& api,
+                                             Envoy::Event::Dispatcher& dispatcher,
+                                             Envoy::Stats::Store& store, const Uri uri) const {
   auto benchmark_client = std::make_unique<BenchmarkClientHttpImpl>(
-      api, dispatcher, createStatsStore(), createStatistic(), createStatistic(), uri,
-      options_.h2());
+      api, dispatcher, store, createStatistic(), createStatistic(), uri, options_.h2());
   benchmark_client->setConnectionTimeout(options_.timeout());
   benchmark_client->setConnectionLimit(options_.connections());
   return benchmark_client;

@@ -110,9 +110,8 @@ public:
                                   ? Envoy::Network::DnsLookupFamily::V4Only
                                   : Envoy::Network::DnsLookupFamily::V6Only);
     client_ = std::make_unique<Client::BenchmarkClientHttpImpl>(
-        api_, *dispatcher_, std::make_unique<Envoy::Stats::IsolatedStoreImpl>(),
-        std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(), uri,
-        use_h2);
+        api_, *dispatcher_, store_, std::make_unique<StreamingStatistic>(),
+        std::make_unique<StreamingStatistic>(), uri, use_h2);
   }
 
   uint64_t nonZeroValuedCounterCount() {
@@ -344,9 +343,10 @@ TEST_P(BenchmarkClientHttpTest, EnableLatencyMeasurement) {
 
 TEST_P(BenchmarkClientHttpTest, StatusTrackingInOnComplete) {
   Uri uri = Uri::Parse(fmt::format("http://foo/"));
+  auto store = std::make_unique<Envoy::Stats::IsolatedStoreImpl>();
   client_ = std::make_unique<Client::BenchmarkClientHttpImpl>(
-      api_, *dispatcher_, std::make_unique<Envoy::Stats::IsolatedStoreImpl>(),
-      std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(), uri, false);
+      api_, *dispatcher_, *store, std::make_unique<StreamingStatistic>(),
+      std::make_unique<StreamingStatistic>(), uri, false);
   Envoy::Http::HeaderMapImpl header;
 
   auto& status = header.insertStatus();

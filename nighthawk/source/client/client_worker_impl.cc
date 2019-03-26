@@ -10,7 +10,7 @@ ClientWorkerImpl::ClientWorkerImpl(OptionInterpreter& option_interpreter, Envoy:
                                    uint64_t start_delay_usec)
     : WorkerImpl(api, tls, std::move(store)), uri_(uri), worker_number_(worker_number),
       start_delay_usec_(start_delay_usec) {
-  benchmark_client_ = option_interpreter.createBenchmarkClient(api, *dispatcher_, uri);
+  benchmark_client_ = option_interpreter.createBenchmarkClient(api, *dispatcher_, *store_, uri);
   sequencer_ = option_interpreter.createSequencer(time_source_, *dispatcher_, *benchmark_client_);
 }
 

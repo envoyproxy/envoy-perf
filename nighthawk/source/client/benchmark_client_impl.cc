@@ -30,12 +30,12 @@ namespace Client {
 
 BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
                                                  Envoy::Event::Dispatcher& dispatcher,
-                                                 Envoy::Stats::StorePtr&& store,
+                                                 Envoy::Stats::Store& store,
                                                  StatisticPtr&& connect_statistic,
                                                  StatisticPtr&& response_statistic, const Uri& uri,
                                                  bool use_h2)
-    : api_(api), dispatcher_(dispatcher), store_(std::move(store)),
-      scope_(store_->createScope("client.benchmark.")),
+    : api_(api), dispatcher_(dispatcher), store_(store),
+      scope_(store_.createScope("client.benchmark.")),
       connect_statistic_(std::move(connect_statistic)),
       response_statistic_(std::move(response_statistic)), use_h2_(use_h2), uri_(uri),
       benchmark_client_stats_({ALL_BENCHMARK_CLIENT_STATS(POOL_COUNTER(*scope_))}) {
@@ -93,7 +93,7 @@ void BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
     ssl_context_manager_.reset(
         new Envoy::Extensions::TransportSockets::Tls::ContextManagerImpl(api_.timeSource()));
     transport_socket_factory_context_ = std::make_unique<Ssl::MinimalTransportSocketFactoryContext>(
-        store_->createScope("client."), dispatcher_, generator_, *store_, api_,
+        store_.createScope("client."), dispatcher_, generator_, store_, api_,
         *ssl_context_manager_);
 
     auto client_config =
@@ -110,7 +110,7 @@ void BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
 
   cluster_ = std::make_unique<Envoy::Upstream::ClusterInfoImpl>(
       cluster_config, bind_config, runtime, std::move(socket_factory),
-      store_->createScope("client."), false /*added_via_api*/);
+      store_.createScope("client."), false /*added_via_api*/);
 
   ASSERT(uri_.address().get() != nullptr);
 
@@ -164,7 +164,7 @@ bool BenchmarkClientHttpImpl::tryStartOne(std::function<void()> caller_completio
 std::map<std::string, uint64_t> BenchmarkClientHttpImpl::getCounters(CounterFilter filter) const {
   std::map<std::string, uint64_t> results;
 
-  for (auto stat : store_->counters()) {
+  for (auto stat : store_.counters()) {
     if (filter(stat->name(), stat->value())) {
       results[stat->name()] = stat->value();
     }

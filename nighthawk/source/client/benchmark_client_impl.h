@@ -48,7 +48,7 @@ class BenchmarkClientHttpImpl : public BenchmarkClient,
                                 public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   BenchmarkClientHttpImpl(Envoy::Api::Api& api, Envoy::Event::Dispatcher& dispatcher,
-                          Envoy::Stats::StorePtr&& store, StatisticPtr&& connect_statistic,
+                          Envoy::Stats::Store& store, StatisticPtr&& connect_statistic,
                           StatisticPtr&& response_statistic, const Uri& uri, bool use_h2);
 
   void setConnectionLimit(uint64_t connection_limit) { connection_limit_ = connection_limit; }
@@ -77,7 +77,7 @@ public:
 private:
   Envoy::Api::Api& api_;
   Envoy::Event::Dispatcher& dispatcher_;
-  Envoy::Stats::StorePtr store_;
+  Envoy::Stats::Store& store_;
   Envoy::Stats::ScopePtr scope_;
   Envoy::Http::HeaderMapImpl request_headers_;
   // These are declared order dependent. Changing orderering may trigger on assert upon
