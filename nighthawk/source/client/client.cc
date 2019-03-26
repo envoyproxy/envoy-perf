@@ -221,11 +221,15 @@ bool Main::run() {
     output.mutable_timestamp()->set_seconds(tv.tv_sec);
     output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
 
+    auto result = output.add_results();
+    result->set_name("global");
     for (auto& statistic : merged_statistics) {
-      auto result = output.add_results();
-      result->set_name("global");
       *(result->add_statistics()) = statistic->toProto();
-      // TODO(oschaaf): summed per-worker counters
+    }
+    for (auto counter : merged_counters) {
+      auto counters = result->add_counters();
+      counters->set_name(counter.first);
+      counters->set_value(counter.second);
     }
 
     std::string str;
