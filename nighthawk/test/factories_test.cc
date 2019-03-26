@@ -18,10 +18,9 @@ using namespace std::chrono_literals;
 namespace Nighthawk {
 namespace Client {
 
-/*
-class OptionsInterpreterTest : public testing::Test {
+class FactoriesTest : public testing::Test {
 public:
-  OptionsInterpreterTest() : api_(Envoy::Api::createApiForTest(stats_store_)) {}
+  FactoriesTest() : api_(Envoy::Api::createApiForTest(stats_store_)) {}
 
   Envoy::Api::ApiPtr api_;
   Envoy::Stats::MockIsolatedStatsStore stats_store_;
@@ -29,36 +28,40 @@ public:
   MockOptions options_;
 };
 
-TEST_F(OptionsInterpreterTest, createBenchmarkClient) {
-  OptionInterpreterImpl interpreter(options_);
+TEST_F(FactoriesTest, createBenchmarkClient) {
+  BenchmarkClientFactoryImpl factory(options_);
 
   EXPECT_CALL(options_, timeout()).Times(1);
   EXPECT_CALL(options_, connections()).Times(1);
   EXPECT_CALL(options_, h2()).Times(1);
 
-  auto benchmark_client = interpreter.createBenchmarkClient(*api_, dispatcher_, stats_store_,
-                                                            Uri::Parse("http://foo/"));
+  auto benchmark_client =
+      factory.create(*api_, dispatcher_, stats_store_, Uri::Parse("http://foo/"));
+  EXPECT_NE(nullptr, benchmark_client.get());
 }
 
-TEST_F(OptionsInterpreterTest, createSequencer) {
-  OptionInterpreterImpl interpreter(options_);
+TEST_F(FactoriesTest, createSequencer) {
+  SequencerFactoryImpl factory(options_);
   MockBenchmarkClient benchmark_client;
 
   EXPECT_CALL(options_, timeout()).Times(1);
   EXPECT_CALL(options_, duration()).Times(1).WillOnce(testing::Return(1s));
   EXPECT_CALL(options_, requests_per_second()).Times(1).WillOnce(testing::Return(1));
-
   EXPECT_CALL(dispatcher_, createTimer_(_)).Times(2);
 
-  auto sequencer = interpreter.createSequencer(api_->timeSource(), dispatcher_, benchmark_client);
+  auto sequencer = factory.create(api_->timeSource(), dispatcher_, benchmark_client);
+  EXPECT_NE(nullptr, sequencer.get());
 }
 
-TEST_F(OptionsInterpreterTest, simpleInstantiations) {
-  OptionInterpreterImpl interpreter(options_);
-  interpreter.createStatsStore();
-  interpreter.createStatistic();
+TEST_F(FactoriesTest, createStore) {
+  StoreFactoryImpl factory(options_);
+  EXPECT_NE(nullptr, factory.create().get());
 }
-*/
+
+TEST_F(FactoriesTest, createStatistic) {
+  StatisticFactoryImpl factory(options_);
+  EXPECT_NE(nullptr, factory.create().get());
+}
 
 } // namespace Client
 } // namespace Nighthawk
