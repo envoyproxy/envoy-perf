@@ -7,7 +7,6 @@
 #include <random>
 
 #include "ares.h"
-#include <google/protobuf/util/json_util.h>
 
 #include "envoy/stats/store.h"
 
@@ -81,48 +80,6 @@ uint32_t Main::determineConcurrency() const {
   }
 
   return concurrency;
-}
-
-std::string Main::getOutputString(const std::vector<StatisticPtr>& merged_statistics,
-                                  const std::map<std::string, uint64_t>& merged_counters) const {
-  std::stringstream s;
-
-  s << "Merged statistics:\n";
-  for (auto& statistic : merged_statistics) {
-    if (statistic->count() > 0) {
-      s << fmt::format("{}: {}\n", statistic->id(), statistic->toString(), "\n");
-    }
-  }
-  s << "\nMerged counters\n";
-  for (auto counter : merged_counters) {
-    s << fmt::format("counter {}:{}\n", counter.first, counter.second);
-  }
-
-  return s.str();
-}
-
-nighthawk::client::Output
-Main::getProtoOutput(const Options& options, const std::vector<StatisticPtr>& merged_statistics,
-                     const std::map<std::string, uint64_t>& merged_counters) const {
-  nighthawk::client::Output output;
-  output.set_allocated_options(options.toCommandLineOptions().release());
-
-  struct timeval tv;
-  gettimeofday(&tv, NULL);
-  output.mutable_timestamp()->set_seconds(tv.tv_sec);
-  output.mutable_timestamp()->set_nanos(tv.tv_usec * 1000);
-
-  auto result = output.add_results();
-  result->set_name("global");
-  for (auto& statistic : merged_statistics) {
-    *(result->add_statistics()) = statistic->toProto();
-  }
-  for (auto counter : merged_counters) {
-    auto counters = result->add_counters();
-    counters->set_name(counter.first);
-    counters->set_value(counter.second);
-  }
-  return output;
 }
 
 std::vector<StatisticPtr>
@@ -244,21 +201,17 @@ bool Main::run() {
       runWorkers(benchmark_client_factory, sequencer_factory, merged_statistics, merged_counters);
 
   if (ok) {
-    std::string cli_output = getOutputString(merged_statistics, merged_counters);
-    std::cout << cli_output;
+    ConsoleOutputFormatterImpl console_formatter(*options_, merged_statistics, merged_counters);
+    std::cout << console_formatter.toString();
 
-    nighthawk::client::Output output =
-        getProtoOutput(*options_, merged_statistics, merged_counters);
-    std::string str;
-    google::protobuf::util::JsonPrintOptions options;
-    google::protobuf::util::MessageToJsonString(output, &str, options);
+    JsonOutputFormatterImpl json_formatter(*options_, merged_statistics, merged_counters);
 
     mkdir("measurements", 0777);
     std::ofstream stream;
     int64_t epoch_seconds = std::chrono::system_clock::now().time_since_epoch().count();
     std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
     stream.open(filename);
-    stream << str;
+    stream << json_formatter.toString();
     ENVOY_LOG(info, "Done. Wrote {}.", filename);
   } else {
     ENVOY_LOG(error, "Error occurred.");

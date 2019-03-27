@@ -34,13 +34,6 @@ private:
   std::map<std::string, uint64_t>
   mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const;
 
-  std::string getOutputString(const std::vector<StatisticPtr>& merged_statistics,
-                              const std::map<std::string, uint64_t>& merged_counters) const;
-
-  nighthawk::client::Output
-  getProtoOutput(const Options& options, const std::vector<StatisticPtr>& merged_statistics,
-                 const std::map<std::string, uint64_t>& merged_counters) const;
-
   OptionsPtr options_;
   std::unique_ptr<Envoy::Logger::Context> logging_context_;
 };

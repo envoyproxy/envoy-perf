@@ -17,6 +17,12 @@ ClientWorkerImpl::ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Ins
 
 void ClientWorkerImpl::simpleWarmup() {
   ENVOY_LOG(debug, "> worker {}: warming up.", worker_number_);
+  // TODO(oschaaf): Maybe add BenchmarkClient::warmup() and call that here.
+  // Idealy that would warm up the pool better, by prefetching the requested amount of
+  // connections. Currently it is possible to use less connections then specified if
+  // completions are fast enough. While this may be an assert, it may also be annoying
+  // when comparing results to some other tools, which do open up the specified amount
+  // of connections.
   benchmark_client_->tryStartOne([this] { dispatcher_->exit(); });
   dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
 }
@@ -26,15 +32,15 @@ void ClientWorkerImpl::delayStart() {
             start_delay_usec_);
   // TODO(oschaaf): We could use dispatcher to sleep, but currently it has a 1 ms resolution
   // which is rather coarse for our purpose here.
-  // TODO(oschaaf): Instead of usleep, it would probably be better to provide an absolute
-  // starting time and wait for that in the (spin loop of the) sequencer implementation for high
-  // accuracy.
+  // TODO(oschaaf): Instead of usleep, it would perhaps be better to provide an absolute
+  // starting time to wait for in a (spin loop of the) sequencer implementation for high
+  // accuracy when releasing the initial requests.
   usleep(start_delay_usec_);
 }
 
 void ClientWorkerImpl::work() {
-  // We need the dispatcher to run here to avoid a runtime assert triggering. This is effectively a
-  // no-op.
+  // We need the dispatcher to run here to avoid a runtime assert triggering.
+  // This is effectively a no-op.
   // TODO(oschaaf):
   dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
   benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
@@ -49,14 +55,11 @@ void ClientWorkerImpl::work() {
 }
 
 StatisticPtrMap ClientWorkerImpl::statistics() const {
-  StatisticPtrMap statistics(benchmark_client_->statistics());
-
-  for (auto stat : sequencer_->statistics()) {
-    // TODO(oschaaf): check this one. asserts in a test (!!)
-    // ASSERT(!statistics.count(stat.first));
-    statistics[stat.first] = stat.second;
-  }
-
+  StatisticPtrMap statistics;
+  StatisticPtrMap s1 = benchmark_client_->statistics();
+  StatisticPtrMap s2 = sequencer_->statistics();
+  statistics.insert(s1.begin(), s1.end());
+  statistics.insert(s2.begin(), s2.end());
   return statistics;
 }
 

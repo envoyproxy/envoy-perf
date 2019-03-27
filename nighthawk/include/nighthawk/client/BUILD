@@ -14,6 +14,7 @@ envoy_basic_cc_library(
         "benchmark_client.h",
         "client_worker.h",
         "factories.h",
+        "output_formatter.h",
         "options.h",
     ],
     include_prefix = "nighthawk/client",
