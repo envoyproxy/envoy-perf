@@ -39,6 +39,7 @@ envoy_cc_library(
         "@envoy//source/common/common:compiler_requirements_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",
         "@envoy//source/common/filesystem:filesystem_lib",
+        "@envoy//source/common/network:dns_lib",
         "@envoy//source/common/runtime:runtime_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
