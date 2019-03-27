@@ -3,7 +3,10 @@ bazel-*
 ._.DS_Store
 res.txt
 compile_commands.json
-.bazelrc
 .cache
 generated/
 .local
+.cmake
+.rnd
+bazel.output.txt
+measurements/
