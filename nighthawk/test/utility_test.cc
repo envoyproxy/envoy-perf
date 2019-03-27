@@ -1,4 +1,10 @@
+#include <string>
+
 #include "gtest/gtest.h"
+
+#include "common/network/utility.h"
+#include "test/test_common/environment.h"
+#include "test/test_common/utility.h"
 
 #include "nighthawk/source/common/utility.h"
 
@@ -16,7 +22,6 @@ public:
     EXPECT_EQ(port, uri.port());
     EXPECT_EQ(scheme, uri.scheme());
     EXPECT_EQ(path, uri.path());
-    EXPECT_TRUE(uri.isValid());
   }
 
   int32_t getCpuCountFromSet(cpu_set_t& set) { return CPU_COUNT(&set); }
@@ -41,17 +46,86 @@ TEST_F(UtilityTest, ExplicitPort) {
   const Uri u1 = Uri::Parse("HTTP://a:111");
   EXPECT_EQ(111, u1.port());
 
-  const Uri u2 = Uri::Parse("HTTP://a:-111");
-  EXPECT_EQ(4294967185, u2.port());
-  EXPECT_FALSE(u2.isValid());
-
-  const Uri u3 = Uri::Parse("HTTP://a:0");
-  EXPECT_FALSE(u2.isValid());
+  EXPECT_THROW(Uri::Parse("HTTP://a:-111"), UriException);
+  EXPECT_THROW(Uri::Parse("HTTP://a:0"), UriException);
 }
 
-TEST_F(UtilityTest, SchemeWeDontUnderstand) {
-  const Uri u = Uri::Parse("foo://a");
-  EXPECT_FALSE(u.isValid());
+TEST_F(UtilityTest, SchemeWeDontUnderstand) { EXPECT_THROW(Uri::Parse("foo://a"), UriException); }
+
+TEST_F(UtilityTest, Empty) { EXPECT_THROW(Uri::Parse(""), UriException); }
+
+TEST_F(UtilityTest, HostStartsWithMinus) { EXPECT_THROW(Uri::Parse("http://-a"), UriException); }
+
+TEST_F(UtilityTest, Ipv6Address) {
+  const Uri u = Uri::Parse("http://[::1]:81/bar");
+  EXPECT_EQ("[::1]", u.host_without_port());
+  EXPECT_EQ("[::1]:81", u.host_and_port());
+  EXPECT_EQ(81, u.port());
+
+  const Uri u2 = Uri::Parse("http://[::1]/bar");
+  EXPECT_EQ("[::1]", u2.host_without_port());
+  EXPECT_EQ("[::1]:80", u2.host_and_port());
+  EXPECT_EQ(80, u2.port());
+}
+
+TEST_F(UtilityTest, FindPortSeparator) {
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("127.0.0.1"));
+  EXPECT_EQ(5, Uri::findPortSeparator("[::1]:80"));
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("[::1]"));
+  EXPECT_EQ(9, Uri::findPortSeparator("127.0.0.1:80"));
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("127.0.0.1"));
+
+  EXPECT_EQ(absl::string_view::npos, Uri::findPortSeparator("foo.com"));
+
+  EXPECT_EQ(7, Uri::findPortSeparator("foo.com:80"));
+  EXPECT_EQ(8, Uri::findPortSeparator("8foo.com:80"));
+}
+
+class UtilityAddressResolutionTest
+    : public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
+public:
+  Envoy::Network::Address::InstanceConstSharedPtr
+  testResolution(absl::string_view uri, Envoy::Network::DnsLookupFamily address_family) {
+    Envoy::Api::ApiPtr api = Envoy::Api::createApiForTest();
+    auto dispatcher = api->allocateDispatcher();
+    auto u = Uri::Parse(uri);
+    return u.resolve(*dispatcher, address_family);
+  }
+};
+
+INSTANTIATE_TEST_SUITE_P(IpVersions, UtilityAddressResolutionTest,
+                         testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
+                         Envoy::TestUtility::ipTestParamsToString);
+
+TEST_P(UtilityAddressResolutionTest, AddressResolution) {
+  if (GetParam() == Envoy::Network::Address::IpVersion::v4) {
+    Envoy::Network::DnsLookupFamily address_family = Envoy::Network::DnsLookupFamily::V4Only;
+    EXPECT_EQ("127.0.0.1:80", testResolution("127.0.0.1", address_family)->asString());
+    EXPECT_EQ("127.0.0.1:81", testResolution("127.0.0.1:81", address_family)->asString());
+    EXPECT_EQ("127.0.0.1:80", testResolution("localhost", address_family)->asString());
+    EXPECT_EQ("127.0.0.1:81", testResolution("localhost:81", address_family)->asString());
+    EXPECT_THROW(testResolution("[::1]", address_family), UriException);
+    EXPECT_THROW(testResolution("::1:81", address_family), UriException);
+  } else {
+    Envoy::Network::DnsLookupFamily address_family = Envoy::Network::DnsLookupFamily::V6Only;
+    EXPECT_EQ("[::1]:80", testResolution("localhost", address_family)->asString());
+    EXPECT_EQ("[::1]:81", testResolution("localhost:81", address_family)->asString());
+    EXPECT_EQ("[::1]:80", testResolution("[::1]", address_family)->asString());
+    EXPECT_EQ("[::1]:81", testResolution("::1:81", address_family)->asString());
+    EXPECT_THROW(testResolution("127.0.0.1", address_family), UriException);
+    EXPECT_THROW(testResolution("127.0.0.1:80", address_family), UriException);
+  }
+}
+TEST_P(UtilityAddressResolutionTest, AddressResolutionBadAddresses) {
+  Envoy::Network::DnsLookupFamily address_family = Envoy::Network::DnsLookupFamily::Auto;
+
+  EXPECT_THROW(testResolution("bad#host", address_family), UriException);
+  EXPECT_THROW(testResolution("-foo.com", address_family), UriException);
+  EXPECT_THROW(testResolution("[foo.com", address_family), UriException);
+  EXPECT_THROW(testResolution("foo]", address_family), UriException);
+  EXPECT_THROW(testResolution(".", address_family), UriException);
+  EXPECT_THROW(testResolution("..", address_family), UriException);
+  EXPECT_THROW(testResolution("a..b", address_family), UriException);
 }
 
 // TODO(oschaaf): we probably want to move this out to another file.

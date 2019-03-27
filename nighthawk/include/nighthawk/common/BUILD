@@ -16,6 +16,7 @@ envoy_basic_cc_library(
         "rate_limiter.h",
         "sequencer.h",
         "statistic.h",
+        "worker.h",
     ],
     include_prefix = "nighthawk/common",
     deps = [
