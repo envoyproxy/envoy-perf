@@ -37,7 +37,11 @@ function setup_clang_toolchain() {
     echo "$CC/$CXX toolchain configured"
 }
 
-# This overrides both ld and ld.gold with llvm's ld.lld.
+# TODO(oschaaf): This is quite the hack, we want to revisit this and back it out
+# once we figure out why bazel coverage isn't working as expected without doing
+# this. Once we do figure that out, this hack *could* be rewritten to assert that the linker
+# that gets used is the actual one we requested.
+# Overrides both ld and ld.gold with llvm's ld.lld.
 function override_linker_with_lld() {
     WORK_DIR=`mktemp -d -p "$DIR"`
     export PATH="$WORK_DIR:$PATH"

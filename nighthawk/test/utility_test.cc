@@ -129,7 +129,7 @@ TEST_P(UtilityAddressResolutionTest, AddressResolutionBadAddresses) {
   EXPECT_THROW(testResolution("a..b", address_family), UriException);
 }
 
-TEST_P(UtilityAddressResolutionTest, resolveTwiceReturnsCached) {
+TEST_P(UtilityAddressResolutionTest, ResolveTwiceReturnsCached) {
   Envoy::Network::DnsLookupFamily address_family =
       GetParam() == Envoy::Network::Address::IpVersion::v6
           ? Envoy::Network::DnsLookupFamily::V6Only
