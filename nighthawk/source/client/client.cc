@@ -201,11 +201,12 @@ bool Main::run() {
       runWorkers(benchmark_client_factory, sequencer_factory, merged_statistics, merged_counters);
 
   if (ok) {
-    ConsoleOutputFormatterImpl console_formatter(*options_, merged_statistics, merged_counters);
+    Envoy::RealTimeSource time_source;
+    ConsoleOutputFormatterImpl console_formatter(time_source, *options_, merged_statistics,
+                                                 merged_counters);
     std::cout << console_formatter.toString();
-
-    JsonOutputFormatterImpl json_formatter(*options_, merged_statistics, merged_counters);
-
+    JsonOutputFormatterImpl json_formatter(time_source, *options_, merged_statistics,
+                                           merged_counters);
     mkdir("measurements", 0777);
     std::ofstream stream;
     int64_t epoch_seconds = std::chrono::system_clock::now().time_since_epoch().count();

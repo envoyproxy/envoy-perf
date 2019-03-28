@@ -15,7 +15,6 @@ class OutputFormatter {
 public:
   virtual ~OutputFormatter() = default;
   virtual std::string toString() const PURE;
-  virtual void writeToFile(std::string path) const PURE;
 };
 
 } // namespace Client
