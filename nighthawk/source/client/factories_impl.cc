@@ -40,8 +40,9 @@ SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
 
   RateLimiterPtr rate_limiter =
       std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requests_per_second()));
-  SequencerTarget sequencer_target =
-      std::bind(&BenchmarkClient::tryStartOne, &benchmark_client, std::placeholders::_1);
+  SequencerTarget sequencer_target = [&benchmark_client](std::function<void()> f) -> bool {
+    return benchmark_client.tryStartOne(f);
+  };
   return std::make_unique<SequencerImpl>(platform_util_, dispatcher, time_source,
                                          std::move(rate_limiter), sequencer_target,
                                          statistic_factory.create(), statistic_factory.create(),
