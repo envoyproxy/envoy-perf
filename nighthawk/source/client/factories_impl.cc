@@ -22,7 +22,6 @@ BenchmarkClientPtr BenchmarkClientFactoryImpl::create(Envoy::Api::Api& api,
                                                       Envoy::Stats::Store& store,
                                                       const Uri uri) const {
   StatisticFactoryImpl statistic_factory(options_);
-
   auto benchmark_client =
       std::make_unique<BenchmarkClientHttpImpl>(api, dispatcher, store, statistic_factory.create(),
                                                 statistic_factory.create(), uri, options_.h2());
@@ -43,12 +42,10 @@ SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
       std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requests_per_second()));
   SequencerTarget sequencer_target =
       std::bind(&BenchmarkClient::tryStartOne, &benchmark_client, std::placeholders::_1);
-
-  SequencerPtr sequencer = std::make_unique<SequencerImpl>(
-      platform_util_, dispatcher, time_source, std::move(rate_limiter), sequencer_target,
-      statistic_factory.create(), statistic_factory.create(), options_.duration(),
-      options_.timeout());
-  return sequencer;
+  return std::make_unique<SequencerImpl>(platform_util_, dispatcher, time_source,
+                                         std::move(rate_limiter), sequencer_target,
+                                         statistic_factory.create(), statistic_factory.create(),
+                                         options_.duration(), options_.timeout());
 }
 
 StoreFactoryImpl::StoreFactoryImpl(const Options& options) : OptionBasedFactoryImpl(options) {}

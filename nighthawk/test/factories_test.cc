@@ -28,7 +28,7 @@ public:
   MockOptions options_;
 };
 
-TEST_F(FactoriesTest, createBenchmarkClient) {
+TEST_F(FactoriesTest, CreateBenchmarkClient) {
   BenchmarkClientFactoryImpl factory(options_);
 
   EXPECT_CALL(options_, timeout()).Times(1);
@@ -40,7 +40,7 @@ TEST_F(FactoriesTest, createBenchmarkClient) {
   EXPECT_NE(nullptr, benchmark_client.get());
 }
 
-TEST_F(FactoriesTest, createSequencer) {
+TEST_F(FactoriesTest, CreateSequencer) {
   SequencerFactoryImpl factory(options_);
   MockBenchmarkClient benchmark_client;
 
@@ -53,12 +53,12 @@ TEST_F(FactoriesTest, createSequencer) {
   EXPECT_NE(nullptr, sequencer.get());
 }
 
-TEST_F(FactoriesTest, createStore) {
+TEST_F(FactoriesTest, CreateStore) {
   StoreFactoryImpl factory(options_);
   EXPECT_NE(nullptr, factory.create().get());
 }
 
-TEST_F(FactoriesTest, createStatistic) {
+TEST_F(FactoriesTest, CreateStatistic) {
   StatisticFactoryImpl factory(options_);
   EXPECT_NE(nullptr, factory.create().get());
 }
