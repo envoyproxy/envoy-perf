@@ -116,6 +116,7 @@ TEST_P(UtilityAddressResolutionTest, AddressResolution) {
     EXPECT_THROW(testResolution("127.0.0.1:80", address_family), UriException);
   }
 }
+
 TEST_P(UtilityAddressResolutionTest, AddressResolutionBadAddresses) {
   Envoy::Network::DnsLookupFamily address_family = Envoy::Network::DnsLookupFamily::Auto;
 
@@ -126,6 +127,20 @@ TEST_P(UtilityAddressResolutionTest, AddressResolutionBadAddresses) {
   EXPECT_THROW(testResolution(".", address_family), UriException);
   EXPECT_THROW(testResolution("..", address_family), UriException);
   EXPECT_THROW(testResolution("a..b", address_family), UriException);
+}
+
+TEST_P(UtilityAddressResolutionTest, ResolveTwiceReturnsCached) {
+  Envoy::Network::DnsLookupFamily address_family =
+      GetParam() == Envoy::Network::Address::IpVersion::v6
+          ? Envoy::Network::DnsLookupFamily::V6Only
+          : Envoy::Network::DnsLookupFamily::V4Only;
+
+  Envoy::Api::ApiPtr api = Envoy::Api::createApiForTest();
+  auto dispatcher = api->allocateDispatcher();
+  auto u = Uri::Parse("localhost");
+
+  EXPECT_EQ(u.resolve(*dispatcher, address_family).get(),
+            u.resolve(*dispatcher, address_family).get());
 }
 
 // TODO(oschaaf): we probably want to move this out to another file.
