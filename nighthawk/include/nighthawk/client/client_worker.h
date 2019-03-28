@@ -22,6 +22,12 @@ public:
    */
   virtual StatisticPtrMap statistics() const PURE;
 
+  /**
+   * Returns the associated benchmark client.
+   * NOTE: This may be deprecated soon in favor of exposing the store
+   * counters.
+   * @return const BenchmarkClient& the associated benchmark client.
+   */
   virtual const BenchmarkClient& benchmark_client() const PURE;
 
   /**

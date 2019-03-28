@@ -20,10 +20,10 @@ public:
   ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Instance& tls,
                    const BenchmarkClientFactory& benchmark_client_factory,
                    const SequencerFactory& sequencer_factory, const Uri uri,
-                   Envoy::Stats::StorePtr&& store, int worker_number, uint64_t start_delay_usec);
+                   Envoy::Stats::StorePtr&& store, const int worker_number,
+                   const uint64_t start_delay_usec);
 
   StatisticPtrMap statistics() const override;
-
   const BenchmarkClient& benchmark_client() const override { return *benchmark_client_; }
   bool success() const override { return success_; }
 
@@ -33,12 +33,12 @@ protected:
 private:
   void simpleWarmup();
   void delayStart();
-  std::unique_ptr<BenchmarkClient> benchmark_client_;
-  std::unique_ptr<Sequencer> sequencer_;
   const Uri uri_;
   const int worker_number_;
   const uint64_t start_delay_usec_;
   bool success_{};
+  const BenchmarkClientPtr benchmark_client_;
+  const SequencerPtr sequencer_;
 };
 
 typedef std::unique_ptr<ClientWorkerImpl> ClientWorkerImplPtr;

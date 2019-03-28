@@ -110,6 +110,8 @@ Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   std::map<std::string, uint64_t> merged;
 
   for (auto& w : workers) {
+    // TODO(oschaaf): would be better to be able to just pull the counters here, and not the
+    // benchmark client.
     auto counters =
         w->benchmark_client().getCounters([](std::string, uint64_t value) { return value > 0; });
     for (auto counter : counters) {
@@ -141,19 +143,16 @@ bool Main::runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
   Uri uri = Uri::Parse(options_->uri());
   tls.registerThread(*main_dispatcher, true);
   try {
-    // TODO(oschaaf): must be able to select ipv6. We may prefer v4 when auto
-    // is selected.
-    uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::V4Only);
+    uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
   } catch (const UriException) {
     tls.shutdownGlobalThreading();
     return false;
   }
 
   uint32_t concurrency = determineConcurrency();
-  // We try to offset the start of each thread so that workers will execute tasks evenly
-  // spaced in time.
-  // E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100 usec).
-  // We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
+  // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
+  // time. E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100
+  // usec). We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
   double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
 
   // We're going to fire up #concurrency benchmark loops and wait for them to complete.
@@ -192,33 +191,32 @@ bool Main::run() {
   std::map<std::string, uint64_t> merged_counters;
   auto logging_context = std::make_unique<Envoy::Logger::Context>(
       spdlog::level::from_str(options_->verbosity()), "[%T.%f][%t][%L] %v", log_lock);
-
-  std::cout << "Nighthawk - A layer 7 protocol benchmarking tool\n";
   BenchmarkClientFactoryImpl benchmark_client_factory(*options_);
   SequencerFactoryImpl sequencer_factory(*options_);
 
-  bool ok =
-      runWorkers(benchmark_client_factory, sequencer_factory, merged_statistics, merged_counters);
+  std::cout << "Nighthawk - A layer 7 protocol benchmarking tool.\n";
 
-  if (ok) {
+  if (runWorkers(benchmark_client_factory, sequencer_factory, merged_statistics, merged_counters)) {
     Envoy::RealTimeSource time_source;
     ConsoleOutputFormatterImpl console_formatter(time_source, *options_, merged_statistics,
                                                  merged_counters);
+    // TODO(oschaaf): what and how we send to the output here should be configurable.
     std::cout << console_formatter.toString();
     JsonOutputFormatterImpl json_formatter(time_source, *options_, merged_statistics,
                                            merged_counters);
     mkdir("measurements", 0777);
     std::ofstream stream;
-    int64_t epoch_seconds = std::chrono::system_clock::now().time_since_epoch().count();
+    const int64_t epoch_seconds = time_source.systemTime().time_since_epoch().count();
     std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
     stream.open(filename);
     stream << json_formatter.toString();
     ENVOY_LOG(info, "Done. Wrote {}.", filename);
+    return true;
   } else {
     ENVOY_LOG(error, "Error occurred.");
   }
 
-  return ok;
+  return false;
 }
 
 } // namespace Client
