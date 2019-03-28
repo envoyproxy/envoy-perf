@@ -20,11 +20,13 @@ envoy_cc_library(
     srcs = [
         "benchmark_client_impl.cc",
         "options_impl.cc",
+        "output_formatter_impl.cc",
         "stream_decoder.cc",
     ],
     hdrs = [
         "benchmark_client_impl.h",
         "options_impl.h",
+        "output_formatter_impl.h",
         "stream_decoder.h",
     ],
     repository = "@envoy",
@@ -37,6 +39,7 @@ envoy_cc_library(
         "@envoy//source/common/common:compiler_requirements_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",
         "@envoy//source/common/filesystem:filesystem_lib",
+        "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/runtime:runtime_lib",
         "@envoy//source/exe:envoy_common_lib",
     ],
