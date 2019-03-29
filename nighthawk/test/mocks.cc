@@ -27,4 +27,19 @@ MockSequencer::~MockSequencer() = default;
 MockOptions::MockOptions() = default;
 MockOptions::~MockOptions() = default;
 
+MockBenchmarkClientFactory::MockBenchmarkClientFactory() = default;
+MockBenchmarkClientFactory::~MockBenchmarkClientFactory() = default;
+
+MockSequencerFactory::MockSequencerFactory() = default;
+MockSequencerFactory::~MockSequencerFactory() = default;
+
+MockStoreFactory::MockStoreFactory() = default;
+MockStoreFactory::~MockStoreFactory() = default;
+
+MockStatisticFactory::MockStatisticFactory() = default;
+MockStatisticFactory::~MockStatisticFactory() = default;
+
+MockBenchmarkClient::MockBenchmarkClient() = default;
+MockBenchmarkClient::~MockBenchmarkClient() = default;
+
 } // namespace Nighthawk
