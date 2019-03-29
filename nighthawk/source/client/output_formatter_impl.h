@@ -13,13 +13,21 @@ namespace Client {
 
 class OutputFormatterImpl : public OutputFormatter {
 public:
+  /**
+   * @param time_source Time source that will be used to generate a timestamp in the output.
+   * @param options The options that led up to the output that will be computed by this instance.
+   * @param merged_statistics Vector of statistic instances which represent the global results
+   * (after merging results if multiple workers are involved).
+   * @param merged_counters Map of counters, keyed by id, representing the global result (after
+   * summing up the counters if multiple workers are involved).
+   */
   OutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options,
                       const std::vector<StatisticPtr>& merged_statistics,
                       const std::map<std::string, uint64_t>& merged_counters);
 
+protected:
   Envoy::ProtobufTypes::MessagePtr toProto() const;
 
-protected:
   Envoy::TimeSource& time_source_;
   const Options& options_;
   const std::vector<StatisticPtr>& merged_statistics_;

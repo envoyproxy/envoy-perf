@@ -27,7 +27,7 @@ std::string ConsoleOutputFormatterImpl::toString() const {
   s << "Merged statistics:\n";
   for (auto& statistic : merged_statistics_) {
     if (statistic->count() > 0) {
-      s << fmt::format("{}: {}\n", statistic->id(), statistic->toString(), "\n");
+      s << fmt::format("{}: {}\n", statistic->id(), statistic->toString());
     }
   }
   s << "\nMerged counters\n";
@@ -40,13 +40,8 @@ std::string ConsoleOutputFormatterImpl::toString() const {
 Envoy::ProtobufTypes::MessagePtr OutputFormatterImpl::toProto() const {
   nighthawk::client::Output output;
   output.set_allocated_options(options_.toCommandLineOptions().release());
-
-  auto ts = time_source_.systemTime().time_since_epoch();
-  auto seconds = std::chrono::duration_cast<std::chrono::seconds>(ts);
-  output.mutable_timestamp()->set_seconds(seconds.count());
-  output.mutable_timestamp()->set_nanos(
-      std::chrono::duration_cast<std::chrono::nanoseconds>(ts - seconds).count());
-
+  *(output.mutable_timestamp()) = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(
+      time_source_.systemTime().time_since_epoch().count());
   auto result = output.add_results();
   result->set_name("global");
   for (auto& statistic : merged_statistics_) {
@@ -67,8 +62,7 @@ JsonOutputFormatterImpl::JsonOutputFormatterImpl(
     : OutputFormatterImpl(time_source, options, merged_statistics, merged_counters) {}
 
 std::string JsonOutputFormatterImpl::toString() const {
-  auto output = toProto();
-  return Envoy::MessageUtil::getJsonStringFromMessage(*output, true, true);
+  return Envoy::MessageUtil::getJsonStringFromMessage(*toProto(), true, true);
 }
 
 YamlOutputFormatterImpl::YamlOutputFormatterImpl(
@@ -78,8 +72,7 @@ YamlOutputFormatterImpl::YamlOutputFormatterImpl(
     : OutputFormatterImpl(time_source, options, merged_statistics, merged_counters) {}
 
 std::string YamlOutputFormatterImpl::toString() const {
-  auto output = toProto();
-  return Envoy::MessageUtil::getYamlStringFromMessage(*output, true, true);
+  return Envoy::MessageUtil::getYamlStringFromMessage(*toProto(), true, true);
 }
 
 } // namespace Client
