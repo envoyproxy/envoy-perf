@@ -37,11 +37,6 @@ void ClientWorkerImpl::delayStart() {
 }
 
 void ClientWorkerImpl::work() {
-  // We must run the dispatcher here to initialize thread local storage / runtime.
-  // If we don't, an assert will trigger later on. Other then that, the following dispatcher run is
-  // a no-op.
-  // TODO(oschaaf): consider moving this into the base class.
-  dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
   benchmark_client_->initialize(*Envoy::Runtime::LoaderSingleton::getExisting());
   simpleWarmup();
   benchmark_client_->setMeasureLatencies(true);
