@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "envoy/common/pure.h"
+#include "envoy/stats/store.h"
 
 #include "nighthawk/client/benchmark_client.h"
 #include "nighthawk/common/statistic.h"
@@ -23,12 +24,9 @@ public:
   virtual StatisticPtrMap statistics() const PURE;
 
   /**
-   * Returns the associated benchmark client.
-   * NOTE: This may be deprecated soon in favor of exposing the store
-   * counters.
-   * @return const BenchmarkClient& the associated benchmark client.
+   * @return const Envoy::Stats::Store& the statistics store associated the benchmark client.
    */
-  virtual const BenchmarkClient& benchmark_client() const PURE;
+  virtual Envoy::Stats::Store& store() const PURE;
 
   /**
    * @brief Returns true iff the worker ran and completed successfully.

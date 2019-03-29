@@ -30,6 +30,20 @@ uint32_t determineCpuCoresWithAffinity() {
 
 } // namespace PlatformUtils
 
+std::map<std::string, uint64_t>
+Utility::mapCountersFromStore(const Envoy::Stats::Store& store,
+                              const StoreCounterFilter filter) const {
+  std::map<std::string, uint64_t> results;
+
+  for (auto stat : store.counters()) {
+    if (filter(stat->name(), stat->value())) {
+      results[stat->name()] = stat->value();
+    }
+  }
+
+  return results;
+}
+
 Uri Uri::Parse(absl::string_view uri) {
   auto r = Uri(uri);
   if (!r.isValid()) {
