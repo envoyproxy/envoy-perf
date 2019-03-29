@@ -93,7 +93,8 @@ TEST_F(ClientWorkerTest, BasicTest) {
   int worker_number = 12345;
   auto worker = std::make_unique<ClientWorkerImpl>(
       api_, tls_, benchmark_client_factory_, sequencer_factory_, Uri::Parse("http://foo"),
-      std::make_unique<Envoy::Stats::IsolatedStoreImpl>(), worker_number, 0);
+      std::make_unique<Envoy::Stats::IsolatedStoreImpl>(), worker_number,
+      time_system_.monotonicTime());
 
   worker->start();
   worker->waitForCompletion();

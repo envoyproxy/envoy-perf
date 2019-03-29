@@ -180,7 +180,4 @@ The name of the file will be `<epoch.json>`, which contains:
   - Server fairness. For example, connections may end up being serviced by the same server thread, or not.
   - One of the clients may be unlucky and structurally spend time waiting on requests from the other(s)
     being serviced due to interference of request release timings and server processing time.
-  - Nighthawk makes an effort to delay the start of each worker so that from a global perspective
-    requests will end up evenly spaced in time. This step isn't very sophisticated at the moment,
-    and any noise during this step may cause irregularities in request timings.
 - Consider using separate machines for the clients and server(s).

@@ -21,7 +21,7 @@ public:
                    const BenchmarkClientFactory& benchmark_client_factory,
                    const SequencerFactory& sequencer_factory, const Uri uri,
                    Envoy::Stats::StorePtr&& store, const int worker_number,
-                   const uint64_t start_delay_usec);
+                   const Envoy::MonotonicTime starting_time_);
 
   StatisticPtrMap statistics() const override;
   const BenchmarkClient& benchmark_client() const override { return *benchmark_client_; }
@@ -35,7 +35,7 @@ private:
   void delayStart();
   const Uri uri_;
   const int worker_number_;
-  const uint64_t start_delay_usec_;
+  const Envoy::MonotonicTime starting_time_;
   bool success_{};
   const BenchmarkClientPtr benchmark_client_;
   const SequencerPtr sequencer_;

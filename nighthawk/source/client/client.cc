@@ -150,17 +150,26 @@ bool Main::runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
   }
 
   uint32_t concurrency = determineConcurrency();
-  // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
-  // time. E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100
-  // usec). We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
-  double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
 
   // We're going to fire up #concurrency benchmark loops and wait for them to complete.
   std::vector<ClientWorkerPtr> workers;
+  // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
+  // time. E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100
+  // usec). We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
+  // We add a two second offset to everyone, so we can be reasonable sure that:
+  // a) All workers will have enough time to start up and enter the spin loop that waits for
+  //    the starting time
+  // b) The spinning will happen, which helps warmup up the CPU and steadying clock frequencies.
+  // TODO(oschaaf): Expose the two seconds in configuration.
+  auto first_worker_start = time_system.monotonicTime() + 2s;
+  double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
+
   for (uint32_t worker_number = 0; worker_number < concurrency; worker_number++) {
+    auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        ((inter_worker_delay_usec * worker_number) * 1us));
     workers.push_back(std::make_unique<ClientWorkerImpl>(
         api, tls, benchmark_client_factory, sequencer_factory, uri, store_factory.create(),
-        worker_number, inter_worker_delay_usec * worker_number));
+        worker_number, first_worker_start + worker_delay));
   }
 
   Envoy::Runtime::RandomGeneratorImpl generator;
@@ -213,7 +222,7 @@ bool Main::run() {
     ENVOY_LOG(info, "Done. Wrote {}.", filename);
     return true;
   } else {
-    ENVOY_LOG(error, "Error occurred.");
+    std::cerr << "An error occurred";
   }
 
   return false;

@@ -1,5 +1,7 @@
 #include "nighthawk/source/client/client_worker_impl.h"
 
+#include "nighthawk/source/common/platform_util_impl.h"
+
 namespace Nighthawk {
 namespace Client {
 
@@ -7,9 +9,9 @@ ClientWorkerImpl::ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Ins
                                    const BenchmarkClientFactory& benchmark_client_factory,
                                    const SequencerFactory& sequencer_factory, const Uri uri,
                                    Envoy::Stats::StorePtr&& store, const int worker_number,
-                                   const uint64_t start_delay_usec)
+                                   const Envoy::MonotonicTime starting_time)
     : WorkerImpl(api, tls, std::move(store)), uri_(uri), worker_number_(worker_number),
-      start_delay_usec_(start_delay_usec),
+      starting_time_(starting_time),
       benchmark_client_(benchmark_client_factory.create(api, *dispatcher_, *store_, uri)),
       sequencer_(sequencer_factory.create(time_source_, *dispatcher_, *benchmark_client_)) {}
 
@@ -26,14 +28,23 @@ void ClientWorkerImpl::simpleWarmup() {
 }
 
 void ClientWorkerImpl::delayStart() {
+  PlatformUtilImpl platform_util;
   // TODO(oschaaf): We could use dispatcher to sleep, but currently it has a 1 ms resolution
   // which is rather coarse for our purpose here.
   // TODO(oschaaf): Instead of usleep, it would perhaps be better to provide an absolute
   // starting time to wait for in a (spin loop of the) sequencer implementation for high
   // accuracy when releasing the initial requests.
-  ENVOY_LOG(debug, "> worker {}: Delay start of worker for {} us.", worker_number_,
-            start_delay_usec_);
-  usleep(start_delay_usec_);
+  ENVOY_LOG(debug, "> worker {}: waiting", worker_number_);
+  int count = 0;
+  while (time_source_.monotonicTime() < starting_time_) {
+    count++;
+    platform_util.yieldCurrentThread();
+  }
+  if (count == 0) {
+    ENVOY_LOG(warn,
+              "> worker {} arrived late and did not have to spin/wait for its turn to start.");
+  }
+  ENVOY_LOG(debug, "> worker {}: started", worker_number_);
 }
 
 void ClientWorkerImpl::work() {
