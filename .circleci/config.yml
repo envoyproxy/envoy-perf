@@ -41,7 +41,22 @@ jobs:
       - run: ci/do_ci.sh coverage
       - store_artifacts:
           path: /root/project/generated
-          destination: /
+          destination: /      
+  asan:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh asan
+  tsan:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh tsan
+
 workflows:
   version: 2
   all:
@@ -51,3 +66,5 @@ workflows:
       - clang_tidy
 #      - test_with_valgrind
       - coverage
+      - asan
+      - tsan
