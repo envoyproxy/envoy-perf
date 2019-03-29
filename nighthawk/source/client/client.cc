@@ -109,11 +109,10 @@ std::map<std::string, uint64_t>
 Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   std::map<std::string, uint64_t> merged;
 
+  Utility util;
   for (auto& w : workers) {
-    // TODO(oschaaf): would be better to be able to just pull the counters here, and not the
-    // benchmark client.
-    auto counters =
-        w->benchmark_client().getCounters([](std::string, uint64_t value) { return value > 0; });
+    auto counters = util.mapCountersFromStore(
+        w->store(), [](std::string, uint64_t value) { return value > 0; });
     for (auto counter : counters) {
       if (merged.count(counter.first) == 0) {
         merged[counter.first] = counter.second;

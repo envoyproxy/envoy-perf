@@ -4,13 +4,12 @@
 #include <memory>
 
 #include "envoy/runtime/runtime.h"
+#include "envoy/stats/store.h"
 
 #include "nighthawk/common/statistic.h"
 
 namespace Nighthawk {
 namespace Client {
-
-typedef std::function<bool(const std::string, const uint64_t)> CounterFilter;
 
 class BenchmarkClient {
 public:
@@ -52,12 +51,9 @@ public:
   virtual bool tryStartOne(std::function<void()> caller_completion_callback) PURE;
 
   /**
-   * Gets a map of tracked counter values, keyed by name.
-   * @param filter function that returns true iff a counter should be included in the map,
-   * based on the named and value it gets passed. The default filter returns all counters.
-   * @return std::map<std::string, uint64_t> containing zero or more entries.
+   * @return const Envoy::Stats::Store& the statistics store associated the benchmark client.
    */
-  virtual std::map<std::string, uint64_t> getCounters(CounterFilter filter) const PURE;
+  virtual Envoy::Stats::Store& store() const PURE;
 
   /**
    * Determines if latency measurement is on.

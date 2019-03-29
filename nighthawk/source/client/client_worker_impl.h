@@ -24,7 +24,7 @@ public:
                    const Envoy::MonotonicTime starting_time_);
 
   StatisticPtrMap statistics() const override;
-  const BenchmarkClient& benchmark_client() const override { return *benchmark_client_; }
+  Envoy::Stats::Store& store() const override { return *store_; }
   bool success() const override { return success_; }
 
 protected:
