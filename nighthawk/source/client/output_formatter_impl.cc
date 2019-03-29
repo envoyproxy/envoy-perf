@@ -40,8 +40,10 @@ std::string ConsoleOutputFormatterImpl::toString() const {
 Envoy::ProtobufTypes::MessagePtr OutputFormatterImpl::toProto() const {
   nighthawk::client::Output output;
   output.set_allocated_options(options_.toCommandLineOptions().release());
-  *(output.mutable_timestamp()) = google::protobuf::util::TimeUtil::NanosecondsToTimestamp(
-      time_source_.systemTime().time_since_epoch().count());
+  *(output.mutable_timestamp()) = Envoy::Protobuf::util::TimeUtil::NanosecondsToTimestamp(
+      std::chrono::duration_cast<std::chrono::nanoseconds>(
+          time_source_.systemTime().time_since_epoch())
+          .count());
   auto result = output.add_results();
   result->set_name("global");
   for (auto& statistic : merged_statistics_) {
