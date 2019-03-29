@@ -19,6 +19,7 @@ envoy_cc_library(
     name = "nighthawk_client_lib",
     srcs = [
         "benchmark_client_impl.cc",
+        "client_worker_impl.cc",
         "factories_impl.cc",
         "options_impl.cc",
         "output_formatter_impl.cc",
@@ -26,6 +27,7 @@ envoy_cc_library(
     ],
     hdrs = [
         "benchmark_client_impl.h",
+        "client_worker_impl.h",
         "factories_impl.h",
         "options_impl.h",
         "output_formatter_impl.h",
