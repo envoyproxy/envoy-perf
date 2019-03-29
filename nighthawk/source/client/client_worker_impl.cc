@@ -31,9 +31,6 @@ void ClientWorkerImpl::delayStart() {
   PlatformUtilImpl platform_util;
   // TODO(oschaaf): We could use dispatcher to sleep, but currently it has a 1 ms resolution
   // which is rather coarse for our purpose here.
-  // TODO(oschaaf): Instead of usleep, it would perhaps be better to provide an absolute
-  // starting time to wait for in a (spin loop of the) sequencer implementation for high
-  // accuracy when releasing the initial requests.
   ENVOY_LOG(debug, "> worker {}: waiting", worker_number_);
   int count = 0;
   while (time_source_.monotonicTime() < starting_time_) {
