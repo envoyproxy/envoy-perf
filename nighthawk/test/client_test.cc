@@ -32,7 +32,6 @@ public:
   ClientTest() : Envoy::BaseIntegrationTest(GetParam(), realTime(), ClientTest::envoy_config) {}
 
   static void SetUpTestCase() {
-    std::cerr << "*** SETUPTESTCASE" << std::endl;
     Envoy::Filesystem::InstanceImplPosix file_system;
     envoy_config = file_system.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
