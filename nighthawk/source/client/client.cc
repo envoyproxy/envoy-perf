@@ -44,7 +44,6 @@ Main::Main(Client::OptionsPtr&& options) : options_(std::move(options)) {
 Main::~Main() { ares_library_cleanup(); }
 
 void Main::configureComponentLogLevels(spdlog::level::level_enum level) {
-  // We rely on Envoy's logging infra.
   // TODO(oschaaf): Add options to tweak the log level of the various log tags
   // that are available.
   Envoy::Logger::Registry::setLogLevel(level);
@@ -135,13 +134,14 @@ bool Main::runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
   Envoy::Stats::StorePtr store = store_factory.create();
   Envoy::Event::RealTimeSystem time_system;
   Envoy::Filesystem::InstanceImplPosix filesystem;
-
   Envoy::Api::Impl api(thread_factory, *store, time_system, filesystem);
   Envoy::ThreadLocal::InstanceImpl tls;
   Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
   Uri uri = Uri::Parse(options_->uri());
   tls.registerThread(*main_dispatcher, true);
   try {
+    // TODO(oschaaf): verify with @htuch that ::Auto is the right default here.
+    // Also, this should be optionized.
     uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
   } catch (const UriException) {
     tls.shutdownGlobalThreading();
@@ -149,17 +149,10 @@ bool Main::runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
   }
 
   uint32_t concurrency = determineConcurrency();
-
-  // We're going to fire up #concurrency benchmark loops and wait for them to complete.
   std::vector<ClientWorkerPtr> workers;
   // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
-  // time. E.g.if we have a 10 workers at 10k/second our global pacing is 100k/second (or 1 / 100
-  // usec). We would then offset the worker starts like [0usec, 10 usec, ..., 90 usec].
-  // We add a two second offset to everyone, so we can be reasonable sure that:
-  // a) All workers will have enough time to start up and enter the spin loop that waits for
-  //    the starting time
-  // b) The spinning will happen, which helps warmup up the CPU and steadying clock frequencies.
-  // TODO(oschaaf): Expose the two seconds in configuration.
+  // time.
+  // TODO(oschaaf): Expose the hard-coded two seconds below in configuration.
   auto first_worker_start = time_system.monotonicTime() + 2s;
   double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
 
@@ -208,7 +201,7 @@ bool Main::run() {
     Envoy::RealTimeSource time_source;
     ConsoleOutputFormatterImpl console_formatter(time_source, *options_, merged_statistics,
                                                  merged_counters);
-    // TODO(oschaaf): what and how we send to the output here should be configurable.
+    // TODO(oschaaf): output format, location, method, etc should be optionized.
     std::cout << console_formatter.toString();
     JsonOutputFormatterImpl json_formatter(time_source, *options_, merged_statistics,
                                            merged_counters);
