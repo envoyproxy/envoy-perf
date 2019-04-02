@@ -43,6 +43,12 @@ void ClientWorkerImpl::delayStart() {
   // TODO(oschaaf): Arguably, this ought to be the job of a rate limiter with awareness of the
   // global status quo, which we do not have right now. This has been noted in the track-for-future
   // issue.
+  // TODO(oschaaf): I retrospect, this probably could be implemented by directly assigning a
+  // starting time to the rate limiter. This would make generalizing our strategies, as
+  // the sequencer would be responsible for how we wait (e.g. dispatcher.sleep or spinning), and the
+  // rate limiter should be in full control of what requests get released when.
+  // Then this step could still exist in some form, but with the sole purpose of warming up the
+  // hardware.
   ENVOY_LOG(debug, "> worker {}: waiting", worker_number_);
   int count = 0;
   while (time_source_.monotonicTime() < starting_time_) {
