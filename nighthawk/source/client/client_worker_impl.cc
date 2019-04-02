@@ -18,9 +18,9 @@ ClientWorkerImpl::ClientWorkerImpl(Envoy::Api::Api& api, Envoy::ThreadLocal::Ins
 void ClientWorkerImpl::simpleWarmup() {
   ENVOY_LOG(debug, "> worker {}: warming up.", worker_number_);
   // TODO(oschaaf): Maybe add BenchmarkClient::warmup() and call that here.
-  // Ideally that would warm up the pool better, by prefetching the requested amount of
-  // connections. Currently it is possible to use less connections then specified if
-  // completions are fast enough. While this may be an assert, it may also be annoying
+  // Ideally we prefetch the requested amount of connections.
+  // Currently it is possible to use less connections then specified if
+  // completions are fast enough. While this may be an asset, it may also be annoying
   // when comparing results to some other tools, which do open up the specified amount
   // of connections.
   benchmark_client_->tryStartOne([this] { dispatcher_->exit(); });
@@ -29,8 +29,20 @@ void ClientWorkerImpl::simpleWarmup() {
 
 void ClientWorkerImpl::delayStart() {
   PlatformUtilImpl platform_util;
-  // TODO(oschaaf): We could use dispatcher to sleep, but currently it has a 1 ms resolution
-  // which is rather coarse for our purpose here.
+
+  // The spin loop we perform serves two purposes:
+  // 1. It warms up the hardware, hopefully steadying CPU clock frequency before we begin.
+  // 2. We can be highly accurate with respect to the designated start time.
+  // The latter is useful, because this attribute may be used to distribute worker starts evenly in
+  // time with respect to the global frequency. An example: Let's assume we have two workers w0/w1,
+  // which should maintain a combined global pace of 1000Hz. w0 and w1 both run at 500Hz, but
+  // ideally their execution is evenly spaced in time, and not overlapping. Workers start offsets
+  // can be computed like "worker_number*(1/global_frequency))", which would yield T0+[0ms, 1ms].
+  // This helps reduce batching/queueing effects, both initially, but also by calibrating the linear
+  // rate limiter we currently have to a precise starting time, which helps later on.
+  // TODO(oschaaf): Arguably, this ought to be the job of a rate limiter with awareness of the
+  // global status quo, which we do not have right now. This has been noted in the track-for-future
+  // issue.
   ENVOY_LOG(debug, "> worker {}: waiting", worker_number_);
   int count = 0;
   while (time_source_.monotonicTime() < starting_time_) {
