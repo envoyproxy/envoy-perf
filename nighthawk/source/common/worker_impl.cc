@@ -21,8 +21,7 @@ void WorkerImpl::start() {
   started_ = true;
   thread_ = thread_factory_.createThread([this]() {
     ASSERT(Envoy::Runtime::LoaderSingleton::getExisting() != nullptr);
-    // We must run the dispatcher here to let the callbacks posted by registerThread() execute.
-    // If we don't, we risk triggering an assert will trigger later on.
+    // Run the dispatcher to let the callbacks posted by registerThread() execute.
     dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
     work();
   });
