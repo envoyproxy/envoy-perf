@@ -42,24 +42,31 @@ public:
     // We fork the integration test fixture into a child process, to avoid conflicting
     // runtimeloaders as both NH and the integration server want to own that and we can have only
     // one.
-    pipe(fd);
+    pipe(fd_port);
+    pipe(fd_confirm);
     pid_ = fork();
     ASSERT(pid_ >= 0);
+
     if (pid_ == 0) {
-      // child process
+      // child process running the integration test server.
       ares_library_init(ARES_LIB_INIT_ALL);
       Envoy::Event::Libevent::Global::initialize();
       initialize();
       int port = lookupPort("listener_0");
-      write(fd[1], &port, sizeof(port));
-
-      // dummy read to wait for the parent to finish. fragile, but we can improve if
-      // we decide the general approach is ok.
-      sleep(1);
-      ASSERT(read(fd[0], &port_, sizeof(port_)) == -1);
+      int parent_message;
+      write(fd_port[1], &port, sizeof(port));
+      // The parent process writes to fd_confirm when it has read the port. This call to read blocks
+      // until that happens.
+      read(fd_confirm[0], &parent_message, sizeof(parent_message));
+      ASSERT(parent_message == 1234);
+      // The parent process closes fd_port when the test tears down. The read call blocks until it
+      // does that.
+      ASSERT(read(fd_port[0], &port_, sizeof(port_)) == -1);
     } else if (pid_ > 0) {
-      ASSERT(read(fd[0], &port_, sizeof(port_)) > 0);
+      ASSERT(read(fd_port[0], &port_, sizeof(port_)) > 0);
       ASSERT(port_ > 0);
+      int foo = 1234;
+      write(fd_confirm[1], &foo, sizeof(foo));
     }
   }
 
@@ -69,8 +76,10 @@ public:
       fake_upstreams_.clear();
       ares_library_cleanup();
     }
-    close(fd[0]);
-    close(fd[1]);
+    close(fd_confirm[0]);
+    close(fd_confirm[1]);
+    close(fd_port[0]);
+    close(fd_port[1]);
   }
 
   std::string testUrl() {
@@ -90,7 +99,8 @@ public:
 
   int port_;
   pid_t pid_;
-  int fd[2];
+  int fd_port[2];
+  int fd_confirm[2];
   static std::string envoy_config;
 };
 
