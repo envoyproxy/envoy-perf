@@ -22,6 +22,7 @@ envoy_cc_test(
     name = "nighthawk_test",
     srcs = [
         "benchmark_http_client_test.cc",
+        "client_test.cc",
         "client_worker_test.cc",
         "factories_test.cc",
         "frequency_test.cc",
