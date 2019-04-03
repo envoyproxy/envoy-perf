@@ -23,6 +23,5 @@ int main(int argc, char** argv) {
   } catch (const Nighthawk::NighthawkException& e) {
     return EXIT_FAILURE;
   }
-  // google::protobuf::ShutdownProtobufLibrary();
   return client->run() ? EXIT_SUCCESS : EXIT_FAILURE;
 }

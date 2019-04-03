@@ -86,9 +86,9 @@ std::vector<StatisticPtr>
 Main::mergeWorkerStatistics(const StatisticFactory& statistic_factory,
                             const std::vector<ClientWorkerPtr>& workers) const {
   // First we init merged_statistics with newly created statistics instances.
-  // We do that by adding the same amount of Statistic instances the first worker.
+  // We do that by adding the same amount of Statistic instances that the first worker has.
   // (We always have at least one worker, and all workers have the same number of Statistic
-  // instances associated to them).
+  // instances associated to them, in the same order).
   std::vector<StatisticPtr> merged_statistics;
   StatisticPtrMap w0_statistics = workers[0]->statistics();
   for (auto w0_statistic : w0_statistics) {
@@ -113,8 +113,8 @@ Main::mergeWorkerStatistics(const StatisticFactory& statistic_factory,
 std::map<std::string, uint64_t>
 Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   std::map<std::string, uint64_t> merged;
-
   const Utility util;
+
   for (auto& w : workers) {
     const auto counters = util.mapCountersFromStore(
         w->store(), [](std::string, uint64_t value) { return value > 0; });
@@ -191,7 +191,6 @@ public:
     Envoy::Runtime::RandomGeneratorImpl generator;
     Envoy::Runtime::ScopedLoaderSingleton loader(
         Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(generator, store(), tls())});
-
     for (auto& w : workers_) {
       w->start();
     }
@@ -229,7 +228,6 @@ bool Main::runWorkers(ProcessContext& context, std::vector<StatisticPtr>& merged
     return false;
   }
   const std::vector<ClientWorkerPtr>& workers = context.createWorkers(uri, determineConcurrency());
-
   if (context.runWorkers()) {
     StatisticFactoryImpl statistic_factory(*options_);
     merged_statistics = mergeWorkerStatistics(statistic_factory, workers);
@@ -265,12 +263,10 @@ bool Main::run() {
   ProcessContext context(*options_);
 
   std::cout << "Nighthawk - A layer 7 protocol benchmarking tool.\n";
-
   if (runWorkers(context, merged_statistics, merged_counters)) {
     writeOutput(context, merged_statistics, merged_counters);
     return true;
   }
-
   std::cerr << "An error occurred";
   return false;
 }
