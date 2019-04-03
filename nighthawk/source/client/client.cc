@@ -11,6 +11,7 @@
 #include "envoy/stats/store.h"
 
 #include "common/api/api_impl.h"
+#include "common/common/cleanup.h"
 #include "common/common/thread_impl.h"
 #include "common/event/dispatcher_impl.h"
 #include "common/event/real_time_system.h"
@@ -84,6 +85,10 @@ uint32_t Main::determineConcurrency() const {
 std::vector<StatisticPtr>
 Main::mergeWorkerStatistics(const StatisticFactory& statistic_factory,
                             const std::vector<ClientWorkerPtr>& workers) const {
+  // First we init merged_statistics with newly created statistics instances.
+  // We do that by adding the same amount of Statistic instances the first worker.
+  // (We always have at least one worker, and all workers have the same number of Statistic
+  // instances associated to them).
   std::vector<StatisticPtr> merged_statistics;
   StatisticPtrMap w0_statistics = workers[0]->statistics();
   for (auto w0_statistic : w0_statistics) {
@@ -92,6 +97,7 @@ Main::mergeWorkerStatistics(const StatisticFactory& statistic_factory,
     merged_statistics.push_back(std::move(new_statistic));
   }
 
+  // Merge the statistics of all workers into the statistics vector we initialized above.
   for (auto& w : workers) {
     uint32_t i = 0;
     for (auto wx_statistic : w->statistics()) {
@@ -108,9 +114,9 @@ std::map<std::string, uint64_t>
 Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   std::map<std::string, uint64_t> merged;
 
-  Utility util;
+  const Utility util;
   for (auto& w : workers) {
-    auto counters = util.mapCountersFromStore(
+    const auto counters = util.mapCountersFromStore(
         w->store(), [](std::string, uint64_t value) { return value > 0; });
     for (auto counter : counters) {
       if (merged.count(counter.first) == 0) {
@@ -124,99 +130,137 @@ Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   return merged;
 }
 
-bool Main::runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
-                      const SequencerFactory& sequencer_factory,
-                      std::vector<StatisticPtr>& merged_statistics,
+class ProcessContext {
+public:
+  ProcessContext(const Options& options)
+      : store_factory_(options), store_(store_factory_.create()),
+        api_(thread_factory_, *store_, time_system_, file_system_),
+        dispatcher_(api().allocateDispatcher()),
+        cleanup_([this] { tls_.shutdownGlobalThreading(); }), benchmark_client_factory_(options),
+        sequencer_factory_(options), options_(options)
+
+  {
+    tls_.registerThread(*dispatcher_, true);
+  }
+
+  Envoy::Thread::ThreadFactoryImplPosix& thread_factory() { return thread_factory_; };
+  Envoy::Filesystem::InstanceImplPosix& file_system() { return file_system_; }
+  Envoy::Event::RealTimeSystem& time_system() { return time_system_; }
+  Envoy::Api::Impl& api() { return api_; }
+  Envoy::Event::Dispatcher& dispatcher() { return *dispatcher_; }
+  Envoy::ThreadLocal::InstanceImpl& tls() { return tls_; }
+  Envoy::Stats::Store& store() { return *store_; }
+
+  BenchmarkClientFactory& benchmark_client_factory() { return benchmark_client_factory_; }
+  SequencerFactory& sequencer_factory() { return sequencer_factory_; }
+  StoreFactory& store_factory() { return store_factory_; };
+
+  const std::vector<ClientWorkerPtr>& createWorkers(const Uri& uri, const uint32_t concurrency) {
+    // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
+    // time.
+    // TODO(oschaaf): Expose kMinimalDelay in configuration.
+    const std::chrono::seconds kMinimalWorkerDelay = 2s;
+    const auto first_worker_start = time_system().monotonicTime() + kMinimalWorkerDelay;
+    const double inter_worker_delay_usec =
+        (1. / options_.requests_per_second()) * 1000000 / concurrency;
+
+    int worker_number = workers_.size();
+    while (workers_.size() < concurrency) {
+      const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
+          ((inter_worker_delay_usec * worker_number) * 1us));
+      workers_.push_back(std::make_unique<ClientWorkerImpl>(
+          api_, tls_, benchmark_client_factory_, sequencer_factory_, uri, store_factory_.create(),
+          worker_number, first_worker_start + worker_delay));
+      worker_number++;
+    }
+    return workers_;
+  }
+
+  bool runWorkers() {
+    Envoy::Runtime::RandomGeneratorImpl generator;
+    Envoy::Runtime::ScopedLoaderSingleton loader(
+        Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(generator, store(), tls())});
+
+    for (auto& w : workers_) {
+      w->start();
+    }
+    bool ok = true;
+    for (auto& w : workers_) {
+      w->waitForCompletion();
+      ok = ok && w->success();
+    }
+    return ok;
+  }
+
+private:
+  Envoy::Thread::ThreadFactoryImplPosix thread_factory_;
+  Envoy::Filesystem::InstanceImplPosix file_system_;
+  Envoy::Event::RealTimeSystem time_system_;
+  StoreFactoryImpl store_factory_;
+  Envoy::Stats::StorePtr store_;
+  Envoy::Api::Impl api_;
+  Envoy::ThreadLocal::InstanceImpl tls_;
+  Envoy::Event::DispatcherPtr dispatcher_;
+  std::vector<ClientWorkerPtr> workers_;
+  Envoy::Cleanup cleanup_;
+  BenchmarkClientFactoryImpl benchmark_client_factory_;
+  SequencerFactoryImpl sequencer_factory_;
+  const Options& options_;
+};
+
+bool Main::runWorkers(ProcessContext& context, std::vector<StatisticPtr>& merged_statistics,
                       std::map<std::string, uint64_t>& merged_counters) const {
-  auto thread_factory = Envoy::Thread::ThreadFactoryImplPosix();
-  StoreFactoryImpl store_factory(*options_);
-  StatisticFactoryImpl statistic_factory(*options_);
-  Envoy::Stats::StorePtr store = store_factory.create();
-  Envoy::Event::RealTimeSystem time_system;
-  Envoy::Filesystem::InstanceImplPosix filesystem;
-  Envoy::Api::Impl api(thread_factory, *store, time_system, filesystem);
-  Envoy::ThreadLocal::InstanceImpl tls;
-  Envoy::Event::DispatcherPtr main_dispatcher(api.allocateDispatcher());
   Uri uri = Uri::Parse(options_->uri());
-  tls.registerThread(*main_dispatcher, true);
   try {
-    // TODO(oschaaf): verify with @htuch that ::Auto is the right default here.
-    // Also, this should be optionized.
-    uri.resolve(*main_dispatcher, Envoy::Network::DnsLookupFamily::Auto);
-  } catch (const UriException) {
-    tls.shutdownGlobalThreading();
+    // TODO(oschaaf): DnsLookupFamily should be optionized.
+    uri.resolve(context.dispatcher(), Envoy::Network::DnsLookupFamily::Auto);
+  } catch (UriException) {
     return false;
   }
+  const std::vector<ClientWorkerPtr>& workers = context.createWorkers(uri, determineConcurrency());
 
-  uint32_t concurrency = determineConcurrency();
-  std::vector<ClientWorkerPtr> workers;
-  // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
-  // time.
-  // TODO(oschaaf): Expose the hard-coded two seconds below in configuration.
-  auto first_worker_start = time_system.monotonicTime() + 2s;
-  double inter_worker_delay_usec = (1. / options_->requests_per_second()) * 1000000 / concurrency;
-
-  for (uint32_t worker_number = 0; worker_number < concurrency; worker_number++) {
-    auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        ((inter_worker_delay_usec * worker_number) * 1us));
-    workers.push_back(std::make_unique<ClientWorkerImpl>(
-        api, tls, benchmark_client_factory, sequencer_factory, uri, store_factory.create(),
-        worker_number, first_worker_start + worker_delay));
-  }
-
-  Envoy::Runtime::RandomGeneratorImpl generator;
-  Envoy::Runtime::ScopedLoaderSingleton loader(
-      Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(generator, *store, tls)});
-
-  for (auto& w : workers) {
-    w->start();
-  }
-
-  bool ok = true;
-  for (auto& w : workers) {
-    w->waitForCompletion();
-    ok = ok && w->success();
-  }
-  if (ok) {
+  if (context.runWorkers()) {
+    StatisticFactoryImpl statistic_factory(*options_);
     merged_statistics = mergeWorkerStatistics(statistic_factory, workers);
     merged_counters = mergeWorkerCounters(workers);
+    return true;
   }
+  return false;
+}
 
-  tls.shutdownGlobalThreading();
-  return ok;
+void Main::writeOutput(ProcessContext& context, const std::vector<StatisticPtr>& merged_statistics,
+                       const std::map<std::string, uint64_t>& merged_counters) const {
+  ConsoleOutputFormatterImpl console_formatter(context.time_system(), *options_, merged_statistics,
+                                               merged_counters);
+  // TODO(oschaaf): output format, location, method, etc should be optionized.
+  std::cout << console_formatter.toString();
+  JsonOutputFormatterImpl json_formatter(context.time_system(), *options_, merged_statistics,
+                                         merged_counters);
+  mkdir("measurements", 0777);
+  std::ofstream stream;
+  const int64_t epoch_seconds = context.time_system().systemTime().time_since_epoch().count();
+  std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
+  stream.open(filename);
+  stream << json_formatter.toString();
+  ENVOY_LOG(info, "Done. Wrote {}.", filename);
 }
 
 bool Main::run() {
   Envoy::Thread::MutexBasicLockable log_lock;
-  std::vector<StatisticPtr> merged_statistics;
-  std::map<std::string, uint64_t> merged_counters;
   auto logging_context = std::make_unique<Envoy::Logger::Context>(
       spdlog::level::from_str(options_->verbosity()), "[%T.%f][%t][%L] %v", log_lock);
-  BenchmarkClientFactoryImpl benchmark_client_factory(*options_);
-  SequencerFactoryImpl sequencer_factory(*options_);
+  std::vector<StatisticPtr> merged_statistics;
+  std::map<std::string, uint64_t> merged_counters;
+  ProcessContext context(*options_);
 
   std::cout << "Nighthawk - A layer 7 protocol benchmarking tool.\n";
 
-  if (runWorkers(benchmark_client_factory, sequencer_factory, merged_statistics, merged_counters)) {
-    Envoy::RealTimeSource time_source;
-    ConsoleOutputFormatterImpl console_formatter(time_source, *options_, merged_statistics,
-                                                 merged_counters);
-    // TODO(oschaaf): output format, location, method, etc should be optionized.
-    std::cout << console_formatter.toString();
-    JsonOutputFormatterImpl json_formatter(time_source, *options_, merged_statistics,
-                                           merged_counters);
-    mkdir("measurements", 0777);
-    std::ofstream stream;
-    const int64_t epoch_seconds = time_source.systemTime().time_since_epoch().count();
-    std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
-    stream.open(filename);
-    stream << json_formatter.toString();
-    ENVOY_LOG(info, "Done. Wrote {}.", filename);
+  if (runWorkers(context, merged_statistics, merged_counters)) {
+    writeOutput(context, merged_statistics, merged_counters);
     return true;
-  } else {
-    std::cerr << "An error occurred";
   }
 
+  std::cerr << "An error occurred";
   return false;
 }
 

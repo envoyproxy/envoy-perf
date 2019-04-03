@@ -41,11 +41,14 @@ public:
   void SetUp() override {
     // We fork the integration test fixture into a child process, to avoid conflicting
     // runtimeloaders as both NH and the integration server want to own that and we can have only
-    // one.
+    // one. The plan is to move to python for this type of testing, so hopefully we can deprecate
+    // this test and it's peculiar setup with fork/pipe soon.
     pipe(fd_port);
     pipe(fd_confirm);
     pid_ = fork();
-    ASSERT(pid_ >= 0);
+    RELEASE_ASSERT(pid_ >= 0, "Fork failed");
+
+    const int kParentMessageId = 12341234;
 
     if (pid_ == 0) {
       // child process running the integration test server.
@@ -58,15 +61,17 @@ public:
       // The parent process writes to fd_confirm when it has read the port. This call to read blocks
       // until that happens.
       read(fd_confirm[0], &parent_message, sizeof(parent_message));
-      ASSERT(parent_message == 1234);
+      RELEASE_ASSERT(parent_message == kParentMessageId, "Unexpected kParentMessageId value");
       // The parent process closes fd_port when the test tears down. The read call blocks until it
       // does that.
-      ASSERT(read(fd_port[0], &port_, sizeof(port_)) == -1);
+      RELEASE_ASSERT(read(fd_port[0], &port_, sizeof(port_)) == -1, "read failed");
+      GTEST_SKIP();
     } else if (pid_ > 0) {
-      ASSERT(read(fd_port[0], &port_, sizeof(port_)) > 0);
-      ASSERT(port_ > 0);
-      int foo = 1234;
-      write(fd_confirm[1], &foo, sizeof(foo));
+      RELEASE_ASSERT(read(fd_port[0], &port_, sizeof(port_)) > 0, "read failed");
+      RELEASE_ASSERT(port_ > 0, "read unexpected port_ value");
+      RELEASE_ASSERT(write(fd_confirm[1], &kParentMessageId, sizeof(kParentMessageId)) ==
+                         sizeof(kParentMessageId),
+                     "write failed");
     }
   }
 
@@ -76,14 +81,14 @@ public:
       fake_upstreams_.clear();
       ares_library_cleanup();
     }
-    close(fd_confirm[0]);
-    close(fd_confirm[1]);
-    close(fd_port[0]);
-    close(fd_port[1]);
+    RELEASE_ASSERT(!close(fd_confirm[0]), "close failed");
+    RELEASE_ASSERT(!close(fd_confirm[1]), "close failed");
+    RELEASE_ASSERT(!close(fd_port[0]), "close failed");
+    RELEASE_ASSERT(!close(fd_port[1]), "close failed");
   }
 
   std::string testUrl() {
-    ASSERT(pid_ > 0);
+    RELEASE_ASSERT(pid_ > 0, "Unexpected call to testUrl");
     const std::string address = Envoy::Network::Test::getLoopbackAddressUrlString(GetParam());
     return fmt::format("http://{}:{}/", address, port_);
   }
@@ -111,37 +116,31 @@ INSTANTIATE_TEST_SUITE_P(IpVersions, ClientTest,
                          Envoy::TestUtility::ipTestParamsToString);
 
 TEST_P(ClientTest, NormalRun) {
-  if (pid_ > 0) {
-    Main program(createOptionsImpl(fmt::format("foo --duration 2 --rps 10 {}", testUrl())));
-    EXPECT_TRUE(program.run());
-  }
+  Main program(createOptionsImpl(fmt::format("foo --duration 2 --rps 10 {}", testUrl())));
+  EXPECT_TRUE(program.run());
 }
 
 TEST_P(ClientTest, AutoConcurrencyRun) {
-  if (pid_ > 0) {
-    std::vector<const char*> argv;
-    argv.push_back("foo");
-    argv.push_back("--concurrency");
-    argv.push_back("auto");
-    argv.push_back("--duration");
-    argv.push_back("1");
-    argv.push_back("--rps");
-    argv.push_back("1");
-    argv.push_back("--verbosity");
-    argv.push_back("error");
-    std::string url = testUrl();
-    argv.push_back(url.c_str());
+  std::vector<const char*> argv;
+  argv.push_back("foo");
+  argv.push_back("--concurrency");
+  argv.push_back("auto");
+  argv.push_back("--duration");
+  argv.push_back("1");
+  argv.push_back("--rps");
+  argv.push_back("1");
+  argv.push_back("--verbosity");
+  argv.push_back("error");
+  std::string url = testUrl();
+  argv.push_back(url.c_str());
 
-    Main program(argv.size(), argv.data());
-    EXPECT_TRUE(program.run());
-  }
+  Main program(argv.size(), argv.data());
+  EXPECT_TRUE(program.run());
 }
 
 TEST_P(ClientTest, BadRun) {
-  if (pid_ > 0) {
-    Main program(createOptionsImpl("foo --duration 1 --rps 1 https://unresolveable.host/"));
-    EXPECT_FALSE(program.run());
-  }
+  Main program(createOptionsImpl("foo --duration 1 --rps 1 https://unresolveable.host/"));
+  EXPECT_FALSE(program.run());
 }
 
 } // namespace Client

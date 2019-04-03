@@ -20,7 +20,7 @@ First, follow steps 1 and 2 over at [Quick start Bazel build for developers](htt
 bazel build -c opt //nighthawk:nighthawk_client
 
 # test it
-bazel test -c opt //nighthawk/test:nighthawk_test
+bazel test -c fastbuild //nighthawk/test:nighthawk_test
 ```
 
 ## Using the Nighthawk client
@@ -162,6 +162,7 @@ The name of the file will be `<epoch.json>`, which contains:
 - The start time of the test, and a serialization of the Nighthawk options involved.
 - The mean latency and the observed standard deviation.
 - Latency percentiles produced by HdrHistogram.
+- Counters as tracked by Envoy's connection-pool and ssl libraries.
 
 ## Accuracy and repeatability considerations when using the Nighthawk client.
 
@@ -169,10 +170,10 @@ The name of the file will be `<epoch.json>`, which contains:
   processes that are not needed. 
 - Be aware that power state management and CPU Frequency changes are able to introduce significant noise.
   When idle, Nighthawk uses a busy loop to achieve precise timings when starting requests, which helps minimize this.
-  Still, consider disabling c-state changes in the system BIOS.
-- Be aware that CPU Thermal throttling may skew results.
-- Consider using `taskset` to isolate client and server. On machines with multiple physical CPU's there is a choice here.
-  You can partition client and server on the same physical processor, or run each of them on a different physical CPU.
+  Still, consider disabling C-state changes in the system BIOS.
+- Be aware that CPU thermal throttling may skew results.
+- Consider using `taskset` to isolate client and server. On machines with multiple physical CPUs there is a choice here.
+  You can partition client and server on the same physical processor, or run each of them on a different physical CPU. Be aware of the latency effects of interconnects such as QPI.
 - Consider disabling hyper-threading.
 - Consider tuning the benchmarking system for low latency (manually, or with tuned).
   - TODO(oschaaf): link resources.

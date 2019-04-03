@@ -13,6 +13,8 @@
 namespace Nighthawk {
 namespace Client {
 
+class ProcessContext;
+
 class Main : public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   Main(int argc, const char* const* argv);
@@ -23,9 +25,7 @@ public:
 private:
   uint32_t determineConcurrency() const;
   void configureComponentLogLevels(spdlog::level::level_enum level);
-  bool runWorkers(const BenchmarkClientFactory& benchmark_client_factory,
-                  const SequencerFactory& sequencer_factory,
-                  std::vector<StatisticPtr>& merged_statistics,
+  bool runWorkers(ProcessContext& context, std::vector<StatisticPtr>& merged_statistics,
                   std::map<std::string, uint64_t>& merged_counters) const;
   std::vector<StatisticPtr>
   mergeWorkerStatistics(const StatisticFactory& statistic_factory,
@@ -33,6 +33,9 @@ private:
 
   std::map<std::string, uint64_t>
   mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const;
+
+  void writeOutput(ProcessContext& context, const std::vector<StatisticPtr>& merged_statistics,
+                   const std::map<std::string, uint64_t>& merged_counters) const;
 
   OptionsPtr options_;
   std::unique_ptr<Envoy::Logger::Context> logging_context_;

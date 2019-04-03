@@ -21,7 +21,7 @@ public:
                    const BenchmarkClientFactory& benchmark_client_factory,
                    const SequencerFactory& sequencer_factory, const Uri uri,
                    Envoy::Stats::StorePtr&& store, const int worker_number,
-                   const Envoy::MonotonicTime starting_time_);
+                   const Envoy::MonotonicTime starting_time);
 
   StatisticPtrMap statistics() const override;
   Envoy::Stats::Store& store() const override { return *store_; }
