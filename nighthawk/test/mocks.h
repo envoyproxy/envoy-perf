@@ -87,8 +87,9 @@ class MockSequencerFactory : public Client::SequencerFactory {
 public:
   MockSequencerFactory();
   ~MockSequencerFactory();
-  MOCK_CONST_METHOD3(create, SequencerPtr(Envoy::TimeSource& time_source,
+  MOCK_CONST_METHOD4(create, SequencerPtr(Envoy::TimeSource& time_source,
                                           Envoy::Event::Dispatcher& dispatcher,
+                                          Envoy::MonotonicTime start_time,
                                           Client::BenchmarkClient& benchmark_client));
 };
 

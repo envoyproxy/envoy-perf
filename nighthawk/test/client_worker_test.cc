@@ -33,7 +33,7 @@ public:
         .WillOnce(testing::Return(
             testing::ByMove(std::unique_ptr<MockBenchmarkClient>(benchmark_client_))));
 
-    EXPECT_CALL(sequencer_factory_, create(_, _, _))
+    EXPECT_CALL(sequencer_factory_, create(_, _, _, _))
         .Times(1)
         .WillOnce(testing::Return(testing::ByMove(std::unique_ptr<MockSequencer>(sequencer_))));
   }

@@ -143,28 +143,39 @@ public:
     tls_.registerThread(*dispatcher_, true);
   }
 
-  Envoy::Thread::ThreadFactoryImplPosix& thread_factory() { return thread_factory_; };
-  Envoy::Filesystem::InstanceImplPosix& file_system() { return file_system_; }
-  Envoy::Event::RealTimeSystem& time_system() { return time_system_; }
+  Envoy::Thread::ThreadFactory& thread_factory() { return thread_factory_; };
+  Envoy::Filesystem::Instance& file_system() { return file_system_; }
+  Envoy::Event::TimeSystem& time_system() { return time_system_; }
   Envoy::Api::Impl& api() { return api_; }
-  Envoy::Event::Dispatcher& dispatcher() { return *dispatcher_; }
-  Envoy::ThreadLocal::InstanceImpl& tls() { return tls_; }
-  Envoy::Stats::Store& store() { return *store_; }
+  Envoy::Event::Dispatcher& dispatcher() const { return *dispatcher_; }
+  Envoy::ThreadLocal::Instance& tls() { return tls_; }
+  Envoy::Stats::Store& store() const { return *store_; }
 
-  BenchmarkClientFactory& benchmark_client_factory() { return benchmark_client_factory_; }
-  SequencerFactory& sequencer_factory() { return sequencer_factory_; }
-  StoreFactory& store_factory() { return store_factory_; };
+  const BenchmarkClientFactory& benchmark_client_factory() const {
+    return benchmark_client_factory_;
+  }
+  const SequencerFactory& sequencer_factory() const { return sequencer_factory_; }
+  const StoreFactory& store_factory() const { return store_factory_; };
 
   const std::vector<ClientWorkerPtr>& createWorkers(const Uri& uri, const uint32_t concurrency) {
-    // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
-    // time.
     // TODO(oschaaf): Expose kMinimalDelay in configuration.
     const std::chrono::seconds kMinimalWorkerDelay = 2s;
+    ASSERT(workers_.size() == 0);
+
+    // We try to offset the start of each thread so that workers will execute tasks evenly spaced in
+    // time. Let's assume we have two workers w0/w1, which should maintain a combined global pace of
+    // 1000Hz. w0 and w1 both run at 500Hz, but ideally their execution is evenly spaced in time,
+    // and not overlapping. Workers start offsets can be computed like
+    // "worker_number*(1/global_frequency))", which would yield T0+[0ms, 1ms]. This helps reduce
+    // batching/queueing effects, both initially, but also by calibrating the linear rate limiter we
+    // currently have to a precise starting time, which helps later on.
+    // TODO(oschaaf): Arguably, this ought to be the job of a rate limiter with awareness of the
+    // global status quo, which we do not have right now. This has been noted in the
+    // track-for-future issue.
     const auto first_worker_start = time_system().monotonicTime() + kMinimalWorkerDelay;
     const double inter_worker_delay_usec =
         (1. / options_.requests_per_second()) * 1000000 / concurrency;
-
-    int worker_number = workers_.size();
+    int worker_number = 0;
     while (workers_.size() < concurrency) {
       const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
           ((inter_worker_delay_usec * worker_number) * 1us));
@@ -202,9 +213,9 @@ private:
   Envoy::ThreadLocal::InstanceImpl tls_;
   Envoy::Event::DispatcherPtr dispatcher_;
   std::vector<ClientWorkerPtr> workers_;
-  Envoy::Cleanup cleanup_;
-  BenchmarkClientFactoryImpl benchmark_client_factory_;
-  SequencerFactoryImpl sequencer_factory_;
+  const Envoy::Cleanup cleanup_;
+  const BenchmarkClientFactoryImpl benchmark_client_factory_;
+  const SequencerFactoryImpl sequencer_factory_;
   const Options& options_;
 };
 

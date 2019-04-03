@@ -32,7 +32,6 @@ protected:
 
 private:
   void simpleWarmup();
-  void delayStart();
   const Uri uri_;
   const int worker_number_;
   const Envoy::MonotonicTime starting_time_;

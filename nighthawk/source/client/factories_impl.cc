@@ -35,15 +35,15 @@ SequencerFactoryImpl::SequencerFactoryImpl(const Options& options)
 
 SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
                                           Envoy::Event::Dispatcher& dispatcher,
+                                          Envoy::MonotonicTime start_time,
                                           BenchmarkClient& benchmark_client) const {
   StatisticFactoryImpl statistic_factory(options_);
-
   RateLimiterPtr rate_limiter =
       std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requests_per_second()));
   SequencerTarget sequencer_target = [&benchmark_client](std::function<void()> f) -> bool {
     return benchmark_client.tryStartOne(f);
   };
-  return std::make_unique<SequencerImpl>(platform_util_, dispatcher, time_source,
+  return std::make_unique<SequencerImpl>(platform_util_, dispatcher, time_source, start_time,
                                          std::move(rate_limiter), sequencer_target,
                                          statistic_factory.create(), statistic_factory.create(),
                                          options_.duration(), options_.timeout());

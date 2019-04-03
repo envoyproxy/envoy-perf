@@ -38,10 +38,10 @@ using SequencerTarget = std::function<bool(std::function<void()>)>;
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   SequencerImpl(const PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
-                Envoy::TimeSource& time_source, RateLimiterPtr&& rate_limiter,
-                SequencerTarget target, StatisticPtr&& latency_statistic,
-                StatisticPtr&& blocked_statistic, std::chrono::microseconds duration,
-                std::chrono::microseconds grace_timeout);
+                Envoy::TimeSource& time_source, Envoy::MonotonicTime start_time,
+                RateLimiterPtr&& rate_limiter, SequencerTarget target,
+                StatisticPtr&& latency_statistic, StatisticPtr&& blocked_statistic,
+                std::chrono::microseconds duration, std::chrono::microseconds grace_timeout);
 
   /**
    * Starts the Sequencer. Should be followed up with a call to waitForCompletion().
@@ -56,9 +56,9 @@ public:
 
   // TODO(oschaaf): calling this after stop() will return broken/unexpected results.
   double completionsPerSecond() const override {
-    const double usec =
-        std::chrono::duration_cast<std::chrono::microseconds>(time_source_.monotonicTime() - start_)
-            .count();
+    const double usec = std::chrono::duration_cast<std::chrono::microseconds>(
+                            time_source_.monotonicTime() - start_time_)
+                            .count();
 
     return usec == 0 ? 0 : ((targets_completed_ / usec) * 1000000);
   }
@@ -112,7 +112,7 @@ private:
   Envoy::Event::TimerPtr spin_timer_;
   std::chrono::microseconds duration_;
   std::chrono::microseconds grace_timeout_;
-  Envoy::MonotonicTime start_;
+  Envoy::MonotonicTime start_time_;
   uint64_t targets_initiated_;
   uint64_t targets_completed_;
   bool running_;

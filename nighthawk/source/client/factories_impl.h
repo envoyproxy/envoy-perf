@@ -32,6 +32,7 @@ class SequencerFactoryImpl : public OptionBasedFactoryImpl, public SequencerFact
 public:
   SequencerFactoryImpl(const Options& options);
   SequencerPtr create(Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
+                      Envoy::MonotonicTime start_time,
                       BenchmarkClient& benchmark_client) const override;
 };
 
