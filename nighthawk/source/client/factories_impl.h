@@ -48,5 +48,14 @@ public:
   StatisticPtr create() const override;
 };
 
+class OutputFormatterFactoryImpl : public OptionBasedFactoryImpl, public OutputFormatterFactory {
+public:
+  OutputFormatterFactoryImpl(Envoy::TimeSource& time_source, const Options& options);
+  OutputFormatterPtr create() const override;
+
+private:
+  Envoy::TimeSource& time_source_;
+};
+
 } // namespace Client
 } // namespace Nighthawk

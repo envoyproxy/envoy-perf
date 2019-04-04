@@ -27,6 +27,8 @@ public:
   virtual bool h2() const PURE;
   virtual std::string concurrency() const PURE;
   virtual std::string verbosity() const PURE;
+  virtual std::string output_format() const PURE;
+
   /**
    * Converts an Options instance to an equivalent CommandLineOptions instance in terms of option
    * values.

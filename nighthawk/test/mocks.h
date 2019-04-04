@@ -71,6 +71,7 @@ public:
   MOCK_CONST_METHOD0(h2, bool());
   MOCK_CONST_METHOD0(concurrency, std::string());
   MOCK_CONST_METHOD0(verbosity, std::string());
+  MOCK_CONST_METHOD0(output_format, std::string());
   MOCK_CONST_METHOD0(toCommandLineOptions, Client::CommandLineOptionsPtr());
 };
 

@@ -49,6 +49,15 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       "default level is 'info'.",
       false, "warn", &verbosities_allowed, cmd);
 
+  std::vector<std::string> output_formats = {"human", "yaml", "json"};
+  TCLAP::ValuesConstraint<std::string> output_formats_allowed(log_levels);
+
+  TCLAP::ValueArg<std::string> output_format(
+      "", "output-format",
+      "Verbosity of the output. Possible values: [human, yaml, json]. The "
+      "default level is 'human'.",
+      false, "human", &output_formats_allowed, cmd);
+
   TCLAP::UnlabeledValueArg<std::string> uri("uri",
                                             "uri to benchmark. http:// and https:// are supported, "
                                             "but in case of https no certificates are validated.",
@@ -79,6 +88,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   h2_ = h2.getValue();
   concurrency_ = concurrency.getValue();
   verbosity_ = verbosity.getValue();
+  output_format_ = output_format.getValue();
 
   // We cap on negative values. TCLAP accepts negative values which we will get here as very
   // large values. We just cap values to 2^63.

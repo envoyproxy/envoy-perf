@@ -26,6 +26,7 @@ public:
   bool h2() const override { return h2_; }
   std::string concurrency() const override { return concurrency_; }
   std::string verbosity() const override { return verbosity_; };
+  std::string output_format() const override { return output_format_; };
 
 private:
   uint64_t requests_per_second_;
@@ -36,6 +37,7 @@ private:
   bool h2_;
   std::string concurrency_;
   std::string verbosity_;
+  std::string output_format_;
 };
 
 } // namespace Client

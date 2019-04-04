@@ -12,11 +12,11 @@ OutputFormatterImpl::OutputFormatterImpl(const OutputFormatter& formatter)
     : output_(formatter.toProto()) {}
 
 OutputFormatterImpl::OutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options) {
-  output_.set_allocated_options(options.toCommandLineOptions().release());
   *(output_.mutable_timestamp()) = Envoy::Protobuf::util::TimeUtil::NanosecondsToTimestamp(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
           time_source.systemTime().time_since_epoch())
           .count());
+  output_.set_allocated_options(options.toCommandLineOptions().release());
 }
 
 nighthawk::client::Output OutputFormatterImpl::toProto() const { return output_; }
@@ -31,7 +31,6 @@ ConsoleOutputFormatterImpl::ConsoleOutputFormatterImpl(Envoy::TimeSource& time_s
 std::string ConsoleOutputFormatterImpl::toString() const {
   std::stringstream ss;
   const auto& output = toProto();
-  const double output_percentiles[] = {.0, .5, .75, .8, .9, .95, .99, .999, 1.};
   ss << "Nighthawk - A layer 7 protocol benchmarking tool." << std::endl << std::endl;
   for (const auto& result : output.results()) {
     if (result.name() == "global") {
@@ -44,7 +43,9 @@ std::string ConsoleOutputFormatterImpl::toString() const {
            << std::endl;
         ss << fmt::format("{:<{}}{:<{}}{:<{}}", "Percentile", 12, "Count", 12, "Latency", 15)
            << std::endl;
-        for (const double p : output_percentiles) {
+
+        // The proto percentiles are ordered ascending. We write the first match to the stream.
+        for (const double p : {.0, .5, .75, .8, .9, .95, .99, .999, 1.}) {
           for (const auto& percentile : statistic.percentiles()) {
             if (percentile.percentile() >= p) {
               ss << fmt::format("{:<{}}{:<{}}{:<{}}", percentile.percentile(), 12,

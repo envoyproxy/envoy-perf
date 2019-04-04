@@ -35,8 +35,6 @@ private:
   std::map<std::string, uint64_t>
   mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const;
 
-  void writeOutput(Envoy::Event::TimeSystem& time_system, OutputFormatter& output_formatter) const;
-
   OptionsPtr options_;
   std::unique_ptr<Envoy::Logger::Context> logging_context_;
 };

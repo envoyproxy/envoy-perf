@@ -20,11 +20,11 @@
 #include "common/runtime/runtime_impl.h"
 #include "common/thread_local/thread_local_impl.h"
 
+#include "nighthawk/client/output_formatter.h"
 #include "nighthawk/source/client/client_worker_impl.h"
 #include "nighthawk/source/client/factories_impl.h"
 #include "nighthawk/source/client/options_impl.h"
 #include "nighthawk/source/client/output.pb.h"
-#include "nighthawk/source/client/output_formatter_impl.h"
 #include "nighthawk/source/common/frequency.h"
 #include "nighthawk/source/common/utility.h"
 
@@ -261,33 +261,20 @@ bool Main::runWorkers(ProcessContext& context, OutputFormatter& formatter) const
   return false;
 }
 
-void Main::writeOutput(Envoy::Event::TimeSystem& time_system,
-                       OutputFormatter& output_formatter) const {
-  // TODO(oschaaf): output format, location, method, etc should be optionized.
-  std::cout << output_formatter.toString();
-  JsonOutputFormatterImpl json_formatter(output_formatter);
-  // TODO(oschaaf): we ought to handle errors here instead of the release assert,
-  RELEASE_ASSERT(mkdir("measurements", 0777) == 0 || errno == EEXIST,
-                 "Failed to create output directory");
-  std::ofstream stream;
-  const int64_t epoch_seconds = time_system.systemTime().time_since_epoch().count();
-  std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
-  stream.open(filename);
-  stream << json_formatter.toString();
-  ENVOY_LOG(info, "Done. Wrote {}.", filename);
-}
-
 bool Main::run() {
   Envoy::Thread::MutexBasicLockable log_lock;
   auto logging_context = std::make_unique<Envoy::Logger::Context>(
       spdlog::level::from_str(options_->verbosity()), "[%T.%f][%t][%L] %v", log_lock);
   ProcessContext context(*options_);
-  ConsoleOutputFormatterImpl console_formatter(context.time_system(), *options_);
-  if (runWorkers(context, console_formatter)) {
-    writeOutput(context.time_system(), console_formatter);
+  OutputFormatterFactoryImpl output_format_factory(context.time_system(), *options_);
+  auto formatter = output_format_factory.create();
+  if (runWorkers(context, *formatter)) {
+    // TODO(oschaaf): the way we output should be optionized.
+    std::cout << formatter->toString();
+    ENVOY_LOG(info, "Done.");
     return true;
   }
-  std::cerr << "An error occurred";
+  ENVOY_LOG(critical, "An error ocurred.");
   return false;
 }
 

@@ -33,8 +33,20 @@ public:
     counters_["foo"] = 1;
     counters_["bar"] = 2;
     time_system_.setSystemTime(std::chrono::milliseconds(1234567891567));
+    command_line_options_.mutable_duration()->set_seconds(1);
+    EXPECT_CALL(options_, toCommandLineOptions())
+        .WillOnce(testing::Return(testing::ByMove(
+            std::make_unique<nighthawk::client::CommandLineOptions>(command_line_options_))));
   }
 
+  void expectEqualToGoldFile(OutputFormatterImpl& formatter, const std::string path) {
+    formatter.addResult("worker_0", statistics_, counters_);
+    formatter.addResult("worker_1", statistics_, counters_);
+    formatter.addResult("global", statistics_, counters_);
+    EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(path)), formatter.toString());
+  }
+
+  nighthawk::client::CommandLineOptions command_line_options_;
   Envoy::Event::SimulatedTimeSystem time_system_;
   Envoy::Filesystem::InstanceImplPosix filesystem_;
   MockOptions options_;
@@ -44,30 +56,17 @@ public:
 
 TEST_F(OutputFormatterTest, CliFormatter) {
   ConsoleOutputFormatterImpl formatter(time_system_, options_);
-  formatter.addResult("global", statistics_, counters_);
-  EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(
-                "nighthawk/test/test_data/output_formatter.txt.gold")),
-            formatter.toString());
+  expectEqualToGoldFile(formatter, "nighthawk/test/test_data/output_formatter.txt.gold");
 }
 
 TEST_F(OutputFormatterTest, JsonFormatter) {
   JsonOutputFormatterImpl formatter(time_system_, options_);
-  formatter.addResult("global", statistics_, counters_);
-  EXPECT_CALL(options_, toCommandLineOptions)
-      .WillOnce(Return(ByMove(std::make_unique<nighthawk::client::CommandLineOptions>())));
-  EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(
-                "nighthawk/test/test_data/output_formatter.json.gold")),
-            formatter.toString());
+  expectEqualToGoldFile(formatter, "nighthawk/test/test_data/output_formatter.json.gold");
 }
 
 TEST_F(OutputFormatterTest, YamlFormatter) {
   YamlOutputFormatterImpl formatter(time_system_, options_);
-  formatter.addResult("global", statistics_, counters_);
-  EXPECT_CALL(options_, toCommandLineOptions)
-      .WillOnce(Return(ByMove(std::make_unique<nighthawk::client::CommandLineOptions>())));
-  EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(
-                "nighthawk/test/test_data/output_formatter.yaml.gold")),
-            formatter.toString());
+  expectEqualToGoldFile(formatter, "nighthawk/test/test_data/output_formatter.yaml.gold");
 }
 
 } // namespace Client

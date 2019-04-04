@@ -3,6 +3,7 @@
 #include "common/stats/isolated_store_impl.h"
 
 #include "nighthawk/source/client/benchmark_client_impl.h"
+#include "nighthawk/source/client/output_formatter_impl.h"
 #include "nighthawk/source/common/platform_util_impl.h"
 #include "nighthawk/source/common/rate_limiter_impl.h"
 #include "nighthawk/source/common/sequencer_impl.h"
@@ -59,6 +60,22 @@ StatisticFactoryImpl::StatisticFactoryImpl(const Options& options)
     : OptionBasedFactoryImpl(options) {}
 
 StatisticPtr StatisticFactoryImpl::create() const { return std::make_unique<HdrStatistic>(); }
+
+OutputFormatterFactoryImpl::OutputFormatterFactoryImpl(Envoy::TimeSource& time_source,
+                                                       const Options& options)
+    : OptionBasedFactoryImpl(options), time_source_(time_source) {}
+
+OutputFormatterPtr OutputFormatterFactoryImpl::create() const {
+  const std::string format = options_.output_format();
+  if (format == "human") {
+    return std::make_unique<Client::ConsoleOutputFormatterImpl>(time_source_, options_);
+  } else if (format == "json") {
+    return std::make_unique<Client::JsonOutputFormatterImpl>(time_source_, options_);
+  } else if (format == "yaml") {
+    return std::make_unique<Client::YamlOutputFormatterImpl>(time_source_, options_);
+  }
+  NOT_REACHED_GCOVR_EXCL_LINE;
+}
 
 } // namespace Client
 } // namespace Nighthawk

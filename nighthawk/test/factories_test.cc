@@ -64,5 +64,22 @@ TEST_F(FactoriesTest, CreateStatistic) {
   EXPECT_NE(nullptr, factory.create().get());
 }
 
+class OutputFormatterFactoryTest : public FactoriesTest,
+                                   public ::testing::WithParamInterface<const char*> {
+public:
+  void testOutputFormatter(const std::string type) {
+    Envoy::RealTimeSource time_source;
+    EXPECT_CALL(options_, toCommandLineOptions());
+    EXPECT_CALL(options_, output_format()).WillOnce(testing::Return(type));
+    OutputFormatterFactoryImpl factory(time_source, options_);
+    EXPECT_NE(nullptr, factory.create().get());
+  }
+};
+
+TEST_P(OutputFormatterFactoryTest, TestCreation) { testOutputFormatter(GetParam()); }
+
+INSTANTIATE_TEST_SUITE_P(OutputFormats, OutputFormatterFactoryTest,
+                         ::testing::ValuesIn({"human", "json", "yaml"}));
+
 } // namespace Client
 } // namespace Nighthawk
