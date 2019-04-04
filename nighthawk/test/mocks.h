@@ -87,8 +87,9 @@ class MockSequencerFactory : public Client::SequencerFactory {
 public:
   MockSequencerFactory();
   ~MockSequencerFactory();
-  MOCK_CONST_METHOD3(create, SequencerPtr(Envoy::TimeSource& time_source,
+  MOCK_CONST_METHOD4(create, SequencerPtr(Envoy::TimeSource& time_source,
                                           Envoy::Event::Dispatcher& dispatcher,
+                                          Envoy::MonotonicTime start_time,
                                           Client::BenchmarkClient& benchmark_client));
 };
 
@@ -132,7 +133,7 @@ public:
   MOCK_METHOD1(setMeasureLatencies, void(bool));
   MOCK_CONST_METHOD0(statistics, StatisticPtrMap());
   MOCK_METHOD1(tryStartOne, bool(std::function<void()>));
-  MOCK_CONST_METHOD1(getCounters, std::map<std::string, uint64_t>(Client::CounterFilter));
+  MOCK_CONST_METHOD0(store, Envoy::Stats::Store&());
 
 protected:
   MOCK_CONST_METHOD0(measureLatencies, bool());

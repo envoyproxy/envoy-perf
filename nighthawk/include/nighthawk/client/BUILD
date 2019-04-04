@@ -12,6 +12,7 @@ envoy_basic_cc_library(
     name = "client_includes",
     hdrs = [
         "benchmark_client.h",
+        "client_worker.h",
         "factories.h",
         "options.h",
         "output_formatter.h",

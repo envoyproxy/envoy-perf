@@ -138,12 +138,12 @@ private:
 // Basic rate limiter interaction test.
 TEST_F(SequencerTestWithTimerEmulation, RateLimiterInteraction) {
   MockSequencerTarget target;
-
   SequencerTarget callback =
       std::bind(&MockSequencerTarget::callback, &target, std::placeholders::_1);
   SequencerImpl sequencer(
-      platform_util_, *dispatcher_, time_system_, std::move(rate_limiter_), callback,
-      std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
+      platform_util_, *dispatcher_, time_system_, time_system_.monotonicTime(),
+      std::move(rate_limiter_), callback, std::make_unique<StreamingStatistic>(),
+      std::make_unique<StreamingStatistic>(),
       test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 1ms /* Sequencer timeout. */);
   // Have the mock rate limiter gate two calls, and block everything else.
   EXPECT_CALL(rate_limiter_unsafe_ref_, tryAcquireOne())
@@ -168,8 +168,9 @@ TEST_F(SequencerTestWithTimerEmulation, RateLimiterSaturatedTargetInteraction) {
   SequencerTarget callback =
       std::bind(&MockSequencerTarget::callback, &target, std::placeholders::_1);
   SequencerImpl sequencer(
-      platform_util_, *dispatcher_, time_system_, std::move(rate_limiter_), callback,
-      std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
+      platform_util_, *dispatcher_, time_system_, time_system_.monotonicTime(),
+      std::move(rate_limiter_), callback, std::make_unique<StreamingStatistic>(),
+      std::make_unique<StreamingStatistic>(),
       test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 0ms /* Sequencer timeout. */);
 
   EXPECT_CALL(rate_limiter_unsafe_ref_, tryAcquireOne())
@@ -194,6 +195,7 @@ TEST_F(SequencerTestWithTimerEmulation, RateLimiterSaturatedTargetInteraction) {
 class SequencerIntegrationTest : public SequencerTestWithTimerEmulation {
 public:
   SequencerIntegrationTest() {
+    Envoy::Event::SimulatedTimeSystem time_system;
     rate_limiter_ = std::make_unique<LinearRateLimiter>(time_system_, frequency_);
   }
 
@@ -208,10 +210,10 @@ public:
 };
 
 TEST_F(SequencerIntegrationTest, TheHappyFlow) {
-  SequencerImpl sequencer(platform_util_, *dispatcher_, time_system_, std::move(rate_limiter_),
-                          sequencer_target_, std::make_unique<StreamingStatistic>(),
-                          std::make_unique<StreamingStatistic>(),
-                          test_number_of_intervals_ * interval_, 1s);
+  SequencerImpl sequencer(
+      platform_util_, *dispatcher_, time_system_, time_system_.monotonicTime(),
+      std::move(rate_limiter_), sequencer_target_, std::make_unique<StreamingStatistic>(),
+      std::make_unique<StreamingStatistic>(), test_number_of_intervals_ * interval_, 1s);
 
   EXPECT_CALL(platform_util_, yieldCurrentThread()).Times(testing::AtLeast(1));
 
@@ -234,8 +236,9 @@ TEST_F(SequencerIntegrationTest, AlwaysSaturatedTargetTest) {
   SequencerTarget callback =
       std::bind(&SequencerIntegrationTest::saturated_test, this, std::placeholders::_1);
   SequencerImpl sequencer(
-      platform_util_, *dispatcher_, time_system_, std::move(rate_limiter_), callback,
-      std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
+      platform_util_, *dispatcher_, time_system_, time_system_.monotonicTime(),
+      std::move(rate_limiter_), callback, std::make_unique<StreamingStatistic>(),
+      std::make_unique<StreamingStatistic>(),
       test_number_of_intervals_ * interval_ /* Sequencer run time.*/, 1ms /* Sequencer timeout. */);
 
   sequencer.start();
@@ -255,8 +258,9 @@ TEST_F(SequencerIntegrationTest, GraceTimeoutTest) {
   SequencerTarget callback =
       std::bind(&SequencerIntegrationTest::timeout_test, this, std::placeholders::_1);
   SequencerImpl sequencer(
-      platform_util_, *dispatcher_, time_system_, std::move(rate_limiter_), callback,
-      std::make_unique<StreamingStatistic>(), std::make_unique<StreamingStatistic>(),
+      platform_util_, *dispatcher_, time_system_, time_system_.monotonicTime(),
+      std::move(rate_limiter_), callback, std::make_unique<StreamingStatistic>(),
+      std::make_unique<StreamingStatistic>(),
       test_number_of_intervals_ * interval_ /* Sequencer run time.*/, grace_timeout);
 
   auto pre_timeout = time_system_.monotonicTime();
