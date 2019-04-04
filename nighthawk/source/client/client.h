@@ -8,6 +8,7 @@
 #include "nighthawk/client/client_worker.h"
 #include "nighthawk/client/factories.h"
 #include "nighthawk/client/options.h"
+#include "nighthawk/client/output_formatter.h"
 #include "nighthawk/common/statistic.h"
 
 namespace Nighthawk {
@@ -25,8 +26,8 @@ public:
 private:
   uint32_t determineConcurrency() const;
   void configureComponentLogLevels(spdlog::level::level_enum level);
-  bool runWorkers(ProcessContext& context, std::vector<StatisticPtr>& merged_statistics,
-                  std::map<std::string, uint64_t>& merged_counters) const;
+  bool runWorkers(ProcessContext& contex, OutputFormatter& output_formatter) const;
+
   std::vector<StatisticPtr>
   mergeWorkerStatistics(const StatisticFactory& statistic_factory,
                         const std::vector<ClientWorkerPtr>& workers) const;
@@ -34,8 +35,7 @@ private:
   std::map<std::string, uint64_t>
   mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const;
 
-  void writeOutput(ProcessContext& context, const std::vector<StatisticPtr>& merged_statistics,
-                   const std::map<std::string, uint64_t>& merged_counters) const;
+  void writeOutput(Envoy::Event::TimeSystem& time_system, OutputFormatter& output_formatter) const;
 
   OptionsPtr options_;
   std::unique_ptr<Envoy::Logger::Context> logging_context_;

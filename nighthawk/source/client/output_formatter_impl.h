@@ -21,40 +21,37 @@ public:
    * @param merged_counters Map of counters, keyed by id, representing the global result (after
    * summing up the counters if multiple workers are involved).
    */
-  OutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options,
-                      const std::vector<StatisticPtr>& merged_statistics,
-                      const std::map<std::string, uint64_t>& merged_counters);
+  OutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options);
+  OutputFormatterImpl(const OutputFormatter& formatter);
 
-protected:
-  Envoy::ProtobufTypes::MessagePtr toProto() const;
+  void addResult(const std::string name, const std::vector<StatisticPtr>& statistics,
+                 const std::map<std::string, uint64_t>& counters) override;
 
-  Envoy::TimeSource& time_source_;
-  const Options& options_;
-  const std::vector<StatisticPtr>& merged_statistics_;
-  const std::map<std::string, uint64_t>& merged_counters_;
+  nighthawk::client::Output toProto() const override;
+
+private:
+  nighthawk::client::Output output_;
 };
 
 class ConsoleOutputFormatterImpl : public OutputFormatterImpl {
 public:
-  ConsoleOutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options,
-                             const std::vector<StatisticPtr>& merged_statistics,
-                             const std::map<std::string, uint64_t>& merged_counters);
+  ConsoleOutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options);
+  ConsoleOutputFormatterImpl(const OutputFormatter& formatter);
+
   std::string toString() const override;
 };
 
 class JsonOutputFormatterImpl : public OutputFormatterImpl {
 public:
-  JsonOutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options,
-                          const std::vector<StatisticPtr>& merged_statistics,
-                          const std::map<std::string, uint64_t>& merged_counters);
+  JsonOutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options);
+  JsonOutputFormatterImpl(const OutputFormatter& formatter);
   std::string toString() const override;
 };
 
 class YamlOutputFormatterImpl : public OutputFormatterImpl {
 public:
-  YamlOutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options,
-                          const std::vector<StatisticPtr>& merged_statistics,
-                          const std::map<std::string, uint64_t>& merged_counters);
+  YamlOutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options);
+  YamlOutputFormatterImpl(const OutputFormatter& formatter);
   std::string toString() const override;
 };
 

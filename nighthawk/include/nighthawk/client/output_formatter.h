@@ -14,6 +14,9 @@ namespace Client {
 class OutputFormatter {
 public:
   virtual ~OutputFormatter() = default;
+  virtual void addResult(const std::string name, const std::vector<StatisticPtr>& statistics,
+                         const std::map<std::string, uint64_t>& counters) PURE;
+  virtual nighthawk::client::Output toProto() const PURE;
   virtual std::string toString() const PURE;
 };
 

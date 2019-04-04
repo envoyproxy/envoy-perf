@@ -1,3 +1,4 @@
+
 #include "nighthawk/source/common/statistic_impl.h"
 
 #include <cmath>

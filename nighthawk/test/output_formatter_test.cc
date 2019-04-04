@@ -43,15 +43,16 @@ public:
 };
 
 TEST_F(OutputFormatterTest, CliFormatter) {
-  ConsoleOutputFormatterImpl formatter(time_system_, options_, statistics_, counters_);
+  ConsoleOutputFormatterImpl formatter(time_system_, options_);
+  formatter.addResult("global", statistics_, counters_);
   EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(
                 "nighthawk/test/test_data/output_formatter.txt.gold")),
             formatter.toString());
 }
 
 TEST_F(OutputFormatterTest, JsonFormatter) {
-  JsonOutputFormatterImpl formatter(time_system_, options_, statistics_, counters_);
-
+  JsonOutputFormatterImpl formatter(time_system_, options_);
+  formatter.addResult("global", statistics_, counters_);
   EXPECT_CALL(options_, toCommandLineOptions)
       .WillOnce(Return(ByMove(std::make_unique<nighthawk::client::CommandLineOptions>())));
   EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(
@@ -60,8 +61,8 @@ TEST_F(OutputFormatterTest, JsonFormatter) {
 }
 
 TEST_F(OutputFormatterTest, YamlFormatter) {
-  YamlOutputFormatterImpl formatter(time_system_, options_, statistics_, counters_);
-
+  YamlOutputFormatterImpl formatter(time_system_, options_);
+  formatter.addResult("global", statistics_, counters_);
   EXPECT_CALL(options_, toCommandLineOptions)
       .WillOnce(Return(ByMove(std::make_unique<nighthawk::client::CommandLineOptions>())));
   EXPECT_EQ(filesystem_.fileReadToEnd(TestEnvironment::runfilesPath(
