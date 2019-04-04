@@ -31,7 +31,7 @@ class ClientTest : public Envoy::BaseIntegrationTest,
 public:
   ClientTest() : Envoy::BaseIntegrationTest(GetParam(), realTime(), readEnvoyConfiguration()) {}
 
-  const std::string readEnvoyConfiguration() {
+  std::string readEnvoyConfiguration() {
     Envoy::Filesystem::InstanceImplPosix file_system;
     const std::string config = file_system.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
@@ -55,7 +55,7 @@ public:
       initialize();
       int port = lookupPort("listener_0");
       int parent_message;
-      write(fd_port_[1], &port, sizeof(port));
+      RELEASE_ASSERT(write(fd_port_[1], &port, sizeof(port)) == sizeof(port_), "write failed");
       // The parent process writes to fd_confirm_ when it has read the port. This call to read
       // blocks until that happens.
       RELEASE_ASSERT(read(fd_confirm_[0], &parent_message, sizeof(parent_message)) ==
@@ -105,8 +105,6 @@ public:
   int fd_port_[2];
   int fd_confirm_[2];
 };
-
-// std::string ClientTest::envoy_config;
 
 INSTANTIATE_TEST_SUITE_P(IpVersions, ClientTest,
                          testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
