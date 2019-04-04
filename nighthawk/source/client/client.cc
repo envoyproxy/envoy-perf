@@ -245,7 +245,9 @@ void Main::writeOutput(ProcessContext& context, const std::vector<StatisticPtr>&
   std::cout << console_formatter.toString();
   JsonOutputFormatterImpl json_formatter(context.time_system(), *options_, merged_statistics,
                                          merged_counters);
-  mkdir("measurements", 0777);
+  // TODO(oschaaf): we ought to handle errors here instead of the release assert,
+  RELEASE_ASSERT(mkdir("measurements", 0777) == 0 || errno == EEXIST,
+                 "Failed to create output directory");
   std::ofstream stream;
   const int64_t epoch_seconds = context.time_system().systemTime().time_since_epoch().count();
   std::string filename = fmt::format("measurements/{}.json", epoch_seconds);

@@ -29,13 +29,13 @@ namespace Client {
 class ClientTest : public Envoy::BaseIntegrationTest,
                    public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:
-  ClientTest() : Envoy::BaseIntegrationTest(GetParam(), realTime(), ClientTest::envoy_config) {}
+  ClientTest() : Envoy::BaseIntegrationTest(GetParam(), realTime(), readEnvoyConfiguration()) {}
 
-  static void SetUpTestCase() {
+  const std::string readEnvoyConfiguration() {
     Envoy::Filesystem::InstanceImplPosix file_system;
-    envoy_config = file_system.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
+    const std::string config = file_system.fileReadToEnd(Envoy::TestEnvironment::runfilesPath(
         "nighthawk/test/test_data/benchmark_http_client_test_envoy.yaml"));
-    envoy_config = Envoy::TestEnvironment::substitute(envoy_config);
+    return Envoy::TestEnvironment::substitute(config);
   }
 
   void SetUp() override {
@@ -43,12 +43,10 @@ public:
     // runtimeloaders as both NH and the integration server want to own that and we can have only
     // one. The plan is to move to python for this type of testing, so hopefully we can deprecate
     // this test and it's peculiar setup with fork/pipe soon.
-    pipe(fd_port);
-    pipe(fd_confirm);
+    RELEASE_ASSERT(pipe(fd_port_) == 0, "Failed to open pipe");
+    RELEASE_ASSERT(pipe(fd_confirm_) == 0, "Failed to open pipe");
     pid_ = fork();
     RELEASE_ASSERT(pid_ >= 0, "Fork failed");
-
-    const int kParentMessageId = 12341234;
 
     if (pid_ == 0) {
       // child process running the integration test server.
@@ -57,21 +55,21 @@ public:
       initialize();
       int port = lookupPort("listener_0");
       int parent_message;
-      write(fd_port[1], &port, sizeof(port));
-      // The parent process writes to fd_confirm when it has read the port. This call to read blocks
-      // until that happens.
-      read(fd_confirm[0], &parent_message, sizeof(parent_message));
-      RELEASE_ASSERT(parent_message == kParentMessageId, "Unexpected kParentMessageId value");
-      // The parent process closes fd_port when the test tears down. The read call blocks until it
+      write(fd_port_[1], &port, sizeof(port));
+      // The parent process writes to fd_confirm_ when it has read the port. This call to read
+      // blocks until that happens.
+      RELEASE_ASSERT(read(fd_confirm_[0], &parent_message, sizeof(parent_message)) ==
+                         sizeof(parent_message),
+                     "Invalid read size");
+      RELEASE_ASSERT(parent_message == port, "Failed to confirm port");
+      // The parent process closes fd_port_ when the test tears down. The read call blocks until it
       // does that.
-      RELEASE_ASSERT(read(fd_port[0], &port_, sizeof(port_)) == -1, "read failed");
+      RELEASE_ASSERT(read(fd_port_[0], &port_, sizeof(port_)) == -1, "read failed");
       GTEST_SKIP();
     } else if (pid_ > 0) {
-      RELEASE_ASSERT(read(fd_port[0], &port_, sizeof(port_)) > 0, "read failed");
+      RELEASE_ASSERT(read(fd_port_[0], &port_, sizeof(port_)) > 0, "read failed");
       RELEASE_ASSERT(port_ > 0, "read unexpected port_ value");
-      RELEASE_ASSERT(write(fd_confirm[1], &kParentMessageId, sizeof(kParentMessageId)) ==
-                         sizeof(kParentMessageId),
-                     "write failed");
+      RELEASE_ASSERT(write(fd_confirm_[1], &port_, sizeof(port_)) == sizeof(port_), "write failed");
     }
   }
 
@@ -81,10 +79,10 @@ public:
       fake_upstreams_.clear();
       ares_library_cleanup();
     }
-    RELEASE_ASSERT(!close(fd_confirm[0]), "close failed");
-    RELEASE_ASSERT(!close(fd_confirm[1]), "close failed");
-    RELEASE_ASSERT(!close(fd_port[0]), "close failed");
-    RELEASE_ASSERT(!close(fd_port[1]), "close failed");
+    RELEASE_ASSERT(!close(fd_confirm_[0]), "close failed");
+    RELEASE_ASSERT(!close(fd_confirm_[1]), "close failed");
+    RELEASE_ASSERT(!close(fd_port_[0]), "close failed");
+    RELEASE_ASSERT(!close(fd_port_[1]), "close failed");
   }
 
   std::string testUrl() {
@@ -104,12 +102,11 @@ public:
 
   int port_;
   pid_t pid_;
-  int fd_port[2];
-  int fd_confirm[2];
-  static std::string envoy_config;
+  int fd_port_[2];
+  int fd_confirm_[2];
 };
 
-std::string ClientTest::envoy_config;
+// std::string ClientTest::envoy_config;
 
 INSTANTIATE_TEST_SUITE_P(IpVersions, ClientTest,
                          testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()),
