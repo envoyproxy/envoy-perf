@@ -55,7 +55,7 @@ public:
       initialize();
       int port = lookupPort("listener_0");
       int parent_message;
-      RELEASE_ASSERT(write(fd_port_[1], &port, sizeof(port)) == sizeof(port_), "write failed");
+      RELEASE_ASSERT(write(fd_port_[1], &port, sizeof(port)) == sizeof(port), "write failed");
       // The parent process writes to fd_confirm_ when it has read the port. This call to read
       // blocks until that happens.
       RELEASE_ASSERT(read(fd_confirm_[0], &parent_message, sizeof(parent_message)) ==
