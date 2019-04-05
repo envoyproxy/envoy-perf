@@ -8,9 +8,6 @@
 namespace Nighthawk {
 namespace Client {
 
-OutputFormatterImpl::OutputFormatterImpl(const OutputFormatter& formatter)
-    : output_(formatter.toProto()) {}
-
 OutputFormatterImpl::OutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options) {
   *(output_.mutable_timestamp()) = Envoy::Protobuf::util::TimeUtil::NanosecondsToTimestamp(
       std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -20,9 +17,6 @@ OutputFormatterImpl::OutputFormatterImpl(Envoy::TimeSource& time_source, const O
 }
 
 nighthawk::client::Output OutputFormatterImpl::toProto() const { return output_; }
-
-ConsoleOutputFormatterImpl::ConsoleOutputFormatterImpl(const OutputFormatter& formatter)
-    : OutputFormatterImpl(formatter) {}
 
 ConsoleOutputFormatterImpl::ConsoleOutputFormatterImpl(Envoy::TimeSource& time_source,
                                                        const Options& options)
@@ -85,9 +79,6 @@ void OutputFormatterImpl::addResult(absl::string_view name,
   }
 }
 
-JsonOutputFormatterImpl::JsonOutputFormatterImpl(const OutputFormatter& formatter)
-    : OutputFormatterImpl(formatter) {}
-
 JsonOutputFormatterImpl::JsonOutputFormatterImpl(Envoy::TimeSource& time_source,
                                                  const Options& options)
     : OutputFormatterImpl(time_source, options) {}
@@ -95,9 +86,6 @@ JsonOutputFormatterImpl::JsonOutputFormatterImpl(Envoy::TimeSource& time_source,
 std::string JsonOutputFormatterImpl::toString() const {
   return Envoy::MessageUtil::getJsonStringFromMessage(toProto(), true, true);
 }
-
-YamlOutputFormatterImpl::YamlOutputFormatterImpl(const OutputFormatter& formatter)
-    : OutputFormatterImpl(formatter) {}
 
 YamlOutputFormatterImpl::YamlOutputFormatterImpl(Envoy::TimeSource& time_source,
                                                  const Options& options)
