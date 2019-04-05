@@ -55,7 +55,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   TCLAP::ValueArg<std::string> output_format(
       "", "output-format",
       "Verbosity of the output. Possible values: [human, yaml, json]. The "
-      "default level is 'human'.",
+      "default output format is 'human'.",
       false, "human", &output_formats_allowed, cmd);
 
   TCLAP::UnlabeledValueArg<std::string> uri("uri",

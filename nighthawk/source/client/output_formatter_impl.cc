@@ -39,9 +39,11 @@ std::string ConsoleOutputFormatterImpl::toString() const {
            << std::endl;
 
         // The proto percentiles are ordered ascending. We write the first match to the stream.
+        double last_percentile = -1.;
         for (const double p : {.0, .5, .75, .8, .9, .95, .99, .999, 1.}) {
           for (const auto& percentile : statistic.percentiles()) {
-            if (percentile.percentile() >= p) {
+            if (percentile.percentile() >= p && last_percentile < percentile.percentile()) {
+              last_percentile = percentile.percentile();
               ss << fmt::format("{:<{}}{:<{}}{:<{}}", percentile.percentile(), 12,
                                 percentile.count(), 12, percentile.duration(), 15)
                  << std::endl;
