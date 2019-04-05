@@ -21,6 +21,8 @@ message CommandLineOptions {
   string concurrency = 6;
   // See :option:`--verbosity` for details.
   string verbosity = 7;
+  // See :option:`--output-format` for details.
+  string output_format = 8;
   // See :option:`--uri` for details.
-  string uri = 8;
+  string uri = 9;
 }

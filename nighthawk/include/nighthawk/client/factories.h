@@ -12,6 +12,7 @@
 
 #include "nighthawk/client/benchmark_client.h"
 #include "nighthawk/client/options.h"
+#include "nighthawk/client/output_formatter.h"
 #include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/sequencer.h"
 #include "nighthawk/common/statistic.h"
@@ -31,7 +32,8 @@ class SequencerFactory {
 public:
   virtual ~SequencerFactory() = default;
   virtual SequencerPtr create(Envoy::TimeSource& time_source, Envoy::Event::Dispatcher& dispatcher,
-                              Envoy::MonotonicTime start_time, BenchmarkClient& benchmark_client) const PURE;
+                              Envoy::MonotonicTime start_time,
+                              BenchmarkClient& benchmark_client) const PURE;
 };
 
 class StoreFactory {
@@ -44,6 +46,12 @@ class StatisticFactory {
 public:
   virtual ~StatisticFactory() = default;
   virtual StatisticPtr create() const PURE;
+};
+
+class OutputFormatterFactory {
+public:
+  virtual ~OutputFormatterFactory() = default;
+  virtual OutputFormatterPtr create() const PURE;
 };
 
 } // namespace Client

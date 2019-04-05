@@ -20,11 +20,11 @@
 #include "common/runtime/runtime_impl.h"
 #include "common/thread_local/thread_local_impl.h"
 
+#include "nighthawk/client/output_formatter.h"
 #include "nighthawk/source/client/client_worker_impl.h"
 #include "nighthawk/source/client/factories_impl.h"
 #include "nighthawk/source/client/options_impl.h"
 #include "nighthawk/source/client/output.pb.h"
-#include "nighthawk/source/client/output_formatter_impl.h"
 #include "nighthawk/source/common/frequency.h"
 #include "nighthawk/source/common/utility.h"
 
@@ -72,11 +72,11 @@ uint32_t Main::determineConcurrency() const {
   ENVOY_LOG(info, "Starting {} threads / event loops. Test duration: {} seconds.", concurrency,
             options_->duration().count());
   ENVOY_LOG(info, "Global targets: {} connections and {} calls per second.",
-            options_->connections() * concurrency, options_->requests_per_second() * concurrency);
+            options_->connections() * concurrency, options_->requestsPerSecond() * concurrency);
 
   if (concurrency > 1) {
     ENVOY_LOG(info, "   (Per-worker targets: {} connections and {} calls per second)",
-              options_->connections(), options_->requests_per_second());
+              options_->connections(), options_->requestsPerSecond());
   }
 
   return concurrency;
@@ -113,10 +113,8 @@ Main::mergeWorkerStatistics(const StatisticFactory& statistic_factory,
 std::map<std::string, uint64_t>
 Main::mergeWorkerCounters(const std::vector<ClientWorkerPtr>& workers) const {
   std::map<std::string, uint64_t> merged;
-  const Utility util;
-
   for (auto& w : workers) {
-    const auto counters = util.mapCountersFromStore(
+    const auto counters = Utility().mapCountersFromStore(
         w->store(), [](std::string, uint64_t value) { return value > 0; });
     for (auto counter : counters) {
       if (merged.count(counter.first) == 0) {
@@ -174,7 +172,7 @@ public:
     // track-for-future issue.
     const auto first_worker_start = time_system().monotonicTime() + kMinimalWorkerDelay;
     const double inter_worker_delay_usec =
-        (1. / options_.requests_per_second()) * 1000000 / concurrency;
+        (1. / options_.requestsPerSecond()) * 1000000 / concurrency;
     int worker_number = 0;
     while (workers_.size() < concurrency) {
       const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -187,17 +185,46 @@ public:
     return workers_;
   }
 
-  bool runWorkers() {
+  std::vector<StatisticPtr> vectorizeStatisticPtrMap(const StatisticFactory& statistic_factory,
+                                                     const StatisticPtrMap& statistics) const {
+    std::vector<StatisticPtr> v;
+    for (auto statistic : statistics) {
+      auto new_statistic = statistic_factory.create()->combine(*(statistic.second));
+      new_statistic->setId(statistic.first);
+      v.push_back(std::move(new_statistic));
+    }
+    return v;
+  }
+
+  bool runWorkers(OutputFormatter& formatter) {
+    bool ok = true;
     Envoy::Runtime::RandomGeneratorImpl generator;
     Envoy::Runtime::ScopedLoaderSingleton loader(
         Envoy::Runtime::LoaderPtr{new Envoy::Runtime::LoaderImpl(generator, store(), tls())});
+
     for (auto& w : workers_) {
       w->start();
     }
-    bool ok = true;
     for (auto& w : workers_) {
       w->waitForCompletion();
       ok = ok && w->success();
+    }
+
+    // We don't write per-worker results if we only have a single worker, because the global results
+    // will be precisely the same.
+    if (workers_.size() > 1) {
+      int i = 0;
+      for (auto& worker : workers_) {
+        if (worker->success()) {
+          StatisticFactoryImpl statistic_factory(options_);
+          formatter.addResult(
+              fmt::format("worker_{}", i),
+              vectorizeStatisticPtrMap(statistic_factory, worker->statistics()),
+              Utility().mapCountersFromStore(
+                  worker->store(), [](std::string, uint64_t value) { return value > 0; }));
+        }
+        i++;
+      }
     }
     return ok;
   }
@@ -218,8 +245,7 @@ private:
   const Options& options_;
 };
 
-bool Main::runWorkers(ProcessContext& context, std::vector<StatisticPtr>& merged_statistics,
-                      std::map<std::string, uint64_t>& merged_counters) const {
+bool Main::runWorkers(ProcessContext& context, OutputFormatter& formatter) const {
   Uri uri = Uri::Parse(options_->uri());
   try {
     // TODO(oschaaf): DnsLookupFamily should be optionized.
@@ -228,48 +254,29 @@ bool Main::runWorkers(ProcessContext& context, std::vector<StatisticPtr>& merged
     return false;
   }
   const std::vector<ClientWorkerPtr>& workers = context.createWorkers(uri, determineConcurrency());
-  if (context.runWorkers()) {
+  if (context.runWorkers(formatter)) {
     StatisticFactoryImpl statistic_factory(*options_);
-    merged_statistics = mergeWorkerStatistics(statistic_factory, workers);
-    merged_counters = mergeWorkerCounters(workers);
+    formatter.addResult("global", mergeWorkerStatistics(statistic_factory, workers),
+                        mergeWorkerCounters(workers));
     return true;
   }
   return false;
-}
-
-void Main::writeOutput(ProcessContext& context, const std::vector<StatisticPtr>& merged_statistics,
-                       const std::map<std::string, uint64_t>& merged_counters) const {
-  ConsoleOutputFormatterImpl console_formatter(context.time_system(), *options_, merged_statistics,
-                                               merged_counters);
-  // TODO(oschaaf): output format, location, method, etc should be optionized.
-  std::cout << console_formatter.toString();
-  JsonOutputFormatterImpl json_formatter(context.time_system(), *options_, merged_statistics,
-                                         merged_counters);
-  // TODO(oschaaf): we ought to handle errors here instead of the release assert,
-  RELEASE_ASSERT(mkdir("measurements", 0777) == 0 || errno == EEXIST,
-                 "Failed to create output directory");
-  std::ofstream stream;
-  const int64_t epoch_seconds = context.time_system().systemTime().time_since_epoch().count();
-  std::string filename = fmt::format("measurements/{}.json", epoch_seconds);
-  stream.open(filename);
-  stream << json_formatter.toString();
-  ENVOY_LOG(info, "Done. Wrote {}.", filename);
 }
 
 bool Main::run() {
   Envoy::Thread::MutexBasicLockable log_lock;
   auto logging_context = std::make_unique<Envoy::Logger::Context>(
       spdlog::level::from_str(options_->verbosity()), "[%T.%f][%t][%L] %v", log_lock);
-  std::vector<StatisticPtr> merged_statistics;
-  std::map<std::string, uint64_t> merged_counters;
   ProcessContext context(*options_);
-
-  std::cout << "Nighthawk - A layer 7 protocol benchmarking tool.\n";
-  if (runWorkers(context, merged_statistics, merged_counters)) {
-    writeOutput(context, merged_statistics, merged_counters);
+  OutputFormatterFactoryImpl output_format_factory(context.time_system(), *options_);
+  auto formatter = output_format_factory.create();
+  if (runWorkers(context, *formatter)) {
+    // TODO(oschaaf): the way we output should be optionized.
+    std::cout << formatter->toString();
+    ENVOY_LOG(info, "Done.");
     return true;
   }
-  std::cerr << "An error occurred";
+  ENVOY_LOG(critical, "An error ocurred.");
   return false;
 }
 
