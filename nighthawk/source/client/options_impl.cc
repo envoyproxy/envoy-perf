@@ -19,7 +19,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   TCLAP::ValueArg<uint64_t> connections(
       "", "connections",
       "The number of connections per event loop that the test should maximally "
-      "use. Default: 1.",
+      "use. HTTP/1 only. Default: 1.",
       false, 1, "uint64_t", cmd);
   TCLAP::ValueArg<uint64_t> duration("", "duration",
                                      "The number of seconds that the test should run. Default: 5.",
@@ -58,6 +58,9 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       "default output format is 'human'.",
       false, "human", &output_formats_allowed, cmd);
 
+  TCLAP::SwitchArg prefetch_connections(
+      "", "prefetch-connections", "Prefetch connections before benchmarking (HTTP/1 only).", cmd);
+
   TCLAP::UnlabeledValueArg<std::string> uri("uri",
                                             "uri to benchmark. http:// and https:// are supported, "
                                             "but in case of https no certificates are validated.",
@@ -89,6 +92,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
   concurrency_ = concurrency.getValue();
   verbosity_ = verbosity.getValue();
   output_format_ = output_format.getValue();
+  prefetch_connections_ = prefetch_connections.getValue();
 
   // We cap on negative values. TCLAP accepts negative values which we will get here as very
   // large values. We just cap values to 2^63.
@@ -142,6 +146,7 @@ CommandLineOptionsPtr OptionsImpl::toCommandLineOptions() const {
   command_line_options->set_concurrency(concurrency());
   command_line_options->set_verbosity(verbosity());
   command_line_options->set_output_format(outputFormat());
+  command_line_options->set_prefetch_connections(prefetchConnections());
 
   return command_line_options;
 }

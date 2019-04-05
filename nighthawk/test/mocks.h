@@ -72,6 +72,7 @@ public:
   MOCK_CONST_METHOD0(concurrency, std::string());
   MOCK_CONST_METHOD0(verbosity, std::string());
   MOCK_CONST_METHOD0(outputFormat, std::string());
+  MOCK_CONST_METHOD0(prefetchConnections, bool());
   MOCK_CONST_METHOD0(toCommandLineOptions, Client::CommandLineOptionsPtr());
 };
 
@@ -135,6 +136,7 @@ public:
   MOCK_CONST_METHOD0(statistics, StatisticPtrMap());
   MOCK_METHOD1(tryStartOne, bool(std::function<void()>));
   MOCK_CONST_METHOD0(store, Envoy::Stats::Store&());
+  MOCK_METHOD0(prefetchPoolConnections, void());
 
 protected:
   MOCK_CONST_METHOD0(measureLatencies, bool());
