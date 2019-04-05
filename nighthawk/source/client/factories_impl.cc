@@ -40,7 +40,7 @@ SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
                                           BenchmarkClient& benchmark_client) const {
   StatisticFactoryImpl statistic_factory(options_);
   RateLimiterPtr rate_limiter =
-      std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requests_per_second()));
+      std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requestsPerSecond()));
   SequencerTarget sequencer_target = [&benchmark_client](std::function<void()> f) -> bool {
     return benchmark_client.tryStartOne(f);
   };
@@ -66,7 +66,7 @@ OutputFormatterFactoryImpl::OutputFormatterFactoryImpl(Envoy::TimeSource& time_s
     : OptionBasedFactoryImpl(options), time_source_(time_source) {}
 
 OutputFormatterPtr OutputFormatterFactoryImpl::create() const {
-  const std::string format = options_.output_format();
+  const std::string format = options_.outputFormat();
   if (format == "human") {
     return std::make_unique<Client::ConsoleOutputFormatterImpl>(time_source_, options_);
   } else if (format == "json") {

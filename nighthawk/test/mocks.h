@@ -63,7 +63,7 @@ public:
   MockOptions();
   ~MockOptions();
 
-  MOCK_CONST_METHOD0(requests_per_second, uint64_t());
+  MOCK_CONST_METHOD0(requestsPerSecond, uint64_t());
   MOCK_CONST_METHOD0(connections, uint64_t());
   MOCK_CONST_METHOD0(duration, std::chrono::seconds());
   MOCK_CONST_METHOD0(timeout, std::chrono::seconds());
@@ -71,7 +71,7 @@ public:
   MOCK_CONST_METHOD0(h2, bool());
   MOCK_CONST_METHOD0(concurrency, std::string());
   MOCK_CONST_METHOD0(verbosity, std::string());
-  MOCK_CONST_METHOD0(output_format, std::string());
+  MOCK_CONST_METHOD0(outputFormat, std::string());
   MOCK_CONST_METHOD0(toCommandLineOptions, Client::CommandLineOptionsPtr());
 };
 

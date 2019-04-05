@@ -24,7 +24,7 @@ public:
   OutputFormatterImpl(Envoy::TimeSource& time_source, const Options& options);
   OutputFormatterImpl(const OutputFormatter& formatter);
 
-  void addResult(const std::string name, const std::vector<StatisticPtr>& statistics,
+  void addResult(absl::string_view name, const std::vector<StatisticPtr>& statistics,
                  const std::map<std::string, uint64_t>& counters) override;
 
   nighthawk::client::Output toProto() const override;

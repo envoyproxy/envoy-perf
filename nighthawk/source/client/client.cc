@@ -72,11 +72,11 @@ uint32_t Main::determineConcurrency() const {
   ENVOY_LOG(info, "Starting {} threads / event loops. Test duration: {} seconds.", concurrency,
             options_->duration().count());
   ENVOY_LOG(info, "Global targets: {} connections and {} calls per second.",
-            options_->connections() * concurrency, options_->requests_per_second() * concurrency);
+            options_->connections() * concurrency, options_->requestsPerSecond() * concurrency);
 
   if (concurrency > 1) {
     ENVOY_LOG(info, "   (Per-worker targets: {} connections and {} calls per second)",
-              options_->connections(), options_->requests_per_second());
+              options_->connections(), options_->requestsPerSecond());
   }
 
   return concurrency;
@@ -172,7 +172,7 @@ public:
     // track-for-future issue.
     const auto first_worker_start = time_system().monotonicTime() + kMinimalWorkerDelay;
     const double inter_worker_delay_usec =
-        (1. / options_.requests_per_second()) * 1000000 / concurrency;
+        (1. / options_.requestsPerSecond()) * 1000000 / concurrency;
     int worker_number = 0;
     while (workers_.size() < concurrency) {
       const auto worker_delay = std::chrono::duration_cast<std::chrono::nanoseconds>(
@@ -210,6 +210,8 @@ public:
       ok = ok && w->success();
     }
 
+    // We don't write per-worker results if we only have a single worker, because the global results
+    // will be precisely the same.
     if (workers_.size() > 1) {
       int i = 0;
       for (auto& worker : workers_) {

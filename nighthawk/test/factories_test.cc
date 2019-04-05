@@ -46,7 +46,7 @@ TEST_F(FactoriesTest, CreateSequencer) {
 
   EXPECT_CALL(options_, timeout()).Times(1);
   EXPECT_CALL(options_, duration()).Times(1).WillOnce(testing::Return(1s));
-  EXPECT_CALL(options_, requests_per_second()).Times(1).WillOnce(testing::Return(1));
+  EXPECT_CALL(options_, requestsPerSecond()).Times(1).WillOnce(testing::Return(1));
   EXPECT_CALL(dispatcher_, createTimer_(_)).Times(2);
   Envoy::Event::SimulatedTimeSystem time_system;
   auto sequencer = factory.create(api_->timeSource(), dispatcher_, time_system.monotonicTime(),
@@ -70,7 +70,7 @@ public:
   void testOutputFormatter(const std::string type) {
     Envoy::RealTimeSource time_source;
     EXPECT_CALL(options_, toCommandLineOptions());
-    EXPECT_CALL(options_, output_format()).WillOnce(testing::Return(type));
+    EXPECT_CALL(options_, outputFormat()).WillOnce(testing::Return(type));
     OutputFormatterFactoryImpl factory(time_source, options_);
     EXPECT_NE(nullptr, factory.create().get());
   }

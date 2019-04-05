@@ -5,6 +5,7 @@
   "h2": false,
   "concurrency": "",
   "verbosity": "",
+  "output_format": "",
   "uri": "",
   "duration": "1s"
  },

@@ -50,7 +50,7 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       false, "warn", &verbosities_allowed, cmd);
 
   std::vector<std::string> output_formats = {"human", "yaml", "json"};
-  TCLAP::ValuesConstraint<std::string> output_formats_allowed(log_levels);
+  TCLAP::ValuesConstraint<std::string> output_formats_allowed(output_formats);
 
   TCLAP::ValueArg<std::string> output_format(
       "", "output-format",
@@ -135,12 +135,13 @@ CommandLineOptionsPtr OptionsImpl::toCommandLineOptions() const {
 
   command_line_options->set_connections(connections());
   command_line_options->mutable_duration()->set_seconds(duration().count());
-  command_line_options->set_requests_per_second(requests_per_second());
+  command_line_options->set_requests_per_second(requestsPerSecond());
   command_line_options->mutable_timeout()->set_seconds(timeout().count());
   command_line_options->set_h2(h2());
   command_line_options->set_uri(uri());
   command_line_options->set_concurrency(concurrency());
   command_line_options->set_verbosity(verbosity());
+  command_line_options->set_output_format(outputFormat());
 
   return command_line_options;
 }

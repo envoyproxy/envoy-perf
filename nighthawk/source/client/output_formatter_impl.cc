@@ -70,11 +70,11 @@ std::string ConsoleOutputFormatterImpl::toString() const {
   return ss.str();
 }
 
-void OutputFormatterImpl::addResult(const std::string name,
+void OutputFormatterImpl::addResult(absl::string_view name,
                                     const std::vector<StatisticPtr>& statistics,
                                     const std::map<std::string, uint64_t>& counters) {
   auto result = output_.add_results();
-  result->set_name(name);
+  result->set_name(name.data(), name.size());
   for (auto& statistic : statistics) {
     *(result->add_statistics()) = statistic->toProto();
   }
