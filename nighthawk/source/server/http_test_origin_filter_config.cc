@@ -34,9 +34,6 @@ public:
         context);
   }
 
-  /**
-   *  Return the Protobuf Message that represents your config incase you have config proto
-   */
   Envoy::ProtobufTypes::MessagePtr createEmptyConfigProto() override {
     return Envoy::ProtobufTypes::MessagePtr{new nighthawk::server::TestOrigin()};
   }
@@ -46,32 +43,27 @@ public:
 private:
   Envoy::Http::FilterFactoryCb createFilter(const nighthawk::server::TestOrigin& proto_config,
                                             Envoy::Server::Configuration::FactoryContext&) {
-    Envoy::Http::HttpTestOriginDecoderFilterConfigSharedPtr config =
-        std::make_shared<Envoy::Http::HttpTestOriginDecoderFilterConfig>(
-            Envoy::Http::HttpTestOriginDecoderFilterConfig(proto_config));
+    Nighthawk::Server::HttpTestOriginDecoderFilterConfigSharedPtr config =
+        std::make_shared<Nighthawk::Server::HttpTestOriginDecoderFilterConfig>(
+            Nighthawk::Server::HttpTestOriginDecoderFilterConfig(proto_config));
 
     return [config](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
-      auto filter = new Envoy::Http::HttpTestOriginDecoderFilter(config);
+      auto filter = new Nighthawk::Server::HttpTestOriginDecoderFilter(config);
       callbacks.addStreamDecoderFilter(Envoy::Http::StreamDecoderFilterSharedPtr{filter});
     };
   }
 
   void translateHttpTestOriginDecoderFilter(const Envoy::Json::Object& json_config,
                                             nighthawk::server::TestOrigin& proto_config) {
-
-    // normally we want to validate the json_config againts a defined json-schema here.
+    // TODO(oschaaf): we want to validate the json_config againts a defined json-schema here.
     JSON_UTIL_SET_STRING(json_config, proto_config, key);
     JSON_UTIL_SET_STRING(json_config, proto_config, val);
   }
 };
 
-/**
- * Static registration for this test-origin filter. @see RegisterFactory.
- */
 static Envoy::Registry::RegisterFactory<HttpTestOriginDecoderFilterConfig,
                                         Envoy::Server::Configuration::NamedHttpFilterConfigFactory>
     register_;
-
 } // namespace Configuration
 } // namespace Server
 } // namespace Nighthawk

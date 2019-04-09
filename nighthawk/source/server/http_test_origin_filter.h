@@ -6,9 +6,22 @@
 
 #include "nighthawk/source/server/http_test_origin_filter.pb.h"
 
-namespace Envoy {
-namespace Http {
+namespace Nighthawk {
+namespace Server {
 
+namespace TestOrigin {
+
+class HeaderNameValues {
+public:
+  const Envoy::Http::LowerCaseString TestOriginResponseSize{
+      "x-nighthawk-test-origin-response-size"};
+};
+
+typedef Envoy::ConstSingleton<HeaderNameValues> HeaderNames;
+
+} // namespace TestOrigin
+
+// Basically this is left in as a placeholder for further configuration.
 class HttpTestOriginDecoderFilterConfig {
 public:
   HttpTestOriginDecoderFilterConfig(const nighthawk::server::TestOrigin& proto_config);
@@ -24,7 +37,7 @@ private:
 typedef std::shared_ptr<HttpTestOriginDecoderFilterConfig>
     HttpTestOriginDecoderFilterConfigSharedPtr;
 
-class HttpTestOriginDecoderFilter : public StreamDecoderFilter {
+class HttpTestOriginDecoderFilter : public Envoy::Http::StreamDecoderFilter {
 public:
   HttpTestOriginDecoderFilter(HttpTestOriginDecoderFilterConfigSharedPtr);
   ~HttpTestOriginDecoderFilter();
@@ -33,18 +46,18 @@ public:
   void onDestroy() override;
 
   // Http::StreamDecoderFilter
-  FilterHeadersStatus decodeHeaders(HeaderMap&, bool) override;
-  FilterDataStatus decodeData(Buffer::Instance&, bool) override;
-  FilterTrailersStatus decodeTrailers(HeaderMap&) override;
-  void setDecoderFilterCallbacks(StreamDecoderFilterCallbacks&) override;
+  Envoy::Http::FilterHeadersStatus decodeHeaders(Envoy::Http::HeaderMap&, bool) override;
+  Envoy::Http::FilterDataStatus decodeData(Envoy::Buffer::Instance&, bool) override;
+  Envoy::Http::FilterTrailersStatus decodeTrailers(Envoy::Http::HeaderMap&) override;
+  void setDecoderFilterCallbacks(Envoy::Http::StreamDecoderFilterCallbacks&) override;
 
 private:
   const HttpTestOriginDecoderFilterConfigSharedPtr config_;
-  StreamDecoderFilterCallbacks* decoder_callbacks_;
+  Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
 
-  const LowerCaseString headerKey() const;
+  const Envoy::Http::LowerCaseString headerKey() const;
   const std::string headerValue() const;
 };
 
-} // namespace Http
-} // namespace Envoy
+} // namespace Server
+} // namespace Nighthawk

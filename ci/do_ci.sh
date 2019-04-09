@@ -1,18 +1,12 @@
 #!/bin/bash -e
 
 function do_build () {
-    bazel build $BAZEL_BUILD_OPTIONS --verbose_failures=true //nighthawk:nighthawk_client
+    bazel build $BAZEL_BUILD_OPTIONS --verbose_failures=true //nighthawk:nighthawk_client //nighthawk:nighthawk_test_origin
 }
 
 function do_test() {
     bazel test $BAZEL_BUILD_OPTIONS $BAZEL_TEST_OPTIONS --test_output=all \
-    //nighthawk/test:nighthawk_test
-}
-
-function do_test_with_valgrind() {
-    apt-get update && apt-get install valgrind && \
-    bazel build $BAZEL_BUILD_OPTIONS -c dbg //nighthawk/test:nighthawk_test && \
-    nighthawk/tools/valgrind-tests.sh
+    //nighthawk/test:nighthawk_test //nighthawk/test/server:http_test_origin_filter_integration_test
 }
 
 function do_clang_tidy() {
@@ -128,9 +122,6 @@ case "$1" in
     ;;
     test)
         do_test
-    ;;
-    test_with_valgrind)
-        do_test_with_valgrind
     ;;
     clang_tidy)
         export RUN_FULL_CLANG_TIDY=1

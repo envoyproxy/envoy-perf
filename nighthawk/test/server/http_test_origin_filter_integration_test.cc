@@ -1,11 +1,15 @@
 #include "test/integration/http_integration.h"
 
+#include <sstream>
+
 #include "gtest/gtest.h"
 
 #include "common/api/api_impl.h"
 #include "envoy/upstream/cluster_manager.h"
 #include "envoy/upstream/upstream.h"
 #include "test/common/upstream/utility.h"
+
+#include "nighthawk/source/server/http_test_origin_filter.h"
 
 namespace Nighthawk {
 
@@ -27,10 +31,9 @@ config:
     HttpIntegrationTest::initialize();
   }
 
-  // Copy of Envoy::IntegrationUtil::makeSingleRequest() but now allowing request header
-  // modification.
-  // TODO(oschaaf): Modify Envoy's version to allow a way to manipulate the request headers
-  // before they go out.
+  // TODO(oschaaf): Modify Envoy's version to allow for a way to manipulate the request headers
+  // before they get send. Then we can eliminate these copies
+  // ofEnvoy::IntegrationUtil::makeSingleRequest().
   Envoy::BufferingStreamDecoderPtr
   makeSingleRequest(uint32_t port, const std::string& method, const std::string& url,
                     const std::string& body, Envoy::Http::CodecClient::Type type,
@@ -89,6 +92,44 @@ config:
     dispatcher->run(Envoy::Event::Dispatcher::RunType::Block);
     return response;
   }
+
+  void testWithResponseSize(int response_size) {
+    std::stringstream ss;
+    int i = response_size;
+    while (i > 0) {
+      ss << "a";
+      i--;
+    }
+
+    Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
+        lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
+        [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
+          const std::string header_value(std::to_string(response_size));
+          request_headers.addCopy(
+              Nighthawk::Server::TestOrigin::HeaderNames::get().TestOriginResponseSize,
+              header_value);
+        });
+    ASSERT_TRUE(response->complete());
+    EXPECT_STREQ("200", response->headers().Status()->value().c_str());
+    auto inserted_header = response->headers().get(Envoy::Http::LowerCaseString("x-supplied-by"));
+    ASSERT_NE(nullptr, inserted_header);
+    EXPECT_STREQ("nighthawk-test-origin", inserted_header->value().c_str());
+    EXPECT_STREQ("text/plain", response->headers().ContentType()->value().c_str());
+    EXPECT_EQ(ss.str(), response->body());
+  }
+
+  void testBadInput(int response_size) {
+    Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
+        lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
+        [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
+          const std::string header_value(std::to_string(response_size));
+          request_headers.addCopy(
+              Nighthawk::Server::TestOrigin::HeaderNames::get().TestOriginResponseSize,
+              std::to_string(response_size));
+        });
+    ASSERT_TRUE(response->complete());
+    EXPECT_STREQ("500", response->headers().Status()->value().c_str());
+  }
 };
 
 INSTANTIATE_TEST_CASE_P(IpVersions, HttpTestOriginIntegrationTest,
@@ -103,21 +144,17 @@ TEST_P(HttpTestOriginIntegrationTest, TestNoSizeIndicationFails) {
 }
 
 TEST_P(HttpTestOriginIntegrationTest, TestBasics) {
-  Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
-      lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
-      [](Envoy::Http::HeaderMapImpl& request_headers) {
-        const Envoy::Http::LowerCaseString header_key("x-test-origin-response-size");
-        const std::string header_value("10");
-        request_headers.addCopy(header_key, header_value);
-      });
-  ASSERT_TRUE(response->complete());
-  EXPECT_STREQ("200", response->headers().Status()->value().c_str());
-  auto inserted_header = response->headers().get(Envoy::Http::LowerCaseString("x-supplied-by"));
-  ASSERT_NE(nullptr, inserted_header);
-  EXPECT_STREQ("nighthawk-test-origin", inserted_header->value().c_str());
-  EXPECT_STREQ("text/plain", response->headers().ContentType()->value().c_str());
-  const std::string body = "aaaaaaaaaa";
-  EXPECT_EQ(body, response->body());
+  testWithResponseSize(10);
+  testWithResponseSize(100);
+  testWithResponseSize(1000);
+  testWithResponseSize(10000);
+}
+
+TEST_P(HttpTestOriginIntegrationTest, TestNegative) { testBadInput(-1); }
+
+TEST_P(HttpTestOriginIntegrationTest, TestTooLarge) {
+  const int max = 1024 * 1024 * 4;
+  testBadInput(max + 1);
 }
 
 } // namespace Nighthawk

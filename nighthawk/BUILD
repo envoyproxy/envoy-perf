@@ -13,3 +13,12 @@ envoy_cc_binary(
         "//nighthawk/source/exe:nighthawk_client_entry_lib",
     ],
 )
+
+envoy_cc_binary(
+    name = "nighthawk_test_origin",
+    repository = "@envoy",
+    deps = [
+        "//nighthawk/source/server:http_test_origin_filter_config",
+        "@envoy//source/exe:envoy_main_entry_lib",
+    ],
+)
