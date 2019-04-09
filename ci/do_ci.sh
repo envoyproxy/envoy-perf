@@ -74,7 +74,7 @@ function do_asan() {
     echo "Building and testing envoy tests..."
     override_linker_with_lld
     cd "${SRCDIR}"
-    run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-asan //nighthawk/test:nighthawk_test
+    run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-asan //nighthawk/test:nighthawk_test //nighthawk/test/server:http_test_origin_filter_integration_test
 }
 
 function do_tsan() {
@@ -82,7 +82,7 @@ function do_tsan() {
     echo "Building and testing envoy tests..."
     override_linker_with_lld
     cd "${SRCDIR}"
-    run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-tsan //nighthawk/test:nighthawk_test
+    run_bazel test ${BAZEL_TEST_OPTIONS} -c dbg --config=clang-tsan //nighthawk/test:nighthawk_test //nighthawk/test/server:http_test_origin_filter_integration_test
 }
 
 [ -z "${NUM_CPUS}" ] && NUM_CPUS=`grep -c ^processor /proc/cpuinfo`
