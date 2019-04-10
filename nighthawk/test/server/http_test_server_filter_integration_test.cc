@@ -184,7 +184,7 @@ TEST_P(HttpTestServerIntegrationTest, TestHeaderConfig) {
   EXPECT_STREQ("200", response->headers().Status()->value().c_str());
   EXPECT_STREQ("bar2",
                response->headers().get(Envoy::Http::LowerCaseString("foo"))->value().c_str());
-  EXPECT_EQ(std::string(0, 'a'), response->body());
+  EXPECT_EQ(std::string(10, 'a'), response->body());
 }
 
 class HttpTestServerIntegrationNoConfigTest : public HttpTestServerIntegrationTestBase {
