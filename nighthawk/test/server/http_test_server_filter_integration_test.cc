@@ -171,6 +171,22 @@ TEST_P(HttpTestServerIntegrationTest, DISABLED_TestTooLarge) {
   testBadResponseSize(max + 1);
 }
 
+TEST_P(HttpTestServerIntegrationTest, TestHeaderConfig) {
+  Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
+      lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
+      [](Envoy::Http::HeaderMapImpl& request_headers) {
+        const std::string header_config =
+            "{response_headers: [ { header: { key: \"foo\", value: \"bar2\"}, append: true } ]}";
+        request_headers.addCopy(Nighthawk::Server::TestServer::HeaderNames::get().TestServerConfig,
+                                header_config);
+      });
+  ASSERT_TRUE(response->complete());
+  EXPECT_STREQ("200", response->headers().Status()->value().c_str());
+  EXPECT_STREQ("bar2",
+               response->headers().get(Envoy::Http::LowerCaseString("foo"))->value().c_str());
+  EXPECT_EQ(std::string(0, 'a'), response->body());
+}
+
 class HttpTestServerIntegrationNoConfigTest : public HttpTestServerIntegrationTestBase {
 public:
   void SetUp() override { initialize(); }
@@ -240,5 +256,7 @@ TEST_P(HttpTestServerIntegrationNoConfigTest, TestHeaderConfig) {
                response->headers().get(Envoy::Http::LowerCaseString("foo"))->value().c_str());
   EXPECT_EQ(std::string(0, 'a'), response->body());
 }
+
+// TODO(oschaaf): maybe add a couple more tests for appending headers.
 
 } // namespace Nighthawk
