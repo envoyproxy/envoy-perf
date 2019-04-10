@@ -15,10 +15,10 @@ envoy_cc_binary(
 )
 
 envoy_cc_binary(
-    name = "nighthawk_test_origin",
+    name = "nighthawk_test_server",
     repository = "@envoy",
     deps = [
-        "//nighthawk/source/server:http_test_origin_filter_config",
+        "//nighthawk/source/server:http_test_server_filter_config",
         "@envoy//source/exe:envoy_main_entry_lib",
     ],
 )

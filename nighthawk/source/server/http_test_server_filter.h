@@ -4,27 +4,27 @@
 
 #include "envoy/server/filter_config.h"
 
-#include "nighthawk/source/server/http_test_origin_filter.pb.h"
+#include "nighthawk/source/server/http_test_server_filter.pb.h"
 
 namespace Nighthawk {
 namespace Server {
 
-namespace TestOrigin {
+namespace TestServer {
 
 class HeaderNameValues {
 public:
-  const Envoy::Http::LowerCaseString TestOriginResponseSize{
-      "x-nighthawk-test-origin-response-size"};
+  const Envoy::Http::LowerCaseString TestServerResponseSize{
+      "x-nighthawk-test-server-response-size"};
 };
 
 typedef Envoy::ConstSingleton<HeaderNameValues> HeaderNames;
 
-} // namespace TestOrigin
+} // namespace TestServer
 
 // Basically this is left in as a placeholder for further configuration.
-class HttpTestOriginDecoderFilterConfig {
+class HttpTestServerDecoderFilterConfig {
 public:
-  HttpTestOriginDecoderFilterConfig(const nighthawk::server::TestOrigin& proto_config);
+  HttpTestServerDecoderFilterConfig(const nighthawk::server::TestServer& proto_config);
 
   const std::string& key() const { return key_; }
   const std::string& val() const { return val_; }
@@ -34,13 +34,13 @@ private:
   const std::string val_;
 };
 
-typedef std::shared_ptr<HttpTestOriginDecoderFilterConfig>
-    HttpTestOriginDecoderFilterConfigSharedPtr;
+typedef std::shared_ptr<HttpTestServerDecoderFilterConfig>
+    HttpTestServerDecoderFilterConfigSharedPtr;
 
-class HttpTestOriginDecoderFilter : public Envoy::Http::StreamDecoderFilter {
+class HttpTestServerDecoderFilter : public Envoy::Http::StreamDecoderFilter {
 public:
-  HttpTestOriginDecoderFilter(HttpTestOriginDecoderFilterConfigSharedPtr);
-  ~HttpTestOriginDecoderFilter();
+  HttpTestServerDecoderFilter(HttpTestServerDecoderFilterConfigSharedPtr);
+  ~HttpTestServerDecoderFilter();
 
   // Http::StreamFilterBase
   void onDestroy() override;
@@ -52,7 +52,7 @@ public:
   void setDecoderFilterCallbacks(Envoy::Http::StreamDecoderFilterCallbacks&) override;
 
 private:
-  const HttpTestOriginDecoderFilterConfigSharedPtr config_;
+  const HttpTestServerDecoderFilterConfigSharedPtr config_;
   Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
 
   Envoy::Http::LowerCaseString headerKey() const;

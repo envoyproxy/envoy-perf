@@ -3,35 +3,35 @@
 
 #include "absl/strings/numbers.h"
 
-#include "http_test_origin_filter.h"
+#include "http_test_server_filter.h"
 
 #include "envoy/server/filter_config.h"
 
 namespace Nighthawk {
 namespace Server {
 
-HttpTestOriginDecoderFilterConfig::HttpTestOriginDecoderFilterConfig(
-    const nighthawk::server::TestOrigin& proto_config)
+HttpTestServerDecoderFilterConfig::HttpTestServerDecoderFilterConfig(
+    const nighthawk::server::TestServer& proto_config)
     : key_(proto_config.key()), val_(proto_config.val()) {}
 
-HttpTestOriginDecoderFilter::HttpTestOriginDecoderFilter(
-    HttpTestOriginDecoderFilterConfigSharedPtr config)
+HttpTestServerDecoderFilter::HttpTestServerDecoderFilter(
+    HttpTestServerDecoderFilterConfigSharedPtr config)
     : config_(config) {}
 
-HttpTestOriginDecoderFilter::~HttpTestOriginDecoderFilter() {}
+HttpTestServerDecoderFilter::~HttpTestServerDecoderFilter() {}
 
-void HttpTestOriginDecoderFilter::onDestroy() {}
+void HttpTestServerDecoderFilter::onDestroy() {}
 
-Envoy::Http::LowerCaseString HttpTestOriginDecoderFilter::headerKey() const {
+Envoy::Http::LowerCaseString HttpTestServerDecoderFilter::headerKey() const {
   return Envoy::Http::LowerCaseString(config_->key());
 }
 
-const std::string& HttpTestOriginDecoderFilter::headerValue() const { return config_->val(); }
+const std::string& HttpTestServerDecoderFilter::headerValue() const { return config_->val(); }
 
 Envoy::Http::FilterHeadersStatus
-HttpTestOriginDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool) {
+HttpTestServerDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool) {
   const auto response_size_header =
-      headers.get(TestOrigin::HeaderNames::get().TestOriginResponseSize);
+      headers.get(TestServer::HeaderNames::get().TestServerResponseSize);
   const int max = 1024 * 1024 * 4;
   int response_size = -1;
 
@@ -46,23 +46,23 @@ HttpTestOriginDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool
         absl::nullopt);
   } else {
     decoder_callbacks_->sendLocalReply(static_cast<Envoy::Http::Code>(500),
-                                       "test-origin didn't understand the request", nullptr,
+                                       "test-server didn't understand the request", nullptr,
                                        absl::nullopt);
   }
   return Envoy::Http::FilterHeadersStatus::StopIteration;
 }
 
-Envoy::Http::FilterDataStatus HttpTestOriginDecoderFilter::decodeData(Envoy::Buffer::Instance&,
+Envoy::Http::FilterDataStatus HttpTestServerDecoderFilter::decodeData(Envoy::Buffer::Instance&,
                                                                       bool) {
   return Envoy::Http::FilterDataStatus::Continue;
 }
 
 Envoy::Http::FilterTrailersStatus
-HttpTestOriginDecoderFilter::decodeTrailers(Envoy::Http::HeaderMap&) {
+HttpTestServerDecoderFilter::decodeTrailers(Envoy::Http::HeaderMap&) {
   return Envoy::Http::FilterTrailersStatus::Continue;
 }
 
-void HttpTestOriginDecoderFilter::setDecoderFilterCallbacks(
+void HttpTestServerDecoderFilter::setDecoderFilterCallbacks(
     Envoy::Http::StreamDecoderFilterCallbacks& callbacks) {
   decoder_callbacks_ = &callbacks;
 }

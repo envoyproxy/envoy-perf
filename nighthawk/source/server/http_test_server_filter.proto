@@ -4,7 +4,7 @@ package nighthawk.server;
 
 import "validate/validate.proto";
 
-message TestOrigin {
+message TestServer {
     string key = 1 [(validate.rules).string.min_bytes = 1];
     string val = 2 [(validate.rules).string.min_bytes = 1];
 }

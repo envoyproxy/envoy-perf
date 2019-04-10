@@ -9,24 +9,24 @@
 #include "envoy/upstream/upstream.h"
 #include "test/common/upstream/utility.h"
 
-#include "nighthawk/source/server/http_test_origin_filter.h"
+#include "nighthawk/source/server/http_test_server_filter.h"
 
 namespace Nighthawk {
 
-class HttpTestOriginIntegrationTest
+class HttpTestServerIntegrationTest
     : public Envoy::HttpIntegrationTest,
       public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:
-  HttpTestOriginIntegrationTest()
+  HttpTestServerIntegrationTest()
       : HttpIntegrationTest(Envoy::Http::CodecClient::Type::HTTP1, GetParam(), realTime()) {}
   void SetUp() override { initialize(); }
 
   void initialize() override {
     config_helper_.addFilter(R"EOF(
-name: test-origin
+name: test-server
 config:
     key: x-supplied-by
-    val: nighthawk-test-origin
+    val: nighthawk-test-server
 )EOF");
     HttpIntegrationTest::initialize();
   }
@@ -98,14 +98,14 @@ config:
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
           const std::string header_value(std::to_string(response_size));
           request_headers.addCopy(
-              Nighthawk::Server::TestOrigin::HeaderNames::get().TestOriginResponseSize,
+              Nighthawk::Server::TestServer::HeaderNames::get().TestServerResponseSize,
               header_value);
         });
     ASSERT_TRUE(response->complete());
     EXPECT_STREQ("200", response->headers().Status()->value().c_str());
     auto inserted_header = response->headers().get(Envoy::Http::LowerCaseString("x-supplied-by"));
     ASSERT_NE(nullptr, inserted_header);
-    EXPECT_STREQ("nighthawk-test-origin", inserted_header->value().c_str());
+    EXPECT_STREQ("nighthawk-test-server", inserted_header->value().c_str());
     EXPECT_STREQ("text/plain", response->headers().ContentType()->value().c_str());
     EXPECT_EQ(std::string(response_size, 'a'), response->body());
   }
@@ -116,7 +116,7 @@ config:
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
           const std::string header_value(std::to_string(response_size));
           request_headers.addCopy(
-              Nighthawk::Server::TestOrigin::HeaderNames::get().TestOriginResponseSize,
+              Nighthawk::Server::TestServer::HeaderNames::get().TestServerResponseSize,
               std::to_string(response_size));
         });
     ASSERT_TRUE(response->complete());
@@ -124,10 +124,10 @@ config:
   }
 };
 
-INSTANTIATE_TEST_CASE_P(IpVersions, HttpTestOriginIntegrationTest,
+INSTANTIATE_TEST_CASE_P(IpVersions, HttpTestServerIntegrationTest,
                         testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
 
-TEST_P(HttpTestOriginIntegrationTest, TestNoSizeIndicationFails) {
+TEST_P(HttpTestServerIntegrationTest, TestNoSizeIndicationFails) {
   Envoy::BufferingStreamDecoderPtr response =
       makeSingleRequest(lookupPort("http"), "GET", "/", "", downstream_protocol_, version_,
                         "foo.com", "", [](Envoy::Http::HeaderMapImpl&) {});
@@ -135,16 +135,16 @@ TEST_P(HttpTestOriginIntegrationTest, TestNoSizeIndicationFails) {
   EXPECT_STREQ("500", response->headers().Status()->value().c_str());
 }
 
-TEST_P(HttpTestOriginIntegrationTest, TestBasics) {
+TEST_P(HttpTestServerIntegrationTest, TestBasics) {
   testWithResponseSize(10);
   testWithResponseSize(100);
   testWithResponseSize(1000);
   testWithResponseSize(10000);
 }
 
-TEST_P(HttpTestOriginIntegrationTest, TestNegative) { testBadInput(-1); }
+TEST_P(HttpTestServerIntegrationTest, TestNegative) { testBadInput(-1); }
 
-TEST_P(HttpTestOriginIntegrationTest, TestTooLarge) {
+TEST_P(HttpTestServerIntegrationTest, TestTooLarge) {
   const int max = 1024 * 1024 * 4;
   testBadInput(max + 1);
 }
