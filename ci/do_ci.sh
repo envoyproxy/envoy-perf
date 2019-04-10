@@ -123,6 +123,9 @@ case "$1" in
     test)
         do_test
     ;;
+    test_with_valgrind)
+        do_test_with_valgrind
+    ;;
     clang_tidy)
         export RUN_FULL_CLANG_TIDY=1
         do_clang_tidy

@@ -22,11 +22,11 @@ HttpTestOriginDecoderFilter::~HttpTestOriginDecoderFilter() {}
 
 void HttpTestOriginDecoderFilter::onDestroy() {}
 
-const Envoy::Http::LowerCaseString HttpTestOriginDecoderFilter::headerKey() const {
+Envoy::Http::LowerCaseString HttpTestOriginDecoderFilter::headerKey() const {
   return Envoy::Http::LowerCaseString(config_->key());
 }
 
-const std::string HttpTestOriginDecoderFilter::headerValue() const { return config_->val(); }
+const std::string& HttpTestOriginDecoderFilter::headerValue() const { return config_->val(); }
 
 Envoy::Http::FilterHeadersStatus
 HttpTestOriginDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool) {
@@ -38,18 +38,12 @@ HttpTestOriginDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool
   if (response_size_header != nullptr &&
       absl::SimpleAtoi(response_size_header->value().c_str(), &response_size) &&
       response_size >= 0 && response_size < max) {
-    // TODO(oschaaf): We can optimize this.
-    std::stringstream stream;
-    while (response_size--) {
-      stream << "a";
-    }
-    decoder_callbacks_->sendLocalReply(static_cast<Envoy::Http::Code>(200), stream.str(),
-                                       [this](Envoy::Http::HeaderMap& direct_response_headers) {
-                                         direct_response_headers.addCopy(headerKey(),
-                                                                         headerValue());
-                                       },
-                                       absl::nullopt);
-
+    decoder_callbacks_->sendLocalReply(
+        static_cast<Envoy::Http::Code>(200), std::string(response_size, 'a'),
+        [this](Envoy::Http::HeaderMap& direct_response_headers) {
+          direct_response_headers.addCopy(headerKey(), headerValue());
+        },
+        absl::nullopt);
   } else {
     decoder_callbacks_->sendLocalReply(static_cast<Envoy::Http::Code>(500),
                                        "test-origin didn't understand the request", nullptr,

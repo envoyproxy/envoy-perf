@@ -16,13 +16,9 @@ class HttpTestOriginDecoderFilterConfig
     : public Envoy::Server::Configuration::NamedHttpFilterConfigFactory {
 public:
   Envoy::Http::FilterFactoryCb
-  createFilterFactory(const Envoy::Json::Object& json_config, const std::string&,
-                      Envoy::Server::Configuration::FactoryContext& context) override {
-
-    nighthawk::server::TestOrigin proto_config;
-    translateHttpTestOriginDecoderFilter(json_config, proto_config);
-
-    return createFilter(proto_config, context);
+  createFilterFactory(const Envoy::Json::Object&, const std::string&,
+                      Envoy::Server::Configuration::FactoryContext&) override {
+    NOT_IMPLEMENTED_GCOVR_EXCL_LINE;
   }
 
   Envoy::Http::FilterFactoryCb
@@ -51,13 +47,6 @@ private:
       auto filter = new Nighthawk::Server::HttpTestOriginDecoderFilter(config);
       callbacks.addStreamDecoderFilter(Envoy::Http::StreamDecoderFilterSharedPtr{filter});
     };
-  }
-
-  void translateHttpTestOriginDecoderFilter(const Envoy::Json::Object& json_config,
-                                            nighthawk::server::TestOrigin& proto_config) {
-    // TODO(oschaaf): we want to validate the json_config againts a defined json-schema here.
-    JSON_UTIL_SET_STRING(json_config, proto_config, key);
-    JSON_UTIL_SET_STRING(json_config, proto_config, val);
   }
 };
 

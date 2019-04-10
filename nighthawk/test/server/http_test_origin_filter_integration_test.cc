@@ -31,9 +31,8 @@ config:
     HttpIntegrationTest::initialize();
   }
 
-  // TODO(oschaaf): Modify Envoy's version to allow for a way to manipulate the request headers
-  // before they get send. Then we can eliminate these copies
-  // ofEnvoy::IntegrationUtil::makeSingleRequest().
+  // TODO(oschaaf): Modify Envoy's Envoy::IntegrationUtil::makeSingleRequest() to allow for a way to
+  // manipulate the request headers before they get send. Then we can eliminate these copies.
   Envoy::BufferingStreamDecoderPtr
   makeSingleRequest(uint32_t port, const std::string& method, const std::string& url,
                     const std::string& body, Envoy::Http::CodecClient::Type type,
@@ -94,13 +93,6 @@ config:
   }
 
   void testWithResponseSize(int response_size) {
-    std::stringstream ss;
-    int i = response_size;
-    while (i > 0) {
-      ss << "a";
-      i--;
-    }
-
     Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
         lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
@@ -115,7 +107,7 @@ config:
     ASSERT_NE(nullptr, inserted_header);
     EXPECT_STREQ("nighthawk-test-origin", inserted_header->value().c_str());
     EXPECT_STREQ("text/plain", response->headers().ContentType()->value().c_str());
-    EXPECT_EQ(ss.str(), response->body());
+    EXPECT_EQ(std::string(response_size, 'a'), response->body());
   }
 
   void testBadInput(int response_size) {

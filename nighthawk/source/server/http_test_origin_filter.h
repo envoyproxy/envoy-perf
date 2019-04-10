@@ -55,8 +55,8 @@ private:
   const HttpTestOriginDecoderFilterConfigSharedPtr config_;
   Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
 
-  const Envoy::Http::LowerCaseString headerKey() const;
-  const std::string headerValue() const;
+  Envoy::Http::LowerCaseString headerKey() const;
+  const std::string& headerValue() const;
 };
 
 } // namespace Server
