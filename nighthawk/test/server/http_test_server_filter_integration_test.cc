@@ -79,7 +79,7 @@ public:
     return response;
   }
 
-  void testWithResponseSize(int response_size) {
+  void testWithResponseSize(int response_size, bool expect_header = true) {
     Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
         lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
@@ -89,21 +89,26 @@ public:
         });
     ASSERT_TRUE(response->complete());
     EXPECT_STREQ("200", response->headers().Status()->value().c_str());
-    auto inserted_header = response->headers().get(Envoy::Http::LowerCaseString("x-supplied-by"));
-    ASSERT_NE(nullptr, inserted_header);
-    EXPECT_STREQ("nighthawk-test-server", inserted_header->value().c_str());
-    EXPECT_STREQ("text/plain", response->headers().ContentType()->value().c_str());
+    if (expect_header) {
+      auto inserted_header = response->headers().get(Envoy::Http::LowerCaseString("x-supplied-by"));
+      ASSERT_NE(nullptr, inserted_header);
+      EXPECT_STREQ("nighthawk-test-server", inserted_header->value().c_str());
+    }
+    if (response_size == 0) {
+      EXPECT_EQ(nullptr, response->headers().ContentType());
+    } else {
+      EXPECT_STREQ("text/plain", response->headers().ContentType()->value().c_str());
+    }
     EXPECT_EQ(std::string(response_size, 'a'), response->body());
   }
 
-  void testBadInput(int response_size) {
+  void testBadResponseSize(int response_size) {
     Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
         lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
-          const std::string header_value(std::to_string(response_size));
+          const std::string header_config = fmt::format("{{response_size:{}}}", response_size);
           request_headers.addCopy(
-              Nighthawk::Server::TestServer::HeaderNames::get().TestServerConfig,
-              std::to_string(response_size));
+              Nighthawk::Server::TestServer::HeaderNames::get().TestServerConfig, header_config);
         });
     ASSERT_TRUE(response->complete());
     EXPECT_STREQ("500", response->headers().Status()->value().c_str());
@@ -124,12 +129,18 @@ config:
 )EOF");
     HttpTestServerIntegrationTestBase::initialize();
   }
+
+  void TearDown() override {
+    cleanupUpstreamAndDownstream();
+    test_server_.reset();
+    fake_upstreams_.clear();
+  }
 };
 
 INSTANTIATE_TEST_CASE_P(IpVersions, HttpTestServerIntegrationTest,
                         testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
 
-TEST_P(HttpTestServerIntegrationTest, TestNoSizeIndicationFails) {
+TEST_P(HttpTestServerIntegrationTest, TestNoHeaderConfig) {
   Envoy::BufferingStreamDecoderPtr response =
       makeSingleRequest(lookupPort("http"), "GET", "/", "", downstream_protocol_, version_,
                         "foo.com", "", [](Envoy::Http::HeaderMapImpl&) {});
@@ -139,13 +150,14 @@ TEST_P(HttpTestServerIntegrationTest, TestNoSizeIndicationFails) {
 }
 
 TEST_P(HttpTestServerIntegrationTest, TestBasics) {
+  testWithResponseSize(1);
   testWithResponseSize(10);
   testWithResponseSize(100);
   testWithResponseSize(1000);
   testWithResponseSize(10000);
 }
 
-TEST_P(HttpTestServerIntegrationTest, TestNegative) { testBadInput(-1); }
+TEST_P(HttpTestServerIntegrationTest, TestNegative) { testBadResponseSize(-1); }
 
 TEST_P(HttpTestServerIntegrationTest, TestZeroLengthRequest) { testWithResponseSize(0); }
 
@@ -154,12 +166,79 @@ TEST_P(HttpTestServerIntegrationTest, TestMaxBoundaryLengthRequest) {
   testWithResponseSize(max);
 }
 
-TEST_P(HttpTestServerIntegrationTest, TestTooLarge) {
+TEST_P(HttpTestServerIntegrationTest, DISABLED_TestTooLarge) {
   const int max = 1024 * 1024 * 4;
-  testBadInput(max + 1);
+  testBadResponseSize(max + 1);
 }
 
-// TODO(oschaaf): test with empty base config & different base config. figure out 0 length request
-// defaulting to the server-level config.
+class HttpTestServerIntegrationNoConfigTest : public HttpTestServerIntegrationTestBase {
+public:
+  void SetUp() override { initialize(); }
+
+  void TearDown() override {
+    cleanupUpstreamAndDownstream();
+    test_server_.reset();
+    fake_upstreams_.clear();
+  }
+
+  void initialize() override {
+    config_helper_.addFilter(R"EOF(
+name: test-server
+)EOF");
+    HttpTestServerIntegrationTestBase::initialize();
+  }
+};
+
+INSTANTIATE_TEST_CASE_P(IpVersions, HttpTestServerIntegrationNoConfigTest,
+                        testing::ValuesIn(Envoy::TestEnvironment::getIpVersionsForTest()));
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestNoHeaderConfig) {
+  Envoy::BufferingStreamDecoderPtr response =
+      makeSingleRequest(lookupPort("http"), "GET", "/", "", downstream_protocol_, version_,
+                        "foo.com", "", [](Envoy::Http::HeaderMapImpl&) {});
+  ASSERT_TRUE(response->complete());
+  EXPECT_STREQ("200", response->headers().Status()->value().c_str());
+  EXPECT_EQ(std::string(0, 'a'), response->body());
+}
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestBasics) {
+  testWithResponseSize(1, false);
+  testWithResponseSize(10, false);
+  testWithResponseSize(100, false);
+  testWithResponseSize(1000, false);
+  testWithResponseSize(10000, false);
+}
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestNegative) { testBadResponseSize(-1); }
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestZeroLengthRequest) {
+  testWithResponseSize(0, false);
+}
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestMaxBoundaryLengthRequest) {
+  const int max = 1024 * 1024 * 4;
+  testWithResponseSize(max, false);
+}
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, DISABLED_TestTooLarge) {
+  const int max = 1024 * 1024 * 4;
+  testBadResponseSize(max + 1);
+}
+
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestHeaderConfig) {
+  Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
+      lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
+      [](Envoy::Http::HeaderMapImpl& request_headers) {
+        const std::string header_config =
+            "{response_headers: [ { header: { key: \"foo\", value: \"bar2\"}, append: true } ]}";
+        request_headers.addCopy(Nighthawk::Server::TestServer::HeaderNames::get().TestServerConfig,
+                                header_config);
+      });
+  ASSERT_TRUE(response->complete());
+  EXPECT_STREQ("200", response->headers().Status()->value().c_str());
+  EXPECT_STREQ("bar2",
+               response->headers().get(Envoy::Http::LowerCaseString("foo"))->value().c_str());
+  EXPECT_EQ(std::string(0, 'a'), response->body());
+}
 
 } // namespace Nighthawk

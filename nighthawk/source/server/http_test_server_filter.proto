@@ -34,5 +34,7 @@ message HeaderValueOption {
 
 message TestServer {
     repeated HeaderValueOption response_headers = 1;
-    uint32 response_size = 2 [(validate.rules).uint32 = {gte: 0, lte: 4194304}];
+    oneof oneof_response_size {
+      uint32 response_size = 2 [(validate.rules).uint32 = {gte: 0, lte: 4194304}];
+    }
 }
