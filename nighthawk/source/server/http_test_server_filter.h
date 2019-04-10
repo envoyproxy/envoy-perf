@@ -13,8 +13,7 @@ namespace TestServer {
 
 class HeaderNameValues {
 public:
-  const Envoy::Http::LowerCaseString TestServerResponseSize{
-      "x-nighthawk-test-server-response-size"};
+  const Envoy::Http::LowerCaseString TestServerConfig{"x-nighthawk-test-server-config"};
 };
 
 typedef Envoy::ConstSingleton<HeaderNameValues> HeaderNames;
@@ -25,13 +24,10 @@ typedef Envoy::ConstSingleton<HeaderNameValues> HeaderNames;
 class HttpTestServerDecoderFilterConfig {
 public:
   HttpTestServerDecoderFilterConfig(const nighthawk::server::TestServer& proto_config);
-
-  const std::string& key() const { return key_; }
-  const std::string& val() const { return val_; }
+  const nighthawk::server::TestServer& server_config() { return server_config_; }
 
 private:
-  const std::string key_;
-  const std::string val_;
+  const nighthawk::server::TestServer server_config_;
 };
 
 typedef std::shared_ptr<HttpTestServerDecoderFilterConfig>
@@ -54,9 +50,6 @@ public:
 private:
   const HttpTestServerDecoderFilterConfigSharedPtr config_;
   Envoy::Http::StreamDecoderFilterCallbacks* decoder_callbacks_;
-
-  Envoy::Http::LowerCaseString headerKey() const;
-  const std::string& headerValue() const;
 };
 
 } // namespace Server

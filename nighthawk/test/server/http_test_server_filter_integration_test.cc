@@ -1,7 +1,5 @@
 #include "test/integration/http_integration.h"
 
-#include <sstream>
-
 #include "gtest/gtest.h"
 
 #include "common/api/api_impl.h"
@@ -13,23 +11,12 @@
 
 namespace Nighthawk {
 
-class HttpTestServerIntegrationTest
+class HttpTestServerIntegrationTestBase
     : public Envoy::HttpIntegrationTest,
       public testing::TestWithParam<Envoy::Network::Address::IpVersion> {
 public:
-  HttpTestServerIntegrationTest()
+  HttpTestServerIntegrationTestBase()
       : HttpIntegrationTest(Envoy::Http::CodecClient::Type::HTTP1, GetParam(), realTime()) {}
-  void SetUp() override { initialize(); }
-
-  void initialize() override {
-    config_helper_.addFilter(R"EOF(
-name: test-server
-config:
-    key: x-supplied-by
-    val: nighthawk-test-server
-)EOF");
-    HttpIntegrationTest::initialize();
-  }
 
   // TODO(oschaaf): Modify Envoy's Envoy::IntegrationUtil::makeSingleRequest() to allow for a way to
   // manipulate the request headers before they get send. Then we can eliminate these copies.
@@ -96,10 +83,9 @@ config:
     Envoy::BufferingStreamDecoderPtr response = makeSingleRequest(
         lookupPort("http"), "GET", "/", "", downstream_protocol_, version_, "foo.com", "",
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
-          const std::string header_value(std::to_string(response_size));
+          const std::string header_config = fmt::format("{{response_size:{}}}", response_size);
           request_headers.addCopy(
-              Nighthawk::Server::TestServer::HeaderNames::get().TestServerResponseSize,
-              header_value);
+              Nighthawk::Server::TestServer::HeaderNames::get().TestServerConfig, header_config);
         });
     ASSERT_TRUE(response->complete());
     EXPECT_STREQ("200", response->headers().Status()->value().c_str());
@@ -116,11 +102,27 @@ config:
         [response_size](Envoy::Http::HeaderMapImpl& request_headers) {
           const std::string header_value(std::to_string(response_size));
           request_headers.addCopy(
-              Nighthawk::Server::TestServer::HeaderNames::get().TestServerResponseSize,
+              Nighthawk::Server::TestServer::HeaderNames::get().TestServerConfig,
               std::to_string(response_size));
         });
     ASSERT_TRUE(response->complete());
     EXPECT_STREQ("500", response->headers().Status()->value().c_str());
+  }
+};
+
+class HttpTestServerIntegrationTest : public HttpTestServerIntegrationTestBase {
+public:
+  void SetUp() override { initialize(); }
+
+  void initialize() override {
+    config_helper_.addFilter(R"EOF(
+name: test-server
+config:
+  response_size: 10
+  response_headers:
+  - { header: { key: "x-supplied-by", value: "nighthawk-test-server"} }
+)EOF");
+    HttpTestServerIntegrationTestBase::initialize();
   }
 };
 
@@ -132,7 +134,8 @@ TEST_P(HttpTestServerIntegrationTest, TestNoSizeIndicationFails) {
       makeSingleRequest(lookupPort("http"), "GET", "/", "", downstream_protocol_, version_,
                         "foo.com", "", [](Envoy::Http::HeaderMapImpl&) {});
   ASSERT_TRUE(response->complete());
-  EXPECT_STREQ("500", response->headers().Status()->value().c_str());
+  EXPECT_STREQ("200", response->headers().Status()->value().c_str());
+  EXPECT_EQ(std::string(10, 'a'), response->body());
 }
 
 TEST_P(HttpTestServerIntegrationTest, TestBasics) {
@@ -144,9 +147,19 @@ TEST_P(HttpTestServerIntegrationTest, TestBasics) {
 
 TEST_P(HttpTestServerIntegrationTest, TestNegative) { testBadInput(-1); }
 
+TEST_P(HttpTestServerIntegrationTest, TestZeroLengthRequest) { testWithResponseSize(0); }
+
+TEST_P(HttpTestServerIntegrationTest, TestMaxBoundaryLengthRequest) {
+  const int max = 1024 * 1024 * 4;
+  testWithResponseSize(max);
+}
+
 TEST_P(HttpTestServerIntegrationTest, TestTooLarge) {
   const int max = 1024 * 1024 * 4;
   testBadInput(max + 1);
 }
+
+// TODO(oschaaf): test with empty base config & different base config. figure out 0 length request
+// defaulting to the server-level config.
 
 } // namespace Nighthawk

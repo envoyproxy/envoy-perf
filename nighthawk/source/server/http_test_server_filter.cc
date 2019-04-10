@@ -1,10 +1,10 @@
-#include <sstream>
 #include <string>
-
-#include "absl/strings/numbers.h"
 
 #include "http_test_server_filter.h"
 
+#include "absl/strings/numbers.h"
+
+#include "common/protobuf/utility.h"
 #include "envoy/server/filter_config.h"
 
 namespace Nighthawk {
@@ -12,7 +12,7 @@ namespace Server {
 
 HttpTestServerDecoderFilterConfig::HttpTestServerDecoderFilterConfig(
     const nighthawk::server::TestServer& proto_config)
-    : key_(proto_config.key()), val_(proto_config.val()) {}
+    : server_config_(proto_config) {}
 
 HttpTestServerDecoderFilter::HttpTestServerDecoderFilter(
     HttpTestServerDecoderFilterConfigSharedPtr config)
@@ -22,33 +22,38 @@ HttpTestServerDecoderFilter::~HttpTestServerDecoderFilter() {}
 
 void HttpTestServerDecoderFilter::onDestroy() {}
 
-Envoy::Http::LowerCaseString HttpTestServerDecoderFilter::headerKey() const {
-  return Envoy::Http::LowerCaseString(config_->key());
-}
-
-const std::string& HttpTestServerDecoderFilter::headerValue() const { return config_->val(); }
-
 Envoy::Http::FilterHeadersStatus
 HttpTestServerDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool) {
-  const auto response_size_header =
-      headers.get(TestServer::HeaderNames::get().TestServerResponseSize);
-  const int max = 1024 * 1024 * 4;
-  int response_size = -1;
+  const auto request_config_header = headers.get(TestServer::HeaderNames::get().TestServerConfig);
+  nighthawk::server::TestServer base_config = config_->server_config();
 
-  if (response_size_header != nullptr &&
-      absl::SimpleAtoi(response_size_header->value().c_str(), &response_size) &&
-      response_size >= 0 && response_size < max) {
-    decoder_callbacks_->sendLocalReply(
-        static_cast<Envoy::Http::Code>(200), std::string(response_size, 'a'),
-        [this](Envoy::Http::HeaderMap& direct_response_headers) {
-          direct_response_headers.addCopy(headerKey(), headerValue());
-        },
-        absl::nullopt);
-  } else {
-    decoder_callbacks_->sendLocalReply(static_cast<Envoy::Http::Code>(500),
-                                       "test-server didn't understand the request", nullptr,
-                                       absl::nullopt);
+  if (request_config_header != nullptr) {
+    try {
+      nighthawk::server::TestServer json_config;
+      Envoy::MessageUtil::loadFromJson(request_config_header->value().c_str(), json_config);
+      base_config.MergeFrom(json_config);
+    } catch (Envoy::EnvoyException) {
+      decoder_callbacks_->sendLocalReply(static_cast<Envoy::Http::Code>(500),
+                                         "test-server didn't understand the request", nullptr,
+                                         absl::nullopt);
+      return Envoy::Http::FilterHeadersStatus::StopIteration;
+    }
   }
+
+  decoder_callbacks_->sendLocalReply(
+      static_cast<Envoy::Http::Code>(200), std::string(base_config.response_size(), 'a'),
+      [&base_config](Envoy::Http::HeaderMap& direct_response_headers) {
+        for (auto header_value_option : base_config.response_headers()) {
+          auto header = header_value_option.header();
+          auto lower_case_key = Envoy::Http::LowerCaseString(header.key());
+          if (!header_value_option.append().value()) {
+            direct_response_headers.remove(lower_case_key);
+          }
+          direct_response_headers.addCopy(lower_case_key, header.value());
+        }
+      },
+      absl::nullopt);
+
   return Envoy::Http::FilterHeadersStatus::StopIteration;
 }
 
