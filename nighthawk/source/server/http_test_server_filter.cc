@@ -36,10 +36,8 @@ HttpTestServerDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool
       Envoy::MessageUtil::loadFromJson(request_config_header->value().c_str(), json_config);
       base_config.MergeFrom(json_config);
       Envoy::MessageUtil::validate(base_config);
-    } catch (Envoy::EnvoyException e_exception) {
-      error_message = e_exception.what();
-    } catch (Envoy::ProtoValidationException p_exception) {
-      error_message = p_exception.what();
+    } catch (Envoy::EnvoyException exception) {
+      error_message = exception.what();
     }
   }
 
