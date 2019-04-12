@@ -4,12 +4,6 @@ load(
     "@envoy//bazel:envoy_build_system.bzl",
     "envoy_cc_library",
 )
-load("@envoy_api//bazel:api_build_system.bzl", "api_proto_library")
-
-api_proto_library(
-    name = "http_test_server_filter_proto",
-    srcs = ["http_test_server_filter.proto"],
-)
 
 envoy_cc_library(
     name = "http_test_server_filter_lib",
@@ -17,7 +11,7 @@ envoy_cc_library(
     hdrs = ["http_test_server_filter.h"],
     repository = "@envoy",
     deps = [
-        ":http_test_server_filter_proto_cc",
+        "//nighthawk/api/server:response_options_proto_cc",
         "@envoy//source/exe:envoy_common_lib",
     ],
 )

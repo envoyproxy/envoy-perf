@@ -166,7 +166,7 @@ TEST_P(HttpTestServerIntegrationTest, TestMaxBoundaryLengthRequest) {
   testWithResponseSize(max);
 }
 
-TEST_P(HttpTestServerIntegrationTest, DISABLED_TestTooLarge) {
+TEST_P(HttpTestServerIntegrationTest, TestTooLarge) {
   const int max = 1024 * 1024 * 4;
   testBadResponseSize(max + 1);
 }
@@ -236,7 +236,7 @@ TEST_P(HttpTestServerIntegrationNoConfigTest, TestMaxBoundaryLengthRequest) {
   testWithResponseSize(max, false);
 }
 
-TEST_P(HttpTestServerIntegrationNoConfigTest, DISABLED_TestTooLarge) {
+TEST_P(HttpTestServerIntegrationNoConfigTest, TestTooLarge) {
   const int max = 1024 * 1024 * 4;
   testBadResponseSize(max + 1);
 }

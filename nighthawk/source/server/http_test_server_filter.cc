@@ -7,11 +7,13 @@
 #include "common/protobuf/utility.h"
 #include "envoy/server/filter_config.h"
 
+#include "nighthawk/api/server/response_options.pb.validate.h"
+
 namespace Nighthawk {
 namespace Server {
 
 HttpTestServerDecoderFilterConfig::HttpTestServerDecoderFilterConfig(
-    const nighthawk::server::TestServer& proto_config)
+    const nighthawk::server::ResponseOptions& proto_config)
     : server_config_(proto_config) {}
 
 HttpTestServerDecoderFilter::HttpTestServerDecoderFilter(
@@ -24,29 +26,24 @@ void HttpTestServerDecoderFilter::onDestroy() {}
 
 Envoy::Http::FilterHeadersStatus
 HttpTestServerDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool) {
-  const auto request_config_header = headers.get(TestServer::HeaderNames::get().TestServerConfig);
-  nighthawk::server::TestServer base_config = config_->server_config();
+  const auto* request_config_header = headers.get(TestServer::HeaderNames::get().TestServerConfig);
+  nighthawk::server::ResponseOptions base_config = config_->server_config();
 
-  bool error = false;
+  std::string error_message = "";
   if (request_config_header != nullptr) {
     try {
-      nighthawk::server::TestServer json_config;
+      nighthawk::server::ResponseOptions json_config;
       Envoy::MessageUtil::loadFromJson(request_config_header->value().c_str(), json_config);
       base_config.MergeFrom(json_config);
-    } catch (Envoy::EnvoyException) {
-      error = true;
+      Envoy::MessageUtil::validate(base_config);
+    } catch (Envoy::EnvoyException e_exception) {
+      error_message = e_exception.what();
+    } catch (Envoy::ProtoValidationException p_exception) {
+      error_message = p_exception.what();
     }
   }
 
-  // TODO(oschaaf): figure out how to get _cc_validate to be around in BUILD, and
-  // do something like this. Enable relevant tests when done.
-  // error = base_config.Validate();
-
-  if (error) {
-    decoder_callbacks_->sendLocalReply(static_cast<Envoy::Http::Code>(500),
-                                       "test-server didn't understand the request", nullptr,
-                                       absl::nullopt);
-  } else {
+  if (error_message.empty()) {
     decoder_callbacks_->sendLocalReply(
         static_cast<Envoy::Http::Code>(200), std::string(base_config.response_size(), 'a'),
         [&base_config](Envoy::Http::HeaderMap& direct_response_headers) {
@@ -59,6 +56,11 @@ HttpTestServerDecoderFilter::decodeHeaders(Envoy::Http::HeaderMap& headers, bool
             direct_response_headers.addCopy(lower_case_key, header.value());
           }
         },
+        absl::nullopt);
+  } else {
+    decoder_callbacks_->sendLocalReply(
+        static_cast<Envoy::Http::Code>(500),
+        fmt::format("test-server didn't understand the request: {}", error_message), nullptr,
         absl::nullopt);
   }
   return Envoy::Http::FilterHeadersStatus::StopIteration;

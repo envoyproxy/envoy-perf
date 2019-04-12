@@ -4,7 +4,7 @@
 
 #include "envoy/server/filter_config.h"
 
-#include "nighthawk/source/server/http_test_server_filter.pb.h"
+#include "nighthawk/api/server/response_options.pb.h"
 
 namespace Nighthawk {
 namespace Server {
@@ -23,11 +23,11 @@ typedef Envoy::ConstSingleton<HeaderNameValues> HeaderNames;
 // Basically this is left in as a placeholder for further configuration.
 class HttpTestServerDecoderFilterConfig {
 public:
-  HttpTestServerDecoderFilterConfig(const nighthawk::server::TestServer& proto_config);
-  const nighthawk::server::TestServer& server_config() { return server_config_; }
+  HttpTestServerDecoderFilterConfig(const nighthawk::server::ResponseOptions& proto_config);
+  const nighthawk::server::ResponseOptions& server_config() { return server_config_; }
 
 private:
-  const nighthawk::server::TestServer server_config_;
+  const nighthawk::server::ResponseOptions server_config_;
 };
 
 typedef std::shared_ptr<HttpTestServerDecoderFilterConfig>

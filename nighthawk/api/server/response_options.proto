@@ -32,7 +32,7 @@ message HeaderValueOption {
   google.protobuf.BoolValue append = 2;
 }
 
-message TestServer {
+message ResponseOptions {
     repeated HeaderValueOption response_headers = 1;
     oneof oneof_response_size {
       uint32 response_size = 2 [(validate.rules).uint32 = {gte: 0, lte: 4194304}];

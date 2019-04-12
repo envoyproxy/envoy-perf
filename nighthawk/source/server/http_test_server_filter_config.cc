@@ -5,8 +5,8 @@
 #include "common/config/json_utility.h"
 #include "envoy/registry/registry.h"
 
-#include "nighthawk/source/server/http_test_server_filter.pb.h"
-#include "nighthawk/source/server/http_test_server_filter.pb.validate.h"
+#include "nighthawk/api/server/response_options.pb.h"
+#include "nighthawk/api/server/response_options.pb.validate.h"
 
 namespace Nighthawk {
 namespace Server {
@@ -26,25 +26,26 @@ public:
                                Envoy::Server::Configuration::FactoryContext& context) override {
 
     return createFilter(
-        Envoy::MessageUtil::downcastAndValidate<const nighthawk::server::TestServer&>(proto_config),
+        Envoy::MessageUtil::downcastAndValidate<const nighthawk::server::ResponseOptions&>(
+            proto_config),
         context);
   }
 
   Envoy::ProtobufTypes::MessagePtr createEmptyConfigProto() override {
-    return Envoy::ProtobufTypes::MessagePtr{new nighthawk::server::TestServer()};
+    return Envoy::ProtobufTypes::MessagePtr{new nighthawk::server::ResponseOptions()};
   }
 
   std::string name() override { return "test-server"; }
 
 private:
-  Envoy::Http::FilterFactoryCb createFilter(const nighthawk::server::TestServer& proto_config,
+  Envoy::Http::FilterFactoryCb createFilter(const nighthawk::server::ResponseOptions& proto_config,
                                             Envoy::Server::Configuration::FactoryContext&) {
     Nighthawk::Server::HttpTestServerDecoderFilterConfigSharedPtr config =
         std::make_shared<Nighthawk::Server::HttpTestServerDecoderFilterConfig>(
             Nighthawk::Server::HttpTestServerDecoderFilterConfig(proto_config));
 
     return [config](Envoy::Http::FilterChainFactoryCallbacks& callbacks) -> void {
-      auto filter = new Nighthawk::Server::HttpTestServerDecoderFilter(config);
+      auto* filter = new Nighthawk::Server::HttpTestServerDecoderFilter(config);
       callbacks.addStreamDecoderFilter(Envoy::Http::StreamDecoderFilterSharedPtr{filter});
     };
   }
