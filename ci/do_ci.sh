@@ -9,6 +9,12 @@ function do_test() {
     //nighthawk/test:nighthawk_test //nighthawk/test/server:http_test_server_filter_integration_test
 }
 
+function do_test_with_valgrind() {	
+    apt-get update && apt-get install valgrind && \	
+    bazel build $BAZEL_BUILD_OPTIONS -c dbg //nighthawk/test:nighthawk_test && \	
+    nighthawk/tools/valgrind-tests.sh	
+}
+
 function do_clang_tidy() {
     ci/run_clang_tidy.sh
 }
