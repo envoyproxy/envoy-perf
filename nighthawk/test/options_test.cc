@@ -43,29 +43,27 @@ TEST_F(OptionsImplTest, BogusInput) {
 TEST_F(OptionsImplTest, All) {
   std::unique_ptr<OptionsImpl> options =
       createOptionsImpl(fmt::format("{} --rps 4 --connections 5 --duration 6 --timeout 7 --h2 "
-                                    "--concurrency 8 --verbosity error --output-format json {}",
+                                    "--concurrency 8  --verbosity error {}",
                                     client_name_, good_test_uri_));
 
-  EXPECT_EQ(4, options->requestsPerSecond());
+  EXPECT_EQ(4, options->requests_per_second());
   EXPECT_EQ(5, options->connections());
   EXPECT_EQ(6s, options->duration());
   EXPECT_EQ(7s, options->timeout());
   EXPECT_EQ(true, options->h2());
   EXPECT_EQ("8", options->concurrency());
   EXPECT_EQ("error", options->verbosity());
-  EXPECT_EQ("json", options->outputFormat());
   EXPECT_EQ(good_test_uri_, options->uri());
 
   // Check that our conversion to CommandLineOptionsPtr makes sense.
   CommandLineOptionsPtr cmd = options->toCommandLineOptions();
-  EXPECT_EQ(cmd->requests_per_second(), options->requestsPerSecond());
+  EXPECT_EQ(cmd->requests_per_second(), options->requests_per_second());
   EXPECT_EQ(cmd->connections(), options->connections());
   EXPECT_EQ(cmd->duration().seconds(), options->duration().count());
   EXPECT_EQ(cmd->timeout().seconds(), options->timeout().count());
   EXPECT_EQ(cmd->h2(), options->h2());
   EXPECT_EQ(cmd->concurrency(), options->concurrency());
   EXPECT_EQ(cmd->verbosity(), options->verbosity());
-  EXPECT_EQ(cmd->output_format(), options->outputFormat());
   EXPECT_EQ(cmd->uri(), options->uri());
 }
 

@@ -1,9 +1,7 @@
-Nighthawk - A layer 7 protocol benchmarking tool.
+Merged statistics:
+stat_id: Count: 3. Mean: 2000.00 μs. pstdev: 816.50 μs.
 
-stat_id: 3 samples, mean: 0.002s, pstdev: 0.000816497s
-Percentile  Count       Latency        
 
-Counter                                 Value       Per second
-bar                                     2           2.00
-foo                                     1           1.00
-
+Merged counters
+counter bar:2
+counter foo:1

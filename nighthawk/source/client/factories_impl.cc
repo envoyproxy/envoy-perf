@@ -3,7 +3,6 @@
 #include "common/stats/isolated_store_impl.h"
 
 #include "nighthawk/source/client/benchmark_client_impl.h"
-#include "nighthawk/source/client/output_formatter_impl.h"
 #include "nighthawk/source/common/platform_util_impl.h"
 #include "nighthawk/source/common/rate_limiter_impl.h"
 #include "nighthawk/source/common/sequencer_impl.h"
@@ -40,7 +39,7 @@ SequencerPtr SequencerFactoryImpl::create(Envoy::TimeSource& time_source,
                                           BenchmarkClient& benchmark_client) const {
   StatisticFactoryImpl statistic_factory(options_);
   RateLimiterPtr rate_limiter =
-      std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requestsPerSecond()));
+      std::make_unique<LinearRateLimiter>(time_source, Frequency(options_.requests_per_second()));
   SequencerTarget sequencer_target = [&benchmark_client](std::function<void()> f) -> bool {
     return benchmark_client.tryStartOne(f);
   };
@@ -60,22 +59,6 @@ StatisticFactoryImpl::StatisticFactoryImpl(const Options& options)
     : OptionBasedFactoryImpl(options) {}
 
 StatisticPtr StatisticFactoryImpl::create() const { return std::make_unique<HdrStatistic>(); }
-
-OutputFormatterFactoryImpl::OutputFormatterFactoryImpl(Envoy::TimeSource& time_source,
-                                                       const Options& options)
-    : OptionBasedFactoryImpl(options), time_source_(time_source) {}
-
-OutputFormatterPtr OutputFormatterFactoryImpl::create() const {
-  const std::string format = options_.outputFormat();
-  if (format == "human") {
-    return std::make_unique<Client::ConsoleOutputFormatterImpl>(time_source_, options_);
-  } else if (format == "json") {
-    return std::make_unique<Client::JsonOutputFormatterImpl>(time_source_, options_);
-  } else if (format == "yaml") {
-    return std::make_unique<Client::YamlOutputFormatterImpl>(time_source_, options_);
-  }
-  NOT_REACHED_GCOVR_EXCL_LINE;
-}
 
 } // namespace Client
 } // namespace Nighthawk
