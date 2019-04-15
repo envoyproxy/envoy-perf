@@ -4,37 +4,11 @@ package nighthawk.server;
 
 import "google/protobuf/wrappers.proto";
 import "validate/validate.proto";
-
-// TODO(oschaaf): HeaderValue(Option) are copied from 
-// import "envoy/api/v2/core/base.proto";
-// Unfortunately, visibility aspects seem to prevent re-use as of writing this.
-
-// Header name/value pair.
-message HeaderValue {
-  // Header name.
-  string key = 1 [(validate.rules).string = {min_bytes: 1, max_bytes: 16384}];
-
-  // Header value.
-  //
-  // The same :ref:`format specifier <config_access_log_format>` as used for
-  // :ref:`HTTP access logging <config_access_log>` applies here, however
-  // unknown header values are replaced with the empty string instead of `-`.
-  string value = 2 [(validate.rules).string.max_bytes = 16384];
-}
-
-// Header name/value pair plus option to control append behavior.
-message HeaderValueOption {
-  // Header name/value pair that this option applies to.
-  HeaderValue header = 1 [(validate.rules).message.required = true];
-
-  // Should the value be appended? If true (default), the value is appended to
-  // existing values.
-  google.protobuf.BoolValue append = 2;
-}
+import "envoy/api/v2/core/base.proto";
 
 message ResponseOptions {
-    repeated HeaderValueOption response_headers = 1;
-    oneof oneof_response_size {
+    repeated envoy.api.v2.core.HeaderValueOption response_headers = 1;
+    oneof oneof_response_size { 
       uint32 response_size = 2 [(validate.rules).uint32 = {gte: 0, lte: 4194304}];
     }
 }
