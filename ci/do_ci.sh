@@ -20,16 +20,19 @@ function do_clang_tidy() {
 }
 
 function do_coverage() {
-    ci/run_coverage.sh
+    gcc -v && \
+    gcov -v && \
+    bazel coverage $BAZEL_TEST_OPTIONS --test_output=all --verbose_failures --experimental_cc_coverage nighthawk/test/...  --instrumentation_filter=//nighthawk/...,. --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main --combined_report=lcov; genhtml bazel-out/_coverage/_coverage_report.dat
 }
+
+# TODO(oschaaf): hack, this should be done in .circleci/config.yml
+git submodule update --init --recursive
 
 # TODO(oschaaf): To avoid OOM kicking in, we throttle resources here. Revisit this later
 # to see how this was finally resolved in Envoy's code base. There is a TODO for when
 # when a later bazel version is deployed in CI here:
 # https://github.com/lizan/envoy/blob/2eb772ac7518c8fbf2a8c7acbc1bf89e548d9c86/ci/do_ci.sh#L86
 if [ -n "$CIRCLECI" ]; then
-    # TODO(oschaaf): hack, this should be done in .circleci/config.yml
-    git submodule update --init --recursive
     if [[ -f "${HOME:-/root}/.gitconfig" ]]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
@@ -39,7 +42,7 @@ if [ -n "$CIRCLECI" ]; then
     export MAKEFLAGS="-j 8"
 fi
 
-if [ "$1" == "coverage" ]; then
+if [ "$1" -eq "coverage" ]; then
     export CC=gcc
     export CXX=g++
 else

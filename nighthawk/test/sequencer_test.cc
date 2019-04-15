@@ -222,8 +222,6 @@ TEST_F(SequencerIntegrationTest, TheHappyFlow) {
   EXPECT_EQ(test_number_of_intervals_, callback_test_count_);
   EXPECT_EQ(test_number_of_intervals_, sequencer.latencyStatistic().count());
   EXPECT_EQ(0, sequencer.blockedStatistic().count());
-
-  EXPECT_EQ(2, sequencer.statistics().size());
 }
 
 // Test an always saturated sequencer target. A concrete example would be a http benchmark client
