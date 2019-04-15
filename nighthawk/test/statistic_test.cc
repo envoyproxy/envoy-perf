@@ -166,16 +166,14 @@ TYPED_TEST(TypedStatisticTest, OneMillionRandomSamples) {
 TYPED_TEST(TypedStatisticTest, ProtoOutput) {
   TypeParam a;
 
-  a.setId("foo");
   a.addValue(6543456);
   a.addValue(342335);
 
   const nighthawk::client::Statistic proto = a.toProto();
 
-  EXPECT_EQ("foo", proto.id());
-  EXPECT_EQ(2, proto.count());
-  EXPECT_EQ(std::round(a.mean()), proto.mean().nanos());
-  EXPECT_EQ(std::round(a.pstdev()), proto.pstdev().nanos());
+  EXPECT_EQ(proto.count(), 2);
+  EXPECT_EQ(proto.mean().nanos(), std::round(a.mean()));
+  EXPECT_EQ(proto.pstdev().nanos(), std::round(a.pstdev()));
 }
 
 TYPED_TEST(TypedStatisticTest, ProtoOutputEmptyStats) {
@@ -188,51 +186,6 @@ TYPED_TEST(TypedStatisticTest, ProtoOutputEmptyStats) {
 }
 
 class StatisticTest : public testing::Test {};
-
-// Note that we explicitly subject SimpleStatistic to the large
-// values below, and see a negative stdev returned.
-TEST(StatisticTest, SimpleStatisticProtoOutputLargeValues) {
-  SimpleStatistic a;
-  uint64_t value = 100ul + 0xFFFFFFFF; // 100 + the max for uint32_t
-  a.addValue(value);
-  a.addValue(value);
-  const nighthawk::client::Statistic proto = a.toProto();
-
-  EXPECT_EQ(proto.count(), 2);
-  Helper::expectNear(((1ul * proto.mean().seconds() * 1000 * 1000 * 1000) + proto.mean().nanos()),
-                     value, a.significantDigits() - 1);
-  EXPECT_EQ(proto.pstdev().nanos(), -854775808);
-}
-
-TEST(StatisticTest, HdrStatisticProtoOutputLargeValues) {
-  HdrStatistic a;
-  uint64_t value = 100ul + 0xFFFFFFFF;
-  a.addValue(value);
-  a.addValue(value);
-  const nighthawk::client::Statistic proto = a.toProto();
-
-  EXPECT_EQ(proto.count(), 2);
-  // TODO(oschaaf): hdr doesn't seem to the promised precision in this scenario.
-  // We substract one from the indicated significant digits to make this test pass.
-  // TODO(oschaaf): revisit this to make sure there's not a different underlying problem.
-  Helper::expectNear(((1ul * proto.mean().seconds() * 1000 * 1000 * 1000) + proto.mean().nanos()),
-                     value, a.significantDigits() - 1);
-  EXPECT_EQ(proto.pstdev().nanos(), 0);
-}
-
-TEST(StatisticTest, StreamingStatProtoOutputLargeValues) {
-  StreamingStatistic a;
-  uint64_t value = 100ul + 0xFFFFFFFF;
-  a.addValue(value);
-  a.addValue(value);
-  const nighthawk::client::Statistic proto = a.toProto();
-
-  EXPECT_EQ(proto.count(), 2);
-  Helper::expectNear(((1ul * proto.mean().seconds() * 1000 * 1000 * 1000) + proto.mean().nanos()),
-                     value, a.significantDigits());
-
-  EXPECT_EQ(proto.pstdev().nanos(), 0);
-}
 
 TEST(StatisticTest, HdrStatisticPercentilesProto) {
   Envoy::Stats::IsolatedStoreImpl store;
@@ -261,15 +214,6 @@ TEST(StatisticTest, CombineAcrossTypesFails) {
   EXPECT_THROW(b.combine(c), std::bad_cast);
   EXPECT_THROW(c.combine(a), std::bad_cast);
   EXPECT_THROW(c.combine(b), std::bad_cast);
-}
-
-TEST(StatisticTest, IdFieldWorks) {
-  StreamingStatistic c;
-  std::string id = "fooid";
-
-  EXPECT_EQ("", c.id());
-  c.setId(id);
-  EXPECT_EQ(id, c.id());
 }
 
 } // namespace Nighthawk

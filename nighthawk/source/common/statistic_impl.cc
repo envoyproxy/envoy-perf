@@ -9,30 +9,17 @@
 namespace Nighthawk {
 
 std::string StatisticImpl::toString() const {
-  return fmt::format("Count: {}. Mean: {:.{}f} μs. pstdev: {:.{}f} μs.\n", count(), mean() / 1000,
-                     2, pstdev() / 1000, 2);
+  return fmt::format("#Completed: {}. Mean: {:.{}f}μs. pstdev: {:.{}f}μs.\n", count(),
+                     mean() / 1000, 2, pstdev() / 1000, 2);
 }
 
 nighthawk::client::Statistic StatisticImpl::toProto() {
   nighthawk::client::Statistic statistic;
-
-  statistic.set_id(id());
   statistic.set_count(count());
-
-  int64_t nanos = count() == 0 ? 0 : std::round(mean());
-  statistic.mutable_mean()->set_seconds(nanos / 1000000000);
-  statistic.mutable_mean()->set_nanos(nanos % 1000000000);
-
-  nanos = count() == 0 ? 0 : std::round(pstdev());
-  statistic.mutable_pstdev()->set_seconds(nanos / 1000000000);
-  statistic.mutable_pstdev()->set_nanos(nanos % 1000000000);
-
+  statistic.mutable_mean()->set_nanos(count() == 0 ? 0 : std::round(mean()));
+  statistic.mutable_pstdev()->set_nanos(count() == 0 ? 0 : std::round(pstdev()));
   return statistic;
 }
-
-std::string StatisticImpl::id() const { return id_; };
-
-void StatisticImpl::setId(const std::string& id) { id_ = id; };
 
 SimpleStatistic::SimpleStatistic() : count_(0), sum_x_(0), sum_x2_(0) {}
 
@@ -50,7 +37,7 @@ double SimpleStatistic::pvariance() const { return (sum_x2_ / count_) - (mean() 
 
 double SimpleStatistic::pstdev() const { return sqrt(pvariance()); }
 
-StatisticPtr SimpleStatistic::combine(const Statistic& statistic) const {
+std::unique_ptr<Statistic> SimpleStatistic::combine(const Statistic& statistic) {
   const SimpleStatistic& a = *this;
   const SimpleStatistic& b = dynamic_cast<const SimpleStatistic&>(statistic);
   auto combined = std::make_unique<SimpleStatistic>();
@@ -80,7 +67,7 @@ double StreamingStatistic::pvariance() const { return accumulated_variance_ / co
 
 double StreamingStatistic::pstdev() const { return sqrt(pvariance()); }
 
-StatisticPtr StreamingStatistic::combine(const Statistic& statistic) const {
+std::unique_ptr<Statistic> StreamingStatistic::combine(const Statistic& statistic) {
   const StreamingStatistic& a = *this;
   const StreamingStatistic& b = dynamic_cast<const StreamingStatistic&>(statistic);
   auto combined = std::make_unique<StreamingStatistic>();
@@ -108,7 +95,7 @@ double InMemoryStatistic::mean() const { return streaming_stats_->mean(); }
 double InMemoryStatistic::pvariance() const { return streaming_stats_->pvariance(); }
 double InMemoryStatistic::pstdev() const { return streaming_stats_->pstdev(); }
 
-StatisticPtr InMemoryStatistic::combine(const Statistic& statistic) const {
+std::unique_ptr<Statistic> InMemoryStatistic::combine(const Statistic& statistic) {
   auto combined = std::make_unique<InMemoryStatistic>();
   const InMemoryStatistic& b = dynamic_cast<const InMemoryStatistic&>(statistic);
 
@@ -154,7 +141,7 @@ double HdrStatistic::mean() const { return hdr_mean(histogram_); }
 double HdrStatistic::pvariance() const { return pstdev() * pstdev(); }
 double HdrStatistic::pstdev() const { return hdr_stddev(histogram_); }
 
-StatisticPtr HdrStatistic::combine(const Statistic& statistic) const {
+std::unique_ptr<Statistic> HdrStatistic::combine(const Statistic& statistic) {
   auto combined = std::make_unique<HdrStatistic>();
   const HdrStatistic& b = dynamic_cast<const HdrStatistic&>(statistic);
 
@@ -173,7 +160,7 @@ std::string HdrStatistic::toString() const {
   std::stringstream stream;
 
   stream << StatisticImpl::toString();
-  stream << fmt::format("{:>12} {:>14} (usec)", "Percentile", "Value") << std::endl;
+  stream << fmt::format("{:>12} {:>14} (us)", "Percentile", "Latency") << std::endl;
 
   std::vector<double> percentiles{50.0, 75.0, 90.0, 99.0, 99.9, 99.99, 99.999, 100.0};
   for (uint64_t i = 0; i < percentiles.size(); i++) {
@@ -198,10 +185,7 @@ nighthawk::client::Statistic HdrStatistic::toProto() {
     nighthawk::client::Percentile* percentile;
 
     percentile = proto.add_percentiles();
-
-    percentile->mutable_duration()->set_seconds(iter.highest_equivalent_value / 1000000000);
-    percentile->mutable_duration()->set_nanos(iter.highest_equivalent_value % 1000000000);
-
+    percentile->mutable_duration()->set_nanos(iter.highest_equivalent_value);
     percentile->set_percentile(percentiles->percentile / 100.0);
     percentile->set_count(iter.cumulative_count);
   }

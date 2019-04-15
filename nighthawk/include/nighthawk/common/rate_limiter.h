@@ -1,7 +1,5 @@
 #pragma once
 
-#include <memory>
-
 #include "envoy/common/pure.h"
 
 namespace Nighthawk {
@@ -25,7 +23,5 @@ public:
    */
   virtual void releaseOne() PURE;
 };
-
-typedef std::unique_ptr<RateLimiter> RateLimiterPtr;
 
 } // namespace Nighthawk

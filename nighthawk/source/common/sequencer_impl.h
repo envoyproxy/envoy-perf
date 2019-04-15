@@ -3,14 +3,15 @@
 #include "common/common/logger.h"
 
 #include "envoy/common/pure.h"
-#include "envoy/common/time.h"
 #include "envoy/event/dispatcher.h"
+#include "envoy/event/timer.h"
 #include "envoy/thread/thread.h"
 
 #include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/rate_limiter.h"
 #include "nighthawk/common/sequencer.h"
-#include "nighthawk/common/statistic.h"
+
+#include "nighthawk/source/common/statistic_impl.h"
 
 namespace Nighthawk {
 
@@ -38,10 +39,8 @@ using SequencerTarget = std::function<bool(std::function<void()>)>;
 class SequencerImpl : public Sequencer, public Envoy::Logger::Loggable<Envoy::Logger::Id::main> {
 public:
   SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
-                Envoy::TimeSource& time_source, RateLimiterPtr&& rate_limiter,
-                SequencerTarget target, StatisticPtr&& latency_statistic,
-                StatisticPtr&& blocked_statistic, std::chrono::microseconds duration,
-                std::chrono::microseconds grace_timeout);
+                Envoy::TimeSource& time_source, RateLimiter& rate_limiter, SequencerTarget& target,
+                std::chrono::microseconds duration, std::chrono::microseconds grace_timeout);
 
   /**
    * Starts the Sequencer. Should be followed up with a call to waitForCompletion().
@@ -63,10 +62,8 @@ public:
     return usec == 0 ? 0 : ((targets_completed_ / usec) * 1000000);
   }
 
-  virtual StatisticPtrMap statistics() const override;
-
-  const Statistic& blockedStatistic() const { return *blocked_statistic_; }
-  const Statistic& latencyStatistic() const { return *latency_statistic_; }
+  const HdrStatistic& blockedStatistic() const override { return blocked_statistic_; }
+  const HdrStatistic& latencyStatistic() const override { return latency_statistic_; }
 
 protected:
   /**
@@ -101,15 +98,15 @@ protected:
   void updateStartBlockingTimeIfNeeded();
 
 private:
-  SequencerTarget target_;
+  SequencerTarget& target_;
   PlatformUtil& platform_util_;
   Envoy::Event::Dispatcher& dispatcher_;
   Envoy::TimeSource& time_source_;
-  std::unique_ptr<RateLimiter> rate_limiter_;
-  StatisticPtr latency_statistic_;
-  StatisticPtr blocked_statistic_;
+  HdrStatistic blocked_statistic_;
+  HdrStatistic latency_statistic_;
   Envoy::Event::TimerPtr periodic_timer_;
   Envoy::Event::TimerPtr spin_timer_;
+  RateLimiter& rate_limiter_;
   std::chrono::microseconds duration_;
   std::chrono::microseconds grace_timeout_;
   Envoy::MonotonicTime start_;
