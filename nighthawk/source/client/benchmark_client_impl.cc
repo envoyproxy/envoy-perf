@@ -161,6 +161,18 @@ bool BenchmarkClientHttpImpl::tryStartOne(std::function<void()> caller_completio
   return true;
 }
 
+std::map<std::string, uint64_t> BenchmarkClientHttpImpl::getCounters(CounterFilter filter) const {
+  std::map<std::string, uint64_t> results;
+
+  for (auto stat : store_.counters()) {
+    if (filter(stat->name(), stat->value())) {
+      results[stat->name()] = stat->value();
+    }
+  }
+
+  return results;
+}
+
 void BenchmarkClientHttpImpl::onComplete(bool success, const Envoy::Http::HeaderMap& headers) {
   requests_completed_++;
   if (!success) {

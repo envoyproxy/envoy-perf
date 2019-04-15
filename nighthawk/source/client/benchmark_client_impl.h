@@ -66,7 +66,9 @@ public:
     measure_latencies_ = measure_latencies;
   }
   bool tryStartOne(std::function<void()> caller_completion_callback) override;
-  Envoy::Stats::Store& store() const override { return store_; }
+  std::map<std::string, uint64_t> getCounters(CounterFilter filter = [](std::string, uint64_t) {
+    return true;
+  }) const override;
 
   // StreamDecoderCompletionCallback
   void onComplete(bool success, const Envoy::Http::HeaderMap& headers) override;

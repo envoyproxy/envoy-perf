@@ -1,6 +1,5 @@
 #include "nighthawk/source/common/worker_impl.h"
 
-#include "envoy/runtime/runtime.h"
 #include "envoy/thread_local/thread_local.h"
 
 using namespace std::chrono_literals;
@@ -19,12 +18,7 @@ WorkerImpl::~WorkerImpl() { tls_.shutdownThread(); }
 void WorkerImpl::start() {
   ASSERT(!started_ && !completed_);
   started_ = true;
-  thread_ = thread_factory_.createThread([this]() {
-    ASSERT(Envoy::Runtime::LoaderSingleton::getExisting() != nullptr);
-    // Run the dispatcher to let the callbacks posted by registerThread() execute.
-    dispatcher_->run(Envoy::Event::Dispatcher::RunType::Block);
-    work();
-  });
+  thread_ = thread_factory_.createThread([this]() { work(); });
 }
 
 void WorkerImpl::waitForCompletion() {

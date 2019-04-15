@@ -21,7 +21,6 @@
 #include "nighthawk/source/common/rate_limiter_impl.h"
 #include "nighthawk/source/common/sequencer_impl.h"
 #include "nighthawk/source/common/statistic_impl.h"
-#include "nighthawk/source/common/utility.h"
 
 #include "envoy/thread_local/thread_local.h"
 #include "test/mocks/runtime/mocks.h"
@@ -116,14 +115,13 @@ public:
   }
 
   uint64_t nonZeroValuedCounterCount() {
-    return Utility()
-        .mapCountersFromStore(client_->store(),
-                              [](std::string, uint64_t value) { return value > 0; })
-        .size();
+    Client::CounterFilter filter = [](std::string, uint64_t value) { return value > 0; };
+    return client_->getCounters(filter).size();
   }
 
   uint64_t getCounter(std::string name) {
-    return client_->store().counter("client." + name).value();
+    auto counters = client_->getCounters();
+    return counters["client." + name];
   }
 
   Envoy::Thread::ThreadFactoryImplPosix thread_factory_;

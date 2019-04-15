@@ -4,7 +4,7 @@
 
 #include "test/mocks/event/mocks.h"
 #include "test/mocks/stats/mocks.h"
-#include "test/test_common/simulated_time_system.h"
+
 #include "test/test_common/utility.h"
 
 #include "common/api/api_impl.h"
@@ -48,9 +48,8 @@ TEST_F(FactoriesTest, CreateSequencer) {
   EXPECT_CALL(options_, duration()).Times(1).WillOnce(testing::Return(1s));
   EXPECT_CALL(options_, requests_per_second()).Times(1).WillOnce(testing::Return(1));
   EXPECT_CALL(dispatcher_, createTimer_(_)).Times(2);
-  Envoy::Event::SimulatedTimeSystem time_system;
-  auto sequencer = factory.create(api_->timeSource(), dispatcher_, time_system.monotonicTime(),
-                                  benchmark_client);
+
+  auto sequencer = factory.create(api_->timeSource(), dispatcher_, benchmark_client);
   EXPECT_NE(nullptr, sequencer.get());
 }
 
