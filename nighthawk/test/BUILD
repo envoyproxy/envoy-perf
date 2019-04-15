@@ -22,7 +22,6 @@ envoy_cc_test(
     name = "nighthawk_test",
     srcs = [
         "benchmark_http_client_test.cc",
-        "factories_test.cc",
         "frequency_test.cc",
         "options_test.cc",
         "platform_util_test.cc",
@@ -45,7 +44,6 @@ envoy_cc_test(
         "//nighthawk/test:nighthawk_mocks",
         "//nighthawk/test/test_common:environment_lib",
         "@envoy//source/common/filesystem:filesystem_lib",
-        "@envoy//source/common/network:dns_lib",
         "@envoy//source/common/protobuf:utility_lib",
         "@envoy//source/common/stats:isolated_store_lib",
         "@envoy//test/integration:http_integration_lib",

@@ -13,14 +13,11 @@
 #include "envoy/stats/store.h"
 
 #include "nighthawk/client/benchmark_client.h"
-#include "nighthawk/client/factories.h"
 #include "nighthawk/client/options.h"
 #include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/rate_limiter.h"
 #include "nighthawk/common/sequencer.h"
 #include "nighthawk/common/statistic.h"
-
-#include "nighthawk/source/common/utility.h"
 
 using namespace std::chrono_literals;
 
@@ -72,38 +69,6 @@ public:
   MOCK_CONST_METHOD0(concurrency, std::string());
   MOCK_CONST_METHOD0(verbosity, std::string());
   MOCK_CONST_METHOD0(toCommandLineOptions, Client::CommandLineOptionsPtr());
-};
-
-class MockBenchmarkClientFactory : public Client::BenchmarkClientFactory {
-public:
-  MockBenchmarkClientFactory();
-  ~MockBenchmarkClientFactory();
-  MOCK_CONST_METHOD4(create, Client::BenchmarkClientPtr(Envoy::Api::Api& api,
-                                                        Envoy::Event::Dispatcher& dispatcher,
-                                                        Envoy::Stats::Store& store, const Uri uri));
-};
-
-class MockSequencerFactory : public Client::SequencerFactory {
-public:
-  MockSequencerFactory();
-  ~MockSequencerFactory();
-  MOCK_CONST_METHOD3(create, SequencerPtr(Envoy::TimeSource& time_source,
-                                          Envoy::Event::Dispatcher& dispatcher,
-                                          Client::BenchmarkClient& benchmark_client));
-};
-
-class MockStoreFactory : public Client::StoreFactory {
-public:
-  MockStoreFactory();
-  ~MockStoreFactory();
-  MOCK_CONST_METHOD0(create, Envoy::Stats::StorePtr());
-};
-
-class MockStatisticFactory : public Client::StatisticFactory {
-public:
-  MockStatisticFactory();
-  ~MockStatisticFactory();
-  MOCK_CONST_METHOD0(create, StatisticPtr());
 };
 
 class FakeSequencerTarget {
