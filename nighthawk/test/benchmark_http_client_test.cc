@@ -294,7 +294,8 @@ TEST_P(BenchmarkClientHttpTest, H1ConnectionFailure) {
   EXPECT_EQ(1, getCounter("upstream_cx_total"));
   EXPECT_LE(1, getCounter("upstream_rq_pending_failure_eject"));
   EXPECT_EQ(1, getCounter("upstream_rq_pending_total"));
-  EXPECT_EQ(5, nonZeroValuedCounterCount());
+  EXPECT_EQ(1, getCounter("upstream_rq_total"));
+  EXPECT_EQ(6, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientHttpTest, H1MultiConnectionFailure) {
@@ -308,7 +309,8 @@ TEST_P(BenchmarkClientHttpTest, H1MultiConnectionFailure) {
   EXPECT_EQ(10, getCounter("upstream_cx_total"));
   EXPECT_LE(10, getCounter("upstream_rq_pending_failure_eject"));
   EXPECT_EQ(10, getCounter("upstream_rq_pending_total"));
-  EXPECT_EQ(5, nonZeroValuedCounterCount());
+  EXPECT_EQ(10, getCounter("upstream_rq_total"));
+  EXPECT_EQ(6, nonZeroValuedCounterCount());
 }
 
 TEST_P(BenchmarkClientHttpTest, EnableLatencyMeasurement) {

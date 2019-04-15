@@ -51,7 +51,6 @@ BenchmarkClientHttpImpl::BenchmarkClientHttpImpl(Envoy::Api::Api& api,
 }
 
 void BenchmarkClientHttpImpl::initialize(Envoy::Runtime::Loader& runtime) {
-  ASSERT(uri_.address().get() != nullptr);
   envoy::api::v2::Cluster cluster_config;
   envoy::api::v2::core::BindConfig bind_config;
 

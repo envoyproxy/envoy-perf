@@ -44,13 +44,11 @@ void SimpleStatistic::addValue(int64_t value) {
 
 uint64_t SimpleStatistic::count() const { return count_; }
 
-double SimpleStatistic::mean() const { return count() == 0 ? std::nan("") : sum_x_ / count_; }
+double SimpleStatistic::mean() const { return count_ == 0 ? std::nan("") : sum_x_ / count_; }
 
-double SimpleStatistic::pvariance() const {
-  return count() == 0 ? std::nan("") : (sum_x2_ / count_) - (mean() * mean());
-}
+double SimpleStatistic::pvariance() const { return (sum_x2_ / count_) - (mean() * mean()); }
 
-double SimpleStatistic::pstdev() const { return count() == 0 ? std::nan("") : sqrt(pvariance()); }
+double SimpleStatistic::pstdev() const { return sqrt(pvariance()); }
 
 StatisticPtr SimpleStatistic::combine(const Statistic& statistic) const {
   const SimpleStatistic& a = *this;
@@ -78,13 +76,9 @@ uint64_t StreamingStatistic::count() const { return count_; }
 
 double StreamingStatistic::mean() const { return count_ == 0 ? std::nan("") : mean_; }
 
-double StreamingStatistic::pvariance() const {
-  return count() == 0 ? std::nan("") : accumulated_variance_ / count_;
-}
+double StreamingStatistic::pvariance() const { return accumulated_variance_ / count_; }
 
-double StreamingStatistic::pstdev() const {
-  return count() == 0 ? std::nan("") : sqrt(pvariance());
-}
+double StreamingStatistic::pstdev() const { return sqrt(pvariance()); }
 
 StatisticPtr StreamingStatistic::combine(const Statistic& statistic) const {
   const StreamingStatistic& a = *this;
@@ -152,9 +146,9 @@ void HdrStatistic::addValue(int64_t value) {
 }
 
 uint64_t HdrStatistic::count() const { return histogram_->total_count; }
-double HdrStatistic::mean() const { return count() == 0 ? std::nan("") : hdr_mean(histogram_); }
+double HdrStatistic::mean() const { return hdr_mean(histogram_); }
 double HdrStatistic::pvariance() const { return pstdev() * pstdev(); }
-double HdrStatistic::pstdev() const { return count() == 0 ? std::nan("") : hdr_stddev(histogram_); }
+double HdrStatistic::pstdev() const { return hdr_stddev(histogram_); }
 
 StatisticPtr HdrStatistic::combine(const Statistic& statistic) const {
   auto combined = std::make_unique<HdrStatistic>();

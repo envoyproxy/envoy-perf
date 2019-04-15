@@ -40,14 +40,14 @@ OptionsImpl::OptionsImpl(int argc, const char* const* argv) {
       "and --connections values.Default : 1. ",
       false, "1", "string", cmd);
 
-  std::vector<std::string> log_levels = {"trace", "debug", "info", "warn", "error", "critical"};
+  std::vector<std::string> log_levels = {"trace", "debug", "info", "warn", "error"};
   TCLAP::ValuesConstraint<std::string> verbosities_allowed(log_levels);
 
   TCLAP::ValueArg<std::string> verbosity(
       "v", "verbosity",
       "Verbosity of the output. Possible values: [trace, debug, info, warn, error, critical]. The "
       "default level is 'info'.",
-      false, "warn", &verbosities_allowed, cmd);
+      false, "info", &verbosities_allowed, cmd);
 
   TCLAP::UnlabeledValueArg<std::string> uri("uri",
                                             "uri to benchmark. http:// and https:// are supported, "
