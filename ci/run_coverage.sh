@@ -16,7 +16,7 @@ bazel clean
 "${BAZEL_COVERAGE}" coverage ${BAZEL_TEST_OPTIONS} \
 "${COVERAGE_TARGET}"  \
 --experimental_cc_coverage \
---instrumentation_filter=//nighthawk/source/...,//nighthawk/include/...,-//nighthawk/envoy/... \
+--instrumentation_filter=//nighthawk/source/...,//nighthawk/include/...,-//nighthawk/hdrhistogram_c/...,-//nighthawk/envoy/... \
 --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main \
 --combined_report=lcov
 

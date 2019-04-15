@@ -25,10 +25,10 @@ envoy_cc_library(
     repository = "@envoy",
     visibility = ["//visibility:public"],
     deps = [
+        "//nighthawk:hdrhistogram_c",
         "//nighthawk/include/nighthawk/client:client_includes",
         "//nighthawk/include/nighthawk/common:base_includes",
         "//nighthawk/source/client:benchmark_options_cc",
-        "@dep_hdrhistogram_c//:hdrhistogram_c",
         "@envoy//source/common/common:compiler_requirements_lib",
         "@envoy//source/common/common:minimal_logger_lib",
         "@envoy//source/common/common:thread_impl_lib_posix",

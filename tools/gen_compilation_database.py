@@ -38,7 +38,7 @@ def isCompileTarget(target, args):
     if filename.startswith("google/protobuf"):
         return False
 
-    if filename.startswith("hdrhistogram_c"):
+    if filename.startswith("nighthawk/hdrhistogram_c"):
         return False
 
     return True
