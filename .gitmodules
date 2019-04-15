@@ -1,3 +1,0 @@
-[submodule "nighthawk/envoy"]
-	path = nighthawk/envoy
-	url = https://github.com/envoyproxy/envoy.git
