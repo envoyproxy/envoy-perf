@@ -188,8 +188,9 @@ TYPED_TEST(TypedStatisticTest, ProtoOutputEmptyStats) {
 class StatisticTest : public testing::Test {};
 
 TEST(StatisticTest, HdrStatisticPercentilesProto) {
+  Envoy::Thread::ThreadFactory& thread_factory = Envoy::Thread::threadFactoryForTest();
   Envoy::Stats::IsolatedStoreImpl store;
-  Envoy::Filesystem::InstanceImpl filesystem;
+  Envoy::Filesystem::InstanceImpl filesystem(100ms, thread_factory, store);
   nighthawk::client::Statistic parsed_json_proto;
   HdrStatistic statistic;
 
