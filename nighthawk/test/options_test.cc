@@ -124,9 +124,6 @@ TEST_F(OptionsImplTest, BadConcurrencyValuesThrow) {
   EXPECT_THROW_WITH_REGEX(
       createOptionsImpl(fmt::format("{} {} --concurrency foo", client_name_, good_test_uri_)),
       MalformedArgvException, "Invalid value for --concurrency");
-  EXPECT_THROW_WITH_REGEX(createOptionsImpl(fmt::format("{} {} --concurrency 999999999999999999999",
-                                                        client_name_, good_test_uri_)),
-                          MalformedArgvException, "Value out of range: --concurrency");
 }
 
 TEST_F(OptionsImplTest, AutoConcurrencyValueParsedOK) {

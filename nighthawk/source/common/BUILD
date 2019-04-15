@@ -18,7 +18,6 @@ envoy_cc_library(
         "platform_util_impl.h",
         "rate_limiter_impl.h",
         "sequencer_impl.h",
-        "ssl.h",
         "statistic_impl.h",
         "utility.h",
     ],
