@@ -12,7 +12,6 @@ envoy_cc_library(
         "sequencer_impl.cc",
         "statistic_impl.cc",
         "utility.cc",
-        "worker_impl.cc",
     ],
     hdrs = [
         "frequency.h",
@@ -22,7 +21,6 @@ envoy_cc_library(
         "ssl.h",
         "statistic_impl.h",
         "utility.h",
-        "worker_impl.h",
     ],
     repository = "@envoy",
     visibility = ["//visibility:public"],

@@ -9,11 +9,10 @@ using namespace std::chrono_literals;
 
 namespace Nighthawk {
 
-SequencerImpl::SequencerImpl(const PlatformUtil& platform_util,
-                             Envoy::Event::Dispatcher& dispatcher, Envoy::TimeSource& time_source,
-                             RateLimiterPtr&& rate_limiter, SequencerTarget target,
-                             StatisticPtr&& latency_statistic, StatisticPtr&& blocked_statistic,
-                             std::chrono::microseconds duration,
+SequencerImpl::SequencerImpl(PlatformUtil& platform_util, Envoy::Event::Dispatcher& dispatcher,
+                             Envoy::TimeSource& time_source, RateLimiterPtr&& rate_limiter,
+                             SequencerTarget target, StatisticPtr&& latency_statistic,
+                             StatisticPtr&& blocked_statistic, std::chrono::microseconds duration,
                              std::chrono::microseconds grace_timeout)
     : target_(target), platform_util_(platform_util), dispatcher_(dispatcher),
       time_source_(time_source), rate_limiter_(std::move(rate_limiter)),

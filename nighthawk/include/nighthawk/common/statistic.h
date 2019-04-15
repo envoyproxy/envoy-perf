@@ -12,6 +12,11 @@
 
 namespace Nighthawk {
 
+class StatisticException : public Envoy::EnvoyException {
+public:
+  StatisticException() : Envoy::EnvoyException("StatisticException") {}
+};
+
 class Statistic;
 
 typedef std::unique_ptr<Statistic> StatisticPtr;

@@ -16,7 +16,7 @@ bazel clean
 "${BAZEL_COVERAGE}" coverage ${BAZEL_TEST_OPTIONS} \
 "${COVERAGE_TARGET}"  \
 --experimental_cc_coverage \
---instrumentation_filter=//nighthawk/source/...,//nighthawk/include/... \
+--instrumentation_filter=//nighthawk/source/...,//nighthawk/include/...,-//nighthawk/envoy/... \
 --coverage_report_generator=@bazel_tools//tools/test/CoverageOutputGenerator/java/com/google/devtools/coverageoutputgenerator:Main \
 --combined_report=lcov
 
@@ -31,8 +31,7 @@ genhtml bazel-out/_coverage/_coverage_report.dat --output-directory="${COVERAGE_
 if [ "$VALIDATE_COVERAGE" == "true" ]
 then
     COVERAGE_VALUE=$(grep -Po '.*lines[.]*: \K(\d|\.)*' "${COVERAGE_SUMMARY}")
-    # TODO(oschaaf): The target is 97.5%, so up this whenever possible in follow ups.
-    COVERAGE_THRESHOLD=94.4
+    COVERAGE_THRESHOLD=97.5
     COVERAGE_FAILED=$(echo "${COVERAGE_VALUE}<${COVERAGE_THRESHOLD}" | bc)
     
     echo "HTML coverage report is in ${COVERAGE_DIR}/coverage.html"

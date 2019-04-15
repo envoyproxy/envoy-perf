@@ -248,7 +248,7 @@ TEST(StatisticTest, StreamingStatProtoOutputLargeValues) {
 
 TEST(StatisticTest, HdrStatisticPercentilesProto) {
   Envoy::Stats::IsolatedStoreImpl store;
-  Envoy::Filesystem::InstanceImplPosix filesystem;
+  Envoy::Filesystem::InstanceImpl filesystem;
   nighthawk::client::Statistic parsed_json_proto;
   HdrStatistic statistic;
 

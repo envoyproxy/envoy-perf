@@ -39,9 +39,7 @@ jobs:
     steps:
       - checkout
       - run: ci/do_ci.sh coverage
-      - store_artifacts:
-          path: /root/project/generated
-          destination: /
+
 workflows:
   version: 2
   all:

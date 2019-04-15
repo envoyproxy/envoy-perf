@@ -12,7 +12,6 @@
 #include "envoy/event/dispatcher.h"
 #include "envoy/stats/store.h"
 
-#include "nighthawk/client/benchmark_client.h"
 #include "nighthawk/client/options.h"
 #include "nighthawk/common/platform_util.h"
 #include "nighthawk/common/rate_limiter.h"
@@ -85,22 +84,6 @@ public:
   ~MockSequencerTarget();
 
   MOCK_METHOD1(callback, bool(std::function<void()>));
-};
-
-class MockBenchmarkClient : public Client::BenchmarkClient {
-public:
-  MockBenchmarkClient();
-  ~MockBenchmarkClient();
-
-  MOCK_METHOD1(initialize, void(Envoy::Runtime::Loader&));
-  MOCK_METHOD0(terminate, void());
-  MOCK_METHOD1(setMeasureLatencies, void(bool));
-  MOCK_CONST_METHOD0(statistics, StatisticPtrMap());
-  MOCK_METHOD1(tryStartOne, bool(std::function<void()>));
-  MOCK_CONST_METHOD1(getCounters, std::map<std::string, uint64_t>(Client::CounterFilter));
-
-protected:
-  MOCK_CONST_METHOD0(measureLatencies, bool());
 };
 
 } // namespace Nighthawk

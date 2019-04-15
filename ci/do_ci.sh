@@ -5,7 +5,7 @@ function do_build () {
 }
 
 function do_test() {
-    bazel test $BAZEL_BUILD_OPTIONS $BAZEL_TEST_OPTIONS --test_output=all \
+    bazel test $BAZEL_BUILD_OPTIONS $BAZEL_TEST_OPTIONS --test_output=all --test_env=ENVOY_IP_TEST_VERSIONS=v4only \
     //nighthawk/test:nighthawk_test
 }
 
@@ -36,9 +36,6 @@ if [ -n "$CIRCLECI" ]; then
         mv "${HOME:-/root}/.gitconfig" "${HOME:-/root}/.gitconfig_save"
         echo 1
     fi
-    export TEST_TMPDIR=/build/tmp
-    mkdir -p "$TEST_TMPDIR"
-    export BAZEL_EXTRA_TEST_OPTIONS="--test_env=ENVOY_IP_TEST_VERSIONS=v4only"
 fi
 
 if [ "$1" == "coverage" ]; then
@@ -52,7 +49,7 @@ else
 fi
 
 export BAZEL_BUILD_OPTIONS="${BAZEL_BUILD_OPTIONS} --jobs ${CONCURRENCY}"
-export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} "${BAZEL_EXTRA_TEST_OPTIONS}" --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
+export BAZEL_TEST_OPTIONS="${BAZEL_TEST_OPTIONS} --jobs ${CONCURRENCY} --local_test_jobs=${CONCURRENCY}"
 
 case "$1" in
     build)

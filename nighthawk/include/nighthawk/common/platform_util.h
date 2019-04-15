@@ -14,7 +14,7 @@ public:
   virtual ~PlatformUtil() = default;
 
   /**
-   * Yields the current thread. The OS decides which one to run.
+   * @brief Yields the current thread. The OS decides which one to run.
    */
   virtual void yieldCurrentThread() const PURE;
 };
