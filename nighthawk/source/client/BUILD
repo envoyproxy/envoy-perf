@@ -8,10 +8,7 @@ licenses(["notice"])  # Apache 2
 
 api_proto_library_internal(
     name = "benchmark_options",
-    srcs = [
-        "options.proto",
-        "output.proto",
-    ],
+    srcs = ["options.proto"],
     visibility = ["//visibility:public"],
 )
 
