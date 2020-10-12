@@ -1,0 +1,35 @@
+syntax = "proto3";
+
+package salvo;
+
+// Capture the location of sources needed for the benchmark
+message SourceRepository {
+  // Specify whether this source location is Envoy or NightHawk
+  oneof identity {
+    bool envoy = 1;
+    bool nighthawk = 2;
+  }
+
+  // Specify the location of the source repository on disk. If specified
+  // this location is used to determine the origin url, branch, and commit
+  // hash.  If not specified, the remaining fields must be populated
+  string location = 3;
+
+  // Specify the remote location of the repository.  This is ignored if
+  // the source location is specified.
+  string url = 4;
+
+  // Specify the local working branch.This is ignored if the source 
+  // location is specified.
+  string branch = 5;
+
+  // Specify a commit hash if applicable.  If not identified we will 
+  // determine this from the source tree.  We will also use this field
+  // to identify the corresponding NightHawk or Envoy image used for
+  // the benchmark
+  string hash = 6;
+
+  // Internal use only. This field is used to specify the location of
+  // the patch generated from changes in the local environment
+  string patch = 7;
+}

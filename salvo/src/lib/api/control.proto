@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package salvo;
+
+import "src/lib/api/image.proto";
+import "src/lib/api/source.proto";
+import "src/lib/api/env.proto";
+
+
+message JobControl {
+  // Specify whether the benchmark runs locally or in a service
+  bool remote = 1;
+
+  // Specify the benchmark to execute
+  oneof benchmark {
+    bool scavenging_benchmark = 2;
+    bool dockerized_benchmark = 3;
+    bool binary_benchmark = 4;
+  }
+
+  // Define where we find all required sources
+  repeated SourceRepository source = 6;
+
+  // Define the names of all required docker images
+  DockerImages images = 7;
+
+  // Define the environment variables needed for the test
+  EnvironmentVars environment = 8;
+}
+
