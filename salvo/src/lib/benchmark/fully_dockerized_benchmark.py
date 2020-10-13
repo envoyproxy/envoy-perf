@@ -29,7 +29,7 @@ class Benchmark(BaseBenchmark):
     # If so, verify that the required source data is defined
     verify_source = images is None or \
         not images.nighthawk_benchmark_image or \
-        not images.nighthawk_binary_image  or \
+        not images.nighthawk_binary_image or \
         not images.envoy_image
 
     log.debug(f"Source verification needed: {verify_source}")
@@ -63,8 +63,8 @@ class Benchmark(BaseBenchmark):
         can_build_nighthawk = True
 
       if (not images.envoy_image and not can_build_envoy) or \
-          (not images.nighthawk_benchmark_image or \
-           not images.nighthawk_binary_image) and not can_build_nighthawk:
+          (not images.nighthawk_benchmark_image or not images.nighthawk_binary_image) \
+              and not can_build_nighthawk:
 
         # If the Envoy image is specified, then the validation failed for NightHawk and vice versa
         msg = "No source specified to build undefined {image} image".format(
@@ -102,8 +102,8 @@ class Benchmark(BaseBenchmark):
     if not images.reuse_nh_images:
       pulled_images = self.pull_images()
       if not pulled_images or len(pulled_images) != 3:
-        raise NotImplementedError(("Unable to retrieve all images. ",
-                                   "Building from source is not yet implemented"))
+        raise NotImplementedError(
+            ("Unable to retrieve all images. ", "Building from source is not yet implemented"))
 
     kwargs = {}
     kwargs['environment'] = image_vars
@@ -127,4 +127,3 @@ class Benchmark(BaseBenchmark):
     log.info(f"Benchmark output: {output_dir}")
 
     return
-

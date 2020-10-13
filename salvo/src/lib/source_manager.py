@@ -11,7 +11,7 @@ log = logging.getLogger(__name__)
 
 SOURCE_REPOSITORY = {'envoy': 'https://github.com/envoyproxy/envoy.git'}
 
-# TODO: Use Enum
+# TODO(abaptiste): Use Enum
 CURRENT = 'baseline'
 PREVIOUS = 'previous'
 
@@ -42,9 +42,9 @@ class SourceManager(object):
       kwargs = {'origin': SOURCE_REPOSITORY[name], 'name': name}
       source_tree = tree.SourceTree(**kwargs)
     else:
-      # TODO: Need to handle the case where source is specified.  We should have
-      #       a source location on disk, so we need to create the source_tree
-      #       a bit differently
+      # TODO(abaptiste): Need to handle the case where source is specified.  We should have
+      # a source location on disk, so we need to create the source_tree
+      # a bit differently
       raise NotImplementedError("Discovering hashes from source is not yet implemented")
 
     # Pull the source
@@ -53,9 +53,9 @@ class SourceManager(object):
       log.error(f"Unable to pull source from origin {kwargs['origin']}")
       return None
 
-    # TODO: Use an explicit hash since "latest" can change
-    #if hash == 'latest':
-    #    hash = source_tree.get_head_hash()
+    # TODO(abaptiste): Use an explicit hash since "latest" can change
+    # if hash == 'latest':
+    #     hash = source_tree.get_head_hash()
 
     # Get the previous hash to the tag
     previous_hash = source_tree.get_previous_commit_hash(hash)

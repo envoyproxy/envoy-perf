@@ -32,8 +32,9 @@ def setup_options():
   """Parse command line arguments required for operation"""
 
   parser = argparse.ArgumentParser(description="Salvo Benchmark Runner")
-  parser.add_argument(
-      '--job', dest='jobcontrol', help='specify the location for the job control json document')
+  parser.add_argument('--job',
+                      dest='jobcontrol',
+                      help='specify the location for the job control json document')
   # FIXME: Add an option to generate a default job Control JSON/YAML
 
   return parser.parse_args()
@@ -68,4 +69,3 @@ def main():
 
 if __name__ == '__main__':
   sys.exit(main())
-

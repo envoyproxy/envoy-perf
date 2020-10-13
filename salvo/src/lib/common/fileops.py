@@ -33,4 +33,3 @@ def delete_directory(path):
   for found_file in glob.glob(os.path.join(path, '*')):
     os.unlink(found_file)
   os.rmdir(path)
-

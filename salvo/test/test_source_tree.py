@@ -59,8 +59,8 @@ def test_get_origin_ssh():
   git = source_tree.SourceTree(**kwargs)
 
   assert git.validate()
-  with mock.patch(
-      'subprocess.check_output', mock.MagicMock(return_value=remote_string)) as magic_mock:
+  with mock.patch('subprocess.check_output',
+                  mock.MagicMock(return_value=remote_string)) as magic_mock:
     origin_url = git.get_origin()
     magic_mock.assert_called_once_with(shlex.split(gitcmd), cwd=kwargs['workdir'], stderr=mock.ANY)
 
@@ -81,8 +81,8 @@ def test_get_origin_https():
   git = source_tree.SourceTree(**kwargs)
 
   assert git.validate()
-  with mock.patch(
-      'subprocess.check_output', mock.MagicMock(return_value=remote_string)) as magic_mock:
+  with mock.patch('subprocess.check_output',
+                  mock.MagicMock(return_value=remote_string)) as magic_mock:
     origin_url = git.get_origin()
     magic_mock.assert_called_once_with(shlex.split(gitcmd), cwd=kwargs['workdir'], stderr=mock.ANY)
 
@@ -252,9 +252,8 @@ def test_branch_up_to_date():
   kwargs = {'origin': origin, 'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
 
-  with mock.patch(
-      'lib.source_tree.SourceTree.get_revs_behind_parent_branch',
-      mock.MagicMock(return_value=0)) as magic_mock:
+  with mock.patch('lib.source_tree.SourceTree.get_revs_behind_parent_branch',
+                  mock.MagicMock(return_value=0)) as magic_mock:
     up_to_date = git.is_up_to_date()
     magic_mock.assert_called_once()
     assert up_to_date

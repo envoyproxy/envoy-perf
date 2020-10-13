@@ -7,7 +7,7 @@ with docker.
 import json
 import logging
 
-#Ref: https://docker-py.readthedocs.io/en/stable/index.html
+# Ref: https://docker-py.readthedocs.io/en/stable/index.html
 import docker
 
 from google.protobuf.json_format import (Error, MessageToJson)
@@ -81,4 +81,3 @@ class DockerHelper():
       raise
 
     return volume_json["volumes"]
-

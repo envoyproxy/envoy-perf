@@ -29,8 +29,8 @@ class BaseBenchmark(object):
 
     self._mode_remote = self._control.remote
 
-    log.debug("Running benchmark: %s %s", "Remote"
-              if self._mode_remote else "Local", self._benchmark_name)
+    log.debug("Running benchmark: %s %s", "Remote" if self._mode_remote else "Local",
+              self._benchmark_name)
 
   def is_remote(self):
     """
@@ -100,4 +100,3 @@ class BaseBenchmark(object):
         Build the json specifying the volume configuration needed for running the container
         """
     return docker_helper.DockerHelper.generate_volume_config(output_dir, test_dir)
-

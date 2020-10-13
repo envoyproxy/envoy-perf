@@ -53,8 +53,7 @@ def test_run_image():
   job_control.scavenging_benchmark = True
 
   with mock.patch('lib.docker_helper.DockerHelper.run_image',
-                  mock.MagicMock(return_value='output string'))  \
-                      as magic_mock:
+                  mock.MagicMock(return_value='output string')) as magic_mock:
     kwargs = {'control': job_control}
     benchmark = BaseBenchmark(**kwargs)
 
@@ -62,8 +61,8 @@ def test_run_image():
     result = benchmark.run_image("this_really_doesnt_matter_either", **run_kwargs)
 
     # Verify that we are running the docker with all the supplied parameters
-    magic_mock.assert_called_once_with(
-        "this_really_doesnt_matter_either", environment=['nothing_really_matters'])
+    magic_mock.assert_called_once_with("this_really_doesnt_matter_either",
+                                       environment=['nothing_really_matters'])
 
     # Verify that the output from the container is returned.
     assert result == 'output string'
@@ -80,7 +79,8 @@ def test_pull_images():
 
   with mock.patch('lib.docker_helper.DockerHelper.pull_image',
                   mock.MagicMock(return_value='envoyproxy/nighthawk-benchmark-dev:latest')) \
-                      as magic_mock:
+      as magic_mock:
+
     kwargs = {'control': job_control}
     benchmark = BaseBenchmark(**kwargs)
 
