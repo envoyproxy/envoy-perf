@@ -18,6 +18,8 @@ jobs:
     steps:
       - checkout
       - run: ci/do_ci.sh test
+      - store_artifacts:
+          path: /tmp/test_logs
 
 workflows:
   version: 2
