@@ -6,30 +6,6 @@
 # in build logs
 set -e
 
-trap cleanup EXIT
-
-# Set the build target. If no parameters are specified
-# we default to "build"
-build_target=${1:-build}
-
-
-# Gather any test logs for debugging
-function cleanup() {
-  echo "Gathering logs for ${build_target}"
-
-  cd salvo
-
-  output_dir=/tmp/test_logs
-  output_path=$(bazel info output_path)
-
-  if [ -d "${output_path}" ]
-  then
-    cd ${output_path}
-    mkdir -p ${output_dir}
-    [ -d k8-fastbuild/testlogs/test ] && tar czf ${output_dir}/logs.tgz -C k8-fastbuild/testlogs test
-  fi
-}
-
 # Build the salvo framework
 function build_salvo() {
   echo "Building Salvo"
@@ -48,10 +24,11 @@ function test_salvo() {
 }
 
 
+# Set the build target. If no parameters are specified
+# we default to "build"
+build_target=${1:-build}
+
 case $build_target in
-  "test")
-    test_salvo
-    ;;
   "build")
     build_salvo
     ;;
