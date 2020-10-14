@@ -35,8 +35,8 @@ class SourceTree(object):
 
   def get_origin(self):
     """
-        Detect the origin url from where the code is fetched
-        """
+    Detect the origin url from where the code is fetched
+    """
     self.validate()
     origin_url = self._origin
 
@@ -52,17 +52,17 @@ class SourceTree(object):
 
   def get_directory(self):
     """
-        Return the full path to where the code has been checked out
-        """
+    Return the full path to where the code has been checked out
+    """
     self.validate()
 
     return self._working_dir
 
   def pull(self):
     """
-        Retrieve the code from the repository and indicate whether the operation
-        succeeded
-        """
+    Retrieve the code from the repository and indicate whether the operation
+    succeeded
+    """
     self.validate()
 
     # Clone into the working directory
@@ -79,8 +79,8 @@ class SourceTree(object):
 
   def get_head_hash(self):
     """
-        Retrieve the hash for the HEAD commit
-        """
+    Retrieve the hash for the HEAD commit
+    """
     self.validate()
 
     cmd = "git rev-list --no-merges --committer='GitHub <noreply@github.com>' --max-count=1 HEAD"
@@ -90,8 +90,8 @@ class SourceTree(object):
 
   def get_previous_commit_hash(self, current_commit):
     """
-        Return one commit hash before the identified commit
-        """
+    Return one commit hash before the identified commit
+    """
     if current_commit == 'latest':
       current_commit = self.get_head_hash()
 
@@ -114,9 +114,9 @@ class SourceTree(object):
 
   def get_revs_behind_parent_branch(self):
     """
-        Determine how many commits the current branch on disk is behind the
-        parent branch.  If we are up to date, return zero
-        """
+    Determine how many commits the current branch on disk is behind the
+    parent branch.  If we are up to date, return zero
+    """
     cmd = "git status"
     kwargs = {'cwd': self._working_dir}
     status_output = cmd_exec.run_command(cmd, **kwargs)
@@ -141,6 +141,6 @@ class SourceTree(object):
 
   def is_up_to_date(self):
     """
-        Convenience function that returns a boolean indicating whether the tree is up to date.
-        """
+    Convenience function that returns a boolean indicating whether the tree is up to date.
+    """
     return self.get_revs_behind_parent_branch() == 0

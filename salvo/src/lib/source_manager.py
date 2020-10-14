@@ -23,9 +23,9 @@ class SourceManager(object):
 
   def get_envoy_images_for_benchmark(self):
     """
-        From the envoy image specified in the control document, determine
-        the current image hash and the previous image hash.
-        """
+    From the envoy image specified in the control document, determine
+    the current image hash and the previous image hash.
+    """
     image_hashes = {}
     source_tree = None
     hash = None

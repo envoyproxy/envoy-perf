@@ -18,17 +18,17 @@ class Benchmark(object):
 
   def __init__(self, control):
     """
-        Initialize the benchmark object and instantiate the underlying
-        object actually performing the test
-        """
+    Initialize the benchmark object and instantiate the underlying
+    object actually performing the test
+    """
     self._control = control
     self._test = {}
     self._setup_test()
 
   def _setup_test(self):
     """
-        Instantiate the object performing the actual test invocation
-        """
+    Instantiate the object performing the actual test invocation
+    """
     # Get the two points that we are benchmarking.  Source Manager will ultimately
     # determine the commit hashes for the images used for benchmarks
     kwargs = {'control': self._control}
@@ -65,10 +65,10 @@ class Benchmark(object):
 
   def _create_new_job_control(self, envoy_image, image_hash, hashid):
     """
-        Copy the job control object and set the image name to the hash specified
+    Copy the job control object and set the image name to the hash specified
 
-        Create a symlink to identify the output directory for the test
-        """
+    Create a symlink to identify the output directory for the test
+    """
     new_job_control = copy.deepcopy(self._control)
     new_job_control.images.envoy_image = \
         '{base_image}:{tag}'.format(base_image=envoy_image, tag=image_hash[hashid])
@@ -84,9 +84,9 @@ class Benchmark(object):
 
   def create_job_control_for_images(self, image_hashes):
     """
-        Deep copy the original job control document and reset the envoy images
-        with the tags for the previous and current image.
-        """
+    Deep copy the original job control document and reset the envoy images
+    with the tags for the previous and current image.
+    """
     if not all([CURRENT in image_hashes, PREVIOUS in image_hashes]):
       raise Exception(f"Missing an image definition for benchmark: {image_hashes}")
 
@@ -114,9 +114,9 @@ class Benchmark(object):
 
   def validate(self):
     """
-        Determine if the configured benchmark has all needed
-        data defined and present
-        """
+    Determine if the configured benchmark has all needed
+    data defined and present
+    """
     if self._test is None:
       raise Exception("No test object was defined")
 
@@ -124,8 +124,8 @@ class Benchmark(object):
 
   def execute(self):
     """
-        Run the instantiated benchmark
-        """
+    Run the instantiated benchmark
+    """
     if self._control.remote:
       # Kick things off in parallel
       raise NotImplementedError("Remote benchmarks have not been implemented yet")

@@ -13,8 +13,8 @@ import lib.source_tree as source_tree
 
 def test_git_object():
   """
-    Verify that we throw an exception if not all required data is present
-    """
+  Verify that we throw an exception if not all required data is present
+  """
   git = source_tree.SourceTree()
 
   with pytest.raises(Exception) as pull_exception:
@@ -25,8 +25,8 @@ def test_git_object():
 
 def test_git_with_origin():
   """
-    Verify that at a minimum, we can work with a remote origin url specified
-    """
+  Verify that at a minimum, we can work with a remote origin url specified
+  """
   kwargs = {'origin': 'somewhere_in_github'}
   git = source_tree.SourceTree(**kwargs)
 
@@ -35,11 +35,11 @@ def test_git_with_origin():
 
 def test_git_with_local_workdir():
   """
-    Verify that we can work with a source location on disk
+  Verify that we can work with a source location on disk
 
-    If the directory is not a real repository, then subsequent functions are
-    expected to fail.  They will be reported accordingly.
-    """
+  If the directory is not a real repository, then subsequent functions are
+  expected to fail.  They will be reported accordingly.
+  """
   kwargs = {'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
 
@@ -48,11 +48,11 @@ def test_git_with_local_workdir():
 
 def test_get_origin_ssh():
   """
-    Verify that we can determine the origin for a local repository.  We will
-    use this to clone the repository when running in a remote context
+  Verify that we can determine the origin for a local repository.  We will
+  use this to clone the repository when running in a remote context
 
-    In this instance the repo was cloned via ssh
-    """
+  In this instance the repo was cloned via ssh
+  """
   remote_string = 'origin  git@github.com:username/reponame.git (fetch)'
   gitcmd = "git remote -v | grep ^origin | grep fetch"
   kwargs = {'workdir': '/tmp', 'name': "required_directory_name"}
@@ -69,11 +69,11 @@ def test_get_origin_ssh():
 
 def test_get_origin_https():
   """
-    Verify that we can determine the origin for a local repository.  We will
-    use this to clone the repository when running in a remote context
+  Verify that we can determine the origin for a local repository.  We will
+  use this to clone the repository when running in a remote context
 
-    In this instance the repo was cloned via https
-    """
+  In this instance the repo was cloned via https
+  """
   remote_string = 'origin	https://github.com/aws/aws-app-mesh-examples.git (fetch)'
   gitcmd = "git remote -v | grep ^origin | grep fetch"
 
@@ -91,9 +91,9 @@ def test_get_origin_https():
 
 def test_git_pull():
   """
-    Verify that we can clone a repository and ensure that the process completed
-    without errors
-    """
+  Verify that we can clone a repository and ensure that the process completed
+  without errors
+  """
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
@@ -112,8 +112,8 @@ def test_git_pull():
 
 def test_git_pull_failure():
   """
-    Verify that we can clone a repository and detect an incomplete operation
-    """
+  Verify that we can clone a repository and detect an incomplete operation
+  """
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
@@ -132,8 +132,8 @@ def test_git_pull_failure():
 
 def test_retrieve_head_hash():
   """
-    Verify that we can determine the hash for the head commit
-    """
+  Verify that we can determine the hash for the head commit
+  """
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
@@ -150,8 +150,8 @@ def test_retrieve_head_hash():
 
 def test_get_previous_commit():
   """
-    Verify that we can identify one commit prior to a specified hash.
-    """
+  Verify that we can identify one commit prior to a specified hash.
+  """
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
@@ -172,8 +172,8 @@ def test_get_previous_commit():
 
 def test_get_previous_commit_fail():
   """
-    Verify that we can identify a failure when attempting to manage commit hashes
-    """
+  Verify that we can identify a failure when attempting to manage commit hashes
+  """
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
   git = source_tree.SourceTree(**kwargs)
@@ -195,9 +195,9 @@ Use '--' to separate paths from revisions, like this:
 
 def test_parent_branch_ahead():
   """
-    Verify that we can determine how many commits beind the local source tree
-    lags behind the remote repository
-    """
+  Verify that we can determine how many commits beind the local source tree
+  lags behind the remote repository
+  """
 
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
@@ -219,9 +219,9 @@ nothing to commit, working tree clean
 
 def test_parent_branch_up_to_date():
   """
-    Verify that we can determine how many commits beind the local source tree
-    lags behind the remote repository
-    """
+  Verify that we can determine how many commits beind the local source tree
+  lags behind the remote repository
+  """
 
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}
@@ -244,9 +244,9 @@ Changes not staged for commit:
 
 def test_branch_up_to_date():
   """
-    Verify that we can determine how many commits beind the local source tree
-    lags behind the remote repository
-    """
+  Verify that we can determine how many commits beind the local source tree
+  lags behind the remote repository
+  """
 
   origin = 'https://github.com/someawesomeproject/repo.git'
   kwargs = {'origin': origin, 'workdir': '/tmp'}

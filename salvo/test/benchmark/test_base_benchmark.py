@@ -16,8 +16,8 @@ from lib.benchmark.base_benchmark import BaseBenchmark
 
 def test_is_remote():
   """
-    Verify that the local vs remote config is read correctly
-    """
+  Verify that the local vs remote config is read correctly
+  """
 
   # Local Invocation
   job_control = JobControl()
@@ -45,8 +45,8 @@ def test_is_remote():
 
 def test_run_image():
   """
-    Verify that we are calling the docker helper with expected arguments
-    """
+  Verify that we are calling the docker helper with expected arguments
+  """
 
   # Create a minimal JobControl object to instantiate the Benchmark class
   job_control = JobControl()
@@ -70,9 +70,9 @@ def test_run_image():
 
 def test_pull_images():
   """
-    Verify that when we pull images get a list of images names  back
-    If the images fail to be retrieved, we should get an empty list
-    """
+  Verify that when we pull images get a list of images names  back
+  If the images fail to be retrieved, we should get an empty list
+  """
   job_control = JobControl()
   job_control.images.reuse_nh_images = True
   job_control.images.nighthawk_benchmark_image = "envoyproxy/nighthawk-benchmark-dev:latest"
@@ -94,8 +94,8 @@ def test_pull_images():
 
 def test_get_docker_volumes():
   """
-    Test and validate the volume structure used when starting a container
-    """
+  Test and validate the volume structure used when starting a container
+  """
   volumes = BaseBenchmark.get_docker_volumes('/tmp/my-output-dir', '/tmp/my-test-dir')
   assert volumes is not None
   assert volumes != {}

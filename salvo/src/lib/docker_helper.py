@@ -19,11 +19,11 @@ log = logging.getLogger(__name__)
 
 class DockerHelper():
   """
-    This class is a wrapper to encapsulate docker operations
+  This class is a wrapper to encapsulate docker operations
 
-    It uses an available docker python module which handles the
-    heavy lifting for manipulating images.
-    """
+  It uses an available docker python module which handles the
+  heavy lifting for manipulating images.
+  """
 
   def __init__(self):
     self._client = docker.from_env()
@@ -37,21 +37,22 @@ class DockerHelper():
     return self._client.images.list()
 
   def run_image(self, image_name, **kwargs):
-    """Execute the identified docker image
+    """
+    Execute the identified docker image
 
-        The user must specify the command to run and any environment
-        variables required
-        """
+    The user must specify the command to run and any environment
+    variables required
+    """
     return self._client.containers.run(image_name, stdout=True, stderr=True, detach=False, **kwargs)
 
   @staticmethod
   def generate_volume_config(output_dir, test_dir=None):
     """
-        Generates the volumes config necessary for a container to run.
-        The docker path is hardcoded at the moment.  The output directory
-        is mounted read-write and the test directory if specified is mounted
-        read-only
-        """
+    Generates the volumes config necessary for a container to run.
+    The docker path is hardcoded at the moment.  The output directory
+    is mounted read-write and the test directory if specified is mounted
+    read-only
+    """
     volume_cfg = Volume()
 
     # Setup the docker socket

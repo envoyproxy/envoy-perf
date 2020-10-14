@@ -15,10 +15,10 @@ logging.basicConfig(level=logging.DEBUG)
 
 def test_get_envoy_images_for_benchmark():
   """
-    Verify that we can determine the current and previous image
-    tags from a minimal job control object.  This test actually invokes
-    git and creates artifacts on disk.
-    """
+  Verify that we can determine the current and previous image
+  tags from a minimal job control object.  This test actually invokes
+  git and creates artifacts on disk.
+  """
 
   job_control = JobControl()
   job_control.remote = False
