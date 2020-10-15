@@ -28,7 +28,7 @@ class SourceManager(object):
     """
     image_hashes = {}
     source_tree = None
-    hash = None
+    commit_hash = None
 
     # Determine if we have an image or a source location
     images = self._control.images
@@ -36,7 +36,7 @@ class SourceManager(object):
       envoy_image = images.envoy_image
       tag = envoy_image.split(':')[-1]
       log.debug(f"Found tag {tag} in image {envoy_image}")
-      hash = tag
+      commit_hash = tag
 
       name = 'envoy'
       kwargs = {'origin': SOURCE_REPOSITORY[name], 'name': name}
@@ -58,9 +58,9 @@ class SourceManager(object):
     #     hash = source_tree.get_head_hash()
 
     # Get the previous hash to the tag
-    previous_hash = source_tree.get_previous_commit_hash(hash)
+    previous_hash = source_tree.get_previous_commit_hash(commit_hash)
     if previous_hash is not None:
-      image_hashes = {CURRENT: hash, PREVIOUS: previous_hash}
+      image_hashes = {CURRENT: commit_hash, PREVIOUS: previous_hash}
 
     log.debug(f"Found hashes: {image_hashes}")
     return image_hashes

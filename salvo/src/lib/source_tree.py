@@ -7,6 +7,8 @@ import lib.cmd_exec as cmd_exec
 
 log = logging.getLogger(__name__)
 
+TAG_REGEX = r'^v\d\.\d+\.\d+'
+
 
 class SourceTree(object):
 
@@ -35,8 +37,8 @@ class SourceTree(object):
 
   def get_origin(self):
     """
-    Detect the origin url from where the code is fetched
-    """
+        Detect the origin url from where the code is fetched
+        """
     self.validate()
     origin_url = self._origin
 
@@ -52,17 +54,17 @@ class SourceTree(object):
 
   def get_directory(self):
     """
-    Return the full path to where the code has been checked out
-    """
+        Return the full path to where the code has been checked out
+        """
     self.validate()
 
     return self._working_dir
 
   def pull(self):
     """
-    Retrieve the code from the repository and indicate whether the operation
-    succeeded
-    """
+        Retrieve the code from the repository and indicate whether the operation
+        succeeded
+        """
     self.validate()
 
     # Clone into the working directory
@@ -79,8 +81,8 @@ class SourceTree(object):
 
   def get_head_hash(self):
     """
-    Retrieve the hash for the HEAD commit
-    """
+        Retrieve the hash for the HEAD commit
+        """
     self.validate()
 
     cmd = "git rev-list --no-merges --committer='GitHub <noreply@github.com>' --max-count=1 HEAD"
@@ -88,15 +90,20 @@ class SourceTree(object):
     kwargs = {'cwd': self._working_dir}
     return cmd_exec.run_command(cmd, **kwargs)
 
-  def get_previous_commit_hash(self, current_commit):
+  def get_previous_commit_hash(self, current_commit, revisions=2):
     """
     Return one commit hash before the identified commit
     """
+
+    if self.is_tag(current_commit):
+      log.info(f"Current commit \"{current_commit}\" is a tag.  Finding previous tag")
+      return self.get_previous_tag(current_commit)
+
     if current_commit == 'latest':
       current_commit = self.get_head_hash()
 
-    cmd = "git rev-list --no-merges --committer='GitHub <noreply@github.com>'  --max-count=2 {commit}".format(
-        commit=current_commit)
+    cmd = "git rev-list --no-merges --committer='GitHub <noreply@github.com>'  --max-count={revisions} {commit}".format(
+        revisions=revisions, commit=current_commit)
     kwargs = {'cwd': self._working_dir}
     hash_list = cmd_exec.run_command(cmd, **kwargs)
 
@@ -141,6 +148,49 @@ class SourceTree(object):
 
   def is_up_to_date(self):
     """
-    Convenience function that returns a boolean indicating whether the tree is up to date.
-    """
+        Convenience function that returns a boolean indicating whether the tree is up to date.
+        """
     return self.get_revs_behind_parent_branch() == 0
+
+  def list_tags(self):
+    """
+    List the repository tags and return a list
+    """
+    cmd = "git tag --list --sort v:refname"
+    kwargs = {'cwd': self._working_dir}
+    tag_output = cmd_exec.run_command(cmd, **kwargs)
+
+    tag_list = [tag.strip() for tag in tag_output.split('\n') if tag]
+    log.debug(f"Repository tags {tag_list}")
+
+    return tag_list
+
+  @staticmethod
+  def is_tag(image_tag):
+    """
+    Return true if the image tag conforms to a git commit tag and is not a commit hash
+    """
+    match = re.match(TAG_REGEX, image_tag)
+    return match is not None
+
+  def get_previous_tag(self, current_tag, revisions=1):
+    """
+    Find the current tag among the ones retrieed from the repository and return the
+    previous tag
+    """
+    tag_list = self.list_tags()[::-1]
+
+    count_previous_revisions = False
+    for tag in tag_list:
+      if count_previous_revisions:
+        log.debug(f"Walking {revisions} back from {current_tag}")
+        revisions -= 1
+
+      if revisions == 0:
+        return tag
+
+      if tag == current_tag:
+        log.debug(f"Found {tag} in revision list")
+        count_previous_revisions = True
+
+    return None
