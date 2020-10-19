@@ -3,6 +3,7 @@
 Test Docker interactions
 """
 
+import os
 import re
 import site
 import pytest
@@ -14,6 +15,10 @@ from lib.docker_helper import DockerHelper
 
 def test_pull_image():
   """Test retrieving an image"""
+
+  if not os.path.exists("/var/run/docker.sock"):
+      pytest.skip("Skipping docker test since no socket is available")
+
   helper = DockerHelper()
   container = helper.pull_image("oschaaf/benchmark-dev:latest")
   assert container is not None
@@ -21,6 +26,10 @@ def test_pull_image():
 
 def test_run_image():
   """Test executing a command in an image"""
+
+  if not os.path.exists("/var/run/docker.sock"):
+      pytest.skip("Skipping docker test since no socket is available")
+
   env = ['key1=val1', 'key2=val2']
   cmd = ['uname', '-r']
   image_name = 'oschaaf/benchmark-dev:latest'
@@ -37,6 +46,10 @@ def test_run_image():
 
 def test_list_images():
   """Test listing available images"""
+
+  if not os.path.exists("/var/run/docker.sock"):
+      pytest.skip("Skipping docker test since no socket is available")
+
   helper = DockerHelper()
   images = helper.list_images()
   assert images != []
