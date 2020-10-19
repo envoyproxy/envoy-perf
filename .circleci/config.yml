@@ -1,6 +1,6 @@
 references:
   envoy-build-image: &envoy-build-image
-    envoyproxy/envoy-build:latest
+    envoyproxy/envoy-build-ubuntu
 
 version: 2
 jobs:

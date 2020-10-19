@@ -19,6 +19,7 @@ function build_salvo() {
 function test_salvo() {
   echo "Running Salvo unit tests"
   pushd salvo
+  ./install_deps.sh
   bazel test //test:*
   popd
 }
@@ -31,6 +32,9 @@ build_target=${1:-build}
 case $build_target in
   "build")
     build_salvo
+    ;;
+  "test")
+    test_salvo
     ;;
   *)
     ;;
