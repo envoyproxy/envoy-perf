@@ -54,15 +54,7 @@ def main():
 
   log.debug("Job definition:\n%s\n%s\n%s\n", '=' * 20, job_control, '=' * 20)
 
-  benchmark = Benchmark(job_control)
-  try:
-    benchmark.validate()
-  # TODO: Create a different class for these exceptions
-  except Exception as validation_exception:
-    log.error("Unable to validate data needed for benchmark run: %s", validation_exception)
-    return 1
-
-  benchmark.execute()
+  # Execute the benchmark given the contents of the job control file
 
   return 0
 

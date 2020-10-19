@@ -68,6 +68,8 @@ bazel-bin/salvo --job ~/test_data/demo_jobcontrol.yaml
 
 ## Dependencies
 
+The `install_deps.sh` script will install any dependencies needed to run salvo. 
+
 * python 3.6+
 * git
 * docker
