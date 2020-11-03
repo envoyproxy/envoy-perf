@@ -1,3 +1,8 @@
+# This script contains functions to create a virtual environment
+# with the dependencies necessary to execute style and formatting
+# checks.  This is sourced from format_python_tools.sh
+
+# Active the environment if it exists, create it if it does not
 source_venv() {
   VENV_DIR=$1
   if [[ "${VIRTUAL_ENV}" == "" ]]; then
@@ -10,6 +15,7 @@ source_venv() {
   fi
 }
 
+# Install python dependencies into the virtual environment
 python_venv() {
   SCRIPT_DIR=$(realpath "$(dirname "$0")")
 

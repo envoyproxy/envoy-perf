@@ -15,7 +15,6 @@ function build_salvo() {
 }
  
 # Test the salvo framework
-# TODO(abaptiste) Tests currently fail in CI, but pass locally. 
 function test_salvo() {
   echo "Running Salvo unit tests"
   pushd salvo

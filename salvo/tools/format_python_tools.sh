@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# This script runs the style and formatting checks
+
 set -e
 
 VENV_DIR="pyformat"
