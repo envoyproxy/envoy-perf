@@ -12,7 +12,7 @@ from google.protobuf.json_format import (MessageToJson)
 
 site.addsitedir("src")
 
-from lib.message_helper import load_control_doc
+from lib.job_control_loader import load_control_doc
 from lib.api.control_pb2 import JobControl
 from lib.api.docker_volume_pb2 import (Volume, VolumeProperties)
 

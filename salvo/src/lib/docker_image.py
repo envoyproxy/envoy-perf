@@ -17,7 +17,7 @@ from lib.api.docker_volume_pb2 import Volume, VolumeProperties
 log = logging.getLogger(__name__)
 
 
-class DockerHelper():
+class DockerImage():
   """
   This class is a wrapper to encapsulate docker operations
 
