@@ -3,14 +3,6 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 licenses(["notice"])  # Apache 2
 
 py_library(
-    name = "api",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//src/lib/api:schema_proto",
-    ],
-)
-
-py_library(
     name = "docker_lib",
     data = [
         "docker_image.py",

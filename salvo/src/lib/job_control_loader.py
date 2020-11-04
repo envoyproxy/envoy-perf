@@ -6,7 +6,7 @@ import re
 import logging
 import yaml
 
-from lib.api.control_pb2 import JobControl
+from api.control_pb2 import JobControl
 from google.protobuf.json_format import (Error, Parse)
 
 log = logging.getLogger(__name__)

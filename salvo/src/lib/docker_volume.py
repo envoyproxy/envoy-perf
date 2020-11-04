@@ -11,7 +11,7 @@ import docker
 
 from google.protobuf.json_format import (Error, MessageToJson)
 
-from lib.api.docker_volume_pb2 import Volume, VolumeProperties
+from api.docker_volume_pb2 import Volume, VolumeProperties
 
 log = logging.getLogger(__name__)
 

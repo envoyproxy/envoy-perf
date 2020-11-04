@@ -12,9 +12,9 @@ from google.protobuf.json_format import (MessageToJson)
 
 site.addsitedir("src")
 
-from lib.job_control_loader import load_control_doc
-from lib.api.control_pb2 import JobControl
-from lib.api.docker_volume_pb2 import (Volume, VolumeProperties)
+from job_control_loader import load_control_doc
+from api.control_pb2 import JobControl
+from api.docker_volume_pb2 import (Volume, VolumeProperties)
 
 
 def _write_object_to_disk(pb_obj, path):
