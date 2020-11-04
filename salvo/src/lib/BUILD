@@ -32,7 +32,7 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":docker_lib",
-        "//:api",
+        "//api:schema_proto",
     ],
 )
 
@@ -42,6 +42,6 @@ py_test(
     srcs_version = "PY3",
     deps = [
         ":job_control_lib",
-        "//:api",
+        "//api:schema_proto",
     ],
 )
