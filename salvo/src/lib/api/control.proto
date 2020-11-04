@@ -6,9 +6,8 @@ import "src/lib/api/image.proto";
 import "src/lib/api/source.proto";
 import "src/lib/api/env.proto";
 
-
 // This message type defines the schema for the consumed data file
-// controlling the benchmark being executed.  In it a user will
+// controlling the benchmark being executed. In it a user will
 // define whether the benchmark uses images only, builds images
 // from source, and whether the benchark executes locally or remotely.
 message JobControl {
@@ -31,4 +30,3 @@ message JobControl {
   // Define the environment variables needed for the test
   EnvironmentVars environment = 8;
 }
-

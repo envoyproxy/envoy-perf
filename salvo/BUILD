@@ -1,13 +1,15 @@
-licenses(["notice"])
+load("@rules_python//python:defs.bzl", "py_binary", "py_library")
+
+licenses(["notice"])  # Apache 2
 
 py_binary(
-  name = "salvo",
-  srcs = [ "salvo.py" ],
-  srcs_version = "PY3",
-  deps = [
-    ":api",
-    ":lib",
-  ],
+    name = "salvo",
+    srcs = ["salvo.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":api",
+        ":lib",
+    ],
 )
 
 py_library(
@@ -25,4 +27,3 @@ py_library(
         "//src/lib:helper_library",
     ],
 )
-

@@ -2,22 +2,20 @@ syntax = "proto3";
 
 package salvo;
 
-// This message defines the properties for a given mount.  It is used
+// This message defines the properties for a given mount. It is used
 // to generate the dictionary specifying volumes for the Python Docker
 // SDK
 message VolumeProperties {
   // Defines a list of properties governing the mount in the container
   string bind = 1;
-  
+
   // Define whether the mount point is read-write or read-only
   string mode = 2;
 }
 
 // This message defines the volume structure consumed by the command
-// to run a docker image. 
+// to run a docker image.
 message Volume {
   // Specify a map of volumes and their mount points for use in a container
   map<string, VolumeProperties> volumes = 1;
 }
-
-

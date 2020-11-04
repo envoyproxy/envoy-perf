@@ -5,7 +5,7 @@ package salvo;
 // Capture all docker images required for the benchmark. This object is examined
 // first before evaluating the state of specified source locations
 message DockerImages {
-  // Determines whether required docker are used if they already exist.  The
+  // Determines whether required docker are used if they already exist. The
   // benchmark image and binary image must be specified. If this is set to false
   // there must be a specified source location from which we build the image
 
@@ -23,4 +23,3 @@ message DockerImages {
   // Specifies the envoy image from which Envoy is injected
   string envoy_image = 4;
 }
-

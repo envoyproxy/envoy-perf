@@ -16,4 +16,3 @@ local_repository(
     name = "salvo_build_config",
     path = ".",
 )
-
