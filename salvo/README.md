@@ -62,8 +62,10 @@ bazel-bin/salvo --job ~/test_data/demo_jobcontrol.yaml
 
 ## Testing Salvo
 
+
+From the root package directory, run the do_ci.sh script with the "test" argument.  Since this installs packages packages, it will need to be run as root.
 ```bash
- bazel test //test:*
+./ci/do_ci.sh test
 ```
 
 ## Dependencies

@@ -4,18 +4,19 @@ package salvo;
 
 // This message defines the properties for a given mount. It is used
 // to generate the dictionary specifying volumes for the Python Docker
-// SDK
+// SDK.  This message is not constructed by the user
 message VolumeProperties {
-  // Defines a list of properties governing the mount in the container
+  // Specified the destination mount path in the benchmark container
   string bind = 1;
 
   // Define whether the mount point is read-write or read-only
+  // eg: 'rw' or 'ro'
   string mode = 2;
 }
 
 // This message defines the volume structure consumed by the command
 // to run a docker image.
 message Volume {
-  // Specify a map of volumes and their mount points for use in a container
+  // Specify a map of local paths and their mount points in the container
   map<string, VolumeProperties> volumes = 1;
 }

@@ -65,17 +65,17 @@ def _validate_job_control_object(job_control):
   saw_nighthawk = False
   for source in job_control.source:
     if source.nighthawk:
-      assert source.location == "/home/ubuntu/nighthawk"
-      assert source.url == "https://github.com/envoyproxy/nighthawk.git"
+      assert not source.source_path
+      assert source.source_url == "https://github.com/envoyproxy/nighthawk.git"
       assert source.branch == "master"
-      assert source.hash is None or source.hash == ""
+      assert not source.commit_hash
       saw_nighthawk = True
 
     elif source.envoy:
-      assert source.location == "/home/ubuntu/envoy"
-      assert source.url == "https://github.com/envoyproxy/envoy.git"
+      assert source.source_path == "/home/ubuntu/envoy"
+      assert not source.source_url
       assert source.branch == "master"
-      assert source.hash == "e744a103756e9242342662442ddb308382e26c8b"
+      assert source.commit_hash == "e744a103756e9242342662442ddb308382e26c8b"
       saw_envoy = True
 
   assert saw_envoy
@@ -115,14 +115,12 @@ def test_control_doc_parse_yaml():
       scavengingBenchmark: true
       source:
         - nighthawk: true
-          location: "/home/ubuntu/nighthawk"
-          url: "https://github.com/envoyproxy/nighthawk.git"
+          source_url: "https://github.com/envoyproxy/nighthawk.git"
           branch: "master"
         - envoy: true
-          location: "/home/ubuntu/envoy"
-          url: "https://github.com/envoyproxy/envoy.git"
+          source_path: "/home/ubuntu/envoy"
           branch: "master"
-          hash: "e744a103756e9242342662442ddb308382e26c8b"
+          commit_hash: "e744a103756e9242342662442ddb308382e26c8b"
       images:
         reuseNhImages: true
         nighthawkBenchmarkImage: "envoyproxy/nighthawk-benchmark-dev:latest"
@@ -161,16 +159,14 @@ def test_control_doc_parse():
       "source": [
         {
           "nighthawk": true,
-          "location": "/home/ubuntu/nighthawk",
-          "url": "https://github.com/envoyproxy/nighthawk.git",
+          "source_url": "https://github.com/envoyproxy/nighthawk.git",
           "branch": "master"
         },
         {
           "envoy": true,
-          "location": "/home/ubuntu/envoy",
-          "url": "https://github.com/envoyproxy/envoy.git",
+          "source_path": "/home/ubuntu/envoy",
           "branch": "master",
-          "hash": "e744a103756e9242342662442ddb308382e26c8b"
+          "commit_hash": "e744a103756e9242342662442ddb308382e26c8b"
         }
       ],
       "images": {
@@ -213,16 +209,14 @@ def test_generate_control_doc():
 
   nighthawk_source = job_control.source.add()
   nighthawk_source.nighthawk = True
-  nighthawk_source.location = "/home/ubuntu/nighthawk"
-  nighthawk_source.url = "https://github.com/envoyproxy/nighthawk.git"
+  nighthawk_source.source_url = "https://github.com/envoyproxy/nighthawk.git"
   nighthawk_source.branch = "master"
 
   envoy_source = job_control.source.add()
   envoy_source.envoy = True
-  envoy_source.location = "/home/ubuntu/envoy"
-  envoy_source.url = "https://github.com/envoyproxy/envoy.git"
+  envoy_source.source_path = "/home/ubuntu/envoy"
   envoy_source.branch = "master"
-  envoy_source.hash = "e744a103756e9242342662442ddb308382e26c8b"
+  envoy_source.commit_hash = "e744a103756e9242342662442ddb308382e26c8b"
 
   job_control.images.reuse_nh_images = True
   job_control.images.nighthawk_benchmark_image = "envoyproxy/nighthawk-benchmark-dev:latest"

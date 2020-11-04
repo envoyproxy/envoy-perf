@@ -10,14 +10,17 @@ message SourceRepository {
     bool nighthawk = 2;
   }
 
-  // Specify the location of the source repository on disk. If specified
-  // this location is used to determine the origin url, branch, and commit
-  // hash. If not specified, the remaining fields must be populated
-  string location = 3;
+  oneof source_location {
+    // Specify the location of the source repository on disk. If specified
+    // this location is used to determine the origin url, branch, and commit
+    // hash. If not specified, the remaining fields must be populated
+    // eg: "/home/user/code/envoy"
+    string source_path = 3;
 
-  // Specify the remote location of the repository. This is ignored if
-  // the source location is specified.
-  string url = 4;
+    // Specify the remote location of the repository.
+    // eg: "https://github.com/envoyproxy/envoy.git"
+    string source_url = 4;
+  }
 
   // Specify the local working branch.This is ignored if the source
   // location is specified.
@@ -27,7 +30,7 @@ message SourceRepository {
   // determine this from the source tree. We will also use this field
   // to identify the corresponding NightHawk or Envoy image used for
   // the benchmark
-  string hash = 6;
+  string commit_hash = 6;
 
   // Internal use only. This field is used to specify the location of
   // the patch generated from changes in the local environment
