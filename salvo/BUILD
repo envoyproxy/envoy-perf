@@ -24,6 +24,6 @@ py_library(
     name = "lib",
     visibility = ["//visibility:public"],
     deps = [
-        "//src/lib:helper_library",
+        "//src/lib:job_control_lib",
     ],
 )
