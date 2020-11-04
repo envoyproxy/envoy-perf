@@ -14,7 +14,7 @@ if os.path.islink(sys.argv[0]):
 
 site.addsitedir("src")
 
-from lib.message_helper import load_control_doc
+from lib.job_control_loader import load_control_doc
 from lib.run_benchmark import Benchmark
 
 LOGFORMAT = "%(asctime)s: %(process)d [ %(levelname)-5s] [%(module)-5s] %(message)s"

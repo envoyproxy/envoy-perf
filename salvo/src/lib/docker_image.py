@@ -8,7 +8,7 @@ import logging
 
 # Ref: https://docker-py.readthedocs.io/en/stable/index.html
 import docker
-from  lib.docker_volume import DockerVolume
+from lib.docker_volume import DockerVolume
 
 from google.protobuf.json_format import (Error, MessageToJson)
 

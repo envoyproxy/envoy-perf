@@ -17,7 +17,7 @@ def test_pull_image():
   """Test retrieving an image"""
 
   if not os.path.exists("/var/run/docker.sock"):
-      pytest.skip("Skipping docker test since no socket is available")
+    pytest.skip("Skipping docker test since no socket is available")
 
   docker_image = DockerImage()
   container = docker_image.pull_image("oschaaf/benchmark-dev:latest")
@@ -28,7 +28,7 @@ def test_run_image():
   """Test executing a command in an image"""
 
   if not os.path.exists("/var/run/docker.sock"):
-      pytest.skip("Skipping docker test since no socket is available")
+    pytest.skip("Skipping docker test since no socket is available")
 
   env = ['key1=val1', 'key2=val2']
   cmd = ['uname', '-r']
@@ -48,7 +48,7 @@ def test_list_images():
   """Test listing available images"""
 
   if not os.path.exists("/var/run/docker.sock"):
-      pytest.skip("Skipping docker test since no socket is available")
+    pytest.skip("Skipping docker test since no socket is available")
 
   docker_image = DockerImage()
   images = docker_image.list_images()
