@@ -4,9 +4,12 @@ licenses(["notice"])  # Apache 2
 
 py_proto_library(
     name = "schema_proto",
-    srcs = glob(
-        ["*.proto"],
-        allow_empty = False,
-    ),
+    srcs = [
+        "control.proto",
+        "docker_volume.proto",
+        "env.proto",
+        "image.proto",
+        "source.proto",
+    ],
     visibility = ["//visibility:public"],
 )
