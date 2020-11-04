@@ -31,8 +31,4 @@ message SourceRepository {
   // to identify the corresponding NightHawk or Envoy image used for
   // the benchmark
   string commit_hash = 6;
-
-  // Internal use only. This field is used to specify the location of
-  // the patch generated from changes in the local environment
-  string patch = 7;
 }
