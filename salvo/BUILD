@@ -12,7 +12,6 @@ py_library(
 
 py_library(
     name = "lib",
-    visibility = ["//visibility:public"],
     deps = [
         "//src/lib:job_control_lib",
     ],
