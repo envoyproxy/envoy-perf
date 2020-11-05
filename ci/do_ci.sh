@@ -20,9 +20,7 @@ function test_salvo() {
   pushd salvo
   ./install_deps.sh
 
-  # TODO(abaptiste): Discover tests vs listing them individually 
-  bazel test //src/lib:test_docker_image
-  bazel test //src/lib:test_job_control_loader
+  bazel test //src/lib/...
 
   popd
 }
