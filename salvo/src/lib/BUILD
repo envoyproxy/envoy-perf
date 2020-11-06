@@ -3,9 +3,15 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 licenses(["notice"])  # Apache 2
 
 py_library(
-    name = "docker",
+    name = "docker_image",
     data = [
         "docker_image.py",
+    ],
+)
+
+py_library(
+    name = "docker_volume",
+    data = [
         "docker_volume.py",
     ],
 )
@@ -23,7 +29,6 @@ py_library(
     data = [
         "cmd_exec.py",
     ],
-    visibility = ["//visibility:public"],
 )
 
 py_test(
@@ -31,7 +36,8 @@ py_test(
     srcs = ["test_docker_image.py"],
     srcs_version = "PY3",
     deps = [
-        ":docker",
+        ":docker_image",
+        ":docker_volume",
         "//api:schema_proto",
     ],
 )
