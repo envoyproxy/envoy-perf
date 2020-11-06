@@ -6,12 +6,17 @@ package salvo;
 // to generate the dictionary specifying volumes for the Python Docker
 // SDK.  This message is not constructed by the user
 message VolumeProperties {
+  // Define whether the mount point is read-write or read-only
+  enum Mode {
+    RO = 0;
+    RW = 1;
+  }
+
   // Specified the destination mount path in the benchmark container
   string bind = 1;
 
-  // Define whether the mount point is read-write or read-only
-  // eg: 'rw' or 'ro'
-  string mode = 2;
+  // Specify whether the volume is read-write or read-only
+  Mode mode = 2;
 }
 
 // This message defines the volume structure consumed by the command

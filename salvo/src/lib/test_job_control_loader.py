@@ -14,6 +14,7 @@ site.addsitedir("src")
 
 from job_control_loader import load_control_doc
 from api.control_pb2 import JobControl
+from api.source_pb2 import SourceRepository
 from api.docker_volume_pb2 import (Volume, VolumeProperties)
 
 
@@ -64,14 +65,14 @@ def _validate_job_control_object(job_control):
   saw_envoy = False
   saw_nighthawk = False
   for source in job_control.source:
-    if source.nighthawk:
+    if source.identity == SourceRepository.SourceIdentity.NIGHTHAWK:
       assert not source.source_path
       assert source.source_url == "https://github.com/envoyproxy/nighthawk.git"
       assert source.branch == "master"
       assert not source.commit_hash
       saw_nighthawk = True
 
-    elif source.envoy:
+    elif source.identity == SourceRepository.SourceIdentity.ENVOY:
       assert source.source_path == "/home/ubuntu/envoy"
       assert not source.source_url
       assert source.branch == "master"
@@ -93,9 +94,7 @@ def _validate_job_control_object(job_control):
 
   # Verify environment
   assert job_control.environment is not None
-  assert job_control.environment.v4only
-  assert not job_control.environment.v6only
-  assert not job_control.environment.all
+  assert job_control.environment.test_version == job_control.environment.V4ONLY
   assert job_control.environment.variables is not None
   assert 'TMP_DIR' in job_control.environment.variables
   assert job_control.environment.output_dir is not None
@@ -114,10 +113,10 @@ def test_control_doc_parse_yaml():
       remote: true
       scavengingBenchmark: true
       source:
-        - nighthawk: true
+        - identity: NIGHTHAWK
           source_url: "https://github.com/envoyproxy/nighthawk.git"
           branch: "master"
-        - envoy: true
+        - identity: ENVOY
           source_path: "/home/ubuntu/envoy"
           branch: "master"
           commit_hash: "random_commit_hash_string"
@@ -127,7 +126,7 @@ def test_control_doc_parse_yaml():
         nighthawkBinaryImage: "envoyproxy/nighthawk-dev:latest"
         envoyImage: "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
       environment:
-        v4only: true
+        testVersion: V4ONLY
         envoyPath: "envoy"
         outputDir: "/home/ubuntu/nighthawk_output"
         testDir: "/home/ubuntu/nighthawk_tests"
@@ -158,12 +157,12 @@ def test_control_doc_parse():
       "scavengingBenchmark": true,
       "source": [
         {
-          "nighthawk": true,
+          "identity": NIGHTHAWK,
           "source_url": "https://github.com/envoyproxy/nighthawk.git",
           "branch": "master"
         },
         {
-          "envoy": true,
+          "identity": ENVOY,
           "source_path": "/home/ubuntu/envoy",
           "branch": "master",
           "commit_hash": "random_commit_hash_string"
@@ -176,7 +175,7 @@ def test_control_doc_parse():
         "envoyImage": "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
       },
       "environment": {
-        "v4only": true,
+        testVersion: V4ONLY,
         "envoyPath": "envoy",
         "outputDir": "/home/ubuntu/nighthawk_output",
         "testDir": "/home/ubuntu/nighthawk_tests",
@@ -208,12 +207,12 @@ def test_generate_control_doc():
   job_control.scavenging_benchmark = True
 
   nighthawk_source = job_control.source.add()
-  nighthawk_source.nighthawk = True
+  nighthawk_source.identity == SourceRepository.SourceIdentity.NIGHTHAWK
   nighthawk_source.source_url = "https://github.com/envoyproxy/nighthawk.git"
   nighthawk_source.branch = "master"
 
   envoy_source = job_control.source.add()
-  envoy_source.envoy = True
+  envoy_source.identity = SourceRepository.SourceIdentity.ENVOY
   envoy_source.source_path = "/home/ubuntu/envoy"
   envoy_source.branch = "master"
   envoy_source.commit_hash = "random_commit_hash_string"
@@ -224,7 +223,7 @@ def test_generate_control_doc():
   job_control.images.envoy_image = "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
 
   job_control.environment.variables["TMP_DIR"] = "/home/ubuntu/nighthawk_output"
-  job_control.environment.v4only = True
+  job_control.environment.test_version = job_control.environment.V4ONLY
   job_control.environment.envoy_path = "envoy"
   job_control.environment.output_dir = '/home/ubuntu/nighthawk_output'
   job_control.environment.test_dir = '/home/ubuntu/nighthawk_tests'
@@ -233,7 +232,7 @@ def test_generate_control_doc():
   _serialize_and_read_object(job_control)
 
 
-def test_docker_volume_generation():
+def _test_docker_volume_generation():
   """
     Verify construction of the volume mount map that we provide to a docker container
     """
@@ -241,17 +240,17 @@ def test_docker_volume_generation():
 
   props = VolumeProperties()
   props.bind = '/var/run/docker.sock'
-  props.mode = 'rw'
+  props.mode = VolumeProperties.RW
   volume_cfg.volumes['/var/run/docker.sock'].CopyFrom(props)
 
   props = VolumeProperties()
   props.bind = '/home/ubuntu/nighthawk_output'
-  props.mode = 'rw'
+  props.mode = VolumeProperties.RW
   volume_cfg.volumes['/home/ubuntu/nighthawk_output'].CopyFrom(props)
 
   props = VolumeProperties()
   props.bind = '/usr/local/bin/benchmarks/benchmarks.runfiles/nighthawk/benchmarks/external_tests/'
-  props.mode = 'ro'
+  props.mode = VolumeProperites.RW
   volume_cfg.volumes['/home/ubuntu/nighthawk_tests'].CopyFrom(props)
 
   # Verify that we the serialized data is json consumable
