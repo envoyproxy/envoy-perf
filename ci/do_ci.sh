@@ -10,7 +10,7 @@ set -e
 function build_salvo() {
   echo "Building Salvo"
   pushd salvo
-  bazel build //:salvo
+  bazel build //src/...
   popd
 }
  

@@ -3,7 +3,7 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 licenses(["notice"])  # Apache 2
 
 py_library(
-    name = "docker_lib",
+    name = "docker",
     data = [
         "docker_image.py",
         "docker_volume.py",
@@ -11,7 +11,7 @@ py_library(
 )
 
 py_library(
-    name = "job_control_lib",
+    name = "job_control",
     data = [
         "job_control_loader.py",
     ],
@@ -19,7 +19,7 @@ py_library(
 )
 
 py_library(
-    name = "shell_lib",
+    name = "shell",
     data = [
         "cmd_exec.py",
     ],
@@ -31,7 +31,7 @@ py_test(
     srcs = ["test_docker_image.py"],
     srcs_version = "PY3",
     deps = [
-        ":docker_lib",
+        ":docker",
         "//api:schema_proto",
     ],
 )
@@ -41,7 +41,7 @@ py_test(
     srcs = ["test_job_control_loader.py"],
     srcs_version = "PY3",
     deps = [
-        ":job_control_lib",
+        ":job_control",
         "//api:schema_proto",
     ],
 )

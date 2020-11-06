@@ -4,7 +4,7 @@ This is a framework that abstracts executing multiple benchmarks of the Envoy Pr
 
 ## Example Control Documents
 
-The control document defines the data needed to excute a benchmark. At the moment, the fully dockerized benchmark is the only one supported. This benchmark discoveres user supplied tests for execution and uses docker images to run the tests. In the exampple below, the user supplied tests files are located in `/home/ubuntu/nighthawk_tests` and are mapped to a volume in the docker container.
+The control document defines the data needed to execute a benchmark. At the moment, the fully dockerized benchmark is the only one supported. This benchmark discoveres user supplied tests for execution and uses docker images to run the tests. In the example below, the user supplied tests files are located in `/home/ubuntu/nighthawk_tests` and are mapped to a volume in the docker container.
 
 To run the benchmark, create a file with the following example contents:
 
@@ -65,7 +65,7 @@ bazel-bin/salvo --job ~/test_data/demo_jobcontrol.yaml
 
 From the root package directory, run the do_ci.sh script with the "test" argument.  Since this installs packages packages, it will need to be run as root.
 ```bash
-./ci/do_ci.sh test
+bazel test //src/...
 ```
 
 ## Dependencies
