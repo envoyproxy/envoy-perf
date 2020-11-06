@@ -54,10 +54,10 @@ def load_control_doc(filename):
   contents = None
 
   # Try loading the contents based on the file extension
-  if re.match(r'.*\.json', filename):
+  if filename.endswith('.json'):
     log.debug(f"Loading JSON file {filename}")
     return _load_json_doc(filename)
-  elif re.match(r'.*\.yaml', filename):
+  elif filename.endswith('.yaml'):
     log.debug(f"Loading YAML file {filename}")
     return _load_yaml_doc(filename)
   else:

@@ -20,7 +20,7 @@ def test_pull_image():
     pytest.skip("Skipping docker test since no socket is available")
 
   docker_image = DockerImage()
-  container = docker_image.pull_image("oschaaf/benchmark-dev:latest")
+  container = docker_image.pull_image("amazonlinux:2")
   assert container is not None
 
 
@@ -32,7 +32,7 @@ def test_run_image():
 
   env = ['key1=val1', 'key2=val2']
   cmd = ['uname', '-r']
-  image_name = 'oschaaf/benchmark-dev:latest'
+  image_name = 'amazonlinux:2'
 
   docker_image = DockerImage()
   kwargs = {}

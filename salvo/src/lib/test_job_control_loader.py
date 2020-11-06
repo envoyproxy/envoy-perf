@@ -75,7 +75,7 @@ def _validate_job_control_object(job_control):
       assert source.source_path == "/home/ubuntu/envoy"
       assert not source.source_url
       assert source.branch == "master"
-      assert source.commit_hash == "e744a103756e9242342662442ddb308382e26c8b"
+      assert source.commit_hash == "random_commit_hash_string"
       saw_envoy = True
 
   assert saw_envoy
@@ -120,7 +120,7 @@ def test_control_doc_parse_yaml():
         - envoy: true
           source_path: "/home/ubuntu/envoy"
           branch: "master"
-          commit_hash: "e744a103756e9242342662442ddb308382e26c8b"
+          commit_hash: "random_commit_hash_string"
       images:
         reuseNhImages: true
         nighthawkBenchmarkImage: "envoyproxy/nighthawk-benchmark-dev:latest"
@@ -166,7 +166,7 @@ def test_control_doc_parse():
           "envoy": true,
           "source_path": "/home/ubuntu/envoy",
           "branch": "master",
-          "commit_hash": "e744a103756e9242342662442ddb308382e26c8b"
+          "commit_hash": "random_commit_hash_string"
         }
       ],
       "images": {
@@ -216,7 +216,7 @@ def test_generate_control_doc():
   envoy_source.envoy = True
   envoy_source.source_path = "/home/ubuntu/envoy"
   envoy_source.branch = "master"
-  envoy_source.commit_hash = "e744a103756e9242342662442ddb308382e26c8b"
+  envoy_source.commit_hash = "random_commit_hash_string"
 
   job_control.images.reuse_nh_images = True
   job_control.images.nighthawk_benchmark_image = "envoyproxy/nighthawk-benchmark-dev:latest"
