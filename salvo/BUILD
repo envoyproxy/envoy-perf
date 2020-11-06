@@ -4,7 +4,7 @@ licenses(["notice"])  # Apache 2
 
 py_binary(
     name = "salvo",
-    srcs = ["src/salvo.py"],
+    srcs = ["salvo.py"],
     srcs_version = "PY3",
     deps = [
         "//api:schema_proto",

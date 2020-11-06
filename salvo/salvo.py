@@ -6,15 +6,7 @@ import os
 import site
 import sys
 
-# Run in the actual bazel directory so that the sys.path
-# is setup correctly
-if os.path.islink(sys.argv[0]):
-  real_exec_dir = os.path.dirname(sys.argv[0])
-  os.chdir(real_exec_dir)
-
-site.addsitedir("src")
-
-from lib.job_control_loader import load_control_doc
+from src.lib.job_control_loader import load_control_doc
 
 
 LOGFORMAT = "%(asctime)s: %(process)d [ %(levelname)-5s] [%(module)-5s] %(message)s"

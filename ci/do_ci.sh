@@ -20,7 +20,7 @@ function test_salvo() {
   pushd salvo
   ./install_deps.sh
 
-  bazel test //src/lib/...
+  bazel test //...
 
   popd
 }
