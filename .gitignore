@@ -1,0 +1,6 @@
+**/*.pyc
+**/*.swp
+**/.vscode/*
+**/__pycache__/*
+bazel-*
+**/venv/*

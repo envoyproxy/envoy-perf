@@ -21,3 +21,5 @@ Performance benchmarking can take multiple forms:
 2. [siege/](siege/README.md) contains an initial attempt at a simple test to run
    iteratively during development to get a view of the time/space impact of the
    changes under configuration.
+2. [salvo/](salvo/README.md) contains a framework that abstracts nighthawk 
+   benchmark execution. This is still under active development

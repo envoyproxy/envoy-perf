@@ -1,0 +1,27 @@
+syntax = "proto3";
+
+package salvo;
+
+// This message defines the properties for a given mount. It is used
+// to generate the dictionary specifying volumes for the Python Docker
+// SDK.  This message is not constructed by the user
+message VolumeProperties {
+  // Define whether the mount point is read-write or read-only
+  enum Mode {
+    RO = 0;
+    RW = 1;
+  }
+
+  // Specified the destination mount path in the benchmark container
+  string bind = 1;
+
+  // Specify whether the volume is read-write or read-only
+  Mode mode = 2;
+}
+
+// This message defines the volume structure consumed by the command
+// to run a docker image.
+message Volume {
+  // Specify a map of local paths and their mount points in the container
+  map<string, VolumeProperties> volumes = 1;
+}

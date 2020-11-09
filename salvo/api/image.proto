@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package salvo;
+
+// Capture all docker images required for the benchmark. This object is examined
+// first before evaluating the state of specified source locations
+message DockerImages {
+  // Determines whether required docker are used if they already exist. The
+  // benchmark image and binary image must be specified. If this is set to false
+  // there must be a specified source location from which we build the image
+
+  // This should be implicit. Images are preferred over building from source. We
+  // build only if the image pull is not successful and sources are present
+  bool reuse_nh_images = 1;
+
+  // Specifies the name of the docker image containing the benchmark framework
+  // If populated we will attempt to pull this image
+  // eg: "envoyproxy/nighthawk-benchmark-dev:latest"
+  string nighthawk_benchmark_image = 2;
+
+  // Specifies the name of the docker image containing nighthawk binaries
+  // eg: "envoyproxy/nighthawk-dev:latest"
+  string nighthawk_binary_image = 3;
+
+  // Specifies the envoy image from which Envoy is injected.  This supports
+  // using a commit hash or a tag to identify a specific image
+  // eg: "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
+  string envoy_image = 4;
+}
