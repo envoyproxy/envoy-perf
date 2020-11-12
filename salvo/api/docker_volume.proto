@@ -2,21 +2,19 @@ syntax = "proto3";
 
 package salvo;
 
-// This message defines the properties for a given mount. It is used
-// to generate the dictionary specifying volumes for the Python Docker
-// SDK.  This message is not constructed by the user
-message VolumeProperties {
-  // Define whether the mount point is read-write or read-only
-  enum Mode {
-    RO = 0;
-    RW = 1;
-  }
+// The messages here are used internally by the framework to generate
+// the json structure specifying volumes for the Python Docker SDK.
+// These messages are not constructed by the user
 
-  // Specified the destination mount path in the benchmark container
+// This message defines the properties for a mount point.
+message VolumeProperties {
+
+  // Specify the destination mount path in the benchmark container
   string bind = 1;
 
-  // Specify whether the volume is read-write or read-only
-  Mode mode = 2;
+  // Specify whether the volume is read-write or read-only.  This field
+  // must be a string that is populated with 'rw' or 'ro' internally
+  string mode = 2;
 }
 
 // This message defines the volume structure consumed by the command

@@ -7,6 +7,7 @@ py_library(
     data = [
         "docker_image.py",
     ],
+    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -14,6 +15,7 @@ py_library(
     data = [
         "docker_volume.py",
     ],
+    visibility = ["//visibility:public"],
 )
 
 py_library(

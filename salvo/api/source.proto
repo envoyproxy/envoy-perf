@@ -7,8 +7,9 @@ message SourceRepository {
 
   // Specify whether this source location is Envoy or NightHawk
   enum SourceIdentity {
-    ENVOY = 0;
-    NIGHTHAWK = 1;
+    UNSPECIFIED = 0;
+    ENVOY = 1;
+    NIGHTHAWK = 2;
   }
 
   SourceIdentity identity = 1;
