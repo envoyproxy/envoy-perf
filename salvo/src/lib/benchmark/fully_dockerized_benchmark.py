@@ -19,14 +19,14 @@ class Benchmark(BaseBenchmark):
 
   def validate(self):
     """
-    Validate that all data required for running the scavenging
+    Validate that all data required for running the dockerized
     benchmark is defined and or accessible
     """
     pass
 
   def _verify_sources(self, images):
     """
-    Validate that sources are defined from which we can build a missing image
+    Validate that sources are available from which we can build a missing image
     """
     pass
 

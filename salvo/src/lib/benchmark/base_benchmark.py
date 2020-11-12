@@ -43,27 +43,26 @@ class BaseBenchmark(object):
 
   def get_source(self):
     """
-    Return the source object from the control object
+    Return the source object defining locations from where either NightHawk or Envoy
+    can be built
     """
     pass
 
   def run_image(self, image_name, **kwargs):
     """
-    Run the specified docker image
+    Run the specified docker image witht he supplied keyword arguments
     """
     pass
 
   def pull_images(self):
     """
-    Retrieve all images defined in the control object.  The validation
-    logic should be run before this method.  The images object should be
-    populated with non-zero length strings.
+    Retrieve the NightHawk and Envoy images defined in the control object. 
     """
     pass
 
   def set_environment_vars(self):
     """
-    Set the Envoy IP test versions and any other variables controlling the test
+    Set the Envoy IP test versions and any other environment variables needed by the test
     """
     pass
 
