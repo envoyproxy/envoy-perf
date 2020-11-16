@@ -17,14 +17,14 @@ class Benchmark(BaseBenchmark):
   def __init__(self, job_control, benchmark_name, **kwargs):
     super(Benchmark, self).__init__(job_control, benchmark_name, **kwargs)
 
-  def __validate(self):
+  def _validate(self):
     """
     Validate that all data required for running the dockerized
     benchmark is defined and or accessible
     """
     pass
 
-  def __verify_sources(self, images):
+  def _verify_sources(self, images):
     """
     Validate that sources are available from which we can build a missing image
     """
@@ -34,4 +34,4 @@ class Benchmark(BaseBenchmark):
     """
     Prepare input artifacts and run the benchmark
     """
-    self.__validate()
+    self._validate()
