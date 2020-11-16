@@ -9,9 +9,6 @@ import src.lib.docker_image as docker_image
 import src.lib.docker_volume as docker_volume
 
 log = logging.getLogger(__name__)
-"""
-Base Benchmark class with common functions for all invocations
-"""
 
 
 def get_docker_volumes(output_dir, test_dir=None):
@@ -21,8 +18,11 @@ def get_docker_volumes(output_dir, test_dir=None):
   return docker_volume.generate_volume_config(output_dir, test_dir)
 
 class BaseBenchmark(object):
+  """
+  Base Benchmark class with common functions for all invocations
+  """
 
-  def __init__(self, **kwargs):
+  def __init__(self, job_control, benchmark_name, **kwargs):
     """
     Initialize the Base Benchmark class.
     """

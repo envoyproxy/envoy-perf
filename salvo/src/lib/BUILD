@@ -2,12 +2,15 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 licenses(["notice"])  # Apache 2
 
+package(
+    default_visibility = ["//:__subpackages__"],
+)
+
 py_library(
     name = "docker_image",
     data = [
         "docker_image.py",
     ],
-    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -15,7 +18,6 @@ py_library(
     data = [
         "docker_volume.py",
     ],
-    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -23,7 +25,13 @@ py_library(
     data = [
         "job_control_loader.py",
     ],
-    visibility = ["//visibility:public"],
+)
+
+py_library(
+    name = "constants",
+    data = [
+        "constants.py",
+    ],
 )
 
 py_library(
@@ -49,6 +57,7 @@ py_test(
     srcs = ["test_job_control_loader.py"],
     srcs_version = "PY3",
     deps = [
+        ":constants",
         ":job_control",
         "//api:schema_proto",
     ],
