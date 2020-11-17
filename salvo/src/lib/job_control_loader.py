@@ -13,9 +13,17 @@ log = logging.getLogger(__name__)
 
 
 def _load_json_doc(filename):
+  """Load a disk file as JSON.
+
+  This function reads the specified filename and parses the contents
+  as JSON.
+
+  Args:
+      filename: The file whose contents are to be read as JSON data
+
+  Returns:
+      A dictionary representation of the file contents
   """
-    Load a disk file as JSON
-    """
   contents = None
   log.debug(f"Opening JSON file {filename}")
   try:
@@ -30,9 +38,17 @@ def _load_json_doc(filename):
 
 
 def _load_yaml_doc(filename):
+  """Load a disk file as YAML.
+
+  This function reads the specified filename and parses the contents
+  as YAML.
+
+  Args:
+      filename: The file whose contents are to be read as YAML data
+
+  Returns:
+      A dictionary representation of the file contents
   """
-    Load a disk file as YAML
-    """
   log.debug(f"Opening YAML file {filename}")
   contents = None
   try:
@@ -48,9 +64,18 @@ def _load_yaml_doc(filename):
 
 
 def load_control_doc(filename):
+  """Return a JobControl object from the identified filename.
+
+  This function uses the extension of the specified file to read its
+  contents as YAML or JSON
+
+  Args:
+      filename: The file whose contents are to be read and stored
+        in a dictionary
+
+  Returns:
+      A dictionary representation of the file contents
   """
-    Return a JobControl object from the identified filename
-    """
   contents = None
 
   # Try loading the contents based on the file extension

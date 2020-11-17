@@ -2,6 +2,10 @@ load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
 licenses(["notice"])  # Apache 2
 
+package(
+    default_visibility = ["//:__subpackages__"],
+)
+
 py_library(
     name = "benchmark",
     data = [
@@ -12,7 +16,6 @@ py_library(
         "//src/lib:docker_image",
         "//src/lib:docker_volume",
     ],
-    visibility = [ "//visibility:public" ]
 )
 
 py_test(

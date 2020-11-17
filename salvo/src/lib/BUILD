@@ -18,6 +18,9 @@ py_library(
     data = [
         "docker_volume.py",
     ],
+    deps = [
+        ":constants",
+    ],
 )
 
 py_library(
@@ -46,6 +49,7 @@ py_test(
     srcs = ["test_docker_image.py"],
     srcs_version = "PY3",
     deps = [
+        ":constants",
         ":docker_image",
         ":docker_volume",
         "//api:schema_proto",

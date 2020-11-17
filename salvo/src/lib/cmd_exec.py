@@ -11,9 +11,15 @@ log = logging.getLogger(__name__)
 
 
 def run_command(cmd, **kwargs):
+  """Run the specified command returning its output to the caller.
+
+  Args:
+      cmd: The command to be executed
+      kwargs: Additional optional arguments provided to check_output
+
+  Returns:
+      The output produced by the command
   """
-    Run the specified command returning its string output to the caller
-    """
   output = ''
   try:
     log.debug(f"Executing command: {cmd} with args {kwargs}")

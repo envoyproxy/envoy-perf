@@ -1,4 +1,3 @@
-#!/usr/bin/env python3
 """
 Test module to validate parsing of the job control document
 """
@@ -17,9 +16,16 @@ from api.docker_volume_pb2 import (Volume, VolumeProperties)
 
 
 def _write_object_to_disk(pb_obj, path):
+  """Store a formatted json document to disk.
+
+  Args:
+      pb_obj: The Protocol Buffer object to be serialized
+      path: The file to which the object's contents are
+        written
+
+  Returns:
+      None
   """
-    Store a formatted json document to disk
-    """
   json_obj = MessageToJson(pb_obj, indent=2)
   with open(path, 'w') as json_doc:
     json_doc.write(json_obj)
@@ -30,9 +36,17 @@ def _write_object_to_disk(pb_obj, path):
 
 
 def _serialize_and_read_object(pb_obj):
+  """Serialize a protobuf object to disk.
+
+  Serialize the protobuf object to disk and re-read it to
+  verify it is JSON.
+
+  Args:
+      pb_obj: The Protocol Buffer object to be serialized
+
+  Returns:
+      None
   """
-    Serialize a protobuf object to disk and verify we can re-read it as JSON
-    """
   with tempfile.NamedTemporaryFile(mode='w', delete=True) as tmp:
     _write_object_to_disk(pb_obj, tmp.name)
 
@@ -43,9 +57,18 @@ def _serialize_and_read_object(pb_obj):
 
 
 def _validate_job_control_object(job_control):
+  """Common verification method for a job control object.
+
+  This method reads an object and verifies its data fields
+  match a predetermined set of data
+
+  Args:
+      job_control: The Protocol Buffer object whose data fields
+        are to be examined and verified
+
+  Returns:
+      None
   """
-    Common verification function for a job control object
-    """
   assert job_control is not None
 
   # Verify execution location
@@ -104,9 +127,12 @@ def _validate_job_control_object(job_control):
 
 
 def test_control_doc_parse_yaml():
+  """Verify that we can consume a yaml formatted control document.
+
+  This method reads a yaml representation of the job control document,
+  serializes it, then verifies that the serialized data matches the
+  input.
   """
-    Verify that we can consume a yaml formatted control document
-    """
   control_yaml = """
       remote: true
       scavengingBenchmark: true
@@ -145,9 +171,12 @@ def test_control_doc_parse_yaml():
 
 
 def test_control_doc_parse():
+  """Verify that we can consume a JSON formatted control document.
+
+  This method reads a JSON representation of the job control document,
+  serializes it, then verifies that the serialized data matches the
+  input.
   """
-    Verify that we can consume a JSON formatted control document
-    """
 
   control_json = """
     {
@@ -197,9 +226,11 @@ def test_control_doc_parse():
 
 
 def test_generate_control_doc():
+  """Verify that we can serialize an object to a file in JSON format.
+
+  This method reads a JSON representation of the job control document,
+  serializes it, then verifies that the serialized data can be re-read.
   """
-    Verify that we can serialize an object to a file in JSON format
-    """
   job_control = JobControl()
   job_control.remote = True
   job_control.scavenging_benchmark = True
@@ -231,9 +262,11 @@ def test_generate_control_doc():
 
 
 def _test_docker_volume_generation():
+  """Verify construction of the volume mount map.
+
+  This test creates the volume and mount map we provide to a docker container.
+  We verify that the structure can be serialized and read as JSON.
   """
-    Verify construction of the volume mount map that we provide to a docker container
-    """
   volume_cfg = Volume()
 
   props = VolumeProperties()

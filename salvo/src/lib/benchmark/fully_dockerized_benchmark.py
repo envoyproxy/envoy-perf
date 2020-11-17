@@ -14,24 +14,30 @@ log = logging.getLogger(__name__)
 
 class Benchmark(BaseBenchmark):
 
-  def __init__(self, job_control, benchmark_name, **kwargs):
-    super(Benchmark, self).__init__(job_control, benchmark_name, **kwargs)
+  def __init__(self, job_control, benchmark_name):
+    """Initialize the benchmark class."""
+    super(Benchmark, self).__init__(job_control, benchmark_name)
 
   def _validate(self):
-    """
-    Validate that all data required for running the dockerized
-    benchmark is defined and or accessible
+    """Validate that all data required for running a benchmark exist.
+
+    Returns:
+        None
     """
     pass
 
   def _verify_sources(self, images):
-    """
-    Validate that sources are available from which we can build a missing image
+    """Validate that sources are available to build a missing image.
+
+    Returns:
+        None
     """
     pass
 
   def execute_benchmark(self):
-    """
-    Prepare input artifacts and run the benchmark
+    """Prepare input artifacts and run the benchmark.
+
+    Returns:
+        None
     """
     self._validate()

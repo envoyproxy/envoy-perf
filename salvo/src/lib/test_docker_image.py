@@ -10,13 +10,18 @@ import pytest
 
 site.addsitedir("src")
 
+from src.lib.constants import DOCKER_SOCKET_PATH
 from lib.docker_image import DockerImage
 
 
 def test_pull_image():
-  """Test retrieving an image"""
+  """Test retrieving an image.
 
-  if not os.path.exists("/var/run/docker.sock"):
+  Verify that we can pull a docker image specifying only
+  its name and tag
+  """
+
+  if not os.path.exists(DOCKER_SOCKET_PATH):
     pytest.skip("Skipping docker test since no socket is available")
 
   docker_image = DockerImage()
@@ -25,9 +30,14 @@ def test_pull_image():
 
 
 def test_run_image():
-  """Test executing a command in an image"""
+  """Test executing a command in an image.
 
-  if not os.path.exists("/var/run/docker.sock"):
+  Verify that we can construct the parameters needed to execute
+  a given docker image.  We verify that the output contains
+  the expected output from the issued command
+  """
+
+  if not os.path.exists(DOCKER_SOCKET_PATH):
     pytest.skip("Skipping docker test since no socket is available")
 
   env = ['key1=val1', 'key2=val2']
@@ -45,9 +55,12 @@ def test_run_image():
 
 
 def test_list_images():
-  """Test listing available images"""
+  """Test listing available images.
 
-  if not os.path.exists("/var/run/docker.sock"):
+  Verify that we can list all existing cached docker images.
+  """
+
+  if not os.path.exists(DOCKER_SOCKET_PATH):
     pytest.skip("Skipping docker test since no socket is available")
 
   docker_image = DockerImage()
