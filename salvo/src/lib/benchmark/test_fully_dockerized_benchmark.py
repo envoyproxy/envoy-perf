@@ -22,6 +22,7 @@ def test_no_envoy_image_no_sources():
   """
   pass
 
+
 def test_source_to_build_envoy():
   """Validate we can build images from source.
 
@@ -29,6 +30,7 @@ def test_source_to_build_envoy():
   We do not expect the validation logic to throw an exception
   """
   pass
+
 
 def test_no_source_to_build_envoy():
   """Validate that we fail to build images without sources.
@@ -38,6 +40,7 @@ def test_no_source_to_build_envoy():
   """
   pass
 
+
 def test_no_source_to_build_nh():
   """Validate that we fail to build nighthawk without sources.
 
@@ -46,6 +49,7 @@ def test_no_source_to_build_nh():
   """
   pass
 
+
 def test_no_source_to_build_nh2():
   """Validate that we fail to build nighthawk without sources.
 
@@ -53,6 +57,7 @@ def test_no_source_to_build_nh2():
   binary image. We expect the validation logic to throw an exception
   """
   pass
+
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

@@ -22,6 +22,7 @@ def get_docker_volumes(output_dir, test_dir=''):
   """
   return docker_volume.generate_volume_config(output_dir, test_dir)
 
+
 class BaseBenchmark(object):
   """Base Benchmark class with common functions for all invocations."""
 
@@ -87,4 +88,3 @@ class BaseBenchmark(object):
     Set the Envoy IP test versions and any other environment variables needed by the test
     """
     pass
-

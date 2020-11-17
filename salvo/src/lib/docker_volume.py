@@ -15,6 +15,7 @@ from api.docker_volume_pb2 import Volume, VolumeProperties
 
 log = logging.getLogger(__name__)
 
+
 def generate_volume_config(output_dir, test_dir=''):
   """Generates the volumes config necessary for a container to run.
 
