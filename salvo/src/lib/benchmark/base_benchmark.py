@@ -19,6 +19,8 @@ def get_docker_volumes(output_dir, test_dir=''):
   Args:
       output_dir: The directory containing the artifacts of the benchmark
       test_dir: If specified, points to the location of user supplied tests
+      If the test_dir is not specified, the volume map will not include an
+      entry for the external test directory
   """
   return docker_volume.generate_volume_config(output_dir, test_dir)
 

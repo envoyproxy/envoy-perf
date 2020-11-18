@@ -22,7 +22,8 @@ def _load_json_doc(filename):
       filename: The file whose contents are to be read as JSON data
 
   Returns:
-      A dictionary representation of the file contents
+      A JobControl object populated with the contestns from the
+      specified JSON file
   """
   contents = None
   log.debug(f"Opening JSON file {filename}")
@@ -47,7 +48,8 @@ def _load_yaml_doc(filename):
       filename: The file whose contents are to be read as YAML data
 
   Returns:
-      A dictionary representation of the file contents
+      A JobControl object populated with the contestns from the
+      specified YAML file
   """
   log.debug(f"Opening YAML file {filename}")
   contents = None
@@ -74,7 +76,8 @@ def load_control_doc(filename):
         in a dictionary
 
   Returns:
-      A dictionary representation of the file contents
+      A JobControl object populated with the contestns from the
+      specified filename
   """
   contents = None
 
