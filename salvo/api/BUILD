@@ -1,6 +1,8 @@
 load("@com_google_protobuf//:protobuf.bzl", "py_proto_library")
 
-licenses(["notice"])  # Apache 2
+package(
+    default_visibility = ["//:__subpackages__"],
+)
 
 py_proto_library(
     name = "schema_proto",
@@ -11,5 +13,4 @@ py_proto_library(
         "image.proto",
         "source.proto",
     ],
-    visibility = ["//visibility:public"],
 )

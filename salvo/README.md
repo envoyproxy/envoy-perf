@@ -21,7 +21,7 @@ JSON Example:
     "envoyImage": "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
   },
   "environment": {
-    "testVersions": V4ONLY,
+    "testVersions": IPV_V4ONLY,
     "envoyPath": "envoy",
     "outputDir": "/home/ubuntu/nighthawk_output",
     "testDir": "/home/ubuntu/nighthawk_tests"
@@ -38,7 +38,7 @@ environment:
   envoyPath: 'envoy'
   outputDir: '/home/ubuntu/nighthawk_output'
   testDir: '/home/ubuntu/nighthawk_tests'
-  testVersions: V4ONLY
+  testVersions: IPV_V4ONLY
 images:
   reuseNhImages: true
   nighthawkBenchmarkImage: 'envoyproxy/nighthawk-benchmark-dev:latest'
@@ -63,7 +63,7 @@ bazel-bin/salvo --job ~/test_data/demo_jobcontrol.yaml
 ## Testing Salvo
 
 
-From the root package directory, run the do_ci.sh script with the "test" argument.  Since this installs packages packages, it will need to be run as root.
+From the root package directory, run the do_ci.sh script with the "test" argument. Since this installs packages packages, it will need to be run as root.
 ```bash
 bazel test //src/...
 ```
