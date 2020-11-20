@@ -40,7 +40,7 @@ def run_command(cmd: str, **kwargs) -> str:
 
     log.debug(f"Returning output: [{output}]")
   except subprocess.CalledProcessError as process_error:
-    log.exception(f"Unable to execute [{cmd}]: {process_error}")
+    log.error(f"Unable to execute [{cmd}]: {process_error}")
     raise
 
   return output
