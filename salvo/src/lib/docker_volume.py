@@ -16,7 +16,7 @@ from api.docker_volume_pb2 import Volume, VolumeProperties
 log = logging.getLogger(__name__)
 
 
-def generate_volume_config(output_dir, test_dir=''):
+def generate_volume_config(output_dir: str, test_dir: str='') -> dict:
   """Generates the volumes config necessary for a container to run.
 
   The docker path is hardcoded at the moment.  The output directory
@@ -55,8 +55,11 @@ def generate_volume_config(output_dir, test_dir=''):
   volume_json = {}
   try:
     volume_json = json.loads(MessageToJson(volume_cfg))
-  except Error as serialize_error:
-    log.exception(f"Could not build volume json object: {serialize_error}")
+  except json.decoder.JSONDecodeError as decode_error:
+    log.exception(f"Could not build volume json object: {decode_error}")
+    raise
+  except Error as general_error:
+    log.exception(f"Unable to convert message to JSON: {general_error}")
     raise
 
   return volume_json["volumes"]

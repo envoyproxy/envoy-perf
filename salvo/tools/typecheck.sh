@@ -12,13 +12,11 @@ function die()
 }
 
 PYTYPE=$(which pytype)
-if [ -z "${PYTYPE}" ]
+if [ -z "${PYTYPE}"  -a -f ${HOME}/.local/bin/pytype ]
 then
-  if [ -f ${HOME}/.local/bin/pytype ]
-  then
-    PYTYPE=${HOME}/.local/bin/pytype
-  fi
+  PYTYPE=${HOME}/.local/bin/pytype
 fi
+
 if [ -z "${PYTYPE}" ]
 then
   die "Unable to find pytype in path"

@@ -13,14 +13,22 @@ LOGFORMAT = "%(asctime)s: %(process)d [ %(levelname)-5s] [%(module)-5s] %(messag
 log = logging.getLogger()
 
 
-def setup_logging(loglevel=logging.DEBUG):
-  """Basic logging configuration """
+def setup_logging(loglevel: int=logging.DEBUG) -> None:
+  """Basic logging configuration.
+
+  Configure the logger with our defined format and set the log level which
+  defaults to debug
+  """
 
   logging.basicConfig(format=LOGFORMAT, level=loglevel)
 
 
-def setup_options():
-  """Parse command line arguments required for operation"""
+def setup_options() -> argparse.Namespace:
+  """Parse command line arguments required for operation.
+
+  Read all command line arguments and return a namespace with consumable
+  data
+  """
 
   parser = argparse.ArgumentParser(description="Salvo Benchmark Runner")
   parser.add_argument('--job',
@@ -30,9 +38,15 @@ def setup_options():
 
   return parser.parse_args()
 
+def main() -> int:
+  """Driver module for benchmark.
 
-def main():
-  """Driver module for benchmark """
+  This is the main function for starting a benchmark.  It verifies that a
+  Job Control object was specified and from that starts the execution.
+
+  The benchmark object encapsulates the different benchmark modes and it
+  is responsible for selecting the correct classes to instantiate
+  """
 
   args = setup_options()
   setup_logging()
