@@ -12,7 +12,7 @@ from google.protobuf.json_format import (Error, Parse)
 log = logging.getLogger(__name__)
 
 
-def _load_json_doc(filename):
+def _load_json_doc(filename: str) -> JobControl:
   """Load a disk file as JSON.
 
   This function reads the specified filename and parses the contents
@@ -38,7 +38,7 @@ def _load_json_doc(filename):
   return contents
 
 
-def _load_yaml_doc(filename):
+def _load_yaml_doc(filename: str) -> JobControl:
   """Load a disk file as YAML.
 
   This function reads the specified filename and parses the contents
@@ -65,7 +65,7 @@ def _load_yaml_doc(filename):
   return contents
 
 
-def load_control_doc(filename):
+def load_control_doc(filename: str) -> JobControl:
   """Return a JobControl object from the identified filename.
 
   This function uses the extension of the specified file to read its
