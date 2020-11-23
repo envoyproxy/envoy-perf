@@ -18,6 +18,10 @@ def setup_logging(loglevel: int=logging.DEBUG) -> None:
 
   Configure the logger with our defined format and set the log level which
   defaults to debug
+
+  Args:
+    loglevel configures the level of the logger.  The default is DEBUG
+      level logging
   """
 
   logging.basicConfig(format=LOGFORMAT, level=loglevel)

@@ -30,6 +30,12 @@ def generate_volume_config(output_dir: str, test_dir: str='') -> dict:
   Returns:
     A map specifying the local and remote mount paths, and whether each
     mount path is read-only, or read-write
+
+  Raises:
+    json.decoder.JSONDecodeError: if we are unable to convert the object
+      to json
+    an Error for any other exceptions caught when generating json from the
+      VolumeProperties object
   """
   volume_cfg = Volume()
 
