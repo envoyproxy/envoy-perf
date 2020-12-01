@@ -9,7 +9,7 @@ import pytest
 from google.protobuf.json_format import (MessageToJson)
 
 from src.lib.constants import (DOCKER_SOCKET_PATH, NIGHTHAWK_EXTERNAL_TEST_DIR)
-from job_control_loader import load_control_doc
+from src.lib.job_control_loader import load_control_doc
 from api.control_pb2 import JobControl
 from api.source_pb2 import SourceRepository
 from api.docker_volume_pb2 import (Volume, VolumeProperties)

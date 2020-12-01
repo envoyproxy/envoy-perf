@@ -11,7 +11,7 @@ import pytest
 site.addsitedir("src")
 
 from src.lib.constants import DOCKER_SOCKET_PATH
-from lib.docker_image import DockerImage
+from src.lib.docker_image import DockerImage
 
 
 def test_pull_image():

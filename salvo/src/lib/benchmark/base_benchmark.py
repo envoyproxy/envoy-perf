@@ -15,10 +15,11 @@ from api.source_pb2 import SourceRepository
 log = logging.getLogger(__name__)
 
 
-def get_docker_volumes(output_dir: str, test_dir: str='') -> dict:
+def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   """Build the volume structure needed to run a container.
 
-  Build the json specifying the volume configuration needed for running the container
+  Build the json specifying the volume configuration needed for running the
+  container.
 
   Args:
       output_dir: The directory containing the artifacts of the benchmark
@@ -40,7 +41,19 @@ class BaseBenchmark(object):
           of benchmark artifacts
         benchmark_name: The name of the benchmark to execute
     """
-    pass
+    if job_control is None:
+      raise Exception("No control object received")
+
+    self._docker_image = docker_image.DockerImage()
+    self._control = job_control
+    self._benchmark_name = benchmark_name
+
+    self._mode_remote = self._control.remote
+    self._build_envoy = False
+    self._build_nighthawk = False
+
+    log.debug("Running benchmark: %s %s", "Remote" if self._mode_remote \
+      else "Local", self._benchmark_name)
 
   def is_remote(self) -> bool:
     """Return a boolean indicating whether the test is to be executed
@@ -49,7 +62,7 @@ class BaseBenchmark(object):
     Returns:
         Whether or not the benchmark runs locally or in a remote service
     """
-    pass
+    return self._mode_remote
 
   def get_images(self) -> DockerImages:
     """Return the images object from the control object.
@@ -57,7 +70,7 @@ class BaseBenchmark(object):
     Returns:
         The images objects specified in the control object
     """
-    pass
+    return self._control.images
 
   def get_source(self) -> List[SourceRepository]:
     """Return the source object defining locations from where
@@ -66,9 +79,9 @@ class BaseBenchmark(object):
     Returns:
         The source objects specified in the control object
     """
-    pass
+    return self._control.source
 
-  def run_image(self, image_name : str, **kwargs) -> bytearray:
+  def run_image(self, image_name: str, **kwargs) -> bytearray:
     """Run the specified docker image with the supplied keyword arguments.
 
     Args:
@@ -78,20 +91,54 @@ class BaseBenchmark(object):
           here https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.run
 
     Returns:
-        A bytearray containing the output produced from executing the specified container
+        A bytearray containing the output produced from executing the specified
+        container
     """
-    pass
+    return self._docker_image.run_image(image_name, **kwargs)
 
   def pull_images(self) -> List[str]:
     """Retrieve all images necessary for the benchmark.
 
-    Retrieve the NightHawk and Envoy images defined in the control object. 
+    Retrieve the NightHawk and Envoy images defined in the control
+    object.
     """
-    pass
+    retrieved_images = []
+    images = self.get_images()
+
+    for image in [
+        images.nighthawk_benchmark_image,
+        images.nighthawk_binary_image,
+        images.envoy_image
+    ]:
+      # If the image name is not defined, we will have an empty string.
+      # For unit testing we'll keep this behavior. For true usage, we
+      # should raise an exception when the benchmark class performs its
+      # validation
+      if image:
+        i = self._docker_image.pull_image(image)
+        log.debug(f"Retrieved image: {i} for {image}")
+        if i is None:
+          return []
+        retrieved_images.append(i)
+
+    return retrieved_images
 
   def set_environment_vars(self) -> None:
     """Build the environment variable map used to launch an image.
 
-    Set the Envoy IP test versions and any other environment variables needed by the test
+    Set the Envoy IP test versions and any other environment variables needed
+    by the test
     """
-    pass
+    environment = self._control.environment
+    if not environment:
+      raise Exception("No environment variables are specified")
+
+    if environment.test_version == environment.IPV_UNSPECIFIED:
+      raise Exception("No IP version is specified for the benchmark")
+    elif environment.test_version == environment.IPV_V4ONLY:
+      os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v4only'
+    elif environment.test_version == environment.IPV_V6ONLY:
+      os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v6only'
+
+    for key, value in environment.variables.items():
+      os.environ[key] = value

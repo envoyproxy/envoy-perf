@@ -24,5 +24,4 @@ fi
 
 echo $PWD
 
-bazel build //...
 ${PYTYPE} src -P bazel-bin:.

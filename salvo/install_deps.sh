@@ -15,5 +15,4 @@ fi
 
 pip3 install --upgrade --user pip
 pip3 install --upgrade --user setuptool
-pip3 install --user pybind11
 pip3 install --user -r requirements.txt

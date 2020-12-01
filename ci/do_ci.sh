@@ -6,11 +6,20 @@
 # in build logs
 set -e
 
+
+function install_deps() {
+  ./install_deps.sh
+}
+
 # Build the salvo framework
 function build_salvo() {
   echo "Building Salvo"
   pushd salvo
+
+  install_deps
   bazel build //...
+  tools/typecheck.sh
+
   popd
 }
  
@@ -18,8 +27,8 @@ function build_salvo() {
 function test_salvo() {
   echo "Running Salvo unit tests"
   pushd salvo
-  ./install_deps.sh
 
+  install_deps
   bazel test //...
 
   popd
