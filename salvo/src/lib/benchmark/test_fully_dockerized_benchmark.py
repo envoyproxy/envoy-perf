@@ -6,8 +6,55 @@ import pytest
 from unittest import mock
 
 from api.control_pb2 import JobControl
+from api.image_pb2 import DockerImages
+from api.env_pb2 import EnvironmentVars
+from api.source_pb2 import SourceRepository
 from src.lib.benchmark.fully_dockerized_benchmark import Benchmark
 
+def _generate_images(job_control: JobControl) -> DockerImages:
+  """Generate a default images specification for a control object.
+
+  Returns:
+    a DockerImages object populated with a default set of data
+  """
+  generated_images = job_control.images
+  generated_images.reuse_nh_images = True
+  generated_images.nighthawk_benchmark_image = \
+      "envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag"
+  generated_images.nighthawk_binary_image = \
+      "envoyproxy/nighthawk-dev:random-binary_image_tag"
+  generated_images.envoy_image = \
+      "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
+
+  return generated_images
+
+def _generate_environment(job_control: JobControl) -> EnvironmentVars:
+  """Generate a default set of environment variables for a control object.
+
+  Returns:
+    an EnvironmentVars object containing varibles used by benchmarks.
+  """
+  generated_environment = job_control.environment
+  generated_environment.variables["TMP_DIR"] = "/home/ubuntu/nighthawk_output"
+  generated_environment.test_version = generated_environment.IPV_V4ONLY
+  generated_environment.envoy_path = "envoy"
+
+  return generated_environment
+
+def _generate_envoy_source(job_control: JobControl) -> SourceRepository:
+  """Generate a default Envoy SourceRepository in the control object.
+
+  Returns:
+    a SourceRepository object defining the location of the Envoy source.
+  """
+  envoy_source = job_control.source.add()
+  envoy_source.identity = envoy_source.SRCID_ENVOY
+  envoy_source.source_path = "/home/ubuntu/envoy"
+  envoy_source.source_url = "https://github.com/envoyproxy/envoy.git"
+  envoy_source.branch = "master"
+  envoy_source.commit_hash = "hash_doesnt_really_matter_here"
+
+  return envoy_source
 
 def test_images_only_config():
   """Test benchmark validation logic.
@@ -16,23 +63,13 @@ def test_images_only_config():
   when all parameters are present.
   """
   # create a valid configuration defining images only for benchmark
-  job_control = JobControl()
-  job_control.remote = False
-  job_control.scavenging_benchmark = True
+  job_control = JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
 
-  docker_images = job_control.images
-  docker_images.reuse_nh_images = True
-  docker_images.nighthawk_benchmark_image = \
-      "envoyproxy/nighthawk-benchmark-dev:test_images_only_config"
-  docker_images.nighthawk_binary_image = \
-      "envoyproxy/nighthawk-dev:test_images_only_config"
-  docker_images.envoy_image = \
-      "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
-
-  env = job_control.environment
-  env.variables["TMP_DIR"] = "/home/ubuntu/nighthawk_output"
-  env.test_version = env.IPV_V4ONLY
-  env.envoy_path = "envoy"
+  _generate_images(job_control)
+  _generate_environment(job_control)
 
   benchmark = Benchmark(job_control, "test_benchmark")
 
@@ -41,7 +78,7 @@ def test_images_only_config():
   with mock.patch('docker.models.containers.ContainerCollection.run') as docker_mock:
     benchmark.execute_benchmark()
     docker_mock.assert_called_once_with(
-        'envoyproxy/nighthawk-benchmark-dev:test_images_only_config',
+        'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
         command=mock.ANY,
         detach=False,
         environment=mock.ANY,
@@ -58,17 +95,15 @@ def test_no_envoy_image_no_sources():
   throw an exception since no sources are present
   """
   # create a valid configuration with a missing Envoy image
-  job_control = JobControl()
-  job_control.remote = False
-  job_control.scavenging_benchmark = True
+  job_control = JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
 
-  docker_images = job_control.images
-  docker_images.reuse_nh_images = True
-  docker_images.reuse_nh_images = True
-  docker_images.nighthawk_benchmark_image = \
-      "envoyproxy/nighthawk-benchmark-dev:test_missing_envoy_image"
-  docker_images.nighthawk_binary_image = \
-      "envoyproxy/nighthawk-dev:test_missing_envoy_image"
+  images = _generate_images(job_control)
+  images.envoy_image = ""
+
+  _generate_environment(job_control)
 
   benchmark = Benchmark(job_control, "test_benchmark")
 
@@ -78,7 +113,6 @@ def test_no_envoy_image_no_sources():
 
   assert str(validation_exception.value) == "No source configuration specified"
 
-
 def test_source_to_build_envoy():
   """Validate we can build images from source.
 
@@ -86,23 +120,15 @@ def test_source_to_build_envoy():
   We do not expect the validation logic to throw an exception
   """
   # create a valid configuration with a missing Envoy image
-  job_control = JobControl()
-  job_control.remote = False
-  job_control.scavenging_benchmark = True
+  job_control = JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
 
-  docker_images = job_control.images
-  docker_images.reuse_nh_images = True
-  docker_images.nighthawk_benchmark_image = \
-      "envoyproxy/nighthawk-benchmark-dev:test_source_present_to_build_envoy"
-  docker_images.nighthawk_binary_image = \
-      "envoyproxy/nighthawk-dev:test_source_present_to_build_envoy"
+  images = _generate_images(job_control)
+  images.envoy_image = ""
 
-  envoy_source = job_control.source.add()
-  envoy_source.identity = envoy_source.SRCID_ENVOY
-  envoy_source.source_path = "/home/ubuntu/envoy"
-  envoy_source.source_url = "https://github.com/envoyproxy/envoy.git"
-  envoy_source.branch = "master"
-  envoy_source.commit_hash = "hash_doesnt_really_matter_here"
+  _generate_envoy_source(job_control)
 
   env = job_control.environment
   env.test_version = env.IPV_V4ONLY
@@ -116,7 +142,7 @@ def test_source_to_build_envoy():
   with mock.patch('docker.models.containers.ContainerCollection.run') as docker_mock:
     benchmark.execute_benchmark()
     docker_mock.assert_called_once_with(
-        'envoyproxy/nighthawk-benchmark-dev:test_source_present_to_build_envoy',
+        'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
         command=mock.ANY,
         detach=False,
         environment=mock.ANY,
@@ -125,7 +151,6 @@ def test_source_to_build_envoy():
         stdout=True,
         tty=True,
         volumes=mock.ANY)
-
 
 def test_no_source_to_build_envoy():
   """Validate that we fail to build images without sources.
@@ -136,27 +161,19 @@ def test_no_source_to_build_envoy():
   We expect the validation logic to throw an exception
   """
   # create a configuration with a missing Envoy image
-  job_control = JobControl()
-  job_control.remote = False
-  job_control.scavenging_benchmark = True
+  job_control = JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
 
-  docker_images = job_control.images
-  docker_images.reuse_nh_images = True
-  docker_images.nighthawk_benchmark_image = \
-      "envoyproxy/nighthawk-benchmark-dev:test_no_source_present_to_build_envoy"
-  docker_images.nighthawk_binary_image = \
-      "envoyproxy/nighthawk-dev:test_no_source_present_to_build_envoy"
-
-  envoy_source = job_control.source.add()
+  images = _generate_images(job_control)
+  images.envoy_image = ""
 
   # Denote that the soure is for nighthawk.  Values aren't really checked at
   # this stage since we have a missing Envoy image and a nighthawk source
   # validation should fail.
+  envoy_source = _generate_envoy_source(job_control)
   envoy_source.identity = envoy_source.SRCID_NIGHTHAWK
-  envoy_source.source_path = "/home/ubuntu/envoy"
-  envoy_source.source_url = "https://github.com/envoyproxy/envoy.git"
-  envoy_source.branch = "master"
-  envoy_source.commit_hash = "hash_doesnt_really_matter_here"
 
   benchmark = Benchmark(job_control, "test_benchmark")
 
@@ -167,7 +184,6 @@ def test_no_source_to_build_envoy():
   assert str(validation_exception.value) == \
       "No source specified to build unspecified Envoy image"
 
-
 def test_no_source_to_build_nh():
   """Validate that we fail to build nighthawk without sources.
 
@@ -177,27 +193,18 @@ def test_no_source_to_build_nh():
   We expect the validation logic to throw an exception
   """
   # create a valid configuration with a missing NightHawk container image
-  job_control = JobControl()
-  job_control.remote = False
-  job_control.scavenging_benchmark = True
+  job_control = JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
 
-  docker_images = job_control.images
-  docker_images.reuse_nh_images = True
-  docker_images.nighthawk_benchmark_image = \
-      "envoyproxy/nighthawk-benchmark-dev:test_no_source_to_build_nh"
-  docker_images.envoy_image = \
-      "envoyproxy/envoy-dev:test_no_source_to_build_nh"
+  images = _generate_images(job_control)
+  images.nighthawk_binary_image = ""
 
-  envoy_source = job_control.source.add()
-
-  # Denote that the soure is for envoy.  Values aren't really checked at this
-  # stage since we have a missing Envoy image and a nighthawk source validation
+  # Generate a default Envoy source object.  Values aren't really checked at
+  # this stage since we have a missing Envoy image, nighthawk source validation
   # should fail.
-  envoy_source.identity = envoy_source.SRCID_ENVOY
-  envoy_source.source_path = "/home/ubuntu/envoy"
-  envoy_source.source_url = "https://github.com/envoyproxy/envoy.git"
-  envoy_source.branch = "master"
-  envoy_source.commit_hash = "hash_doesnt_really_matter_here"
+  _generate_envoy_source(job_control)
 
   benchmark = Benchmark(job_control, "test_benchmark")
 
@@ -208,7 +215,6 @@ def test_no_source_to_build_nh():
   assert str(validation_exception.value) == \
       "No source specified to build unspecified NightHawk image"
 
-
 def test_no_source_to_build_nh2():
   """Validate that we fail to build nighthawk without sources.
 
@@ -218,24 +224,19 @@ def test_no_source_to_build_nh2():
   We expect the validation logic to throw an exception
   """
   # create a valid configuration with a missing both NightHawk container images
-  job_control = JobControl()
-  job_control.remote = False
-  job_control.scavenging_benchmark = True
+  job_control = JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
 
-  docker_images = job_control.images
-  docker_images.envoy_image = \
-      "envoyproxy/envoy-dev:test_no_source_present_to_build_both_nighthawk_images"
+  images = _generate_images(job_control)
+  images.nighthawk_binary_image = ""
+  images.nighthawk_benchmark_image = ""
 
-  envoy_source = job_control.source.add()
-
-  # Denote that the soure is for envoy.  Values aren't really checked at this
-  # stage since we have a missing Envoy image and a nighthawk source validation
+  # Generate a default Envoy source object.  Values aren't really checked at
+  # this stage since we have a missing Envoy image, nighthawk source validation
   # should fail.
-  envoy_source.identity = envoy_source.SRCID_ENVOY
-  envoy_source.source_path = "/home/ubuntu/envoy"
-  envoy_source.source_url = "https://github.com/envoyproxy/envoy.git"
-  envoy_source.branch = "master"
-  envoy_source.commit_hash = "hash_doesnt_really_matter_here"
+  _generate_envoy_source(job_control)
 
   benchmark = Benchmark(job_control, "test_benchmark")
 

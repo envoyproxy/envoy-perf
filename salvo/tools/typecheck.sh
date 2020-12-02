@@ -5,9 +5,9 @@ set -x
 
 function die()
 {
-  MSG="$1"
+  MESSAGE="$1"
 
-  echo ${MSG}
+  echo ${MESSAGE}
   exit 1
 }
 

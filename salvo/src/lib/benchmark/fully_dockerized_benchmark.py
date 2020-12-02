@@ -10,6 +10,7 @@ import logging
 from src.lib.benchmark.base_benchmark import (BaseBenchmark, get_docker_volumes)
 from api.control_pb2 import JobControl
 from api.image_pb2 import DockerImages
+from src.lib.docker_image import DockerRunParameters
 
 log = logging.getLogger(__name__)
 
@@ -92,9 +93,9 @@ class Benchmark(BaseBenchmark):
               and not can_build_nighthawk:
         # If the Envoy image is specified, then the validation failed for
         # NightHawk and vice versa
-        msg = "No source specified to build unspecified {image} image".format(
+        message = "No source specified to build unspecified {image} image".format(
             image="NightHawk" if images.envoy_image else "Envoy")
-        raise Exception(msg)
+        raise Exception(message)
 
 
   def execute_benchmark(self) -> None:
@@ -133,17 +134,18 @@ class Benchmark(BaseBenchmark):
     log.debug(f"Using Volumes: {volumes}")
     self.set_environment_vars()
 
-    kwargs = {}
-    kwargs['environment'] = image_vars
-    kwargs['command'] = ['./benchmarks', '--log-cli-level=info', '-vvvv']
-    kwargs['volumes'] = volumes
-    kwargs['network_mode'] = 'host'
-    kwargs['tty'] = True
+    run_parameters = DockerRunParameters(
+        command=['./benchmarks', '--log-cli-level=info', '-vvvv'],
+        environment=image_vars,
+        volumes=volumes,
+        network_mode='host',
+        tty=True
+    )
 
     # TODO: We need to capture stdout and stderr to a file to catch docker
     # invocation issues. This may help with the escaping that we see happening
     # on an successful invocation
-    result = self.run_image(images.nighthawk_benchmark_image, **kwargs)
+    result = self.run_image(images.nighthawk_benchmark_image, run_parameters)
 
     # FIXME: result needs to be unescaped. We don't use this data and the same
     # content is available in the nighthawk-human.txt file.

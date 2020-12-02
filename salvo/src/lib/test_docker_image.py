@@ -11,7 +11,7 @@ import pytest
 site.addsitedir("src")
 
 from src.lib.constants import DOCKER_SOCKET_PATH
-from src.lib.docker_image import DockerImage
+from src.lib.docker_image import (DockerImage, DockerRunParameters)
 
 
 def test_pull_image():
@@ -45,10 +45,14 @@ def test_run_image():
   image_name = 'amazonlinux:2'
 
   docker_image = DockerImage()
-  kwargs = {}
-  kwargs['environment'] = env
-  kwargs['command'] = cmd
-  result = docker_image.run_image(image_name, **kwargs)
+  run_parameters = DockerRunParameters(
+      environment=env,
+      command=cmd,
+      volumes={},
+      network_mode='host',
+      tty=True
+  )
+  result = docker_image.run_image(image_name, run_parameters)
 
   assert result is not None
   assert re.match(r'[0-9\-a-z]', result.decode('utf-8')) is not None

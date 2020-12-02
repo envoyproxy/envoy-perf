@@ -2,6 +2,7 @@
 This module contains abstracts running a docker image.
 """
 
+import collections
 import json
 import logging
 
@@ -15,6 +16,13 @@ from api.docker_volume_pb2 import Volume, VolumeProperties
 
 log = logging.getLogger(__name__)
 
+DockerRunParameters = collections.namedtuple("DockerRunParameters", [
+    'environment',  # a dict with environment variable to set in the container
+    'command',      # a string containing the command to execute
+    'volumes',      # a dict with the volumes mounted in the container
+    'network_mode', # a string that specifies the network stack used
+    'tty'           # a boolean indicating if a pseudo-tty is allocated
+])
 
 class DockerImage():
   """This class is a wrapper to encapsulate docker operations.
@@ -54,20 +62,23 @@ class DockerImage():
 
     return self._existing_tags
 
-  def run_image(self, image_name: str, **kwargs: List[str]) -> bytearray:
+  def run_image(self, image_name: str,
+                run_parameters: DockerRunParameters) -> bytearray:
     """Execute the identified docker image.
 
-    This method runs the specified image using the arguments specified in kwargs.  kwargs
-    is passed through to the docker container and should contain the volume mapping,
+    This method runs the specified image using the arguments specified in
+    run_parameters. DockerRunParameters contains the volume mapping,
     environment variables, and command to be executed.
 
     Args:
         image_name: The image that is to be executed
-        kwargs: Additional optional argumments to pass to the invocation of
-          the docker image.  The list of supported options is quite long and they
-          are documented here https://docker-py.readthedocs.io/en/stable/index.html
+        run_parameters: argumments to pass to the invocation of the docker
+          image. The list of supported options is quite long and they are
+          documented here https://docker-py.readthedocs.io/en/stable/index.html
 
     Returns:
         A bytearray containing the output produced from executing the specified container
     """
-    return self._client.containers.run(image_name, stdout=True, stderr=True, detach=False, **kwargs)
+
+    return self._client.containers.run(image_name, stdout=True, stderr=True, detach=False,
+                                       **run_parameters._asdict())

@@ -6,7 +6,7 @@ import os
 import logging
 from typing import List
 
-import src.lib.docker_image as docker_image
+from src.lib.docker_image import (DockerImage, DockerRunParameters)
 import src.lib.docker_volume as docker_volume
 from api.control_pb2 import JobControl
 from api.image_pb2 import DockerImages
@@ -40,11 +40,14 @@ class BaseBenchmark(object):
         job_control: The protobuf object containing the parameters and locations
           of benchmark artifacts
         benchmark_name: The name of the benchmark to execute
+
+    Raises:
+        an Exception if no job control object is specified
     """
     if job_control is None:
       raise Exception("No control object received")
 
-    self._docker_image = docker_image.DockerImage()
+    self._docker_image = DockerImage()
     self._control = job_control
     self._benchmark_name = benchmark_name
 
@@ -81,26 +84,29 @@ class BaseBenchmark(object):
     """
     return self._control.source
 
-  def run_image(self, image_name: str, **kwargs) -> bytearray:
+  def run_image(self, image_name: str, run_parameters: DockerRunParameters) -> bytearray:
     """Run the specified docker image with the supplied keyword arguments.
 
     Args:
         image_name: The docker image to be executed
-        kwargs: Additional (optional) arguments passed to the docker
-          image for execution. The full list of arguments can be referenced
-          here https://docker-py.readthedocs.io/en/stable/containers.html#docker.models.containers.ContainerCollection.run
+        run_paramters: a namedtuple of parameters supplied to an image for execution
 
     Returns:
         A bytearray containing the output produced from executing the specified
         container
     """
-    return self._docker_image.run_image(image_name, **kwargs)
+    return self._docker_image.run_image(image_name, run_parameters)
 
   def pull_images(self) -> List[str]:
     """Retrieve all images necessary for the benchmark.
 
     Retrieve the NightHawk and Envoy images defined in the control
     object.
+
+    Returns:
+        a List of required image names that are retrievable. If any image is
+          unavailable, we return an empty list. The intent is for the caller to
+          build the necessary images.
     """
     retrieved_images = []
     images = self.get_images()
@@ -115,11 +121,11 @@ class BaseBenchmark(object):
       # should raise an exception when the benchmark class performs its
       # validation
       if image:
-        i = self._docker_image.pull_image(image)
-        log.debug(f"Retrieved image: {i} for {image}")
-        if i is None:
+        retrieved_image = self._docker_image.pull_image(image)
+        log.debug(f"Retrieved image: {retrieved_image} for {image}")
+        if retrieved_image is None:
           return []
-        retrieved_images.append(i)
+        retrieved_images.append(retrieved_image)
 
     return retrieved_images
 
