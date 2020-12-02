@@ -3,16 +3,11 @@ This module contains abstracts running a docker image.
 """
 
 import collections
-import json
 import logging
 
 # Ref: https://docker-py.readthedocs.io/en/stable/index.html
 import docker
 from typing import List
-
-from google.protobuf.json_format import (Error, MessageToJson)
-
-from api.docker_volume_pb2 import Volume, VolumeProperties
 
 log = logging.getLogger(__name__)
 
@@ -48,7 +43,7 @@ class DockerImage():
     """
     return self._client.images.pull(image_name)
 
-  def list_images(self) -> list:
+  def list_images(self) -> List[str]:
     """List all available docker image tags.
 
     This method returns all the existing image tags from the local host. This is used

@@ -34,7 +34,7 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
   """
   output = ''
   try:
-    log.debug(f"Executing command: [{cmd}] with args [{**parameters._asdict()}]")
+    log.debug(f"Executing command: [{cmd}] with args [{parameters._asdict()}]")
     cmd_array = shlex.split(cmd)
     output = subprocess.check_output(
       cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
