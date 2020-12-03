@@ -107,6 +107,9 @@ class BaseBenchmark(object):
         a List of required image names that are retrievable. If any image is
           unavailable, we return an empty list. The intent is for the caller to
           build the necessary images.
+
+    Raises:
+        an Exception if a requested image is unavailable.
     """
     retrieved_images = []
     images = self.get_images()
@@ -124,7 +127,7 @@ class BaseBenchmark(object):
         retrieved_image = self._docker_image.pull_image(image)
         log.debug(f"Retrieved image: {retrieved_image} for {image}")
         if retrieved_image is None:
-          return []
+            raise Exception("Unable to retrieve image: %s" % image)
         retrieved_images.append(retrieved_image)
 
     return retrieved_images

@@ -3,15 +3,17 @@ Module to execute a command and return the output generated.  Returns both
 stdout and stderr in the buffer.  We also convert bytes objects to a string
 so callers manipulate one type of object
 """
-import collections
 import shlex
 import subprocess
+import typing
 import logging
 
 log = logging.getLogger(__name__)
 
-CommandParameters = collections.namedtuple("CommandParameters", [
-    'cwd', # A string specifying the working directory ofthe executing command
+# Encapsulates parameters and their values required to execute a command
+CommandParameters = typing.NamedTuple("CommandParameters", [
+    ('cwd', str), # A string specifying the working directory of the executing
+                  # command
 ])
 
 def run_command(cmd: str, parameters: CommandParameters) -> str:
@@ -37,7 +39,7 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
     log.debug(f"Executing command: [{cmd}] with args [{parameters._asdict()}]")
     cmd_array = shlex.split(cmd)
     output = subprocess.check_output(
-      cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
+        cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
 
     if isinstance(output, bytes):
       output = output.decode('utf-8').strip()

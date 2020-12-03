@@ -11,9 +11,12 @@ from typing import List
 
 log = logging.getLogger(__name__)
 
+# TODO(abaptiste): consider using pytype annotations in the NamedTuple
+
+# Provides parameters required for executing a docker container
 DockerRunParameters = collections.namedtuple("DockerRunParameters", [
-    'environment',  # a dict with environment variable to set in the container
-    'command',      # a string containing the command to execute
+    'environment',  # a dict with environment variables to set in the container
+    'command',      # a lexical split string containing the command to execute
     'volumes',      # a dict with the volumes mounted in the container
     'network_mode', # a string that specifies the network stack used
     'tty'           # a boolean indicating if a pseudo-tty is allocated
@@ -46,8 +49,9 @@ class DockerImage():
   def list_images(self) -> List[str]:
     """List all available docker image tags.
 
-    This method returns all the existing image tags from the local host. This is used
-    to determine whether the envoy image already exists before we attempt to rebuild it
+    This method returns all the existing image tags from the local host. This
+    is used to determine whether the envoy image already exists before we
+    attempt to rebuild it
 
     Returns:
         A list of image tags available on the local host
@@ -72,8 +76,9 @@ class DockerImage():
           documented here https://docker-py.readthedocs.io/en/stable/index.html
 
     Returns:
-        A bytearray containing the output produced from executing the specified container
+        A bytearray containing the output produced from executing the specified
+          container
     """
 
-    return self._client.containers.run(image_name, stdout=True, stderr=True, detach=False,
-                                       **run_parameters._asdict())
+    return self._client.containers.run(image_name, stdout=True, stderr=True,
+                                       detach=False, **run_parameters._asdict())

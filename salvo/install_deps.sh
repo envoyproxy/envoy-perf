@@ -6,6 +6,12 @@ then
   exit 0
 fi
 
+if [ -f ${HOME}/.salvo_deps_installed ]
+then
+  echo "Dependencies already installed. Remove \"${HOME}/.salvo_deps_installed\" to reinstall."
+  exit 0
+fi
+
 /usr/bin/apt update
 /usr/bin/apt -y install \
   docker.io \
@@ -16,3 +22,5 @@ fi
 pip3 install --upgrade --user pip
 pip3 install --upgrade --user setuptool
 pip3 install --user -r requirements.txt
+
+touch ${HOME}/.salvo_deps_installed
