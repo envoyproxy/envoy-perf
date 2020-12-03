@@ -26,4 +26,12 @@ message DockerImages {
   // using a commit hash or a tag to identify a specific image
   // eg: "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
   string envoy_image = 4;
+
+  // Specifies additional images for which we benchmark for analysis. In this
+  // field one can specify list of image strings.  The framework will execute
+  // an additional benchmark run for each entry specified. If this field is
+  // not specified, we will deduce one commit or tag prior to the "envoy_image"
+  // defined and benchmark the discovered image.
+  // eg: [ "envoyproxy/envoy-dev:7da2adee8962c202999e96cb41e899deb34faf48",..]
+  repeated string additional_envoy_images = 5;
 }
