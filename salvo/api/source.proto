@@ -26,13 +26,20 @@ message SourceRepository {
     string source_url = 3;
   }
 
-  // Specify the local working branch.This is ignored if the source
+  // Specify the local working branch. This is ignored if the source
   // location is specified.
   string branch = 4;
 
-  // Specify a commit hash if applicable. If not identified we will
+  // Specify a commit hash if applicable. If not specified we will
   // determine this from the source tree. We will also use this field
   // to identify the corresponding NightHawk or Envoy image used for
   // the benchmark
   string commit_hash = 5;
+
+  // Specify a set of additional hashes for comparing benchmark results.
+  // This field is optional and if unspecified, we will default to using
+  // one commit prior to the specified "commit_hash" field.  For each
+  // hash specfied we will run a benchmark using the Envoy binary built
+  // from that source commit
+  repeated string additional_hashes = 6;
 }
