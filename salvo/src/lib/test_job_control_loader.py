@@ -12,7 +12,7 @@ import src.lib.job_control_loader as job_ctrl
 
 import api.control_pb2 as proto_control
 import api.source_pb2 as proto_source
-from api.docker_volume_pb2 import (Volume, VolumeProperties)
+import api.docker_volume_pb2 as proto_docker_volume
 
 
 def _write_object_to_disk(pb_obj, path):
@@ -274,19 +274,19 @@ def _test_docker_volume_generation():
   This test creates the volume and mount map we provide to a docker container.
   We verify that the structure can be serialized and read as JSON.
   """
-  volume_cfg = Volume()
+  volume_cfg = proto_docker_volume.Volume()
 
-  props = VolumeProperties()
+  props = proto_docker_volume.VolumeProperties()
   props.bind = constants.DOCKER_SOCKET_PATH
   props.mode = 'ro'
   volume_cfg.volumes[constants.DOCKER_SOCKET_PATH].CopyFrom(props)
 
-  props = VolumeProperties()
+  props = proto_docker_volume.VolumeProperties()
   props.bind = '/home/ubuntu/nighthawk_output'
   props.mode = 'rw'
   volume_cfg.volumes['/home/ubuntu/nighthawk_output'].CopyFrom(props)
 
-  props = VolumeProperties()
+  props = proto_docker_volume.VolumeProperties()
   props.bind = constants.NIGHTHAWK_EXTERNAL_TEST_DIR
   props.mode = 'rw'
   volume_cfg.volumes[constants.NIGHTHAWK_EXTERNAL_TEST_DIR].CopyFrom(props)

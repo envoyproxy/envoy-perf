@@ -9,8 +9,8 @@ import logging
 
 import src.lib.benchmark.base_benchmark as base_benchmark
 import src.lib.docker_image as docker_image
-from api.control_pb2 import JobControl
-from api.image_pb2 import DockerImages
+import api.control_pb2 as proto_control
+import api.image_pb2 as proto_image
 
 log = logging.getLogger(__name__)
 
@@ -20,7 +20,8 @@ class Benchmark(base_benchmark.BaseBenchmark):
      All common methods for benchmarks should be defined here.
   """
 
-  def __init__(self, job_control: JobControl, benchmark_name: str) -> None:
+  def __init__(
+      self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the benchmark class."""
     super(Benchmark, self).__init__(job_control, benchmark_name)
 
@@ -50,7 +51,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     return
 
-  def _verify_sources(self, images: DockerImages) -> None:
+  def _verify_sources(self, images: proto_image.DockerImages) -> None:
     """Validate that sources are available to build a missing image.
 
     Verify that a source definition exists tht can build a missing
