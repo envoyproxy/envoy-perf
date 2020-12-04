@@ -5,13 +5,9 @@ This module builds the volume mapping structure passed to a docker image
 import json
 import logging
 
-# Ref: https://docker-py.readthedocs.io/en/stable/index.html
-import docker
-
-from google.protobuf.json_format import (Error, MessageToJson)
-from src.lib.constants import (DOCKER_SOCKET_PATH, NIGHTHAWK_EXTERNAL_TEST_DIR)
-
-from api.docker_volume_pb2 import Volume, VolumeProperties
+import google.protobuf.json_format as json_format
+import src.lib.constants as constants
+import api.docker_volume_pb2 as proto_docker_volume
 
 log = logging.getLogger(__name__)
 
@@ -37,34 +33,34 @@ def generate_volume_config(output_dir: str, test_dir: str='') -> dict:
     an Error for any other exceptions caught when generating json from the
       VolumeProperties object
   """
-  volume_cfg = Volume()
+  volume_cfg = proto_docker_volume.Volume()
 
   # Setup the docker socket
-  properties = VolumeProperties()
-  properties.bind = DOCKER_SOCKET_PATH
+  properties = proto_docker_volume.VolumeProperties()
+  properties.bind = constants.DOCKER_SOCKET_PATH
   properties.mode = 'rw'
-  volume_cfg.volumes[DOCKER_SOCKET_PATH].CopyFrom(properties)
+  volume_cfg.volumes[constants.DOCKER_SOCKET_PATH].CopyFrom(properties)
 
   # Setup the output directory
-  properties = VolumeProperties()
+  properties = proto_docker_volume.VolumeProperties()
   properties.bind = output_dir
   properties.mode = 'rw'
   volume_cfg.volumes[output_dir].CopyFrom(properties)
 
   # Setup the test directory
   if test_dir:
-    properties = VolumeProperties()
-    properties.bind = NIGHTHAWK_EXTERNAL_TEST_DIR
+    properties = proto_docker_volume.VolumeProperties()
+    properties.bind = constants.NIGHTHAWK_EXTERNAL_TEST_DIR
     properties.mode = 'ro'
     volume_cfg.volumes[test_dir].CopyFrom(properties)
 
   volume_json = {}
   try:
-    volume_json = json.loads(MessageToJson(volume_cfg))
+    volume_json = json.loads(json_format.MessageToJson(volume_cfg))
   except json.decoder.JSONDecodeError as decode_error:
     log.error(f"Could not build volume json object: {decode_error}")
     raise
-  except Error as general_error:
+  except json_format.Error as general_error:
     log.error(f"Unable to convert message to JSON: {general_error}")
     raise
 

@@ -7,15 +7,15 @@ https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 
 import logging
 
-from src.lib.benchmark.base_benchmark import (BaseBenchmark, get_docker_volumes)
+import src.lib.benchmark.base_benchmark as base_benchmark
+import src.lib.docker_image as docker_image
 from api.control_pb2 import JobControl
 from api.image_pb2 import DockerImages
-from src.lib.docker_image import DockerRunParameters
 
 log = logging.getLogger(__name__)
 
 
-class Benchmark(BaseBenchmark):
+class Benchmark(base_benchmark.BaseBenchmark):
   """This is the base class from which all benchmark objecs are derived.
      All common methods for benchmarks should be defined here.
   """
@@ -130,11 +130,11 @@ class Benchmark(BaseBenchmark):
     }
     log.debug(f"Using environment: {image_vars}")
 
-    volumes = get_docker_volumes(output_dir, test_dir)
+    volumes = base_benchmark.get_docker_volumes(output_dir, test_dir)
     log.debug(f"Using Volumes: {volumes}")
-    self.set_environment_vars()
+    self._set_environment_vars()
 
-    run_parameters = DockerRunParameters(
+    run_parameters = docker_image.DockerRunParameters(
         command=['./benchmarks', '--log-cli-level=info', '-vvvv'],
         environment=image_vars,
         volumes=volumes,
@@ -146,6 +146,8 @@ class Benchmark(BaseBenchmark):
     # invocation issues. This may help with the escaping that we see happening
     # on an successful invocation
     result = self.run_image(images.nighthawk_benchmark_image, run_parameters)
+
+    self._clear_environment_vars()
 
     # FIXME: result needs to be unescaped. We don't use this data and the same
     # content is available in the nighthawk-human.txt file.

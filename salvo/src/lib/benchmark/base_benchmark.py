@@ -6,11 +6,11 @@ import os
 import logging
 from typing import List
 
-from src.lib.docker_image import (DockerImage, DockerRunParameters)
+import src.lib.docker_image  as docker_image
 import src.lib.docker_volume as docker_volume
-from api.control_pb2 import JobControl
-from api.image_pb2 import DockerImages
-from api.source_pb2 import SourceRepository
+import api.control_pb2 as proto_control
+import api.image_pb2 as proto_image
+import api.source_pb2 as proto_source
 
 log = logging.getLogger(__name__)
 
@@ -33,7 +33,7 @@ def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
 class BaseBenchmark(object):
   """Base Benchmark class with common functions for all invocations."""
 
-  def __init__(self, job_control: JobControl, benchmark_name: str) -> None:
+  def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the Base Benchmark class.
 
     Args:
@@ -47,7 +47,7 @@ class BaseBenchmark(object):
     if job_control is None:
       raise Exception("No control object received")
 
-    self._docker_image = DockerImage()
+    self._docker_image = docker_image.DockerImage()
     self._control = job_control
     self._benchmark_name = benchmark_name
 
@@ -67,7 +67,7 @@ class BaseBenchmark(object):
     """
     return self._mode_remote
 
-  def get_images(self) -> DockerImages:
+  def get_images(self) -> proto_image.DockerImages:
     """Return the images object from the control object.
 
     Returns:
@@ -75,7 +75,7 @@ class BaseBenchmark(object):
     """
     return self._control.images
 
-  def get_source(self) -> List[SourceRepository]:
+  def get_source(self) -> List[proto_source.SourceRepository]:
     """Return the source object defining locations from where
        NightHawk or Envoy can be built.
 
@@ -84,12 +84,14 @@ class BaseBenchmark(object):
     """
     return self._control.source
 
-  def run_image(self, image_name: str, run_parameters: DockerRunParameters) -> bytearray:
+  def run_image(self, image_name: str,
+                run_parameters: docker_image.DockerRunParameters) -> bytearray:
     """Run the specified docker image with the supplied keyword arguments.
 
     Args:
         image_name: The docker image to be executed
-        run_paramters: a namedtuple of parameters supplied to an image for execution
+        run_paramters: a namedtuple of parameters supplied to an image for
+          execution
 
     Returns:
         A bytearray containing the output produced from executing the specified
@@ -132,15 +134,16 @@ class BaseBenchmark(object):
 
     return retrieved_images
 
-  def set_environment_vars(self) -> None:
+  def _set_environment_vars(self) -> None:
     """Build the environment variable map used to launch an image.
 
     Set the Envoy IP test versions and any other environment variables needed
-    by the test
+    by the test. This method is called before we execute the docker image so
+    that the image has all variables it needs for a given benchmark.
     """
+    self._clear_environment_vars()
+
     environment = self._control.environment
-    if not environment:
-      raise Exception("No environment variables are specified")
 
     if environment.test_version == environment.IPV_UNSPECIFIED:
       raise Exception("No IP version is specified for the benchmark")
@@ -149,5 +152,25 @@ class BaseBenchmark(object):
     elif environment.test_version == environment.IPV_V6ONLY:
       os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v6only'
 
+    if environment.envoy_path:
+      os.environ['ENVOY_PATH'] = environment.envoy_path
+
     for key, value in environment.variables.items():
       os.environ[key] = value
+
+  def _clear_environment_vars(self) -> None:
+    """Clear any environment variables in the job control document
+       so that we do not influence additionally executing tests.
+    """
+    environment = self._control.environment
+
+    # Check that the key exists before deleting it to prevent KeyErrors
+    if 'ENVOY_IP_TEST_VERSIONS' in os.environ:
+      del os.environ['ENVOY_IP_TEST_VERSIONS']
+
+    if 'ENVOY_PATH' in os.environ:
+      del os.environ['ENVOY_PATH']
+
+    for key, _ in environment.variables.items():
+      if key in os.environ:
+        del os.environ[key]
