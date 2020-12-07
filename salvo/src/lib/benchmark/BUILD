@@ -19,6 +19,17 @@ py_library(
 )
 
 py_test(
+  name = "test_base_benchmark",
+  srcs = [ "test_base_benchmark.py" ],
+  srcs_version = "PY3",
+  deps = [
+      "//api:schema_proto",
+      "//src/lib:docker_image",
+      ":benchmark"
+  ],
+)
+
+py_test(
   name = "test_fully_dockerized_benchmark",
   srcs = [ "test_fully_dockerized_benchmark.py" ],
   srcs_version = "PY3",

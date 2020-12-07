@@ -6,13 +6,13 @@ import json
 import tempfile
 import pytest
 
-from google.protobuf.json_format import (MessageToJson)
+import google.protobuf.json_format as json_format
+import src.lib.constants as constants
+import src.lib.job_control_loader as job_ctrl
 
-from src.lib.constants import (DOCKER_SOCKET_PATH, NIGHTHAWK_EXTERNAL_TEST_DIR)
-from job_control_loader import load_control_doc
-from api.control_pb2 import JobControl
-from api.source_pb2 import SourceRepository
-from api.docker_volume_pb2 import (Volume, VolumeProperties)
+import api.control_pb2 as proto_control
+import api.source_pb2 as proto_source
+import api.docker_volume_pb2 as proto_docker_volume
 
 
 def _write_object_to_disk(pb_obj, path):
@@ -26,7 +26,7 @@ def _write_object_to_disk(pb_obj, path):
   Returns:
       None
   """
-  json_obj = MessageToJson(pb_obj, indent=2)
+  json_obj = json_format.MessageToJson(pb_obj, indent=2)
   with open(path, 'w') as json_doc:
     json_doc.write(json_obj)
 
@@ -86,14 +86,16 @@ def _validate_job_control_object(job_control):
   saw_envoy = False
   saw_nighthawk = False
   for source in job_control.source:
-    if source.identity == SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:
+    if source.identity == \
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:
       assert not source.source_path
       assert source.source_url == "https://github.com/envoyproxy/nighthawk.git"
       assert source.branch == "master"
       assert not source.commit_hash
       saw_nighthawk = True
 
-    elif source.identity == SourceRepository.SourceIdentity.SRCID_ENVOY:
+    elif source.identity == \
+        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:
       assert source.source_path == "/home/ubuntu/envoy"
       assert not source.source_url
       assert source.branch == "master"
@@ -164,7 +166,7 @@ def test_control_doc_parse_yaml():
   with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp:
     tmp.write(control_yaml)
     tmp.close()
-    job_control = load_control_doc(tmp.name)
+    job_control = job_ctrl.load_control_doc(tmp.name)
     os.unlink(tmp.name)
 
   _validate_job_control_object(job_control)
@@ -219,7 +221,7 @@ def test_control_doc_parse():
   with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp:
     tmp.write(control_json)
     tmp.close()
-    job_control = load_control_doc(tmp.name)
+    job_control = job_ctrl.load_control_doc(tmp.name)
     os.unlink(tmp.name)
 
   _validate_job_control_object(job_control)
@@ -231,25 +233,30 @@ def test_generate_control_doc():
   This method reads a JSON representation of the job control document,
   serializes it, then verifies that the serialized data can be re-read.
   """
-  job_control = JobControl()
+  job_control = proto_control.JobControl()
   job_control.remote = True
   job_control.scavenging_benchmark = True
 
   nighthawk_source = job_control.source.add()
-  nighthawk_source.identity == SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
+  nighthawk_source.identity = \
+      proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
   nighthawk_source.source_url = "https://github.com/envoyproxy/nighthawk.git"
   nighthawk_source.branch = "master"
 
   envoy_source = job_control.source.add()
-  envoy_source.identity = SourceRepository.SourceIdentity.SRCID_ENVOY
+  envoy_source.identity = \
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
   envoy_source.source_path = "/home/ubuntu/envoy"
   envoy_source.branch = "master"
   envoy_source.commit_hash = "random_commit_hash_string"
 
   job_control.images.reuse_nh_images = True
-  job_control.images.nighthawk_benchmark_image = "envoyproxy/nighthawk-benchmark-dev:latest"
-  job_control.images.nighthawk_binary_image = "envoyproxy/nighthawk-dev:latest"
-  job_control.images.envoy_image = "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
+  job_control.images.nighthawk_benchmark_image = \
+      "envoyproxy/nighthawk-benchmark-dev:latest"
+  job_control.images.nighthawk_binary_image = \
+      "envoyproxy/nighthawk-dev:latest"
+  job_control.images.envoy_image = \
+      "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
 
   job_control.environment.variables["TMP_DIR"] = "/home/ubuntu/nighthawk_output"
   job_control.environment.test_version = job_control.environment.IPV_V4ONLY
@@ -267,22 +274,22 @@ def _test_docker_volume_generation():
   This test creates the volume and mount map we provide to a docker container.
   We verify that the structure can be serialized and read as JSON.
   """
-  volume_cfg = Volume()
+  volume_cfg = proto_docker_volume.Volume()
 
-  props = VolumeProperties()
-  props.bind = DOCKER_SOCKET_PATH
+  props = proto_docker_volume.VolumeProperties()
+  props.bind = constants.DOCKER_SOCKET_PATH
   props.mode = 'ro'
-  volume_cfg.volumes[DOCKER_SOCKET_PATH].CopyFrom(props)
+  volume_cfg.volumes[constants.DOCKER_SOCKET_PATH].CopyFrom(props)
 
-  props = VolumeProperties()
+  props = proto_docker_volume.VolumeProperties()
   props.bind = '/home/ubuntu/nighthawk_output'
   props.mode = 'rw'
   volume_cfg.volumes['/home/ubuntu/nighthawk_output'].CopyFrom(props)
 
-  props = VolumeProperties()
-  props.bind = NIGHTHAWK_EXTERNAL_TEST_DIR
+  props = proto_docker_volume.VolumeProperties()
+  props.bind = constants.NIGHTHAWK_EXTERNAL_TEST_DIR
   props.mode = 'rw'
-  volume_cfg.volumes[NIGHTHAWK_EXTERNAL_TEST_DIR].CopyFrom(props)
+  volume_cfg.volumes[constants.NIGHTHAWK_EXTERNAL_TEST_DIR].CopyFrom(props)
 
   # Verify that we the serialized data is json consumable
   _serialize_and_read_object(volume_cfg)

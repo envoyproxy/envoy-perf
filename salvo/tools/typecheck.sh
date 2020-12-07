@@ -5,9 +5,9 @@ set -x
 
 function die()
 {
-  MSG="$1"
+  MESSAGE="$1"
 
-  echo ${MSG}
+  echo ${MESSAGE}
   exit 1
 }
 
@@ -24,5 +24,4 @@ fi
 
 echo $PWD
 
-bazel build //...
 ${PYTYPE} src -P bazel-bin:.
