@@ -5,8 +5,9 @@ import os
 import copy
 import pytest
 
-import api.control_pb2 as proto_control
+import api.env_pb2 as proto_env
 import src.lib.benchmark.base_benchmark as base_benchmark
+import src.lib.benchmark.benchmark_errors as benchmark_errors
 
 def test_environment_variables():
   """Test that the specified environment variables are set for a
@@ -16,54 +17,53 @@ def test_environment_variables():
       the variables that we set so that we do not pollute other
       tests.
   """
-  job_control = proto_control.JobControl()
-  environ = job_control.environment
+  environ = proto_env.EnvironmentVars()
   environ.variables["TMP_DIR"] = "/home/user/nighthawk_output"
   environ.variables["TEST_VAR1"] = "TEST_VALUE1"
   environ.variables["TEST_VAR2"] = "TEST_VALUE2"
   environ.variables["TEST_VAR3"] = "TEST_VALUE3"
-  environ.test_version = job_control.environment.IPV_V4ONLY
+  environ.test_version = environ.IPV_V4ONLY
   environ.envoy_path = "a_proxy_called_envoy"
 
-  benchmark = base_benchmark.BaseBenchmark(job_control, "test_benchmark")
-  benchmark._set_environment_vars()
+  benchmark_env_controller = base_benchmark.BenchmarkEnvController(environ)
 
-  expected_vars = {
-      'TMP_DIR': '/home/user/nighthawk_output',
-      'TEST_VAR1': 'TEST_VALUE1',
-      'TEST_VAR2': 'TEST_VALUE2',
-      'TEST_VAR3': 'TEST_VALUE3',
-      'ENVOY_IP_TEST_VERSIONS': 'v4only',
-      'ENVOY_PATH': 'a_proxy_called_envoy'
-  }
-
-  environment_variables = copy.deepcopy(os.environ)
-  benchmark._clear_environment_vars()
+  environment_variables = {}
+  with benchmark_env_controller:
+    expected_vars = {
+        'TMP_DIR': '/home/user/nighthawk_output',
+        'TEST_VAR1': 'TEST_VALUE1',
+        'TEST_VAR2': 'TEST_VALUE2',
+        'TEST_VAR3': 'TEST_VALUE3',
+        'ENVOY_IP_TEST_VERSIONS': 'v4only',
+        'ENVOY_PATH': 'a_proxy_called_envoy'
+    }
+    environment_variables = copy.deepcopy(os.environ)
 
   for (key, value) in expected_vars.items():
     assert environment_variables[key] == value
 
 def test_no_environment_variables_exception():
   """Test that we raise an exception if the environment is not configured."""
-  job_control = proto_control.JobControl()
+  environ = proto_env.EnvironmentVars()
 
-  benchmark = base_benchmark.BaseBenchmark(job_control, "test_benchmark")
-  with pytest.raises(Exception) as environment_exception:
-    benchmark._set_environment_vars()
+  benchmark_env_controller = base_benchmark.BenchmarkEnvController(environ)
+  with pytest.raises(benchmark_errors.BenchmarkEnvironmentError) \
+      as environment_error:
+    with benchmark_env_controller:
+      # No action neeed here
+      pass
 
-  assert str(environment_exception.value) == \
+  assert str(environment_error.value) == \
       "No IP version is specified for the benchmark"
 
 def test_minimal_environment_variables():
   """Test that setting the required variables works and no extra variables are
      set.
   """
-  job_control = proto_control.JobControl()
-  environ = job_control.environment
-  environ.test_version = job_control.environment.IPV_V4ONLY
+  environ = proto_env.EnvironmentVars()
+  environ.test_version = environ.IPV_V4ONLY
 
-  benchmark = base_benchmark.BaseBenchmark(job_control, "test_benchmark")
-  benchmark._set_environment_vars()
+  benchmark_env_controller = base_benchmark.BenchmarkEnvController(environ)
 
   not_expected_vars = {
       'TMP_DIR': '/home/user/nighthawk_output',
@@ -76,12 +76,12 @@ def test_minimal_environment_variables():
   expected_vars = {
       'ENVOY_IP_TEST_VERSIONS': 'v4only',
   }
+  with benchmark_env_controller:
+    for (key, value) in expected_vars.items():
+      assert os.environ[key] == value
 
-  for (key, value) in expected_vars.items():
-    assert os.environ[key] == value
-
-  for (key, _) in not_expected_vars.items():
-    assert key not in os.environ
+    for (key, _) in not_expected_vars.items():
+      assert key not in os.environ
 
 
 if __name__ == '__main__':

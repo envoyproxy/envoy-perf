@@ -1,9 +1,14 @@
 load("@rules_python//python:defs.bzl", "py_library", "py_test")
 
-licenses(["notice"])  # Apache 2
-
 package(
-    default_visibility = ["//:__subpackages__"],
+    default_visibility = ["//:__subpackages__"]
+)
+
+py_library(
+    name = "benchmark_errors",
+    data = [
+        "benchmark_errors.py",
+    ],
 )
 
 py_library(
@@ -13,8 +18,9 @@ py_library(
         "fully_dockerized_benchmark.py"
     ],
     deps = [
-        "//src/lib:docker_image",
-        "//src/lib:docker_volume",
+        ":benchmark_errors",
+        "//src/lib/docker:docker_image",
+        "//src/lib/docker:docker_volume",
     ],
 )
 
@@ -24,7 +30,7 @@ py_test(
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
-      "//src/lib:docker_image",
+      "//src/lib/docker:docker_image",
       ":benchmark"
   ],
 )
@@ -35,7 +41,7 @@ py_test(
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
-      "//src/lib:docker_image",
+      "//src/lib/docker:docker_image",
       ":benchmark"
   ],
 )

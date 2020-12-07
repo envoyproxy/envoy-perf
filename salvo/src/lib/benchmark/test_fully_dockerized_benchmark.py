@@ -10,8 +10,10 @@ import api.image_pb2 as proto_image
 import api.env_pb2 as proto_environ
 import api.source_pb2 as proto_source
 import src.lib.benchmark.fully_dockerized_benchmark as full_docker
+import src.lib.benchmark.benchmark_errors as benchmark_errors
 
-def _generate_images(job_control: proto_control.JobControl) -> proto_image.DockerImages:
+def _generate_images(
+    job_control: proto_control.JobControl) -> proto_image.DockerImages:
   """Generate a default images specification for a control object.
 
   Returns:
@@ -58,17 +60,19 @@ def _generate_envoy_source(
 
   return envoy_source
 
-def test_images_only_config():
-  """Test benchmark validation logic.
-
-  Validate that we attempt to run the specified docker image
-  when all parameters are present.
-  """
-  # create a valid configuration defining images only for benchmark
+def _generate_default_job_control() -> proto_control.JobControl:
+  """Generate a default job control object used in tests."""
   job_control = proto_control.JobControl(
       remote=False,
       scavenging_benchmark=True
   )
+  return job_control
+
+def test_images_only_config():
+  """Test benchmark validation logic."""
+
+  # create a valid configuration defining images only for benchmark
+  job_control = _generate_default_job_control()
 
   _generate_images(job_control)
   _generate_environment(job_control)
@@ -77,8 +81,8 @@ def test_images_only_config():
 
   # Calling execute_benchmark shoud not throw an exception
   # Mock the container invocation so that we don't try to pull an image
-  with mock.patch(
-      'docker.models.containers.ContainerCollection.run') as docker_mock:
+  with mock.patch('docker.models.containers.ContainerCollection.run') \
+      as docker_mock:
     benchmark.execute_benchmark()
     docker_mock.assert_called_once_with(
         'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
@@ -98,10 +102,7 @@ def test_no_envoy_image_no_sources():
   throw an exception since no sources are present
   """
   # create a valid configuration with a missing Envoy image
-  job_control = proto_control.JobControl(
-      remote=False,
-      scavenging_benchmark=True
-  )
+  job_control = _generate_default_job_control()
 
   images = _generate_images(job_control)
   images.envoy_image = ""
@@ -111,10 +112,11 @@ def test_no_envoy_image_no_sources():
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
   # Calling execute_benchmark shoud not throw an exception
-  with pytest.raises(Exception) as validation_exception:
+  with pytest.raises(benchmark_errors.FullyDockerizedBenchmarkError) \
+      as validation_error:
     benchmark.execute_benchmark()
 
-  assert str(validation_exception.value) == "No source configuration specified"
+  assert str(validation_error.value) == "No source configuration specified"
 
 def test_source_to_build_envoy():
   """Validate we can build images from source.
@@ -123,10 +125,7 @@ def test_source_to_build_envoy():
   We do not expect the validation logic to throw an exception
   """
   # create a valid configuration with a missing Envoy image
-  job_control = proto_control.JobControl(
-      remote=False,
-      scavenging_benchmark=True
-  )
+  job_control = _generate_default_job_control()
 
   images = _generate_images(job_control)
   images.envoy_image = ""
@@ -142,7 +141,8 @@ def test_source_to_build_envoy():
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
   # Mock the container invocation so that we don't try to pull an image
-  with mock.patch('docker.models.containers.ContainerCollection.run') as docker_mock:
+  with mock.patch('docker.models.containers.ContainerCollection.run') \
+      as docker_mock:
     benchmark.execute_benchmark()
     docker_mock.assert_called_once_with(
         'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',

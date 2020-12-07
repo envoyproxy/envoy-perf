@@ -7,10 +7,11 @@ https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 
 import logging
 
-import src.lib.benchmark.base_benchmark as base_benchmark
-import src.lib.docker_image as docker_image
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
+import src.lib.benchmark.base_benchmark as base_benchmark
+import src.lib.benchmark.benchmark_errors as benchmark_errors
+import src.lib.docker.docker_image as docker_image
 
 log = logging.getLogger(__name__)
 
@@ -61,12 +62,13 @@ class Benchmark(base_benchmark.BaseBenchmark):
         None
 
     Raises:
-        an Exception if no source definitions allow us to build
-          missing docker images.
+        an FullyDockerizedBenchmarkError if no source definitions
+          allow us to build missing docker images.
     """
     source = self.get_source()
     if not source:
-      raise Exception("No source configuration specified")
+      raise benchmark_errors.FullyDockerizedBenchmarkError(
+          "No source configuration specified")
 
     can_build_envoy = False
     can_build_nighthawk = False
@@ -77,7 +79,8 @@ class Benchmark(base_benchmark.BaseBenchmark):
       # Missing at least one nighthawk image -> Need to see a nighthawk source
 
       if source_def.identity == source_def.SRCID_UNSPECIFIED:
-        raise Exception("No source identity specified")
+        raise benchmark_errors.FullyDockerizedBenchmarkError(
+            "No source identity specified")
 
       if not images.envoy_image \
           and source_def.identity == source_def.SRCID_ENVOY and \
@@ -96,8 +99,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
         # NightHawk and vice versa
         message = "No source specified to build unspecified {image} image".format(
             image="NightHawk" if images.envoy_image else "Envoy")
-        raise Exception(message)
-
+        raise benchmark_errors.FullyDockerizedBenchmarkError(message)
 
   def execute_benchmark(self) -> None:
     """Prepare input artifacts and run the benchmark.
@@ -133,7 +135,9 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     volumes = base_benchmark.get_docker_volumes(output_dir, test_dir)
     log.debug(f"Using Volumes: {volumes}")
-    self._set_environment_vars()
+
+    environment_controller = base_benchmark.BenchmarkEnvController(
+        self._control.environment)
 
     run_parameters = docker_image.DockerRunParameters(
         command=['./benchmarks', '--log-cli-level=info', '-vvvv'],
@@ -146,9 +150,9 @@ class Benchmark(base_benchmark.BaseBenchmark):
     # TODO: We need to capture stdout and stderr to a file to catch docker
     # invocation issues. This may help with the escaping that we see happening
     # on an successful invocation
-    result = self.run_image(images.nighthawk_benchmark_image, run_parameters)
 
-    self._clear_environment_vars()
+    with environment_controller:
+      result = self.run_image(images.nighthawk_benchmark_image, run_parameters)
 
     # FIXME: result needs to be unescaped. We don't use this data and the same
     # content is available in the nighthawk-human.txt file.
