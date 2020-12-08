@@ -8,7 +8,8 @@ import re
 import pytest
 
 import src.lib.constants as constants
-import src.lib.docker_image as docker_image
+import src.lib.docker.docker_image as docker_image
+
 
 def test_pull_image():
   """Test retrieving an image.

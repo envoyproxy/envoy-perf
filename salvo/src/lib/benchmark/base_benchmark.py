@@ -6,11 +6,12 @@ import os
 import logging
 from typing import List
 
-import src.lib.docker_image  as docker_image
-import src.lib.docker_volume as docker_volume
+import src.lib.docker.docker_image as docker_image
+import src.lib.docker.docker_volume as docker_volume
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import api.source_pb2 as proto_source
+import api.env_pb2 as proto_env
 
 log = logging.getLogger(__name__)
 
@@ -30,10 +31,15 @@ def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   return docker_volume.generate_volume_config(output_dir, test_dir)
 
 
+class BenchmarkError(Exception):
+  """Errror raised in a benchmark for an unresolvable condition."""
+
+
 class BaseBenchmark(object):
   """Base Benchmark class with common functions for all invocations."""
 
-  def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
+  def __init__(self, job_control: proto_control.JobControl,
+               benchmark_name: str) -> None:
     """Initialize the Base Benchmark class.
 
     Args:
@@ -42,10 +48,10 @@ class BaseBenchmark(object):
         benchmark_name: The name of the benchmark to execute
 
     Raises:
-        an Exception if no job control object is specified
+        BaseBenchmarkError: if no job control object is specified
     """
     if job_control is None:
-      raise Exception("No control object received")
+      raise BenchmarkError("No control object received")
 
     self._docker_image = docker_image.DockerImage()
     self._control = job_control
@@ -111,7 +117,7 @@ class BaseBenchmark(object):
           build the necessary images.
 
     Raises:
-        an Exception if a requested image is unavailable.
+        BenchmarkError: if a requested image is unavailable.
     """
     retrieved_images = []
     images = self.get_images()
@@ -129,10 +135,22 @@ class BaseBenchmark(object):
         retrieved_image = self._docker_image.pull_image(image)
         log.debug(f"Retrieved image: {retrieved_image} for {image}")
         if retrieved_image is None:
-            raise Exception("Unable to retrieve image: %s" % image)
+          raise BenchmarkError("Unable to retrieve image: %s" % image)
         retrieved_images.append(retrieved_image)
 
     return retrieved_images
+
+class BenchmarkEnvironmentError(Exception):
+  """An Error raised if the environment variables required are not
+     able to be set.
+  """
+
+class BenchmarkEnvController():
+  """Benchmark Environment Controller context class."""
+
+  def __init__(self, environment: proto_env.EnvironmentVars) -> None:
+    """Initialize the environment controller with the environment object."""
+    self._environment = environment
 
   def _set_environment_vars(self) -> None:
     """Build the environment variable map used to launch an image.
@@ -140,13 +158,18 @@ class BaseBenchmark(object):
     Set the Envoy IP test versions and any other environment variables needed
     by the test. This method is called before we execute the docker image so
     that the image has all variables it needs for a given benchmark.
+
+    Raises:
+      BenchmarkEnvironmentError: if a required environment variable is
+        unspecified
     """
     self._clear_environment_vars()
 
-    environment = self._control.environment
+    environment = self._environment
 
     if environment.test_version == environment.IPV_UNSPECIFIED:
-      raise Exception("No IP version is specified for the benchmark")
+      raise BenchmarkEnvironmentError(
+          "No IP version is specified for the benchmark")
     elif environment.test_version == environment.IPV_V4ONLY:
       os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v4only'
     elif environment.test_version == environment.IPV_V6ONLY:
@@ -162,7 +185,7 @@ class BaseBenchmark(object):
     """Clear any environment variables in the job control document
        so that we do not influence additionally executing tests.
     """
-    environment = self._control.environment
+    environment = self._environment
 
     # Check that the key exists before deleting it to prevent KeyErrors
     if 'ENVOY_IP_TEST_VERSIONS' in os.environ:
@@ -174,3 +197,20 @@ class BaseBenchmark(object):
     for key, _ in environment.variables.items():
       if key in os.environ:
         del os.environ[key]
+
+  def execute_benchmark(self) -> None:
+    """Interface that must be implemented to execute a given
+       benchmark.
+
+    Raises:
+      NotImplementedError: if this method is not overridden
+    """
+    raise NotImplementedError("Execute Benchmark must be implemented")
+
+  def __enter__(self):
+    """Sets the environment variables specified in the control document."""
+    self._set_environment_vars()
+
+  def __exit__(self, type_param, value, traceback):
+    """Clears any environment variables specified in the control document."""
+    self._clear_environment_vars()

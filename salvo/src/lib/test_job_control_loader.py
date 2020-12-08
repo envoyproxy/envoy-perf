@@ -233,9 +233,10 @@ def test_generate_control_doc():
   This method reads a JSON representation of the job control document,
   serializes it, then verifies that the serialized data can be re-read.
   """
-  job_control = proto_control.JobControl()
-  job_control.remote = True
-  job_control.scavenging_benchmark = True
+  job_control = proto_control.JobControl(
+      remote=True,
+      scavenging_benchmark=True
+  )
 
   nighthawk_source = job_control.source.add()
   nighthawk_source.identity = \

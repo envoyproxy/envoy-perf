@@ -1,18 +1,19 @@
 """
-This module builds the volume mapping structure passed to a docker image 
+This module contains helper functions abstracting the interaction
+with docker.
 """
 
 import json
 import logging
 
 import google.protobuf.json_format as json_format
-import src.lib.constants as constants
 import api.docker_volume_pb2 as proto_docker_volume
+import src.lib.constants as constants
 
 log = logging.getLogger(__name__)
 
 
-def generate_volume_config(output_dir: str, test_dir: str='') -> dict:
+def generate_volume_config(output_dir: str, test_dir: str = '') -> dict:
   """Generates the volumes config necessary for a container to run.
 
   The docker path is hardcoded at the moment.  The output directory
@@ -30,8 +31,8 @@ def generate_volume_config(output_dir: str, test_dir: str='') -> dict:
   Raises:
     json.decoder.JSONDecodeError: if we are unable to convert the object
       to json
-    an Error for any other exceptions caught when generating json from the
-      VolumeProperties object
+    json_format.Error: for any other exceptions caught when generating
+      json from the VolumeProperties object
   """
   volume_cfg = proto_docker_volume.Volume()
 
