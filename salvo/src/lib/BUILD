@@ -7,23 +7,6 @@ package(
 )
 
 py_library(
-    name = "docker_image",
-    data = [
-        "docker_image.py",
-    ],
-)
-
-py_library(
-    name = "docker_volume",
-    data = [
-        "docker_volume.py",
-    ],
-    deps = [
-        ":constants",
-    ],
-)
-
-py_library(
     name = "job_control",
     data = [
         "job_control_loader.py",
@@ -41,18 +24,6 @@ py_library(
     name = "shell",
     data = [
         "cmd_exec.py",
-    ],
-)
-
-py_test(
-    name = "test_docker_image",
-    srcs = ["test_docker_image.py"],
-    srcs_version = "PY3",
-    deps = [
-        ":constants",
-        ":docker_image",
-        ":docker_volume",
-        "//api:schema_proto",
     ],
 )
 
