@@ -8,7 +8,6 @@ from typing import List
 
 import src.lib.docker.docker_image as docker_image
 import src.lib.docker.docker_volume as docker_volume
-import src.lib.benchmark.benchmark_errors as benchmark_errors
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import api.source_pb2 as proto_source
@@ -32,6 +31,10 @@ def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   return docker_volume.generate_volume_config(output_dir, test_dir)
 
 
+class BenchmarkError(Exception):
+  """Errror raised in a benchmark for an unresolvable condition."""
+
+
 class BaseBenchmark(object):
   """Base Benchmark class with common functions for all invocations."""
 
@@ -48,7 +51,7 @@ class BaseBenchmark(object):
         BaseBenchmarkError: if no job control object is specified
     """
     if job_control is None:
-      raise benchmark_errors.BenchmarkError("No control object received")
+      raise BenchmarkError("No control object received")
 
     self._docker_image = docker_image.DockerImage()
     self._control = job_control
@@ -132,12 +135,15 @@ class BaseBenchmark(object):
         retrieved_image = self._docker_image.pull_image(image)
         log.debug(f"Retrieved image: {retrieved_image} for {image}")
         if retrieved_image is None:
-          raise benchmark_errors.BenchmarkError(
-              "Unable to retrieve image: %s" % image)
+          raise BenchmarkError("Unable to retrieve image: %s" % image)
         retrieved_images.append(retrieved_image)
 
     return retrieved_images
 
+class BenchmarkEnvironmentError(Exception):
+  """An Error raised if the environment variables required are not
+     able to be set.
+  """
 
 class BenchmarkEnvController():
   """Benchmark Environment Controller context class."""
@@ -162,7 +168,7 @@ class BenchmarkEnvController():
     environment = self._environment
 
     if environment.test_version == environment.IPV_UNSPECIFIED:
-      raise benchmark_errors.BenchmarkEnvironmentError(
+      raise BenchmarkEnvironmentError(
           "No IP version is specified for the benchmark")
     elif environment.test_version == environment.IPV_V4ONLY:
       os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v4only'
@@ -202,9 +208,9 @@ class BenchmarkEnvController():
     raise NotImplementedError("Execute Benchmark must be implemented")
 
   def __enter__(self):
-    """Method executed when entering a context."""
+    """Sets the environment variables specified in the control document."""
     self._set_environment_vars()
 
   def __exit__(self, type_param, value, traceback):
-    """Method executed when leaving a context."""
+    """Clears any environment variables specified in the control document."""
     self._clear_environment_vars()

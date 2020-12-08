@@ -5,20 +5,12 @@ package(
 )
 
 py_library(
-    name = "benchmark_errors",
-    data = [
-        "benchmark_errors.py",
-    ],
-)
-
-py_library(
     name = "benchmark",
     data = [
         "base_benchmark.py",
         "fully_dockerized_benchmark.py"
     ],
     deps = [
-        ":benchmark_errors",
         "//src/lib/docker:docker_image",
         "//src/lib/docker:docker_volume",
     ],

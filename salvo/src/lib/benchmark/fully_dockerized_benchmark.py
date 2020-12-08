@@ -10,11 +10,14 @@ import logging
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import src.lib.benchmark.base_benchmark as base_benchmark
-import src.lib.benchmark.benchmark_errors as benchmark_errors
 import src.lib.docker.docker_image as docker_image
 
 log = logging.getLogger(__name__)
 
+class FullyDockerizedBenchmarkError(Exception):
+  """Error rasied when running a fully dockerized benchmark in cases
+     where we cannot make progress due to abnormal conditions.
+  """
 
 class Benchmark(base_benchmark.BaseBenchmark):
   """This is the base class from which all benchmark objecs are derived.
@@ -67,8 +70,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     """
     source = self.get_source()
     if not source:
-      raise benchmark_errors.FullyDockerizedBenchmarkError(
-          "No source configuration specified")
+      raise FullyDockerizedBenchmarkError("No source configuration specified")
 
     can_build_envoy = False
     can_build_nighthawk = False
@@ -79,8 +81,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
       # Missing at least one nighthawk image -> Need to see a nighthawk source
 
       if source_def.identity == source_def.SRCID_UNSPECIFIED:
-        raise benchmark_errors.FullyDockerizedBenchmarkError(
-            "No source identity specified")
+        raise FullyDockerizedBenchmarkError("No source identity specified")
 
       if not images.envoy_image \
           and source_def.identity == source_def.SRCID_ENVOY and \
@@ -99,7 +100,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
         # NightHawk and vice versa
         message = "No source specified to build unspecified {image} image".format(
             image="NightHawk" if images.envoy_image else "Envoy")
-        raise benchmark_errors.FullyDockerizedBenchmarkError(message)
+        raise FullyDockerizedBenchmarkError(message)
 
   def execute_benchmark(self) -> None:
     """Prepare input artifacts and run the benchmark.

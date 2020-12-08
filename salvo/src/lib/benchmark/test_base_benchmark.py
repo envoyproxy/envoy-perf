@@ -7,7 +7,6 @@ import pytest
 
 import api.env_pb2 as proto_env
 import src.lib.benchmark.base_benchmark as base_benchmark
-import src.lib.benchmark.benchmark_errors as benchmark_errors
 
 def test_environment_variables():
   """Test that the specified environment variables are set for a
@@ -47,7 +46,7 @@ def test_no_environment_variables_exception():
   environ = proto_env.EnvironmentVars()
 
   benchmark_env_controller = base_benchmark.BenchmarkEnvController(environ)
-  with pytest.raises(benchmark_errors.BenchmarkEnvironmentError) \
+  with pytest.raises(base_benchmark.BenchmarkEnvironmentError) \
       as environment_error:
     with benchmark_env_controller:
       # No action neeed here

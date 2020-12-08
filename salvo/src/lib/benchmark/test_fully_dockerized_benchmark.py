@@ -10,7 +10,6 @@ import api.image_pb2 as proto_image
 import api.env_pb2 as proto_environ
 import api.source_pb2 as proto_source
 import src.lib.benchmark.fully_dockerized_benchmark as full_docker
-import src.lib.benchmark.benchmark_errors as benchmark_errors
 
 def _generate_images(
     job_control: proto_control.JobControl) -> proto_image.DockerImages:
@@ -112,7 +111,7 @@ def test_no_envoy_image_no_sources():
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
   # Calling execute_benchmark shoud not throw an exception
-  with pytest.raises(benchmark_errors.FullyDockerizedBenchmarkError) \
+  with pytest.raises(full_docker.FullyDockerizedBenchmarkError) \
       as validation_error:
     benchmark.execute_benchmark()
 
