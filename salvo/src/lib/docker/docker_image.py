@@ -39,12 +39,19 @@ class DockerImage():
 
     Args:
         image_name: The name of the docker image that we are retrieving from
-        dockerhub or another repository
+        dockerhub or another repository. If the image exists locally, we return
+        the corresponding docker image object from the image name
 
     Returns:
         The Image that was pulled
     """
-    return self._client.images.pull(image_name)
+    existing_images = self.list_images()
+    if image_name not in existing_images:
+      image = self._client.images.pull(image_name)
+    else:
+      image = self._client.images.get(image_name)
+
+    return image
 
   def list_images(self) -> List[str]:
     """List all available docker image tags.
@@ -80,5 +87,55 @@ class DockerImage():
           container
     """
 
-    return self._client.containers.run(image_name, stdout=True, stderr=True,
-                                       detach=False, **run_parameters._asdict())
+    output = ''
+    with DockerImageController(self):
+      output = self._client.containers.run(image_name, stdout=True,
+                                           stderr=True, detach=False,
+                                           **run_parameters._asdict())
+    return output
+
+  def list_processes(self) -> List[str]:
+    """List running containers."""
+    image_filter = {'status': 'running'}
+    return [container.name for container in \
+        self._client.containers.list(filters=image_filter)]
+
+  def stop_image(self, image_name: str) -> None:
+    """Stops a running container."""
+    container = self._client.containers.get(image_name)
+    container.stop()
+
+class DockerImageController():
+  """Manage docker images and stop lingering processes that we spawn."""
+
+  def __init__(self, docker_image: DockerImage) -> None:
+    """Initialize the controller with the DockerImage object.
+
+    Internally this uses the docker image object to enumerage running containers
+    and stop identified containers.
+    """
+    self._running_procs = []
+    self._image = docker_image
+
+  def __enter__(self) -> None:
+    """Enumerate any docker images that are running prior to invoking the
+       benchmark container.
+    """
+    running_images = self._image.list_processes()
+    log.debug(f"Currently Running images: {running_images}")
+    self._running_procs = running_images
+
+  def __exit__(self, type_param, value, traceback) -> None:
+    """Stop any new docker processes that were started.
+
+    Note that this will catch any docker images that were started after
+    the benchmark begins running.
+    """
+    running_images = self._image.list_processes()
+
+    images_to_stop = filter(lambda img: img not in self._running_procs,
+                            running_images)
+
+    for image_name in images_to_stop:
+      log.debug(f"Stopping image: {image_name}")
+      self._image.stop_image(image_name)

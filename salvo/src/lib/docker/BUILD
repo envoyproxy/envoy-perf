@@ -8,7 +8,7 @@ package(
 
 py_library(
     name = "docker_image",
-    data = [
+    srcs = [
         "docker_image.py",
     ],
     deps = [
@@ -18,7 +18,7 @@ py_library(
 
 py_library(
     name = "docker_volume",
-    data = [
+    srcs = [
         "docker_volume.py",
     ],
     deps = [
