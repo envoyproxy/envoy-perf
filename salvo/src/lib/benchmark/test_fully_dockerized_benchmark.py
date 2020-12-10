@@ -2,6 +2,7 @@
 Test the fully dockerized benchmark class
 """
 
+import os
 import pytest
 from unittest import mock
 
@@ -10,6 +11,8 @@ import api.image_pb2 as proto_image
 import api.env_pb2 as proto_environ
 import api.source_pb2 as proto_source
 import src.lib.benchmark.fully_dockerized_benchmark as full_docker
+from src.lib.benchmark import base_benchmark
+from src.lib.docker import docker_image
 
 def _generate_images(
     job_control: proto_control.JobControl) -> proto_image.DockerImages:
@@ -78,21 +81,22 @@ def test_images_only_config():
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
+  run_parameters = docker_image.DockerRunParameters(
+      command=['./benchmarks', '--log-cli-level=info', '-vvvv'],
+      environment=mock.ANY,
+      volumes=mock.ANY,
+      network_mode='host',
+      tty=True
+  )
+
   # Calling execute_benchmark shoud not throw an exception
   # Mock the container invocation so that we don't try to pull an image
-  with mock.patch('docker.models.containers.ContainerCollection.run') \
+  with mock.patch('src.lib.benchmark.base_benchmark.BaseBenchmark.run_image') \
       as docker_mock:
     benchmark.execute_benchmark()
     docker_mock.assert_called_once_with(
         'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
-        command=mock.ANY,
-        detach=False,
-        environment=mock.ANY,
-        network_mode='host',
-        stderr=True,
-        stdout=True,
-        tty=True,
-        volumes=mock.ANY)
+        run_parameters)
 
 def test_no_envoy_image_no_sources():
   """Test benchmark validation logic.
@@ -139,20 +143,21 @@ def test_source_to_build_envoy():
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
+  run_parameters = docker_image.DockerRunParameters(
+      command=['./benchmarks', '--log-cli-level=info', '-vvvv'],
+      environment=mock.ANY,
+      volumes=mock.ANY,
+      network_mode='host',
+      tty=True
+  )
+
   # Mock the container invocation so that we don't try to pull an image
-  with mock.patch('docker.models.containers.ContainerCollection.run') \
+  with mock.patch('src.lib.benchmark.base_benchmark.BaseBenchmark.run_image') \
       as docker_mock:
     benchmark.execute_benchmark()
     docker_mock.assert_called_once_with(
         'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
-        command=mock.ANY,
-        detach=False,
-        environment=mock.ANY,
-        network_mode='host',
-        stderr=True,
-        stdout=True,
-        tty=True,
-        volumes=mock.ANY)
+        run_parameters)
 
 def test_no_source_to_build_envoy():
   """Validate that we fail to build images without sources.
