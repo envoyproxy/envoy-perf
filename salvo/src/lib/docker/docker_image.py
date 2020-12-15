@@ -68,9 +68,17 @@ class DockerImage():
 
     return self._existing_tags
 
+  def get_docker_client(self) -> docker.client:
+    """Return an instance of the docker client for use by the controller.
+
+    Returns:
+      the instantiated docker client.
+    """
+    return self._client
+
   def run_image(self, image_name: str,
                 run_parameters: DockerRunParameters) -> bytearray:
-    """Execute the identified docker image.
+    """Execute the identified docker image using the docker controller.
 
     This method runs the specified image using the arguments specified in
     run_parameters. DockerRunParameters contains the volume mapping,
@@ -79,8 +87,7 @@ class DockerImage():
     Args:
         image_name: The image that is to be executed
         run_parameters: argumments to pass to the invocation of the docker
-          image. The list of supported options is quite long and they are
-          documented here https://docker-py.readthedocs.io/en/stable/index.html
+          image.
 
     Returns:
         A bytearray containing the output produced from executing the specified
@@ -88,10 +95,9 @@ class DockerImage():
     """
 
     output = ''
-    with DockerImageController(self):
-      output = self._client.containers.run(image_name, stdout=True,
-                                           stderr=True, detach=False,
-                                           **run_parameters._asdict())
+    with DockerImageController(self) as docker_controller:
+      output = docker_controller.run(image_name, run_parameters)
+
     return output
 
   def list_processes(self) -> List[str]:
@@ -117,13 +123,15 @@ class DockerImageController():
     self._running_procs = []
     self._image = docker_image
 
-  def __enter__(self) -> None:
+  def __enter__(self):
     """Enumerate any docker images that are running prior to invoking the
        benchmark container.
     """
     running_images = self._image.list_processes()
     log.debug(f"Currently Running images: {running_images}")
     self._running_procs = running_images
+
+    return self
 
   def __exit__(self, type_param, value, traceback) -> None:
     """Stop any new docker processes that were started.
@@ -139,3 +147,23 @@ class DockerImageController():
     for image_name in images_to_stop:
       log.debug(f"Stopping image: {image_name}")
       self._image.stop_image(image_name)
+
+  def run(self, image_name: str,
+          run_parameters: DockerRunParameters) -> bytearray:
+    """Use the docker client to execute the specified container.
+
+    Args:
+      image_name: The image that is to be executed
+      run_parameters: argumments to pass to the invocation of the docker
+        image. The list of supported options is quite long and they are
+        documented here https://docker-py.readthedocs.io/en/stable/index.html
+
+    Returns:
+      A bytearray containing the output produced from executing the specified
+        container
+    """
+
+    client = self._image.get_docker_client()
+    return client.containers.run(image_name, stdout=True,
+                                 stderr=True, detach=False,
+                                 **run_parameters._asdict())
