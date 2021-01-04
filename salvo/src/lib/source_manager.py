@@ -52,7 +52,7 @@ class SourceManager(object):
       a SourceManagerError if we are unable to determine the prior commit
         or tag
     """
-    pass
+    return []
 
   def find_all_images_from_specified_tags(self) -> List[str]:
     """Find all images required for benchmarking from the images specified
@@ -67,7 +67,7 @@ class SourceManager(object):
         document.  We require the nighthawk images to be specified at a
         minimum.  We will not build those from source yet.
     """
-    pass
+    return []
 
   def find_all_images_from_specified_sources(self) -> List[str]:
     """Find all images required for benchmarking from the source and hashes
@@ -82,7 +82,7 @@ class SourceManager(object):
         document. We require the nighthawk images to be specified at a
         minimum.  We will not build those from source yet.
     """
-    pass
+    return []
 
   def get_envoy_hashes_for_benchmark(self) -> List[str]:
     """Determine the hashes for the baseline and previous Envoy Image.
@@ -99,7 +99,7 @@ class SourceManager(object):
        the baseline benchmark, and the previous envoy image the results
        are compared against
     """
-    pass
+    return []
 
   def get_image_hashes_from_disk_source(
       self, disk_source_tree: source_tree.SourceTree,
@@ -118,7 +118,7 @@ class SourceManager(object):
       SourceManagerError: if we are not able to deterimine hashes prior to
         the identified commit
     """
-    pass
+    return []
 
   def get_source_repository(self, source_id) -> proto_source.SourceRepository:
     """Find and return the source repository object with the specified id
@@ -132,4 +132,4 @@ class SourceManager(object):
     Raises:
       SourceManagerError: If no source exists matching the specified source_id
     """
-    pass
+    return proto_source.SourceRepository()

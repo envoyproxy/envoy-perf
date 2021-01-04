@@ -4,6 +4,7 @@ import logging
 import os
 import re
 from subprocess import CalledProcessError
+from typing import List
 
 import src.lib.cmd_exec as cmd_exec
 import src.lib.constants as constants
@@ -37,7 +38,9 @@ class SourceTree(object):
     """Create temporary directories for building and working
         with a source tree.
     """
-    self._tempdir = fileops.get_random_dir(constants.SALVO_TMP)
+
+    # Get the temporary directory from fileops module
+    self._tempdir = None
 
     self._source_repo = source_repo
     self._source_url = source_repo.source_url
@@ -102,7 +105,7 @@ class SourceTree(object):
         HEAD and the local HEAD.  This diff is applied to the source in the
         remote context.
     """
-    pass
+    return ''
 
   def get_directory(self) -> str:
     """Return the full path where the code has been checked out.
@@ -110,7 +113,7 @@ class SourceTree(object):
     Returns:
       a string containing the disk path to the source.
     """
-    pass
+    return ''
 
   def pull(self) -> bool:
     """Retrieve the code from the repository.
@@ -121,7 +124,7 @@ class SourceTree(object):
     Returns:
       a boolean indicating whether the operation was successful
     """
-    pass
+    return False
 
   def checkout_commit_hash(self) -> bool:
     """Checks out the specified commit hash in the source tree
@@ -129,7 +132,7 @@ class SourceTree(object):
     Returns:
       a boolean indicating whether the operation was successful
     """
-    pass
+    return False
 
   def get_head_hash(self) -> str:
     """Retrieve the hash for the HEAD commit.
@@ -138,7 +141,7 @@ class SourceTree(object):
       a string containing the hash corresponding to commit at the HEAD of the
         tree.
     """
-    pass
+    return ''
 
   def get_previous_commit_hash(self, current_commit: str,
                                revisions: int = 2) -> str:
@@ -152,7 +155,7 @@ class SourceTree(object):
     Returns:
       a string with the discovered commit hash
     """
-    pass
+    return ''
 
   def get_revs_behind_parent_branch(self) -> int:
     """Get the number of commits behind the parent branch.
@@ -164,7 +167,7 @@ class SourceTree(object):
       an integer with the number of commits the local source lags
        behind the parent branch
     """
-    pass
+    return 0
 
   def is_up_to_date(self) -> bool:
     """Determine whether the source tree is up to date.
@@ -172,15 +175,15 @@ class SourceTree(object):
     Returns:
       a boolean indicating whether the tree is up to date.
     """
-    pass
+    return False
 
-  def list_tags(self) -> list:
+  def list_tags(self) -> List[str]:
     """Enumerate the repository tags and return them in a list.
 
     Returns:
       a list of tags from the commits
     """
-    pass
+    return []
 
   def get_previous_tag(self, current_tag: str, revisions: int = 1) -> str:
     """Identify a tag a number of revisions behind the current tag.
@@ -201,4 +204,4 @@ class SourceTree(object):
         we expect
 
     """
-    pass
+    return ''
