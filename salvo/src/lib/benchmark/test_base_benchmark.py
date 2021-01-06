@@ -6,7 +6,7 @@ import copy
 import pytest
 
 import api.env_pb2 as proto_env
-import src.lib.benchmark.base_benchmark as base_benchmark
+from src.lib.benchmark import base_benchmark
 
 def test_environment_variables():
   """Test that the specified environment variables are set for a

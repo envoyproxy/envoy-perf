@@ -5,7 +5,7 @@ code
 import logging
 from typing import List
 
-import src.lib.source_tree as source_tree
+from src.lib import source_tree
 import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
 
@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 """The KNOWN_REPOSITORIES map contains the known remote locations for the source
    code needed to build Envoy.
 """
-KNOWN_REPOSITORIES = {'envoy': 'https://github.com/envoyproxy/envoy.git'}
+_KNOWN_REPOSITORIES = {'envoy': 'https://github.com/envoyproxy/envoy.git'}
 
 # In the list of benchmarks to execute, the Baseline image is always
 # the last entry
@@ -89,7 +89,7 @@ class SourceManager(object):
 
     Using the name and tag for the envoy image specified in the control
     document, determine the previous image hash.  Return all discovered
-    hashes in a dictionary.
+    hashes.
 
     If secondary images or secondary hashes are present, we will use these
     images for benchmarking and will not do any hash deduction.
@@ -120,11 +120,14 @@ class SourceManager(object):
     """
     return []
 
-  def get_source_repository(self, source_id) -> proto_source.SourceRepository:
+def get_source_repository(self, \
+    source_id: proto_source.SourceRepository.SourceIdentity) \
+    -> proto_source.SourceRepository:
     """Find and return the source repository object with the specified id
 
     Args:
-      source_id: The identity of the source object we seek
+      source_id: The identity of the source object we seek (eg.
+        SRCID_NIGHTHAWK or SRCID_ENVOY)
 
     Return:
       a Source repository matching the specified source_id

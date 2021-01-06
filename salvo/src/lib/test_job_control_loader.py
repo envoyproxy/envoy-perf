@@ -6,9 +6,9 @@ import json
 import tempfile
 import pytest
 
-import google.protobuf.json_format as json_format
-import src.lib.constants as constants
-import src.lib.job_control_loader as job_ctrl
+from google.protobuf import json_format
+from src.lib import constants
+from src.lib import job_control_loader as job_ctrl
 
 import api.control_pb2 as proto_control
 import api.source_pb2 as proto_source

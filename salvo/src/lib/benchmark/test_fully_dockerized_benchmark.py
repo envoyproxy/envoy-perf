@@ -10,7 +10,8 @@ import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import api.env_pb2 as proto_environ
 import api.source_pb2 as proto_source
-import src.lib.benchmark.fully_dockerized_benchmark as full_docker
+
+from src.lib.benchmark import fully_dockerized_benchmark as full_docker
 from src.lib.benchmark import base_benchmark
 from src.lib.docker import docker_image
 

@@ -4,10 +4,10 @@ Test source management operations needed for executing benchmarks
 import logging
 import shlex
 import pytest
-import unittest.mock as mock
+from unittest import mock
 
-import src.lib.source_manager as source_manager
-import src.lib.source_tree as source_tree
+from src.lib import (source_manager, source_tree)
+
 import api.control_pb2 as proto_control
 
 logging.basicConfig(level=logging.DEBUG)

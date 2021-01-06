@@ -6,9 +6,9 @@ with docker.
 import json
 import logging
 
-import google.protobuf.json_format as json_format
+from google.protobuf import json_format
+from src.lib import constants
 import api.docker_volume_pb2 as proto_docker_volume
-import src.lib.constants as constants
 
 log = logging.getLogger(__name__)
 

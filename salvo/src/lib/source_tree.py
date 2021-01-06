@@ -3,18 +3,19 @@
 import logging
 import os
 import re
-from subprocess import CalledProcessError
+import subprocess
 from typing import List
 
-import src.lib.cmd_exec as cmd_exec
-import src.lib.constants as constants
+from src.lib import (cmd_exec, constants)
 
 import api.source_pb2 as proto_source
 
 log = logging.getLogger(__name__)
 
-
-TAG_REGEX = r'^v\d\.\d+\.\d+'
+# _TAG_REGEX matches strings of the format "v1.16.0".  We use this to
+# determine whether a user specified a commit hash or a release tag
+# for a given docker image
+_TAG_REGEX = r'^v\d\.\d+\.\d+'
 
 class SourceTreeException(Exception):
   """Raised if we encounter a condition from which we cannot recover, when
@@ -23,7 +24,7 @@ class SourceTreeException(Exception):
 
 def is_tag(image_tag: str) -> bool:
   """Determine whether a an image tag is a commit hash or a version tag."""
-  match = re.match(TAG_REGEX, image_tag)
+  match = re.match(_TAG_REGEX, image_tag)
   return match is not None
 
 
@@ -88,7 +89,9 @@ class SourceTree(object):
     if self._source_path and not self._source_url:
       return True
 
-    return False
+    raise SourceTreeException(
+        "Insufficient information in source definition for it to be usable")
+
 
   def get_source_identity(self) -> \
       proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:

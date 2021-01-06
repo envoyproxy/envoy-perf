@@ -5,8 +5,8 @@ import json
 import logging
 import yaml
 
+from google.protobuf import json_format
 import api.control_pb2 as proto_control
-import google.protobuf.json_format as json_format
 
 log = logging.getLogger(__name__)
 

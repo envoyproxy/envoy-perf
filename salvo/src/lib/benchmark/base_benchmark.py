@@ -6,8 +6,8 @@ import os
 import logging
 from typing import List
 
-import src.lib.docker.docker_image as docker_image
-import src.lib.docker.docker_volume as docker_volume
+from src.lib.docker import (docker_image, docker_volume)
+
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import api.source_pb2 as proto_source
