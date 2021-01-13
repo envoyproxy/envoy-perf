@@ -47,7 +47,7 @@ py_library(
         "//api:schema_proto",
         ":shell",
         ":constants",
-        "//src/lib/common:fileops"
+        "//src/lib/common:file_ops"
     ],
 )
 

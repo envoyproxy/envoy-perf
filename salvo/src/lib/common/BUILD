@@ -5,8 +5,8 @@ package(
 )
 
 py_library(
-    name = "fileops",
+    name = "file_ops",
     data = [
-        "fileops.py",
+        "file_ops.py",
     ],
 )

@@ -25,8 +25,7 @@ def open_json(path: str, mode: str = 'r') -> dict:
 
 
 def open_yaml(path: str, mode: str = 'r') -> dict:
-  """Open a json file and return its contents as a dictionary
-
+  """Open a yaml file and return its contents as a dictionary 
   Args:
     path: the full path to the YAML file
     mode: the mode with which we open the file.  The mode defaults
