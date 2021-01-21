@@ -12,14 +12,6 @@ import api.source_pb2 as proto_source
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
 
-_GIT_TAG_LIST = """
-v1.14.5
-v1.15.0
-v1.15.1
-v1.15.2
-v1.16.0
-"""
-
 def test_source_tree_object():
   """Verify that we throw an exception if not all required data is present."""
   source = source_tree.SourceTree(proto_source.SourceRepository())
@@ -346,16 +338,21 @@ def test_branch_up_to_date():
 def test_list_tags():
   """Verify that we can list tags from a repository."""
 
+  GIT_TAG_LIST = """
+v1.15.2
+v1.16.0
+"""
+
   origin = 'https://github.com/someawesomeproject/repo.git'
   source = _generate_source_tree_from_origin(origin)
 
   git_cmd = "git tag --list --sort v:refname"
   with mock.patch('src.lib.cmd_exec.run_command',
-                  mock.MagicMock(return_value=_GIT_TAG_LIST)) as magic_mock:
+                  mock.MagicMock(return_value=GIT_TAG_LIST)) as magic_mock:
 
     tags_list = source.list_tags()
     expected_tags_list = [
-        tag for tag in _GIT_TAG_LIST.split('\n') if tag
+        tag for tag in GIT_TAG_LIST.split('\n') if tag
     ]
 
     cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
@@ -374,6 +371,12 @@ def test_is_tag():
 
 def test_get_previous_tag():
   """Verify that we can identify the previous tag for a given release."""
+
+  GIT_TAG_LIST = """
+v1.15.2
+v1.16.0
+"""
+
   origin = 'https://github.com/someawesomeproject/repo.git'
   source = _generate_source_tree_from_origin(origin)
 
@@ -383,7 +386,7 @@ def test_get_previous_tag():
   git_cmd = "git tag --list --sort v:refname"
 
   with mock.patch('src.lib.cmd_exec.run_command',
-                  mock.MagicMock(return_value=_GIT_TAG_LIST)) as magic_mock:
+                  mock.MagicMock(return_value=GIT_TAG_LIST)) as magic_mock:
 
     previous_tag = source.get_previous_tag(current_tag)
     cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
@@ -393,6 +396,14 @@ def test_get_previous_tag():
 
 def test_get_previous_n_tag():
   """Verify that we can identify the previous tag for a given release."""
+
+  GIT_TAG_LIST = """
+v1.14.5
+v1.15.0
+v1.15.1
+v1.15.2
+v1.16.0
+"""
   origin = 'https://github.com/someawesomeproject/repo.git'
   source = _generate_source_tree_from_origin(origin)
 
@@ -402,7 +413,7 @@ def test_get_previous_n_tag():
   git_cmd = "git tag --list --sort v:refname"
 
   with mock.patch('src.lib.cmd_exec.run_command',
-                  mock.MagicMock(return_value=_GIT_TAG_LIST)) as magic_mock:
+                  mock.MagicMock(return_value=GIT_TAG_LIST)) as magic_mock:
 
     previous_tag = source.get_previous_tag(current_tag, revisions=4)
 

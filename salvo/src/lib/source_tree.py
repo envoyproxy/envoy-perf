@@ -127,6 +127,10 @@ class SourceTree(object):
         remotely.  We will attempt to generate a patch between the origin
         HEAD and the local HEAD.  This diff is applied to the source in the
         remote context.
+
+    Raises:
+      SourceTreeError: if we are not able to determine the origin url for
+        a managed source tree
     """
     valid = self._validate()
     log.debug(f"Valid: {valid} for object: {self}")
