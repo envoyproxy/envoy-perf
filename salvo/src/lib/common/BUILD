@@ -10,3 +10,11 @@ py_library(
         "file_ops.py",
     ],
 )
+py_test(
+    name = "test_file_ops",
+    srcs = ["test_file_ops.py"],
+    srcs_version = "PY3",
+    deps = [
+        ":file_ops",
+    ],
+)
