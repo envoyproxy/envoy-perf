@@ -13,7 +13,7 @@ from src.lib.common import file_ops
 from unittest import mock
 
 
-_test_json = """
+_TEST_JSON = """
 {
   "key" : "this is my json file",
   "key2" : "there are many like it",
@@ -23,7 +23,7 @@ _test_json = """
 }
 """
 
-_test_yaml = """
+_TEST_YAML = """
 key: this is my json file
 key2: there are many like it
 key3:
@@ -42,7 +42,7 @@ def _validate_test_data(file_data):
 def test_open_json():
   with tempfile.NamedTemporaryFile() as temp_json:
     with open(temp_json.name, 'w') as temp_data:
-      temp_data.write(_test_json)
+      temp_data.write(_TEST_JSON)
 
     json_data = file_ops.open_json(temp_json.name)
     _validate_test_data(json_data)
@@ -50,7 +50,7 @@ def test_open_json():
 def test_open_yaml():
   with tempfile.NamedTemporaryFile() as temp_yaml:
     with open(temp_yaml.name, 'w') as temp_data:
-      temp_data.write(_test_yaml)
+      temp_data.write(_TEST_YAML)
 
     yaml_data = file_ops.open_yaml(temp_yaml.name)
     _validate_test_data(yaml_data)
@@ -58,7 +58,7 @@ def test_open_yaml():
 def test_open_yaml_as_json():
   with tempfile.NamedTemporaryFile() as temp_json:
     with open(temp_json.name, 'w') as temp_data:
-      temp_data.write(_test_yaml)
+      temp_data.write(_TEST_YAML)
 
     with pytest.raises(json.decoder.JSONDecodeError) as decode_error:
       json_data = file_ops.open_json(temp_json.name)
@@ -68,7 +68,7 @@ def test_open_yaml_as_json():
 def test_open_json_as_yaml():
   with tempfile.NamedTemporaryFile() as temp_yaml:
     with open(temp_yaml.name, 'w') as temp_data:
-      temp_data.write(_test_json)
+      temp_data.write(_TEST_JSON)
 
     yaml_data = file_ops.open_yaml(temp_yaml.name)
     _validate_test_data(yaml_data)
