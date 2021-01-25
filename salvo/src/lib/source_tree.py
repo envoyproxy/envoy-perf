@@ -1,7 +1,9 @@
 """Manage a source location on disk"""
 import re
+import glob
 import logging
 import os
+import shutil
 import subprocess
 from typing import List
 
@@ -54,7 +56,11 @@ class SourceTree(object):
     if not home_dir.startswith(constants.SALVO_TMP):
       home_dir = constants.SALVO_TMP
 
-    self._tempdir = file_ops.get_random_dir(home_dir)
+    # This is the destination directory where the source is copied or cloned
+    # If the source_repo has a path, we copy from that path into the _build_dir.
+    # If the source_repo has a url, we clone from that url into the _build_dir.
+    self._build_dir = file_ops.get_random_dir(home_dir)
+
     self._source_repo = source_repo
 
   def __repr__(self) -> str:
@@ -65,6 +71,7 @@ class SourceTree(object):
     result += f"Branch: [{self._source_repo.branch}] "
     result += f"Hash: [{self._source_repo.commit_hash}] "
     result += f"Workdir: [{self._source_repo.source_path}]"
+    result += f"Build Dir: [{self._build_dir.name}]"
 
     return result
 
@@ -96,11 +103,6 @@ class SourceTree(object):
     # - We can clone the url to a temporary disk location and work in that
     #   directory
     if not self._source_repo.source_path and self._source_repo.source_url:
-      log.debug(f"No source path in control object. Using {self._tempdir}")
-
-      if not os.path.exists(self._tempdir):
-        os.mkdir(self._tempdir)
-
       return True
 
     # We have a source url and a source on disk -> good.
@@ -164,8 +166,31 @@ class SourceTree(object):
     """
     self._validate()
 
-    return  self._source_repo.source_path \
-                 if self._source_repo.source_path else self._tempdir
+    return self._build_dir.name
+
+  def copy_source_directory(self) -> bool:
+    """Clone the original source directory.
+
+    Directories outside of the bazel build tree are read only.  We must copy
+    the source to a new location to build it.
+
+    Returns:
+      a boolean value indicating the success of the copy operation
+    """
+    self._validate()
+
+    if not self._source_repo.source_path:
+      log.debug("No source location specified.  Source may need to be cloned")
+      return False
+
+    output_directory = self.get_source_directory()
+
+    log.debug(f"Copying tree from {self._source_repo.source_path} to {output_directory}")
+    ignore_bazel = shutil.ignore_patterns('bazel-*')
+    shutil.copytree(self._source_repo.source_path, output_directory,
+                    symlinks=False, ignore=ignore_bazel)
+
+    return True
 
   def pull(self) -> bool:
     """Retrieve the code from the repository.
@@ -182,6 +207,10 @@ class SourceTree(object):
     source_name = proto_source.SourceRepository.SourceIdentity.Name(
         self._source_repo.identity)
     log.debug(f"Pulling [{source_name}] from origin: [{self._source_repo.source_url}]")
+
+    if not self._source_repo.source_url:
+      log.debug("No url specified for source. Cannot pull.")
+      return False
 
     try:
       if self.is_up_to_date():
@@ -229,7 +258,6 @@ class SourceTree(object):
       # HEAD is now at <8 chars of hash>
       expected = "HEAD is now at {commit_hash}".format(
           commit_hash=self._source_repo.commit_hash[:8])
-      log.debug(f"Checkout output: {output}")
 
       checkout_success = expected in output
 
@@ -269,7 +297,9 @@ class SourceTree(object):
 
     assert current_commit
 
-    self.pull()
+    if not self.pull():
+      log.debug("Source pull failed. Copying source directory")
+      self.copy_source_directory()
 
     log.debug(f"Finding previous commit to current commit: [{current_commit}]")
     if is_tag(current_commit):
@@ -399,10 +429,11 @@ class SourceTree(object):
     count_previous_revisions = False
     for tag in tag_list:
       if count_previous_revisions:
-        log.debug(f"Walking {revisions} back from {current_tag}")
+        log.debug(f"Walking {revisions} revision(s) back from {current_tag}")
         revisions -= 1
 
       if revisions == 0:
+        log.debug(f"Using tag {tag} as ancestor to {current_tag}")
         return tag
 
       if tag == current_tag:

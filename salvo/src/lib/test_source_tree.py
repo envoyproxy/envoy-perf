@@ -48,7 +48,7 @@ def test_source_tree_with_local_workdir():
     origin = source.get_origin()
     assert origin == "git@github.com:username/reponame.git"
 
-    cmd_params = cmd_exec.CommandParameters(cwd='/some_source_path')
+    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with("git remote -v", cmd_params)
 
 def test_get_origin_ssh():
@@ -68,7 +68,7 @@ def test_get_origin_ssh():
                   mock.MagicMock(return_value=remote_string)) as magic_mock:
     origin_url = source.get_origin()
 
-    cmd_params = cmd_exec.CommandParameters(cwd='/tmp')
+    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
     assert origin_url == 'git@github.com:username/reponame.git'
@@ -90,7 +90,7 @@ def test_get_origin_https():
   with mock.patch('src.lib.cmd_exec.run_command',
                   mock.MagicMock(return_value=remote_string)) as magic_mock:
     origin_url = source.get_origin()
-    cmd_params = cmd_exec.CommandParameters(cwd='/tmp')
+    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
     assert origin_url == 'https://github.com/aws/aws-app-mesh-examples.git'
@@ -439,7 +439,7 @@ def test_source_tree_with_disk_files():
     origin = source.get_origin()
     assert origin
 
-    cmd_params = cmd_exec.CommandParameters(cwd='/tmp')
+    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
 
