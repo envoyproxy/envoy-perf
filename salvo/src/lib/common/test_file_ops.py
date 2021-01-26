@@ -82,7 +82,7 @@ def test_delete_directory():
 def test_get_random_dir():
   temp_path = file_ops.get_random_dir('my_test_path')
   assert temp_path
-  parent_dir = os.path.dirname(temp_path)
+  parent_dir = os.path.dirname(temp_path.name)
   assert parent_dir == 'my_test_path'
 
 if __name__ == '__main__':

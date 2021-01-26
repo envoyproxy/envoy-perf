@@ -7,6 +7,7 @@ import shlex
 import subprocess
 import typing
 import logging
+import tempfile
 
 log = logging.getLogger(__name__)
 
@@ -34,19 +35,38 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
     subprocess.CalledProcessError if there was a failure executing the specified
       command
   """
+
+  # Because the stdout/stderr from nighthawk can be large, we redirect it to
+  # a temporary file and re-read the output to return to the caller.  This
+  # method also appears to capture output more consistently in the event of a
+  # failed command execution.
   output = ''
+  params = parameters._asdict()
+  tmpfile = tempfile.TemporaryFile(
+      mode='w+', dir=params['cwd'], prefix='cmd_output'
+  )
+
   try:
     log.debug(f"Executing command: [{cmd}] with args [{parameters._asdict()}]")
     cmd_array = shlex.split(cmd)
-    output = subprocess.check_output(
-        cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
+
+    subprocess.check_call(cmd_array, stdout=tmpfile, stderr=tmpfile,
+                          **parameters._asdict())
+
+  except subprocess.CalledProcessError as process_error:
+    log.error(f"Unable to execute [{cmd}]: {process_error}")
+    raise
+
+  finally:
+    tmpfile.flush()
+    tmpfile.seek(0)
+    output = tmpfile.read()
+    tmpfile.close()
 
     if isinstance(output, bytes):
       output = output.decode('utf-8').strip()
 
     log.debug(f"Returning output: [{output}]")
-  except subprocess.CalledProcessError as process_error:
-    log.error(f"Unable to execute [{cmd}]: {process_error}")
-    raise
 
   return output
+
