@@ -168,6 +168,30 @@ class SourceTree(object):
 
     return self._build_dir.name
 
+  def copy_source_directory(self) -> bool:
+    """Clone the original source directory.
+
+    Directories outside of the bazel build tree are read only.  We must copy
+    the source to a new location to build it.
+
+    Returns:
+      a boolean value indicating the success of the copy operation
+    """
+    self._validate()
+
+    if not self._source_repo.source_path:
+      log.debug("No source location specified.  Source may need to be cloned")
+      return False
+
+    output_directory = self.get_source_directory()
+
+    log.debug(f"Copying tree from {self._source_repo.source_path} to {output_directory}")
+    ignore_bazel = shutil.ignore_patterns('bazel-*')
+    shutil.copytree(self._source_repo.source_path, output_directory,
+                    symlinks=False, ignore=ignore_bazel)
+
+    return True
+
   def pull(self) -> bool:
     """Retrieve the code from the repository.
 
