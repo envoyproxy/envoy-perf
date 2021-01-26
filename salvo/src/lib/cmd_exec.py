@@ -35,6 +35,11 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
     subprocess.CalledProcessError if there was a failure executing the specified
       command
   """
+
+  # Because the stdout/stderr from nighthawk can be large, we redirect it to
+  # a temporary file and re-read the output to return to the caller.  This
+  # method also appears to capture output more consistently in the event of a
+  # failed command execution.
   output = ''
   params = parameters._asdict()
   tmpfile = tempfile.TemporaryFile(
