@@ -2,6 +2,13 @@ syntax = "proto3";
 
 package salvo;
 
+message BazelOption {
+  // A string containing the entire compiler option and value that is supplied
+  // to bazel when compiling a project.
+  // eg. " --jobs 4" or "--define tcmalloc=gperftools"
+  string parameter = 1;
+}
+
 // Capture the location of sources needed for the benchmark
 message SourceRepository {
 
@@ -38,8 +45,12 @@ message SourceRepository {
 
   // Specify a set of additional hashes for comparing benchmark results.
   // This field is optional and if unspecified, we will default to using
-  // one commit prior to the specified "commit_hash" field.  For each
+  // one commit prior to the specified "commit_hash" field. For each
   // hash specfied we will run a benchmark using the Envoy binary built
   // from that source commit
   repeated string additional_hashes = 6;
+
+  // A list of compiler options and flags to supply to bazel when building
+  // the source of NightHawk or Envoy
+  repeated BazelOption bazel_options = 7;
 }
