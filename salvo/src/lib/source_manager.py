@@ -25,6 +25,23 @@ _KNOWN_REPOSITORIES = {
 # the last entry
 BASELINE = -1
 
+def _extract_tag_from_image(image_name: str) -> str:
+  """Pull the tag from the docker image name.
+
+  If there is no tag detected, we return the passed in image name
+
+  Args:
+    image_name: The docker image name
+
+  Return:
+    a string containing the image tag. For example:
+      envoyproxy/envoy:v1.15.3 -> v1.15.3
+  """
+  if ':' not in image_name:
+    return image_name
+
+  return image_name.split(':')[-1]
+
 class SourceManagerError(Exception):
   """Raised when an unrecoverable error is encountered while working with
      a source tree.
@@ -94,7 +111,7 @@ class SourceManager(object):
     """
     envoy_image = self._control.images.envoy_image
     if envoy_image:
-      commit_hash = envoy_image.split(':')[-1]
+      commit_hash = _extract_tag_from_image(envoy_image)
       log.debug(f"Found tag [{commit_hash}] in image [{envoy_image}]")
     else:
       commit_hash = envoy_source.get_head_hash()
@@ -133,8 +150,10 @@ class SourceManager(object):
     # NOTE: The baseline is always the last image in our list
     additional_images = images.additional_envoy_images
     if additional_images:
-      hash_list.extend(additional_images)
-      hash_list.append(envoy_image)
+      additional_tags = [_extract_tag_from_image(image) \
+          for image in images.additional_envoy_images]
+      hash_list.extend(additional_tags)
+      hash_list.append(_extract_tag_from_image(envoy_image))
     else:
       # We have to deduce the previous image by commit hash
       hash_list = self.determine_envoy_hashes_from_source()
@@ -345,8 +364,7 @@ class SourceManager(object):
         SRCID_NIGHTHAWK or SRCID_ENVOY)
 
     Return:
-      the Bazel Options defined in the source identified by the
-        specified source_id
+      a boolean indicating the presense of user specified bazel options
     """
     try:
       build_options = self.get_build_options(source_id)
