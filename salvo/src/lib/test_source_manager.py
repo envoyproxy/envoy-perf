@@ -59,6 +59,15 @@ def _run_command_side_effect(*args):
   elif args[0] == 'git clone git@github.com:username/reponame.git .':
     return 'Cloning into \'.\''
 
+  elif args[0] == 'git tag --list --sort v:refname':
+    return """
+v1.14.5
+v1.15.0
+v1.15.1
+v1.15.2
+v1.16.0
+"""
+
   raise Exception(f"Unhandled input in side effect: {args}")
 
 def _generate_default_benchmark_images(job_control):
@@ -169,6 +178,67 @@ def test_determine_envoy_hashes_from_source(mock_copy_source_directory,
 
   assert hashes == expected_hashes
 
+@mock.patch("src.lib.cmd_exec.run_command")
+@mock.patch.object(source_tree.SourceTree, 'pull')
+def test_determine_envoy_hashes_from_source2(mock_source_tree_pull,
+                                             mock_run_command):
+  """
+  Verify that we can determine Envoy hashes from a source repository
+
+  This test exercises the else case where we use the head hash instead
+  of a specific envoy tag.
+  """
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+
+  _generate_default_benchmark_images(job_control)
+  _generate_default_envoy_source(job_control)
+
+  # Add an envoy image and specify additional versions to test
+  job_control.images.envoy_image="envoyproxy/envoy:v1.16.0"
+
+  # Setup mocks
+  mock_source_tree_pull.return_value = True
+  mock_run_command.side_effect = _run_command_side_effect
+
+  manager = source_manager.SourceManager(job_control)
+
+  hashes = manager.determine_envoy_hashes_from_source()
+  expected_hashes = ['v1.15.2', 'v1.16.0']
+
+  assert hashes == expected_hashes
+
+@mock.patch.object(source_tree.SourceTree, 'pull')
+@mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
+def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory,
+                                                      mock_source_tree_pull):
+  """
+  Verify that we can determine Envoy hashes from a source repository
+  """
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+
+  _generate_default_benchmark_images(job_control)
+  _generate_default_envoy_source(job_control)
+
+  # Setup mocks to simulate a source retrieval failure
+  mock_copy_source_directory.return_value = False
+  mock_source_tree_pull.return_value = False
+
+  manager = source_manager.SourceManager(job_control)
+
+  hashes = None
+  with pytest.raises(source_manager.SourceManagerError) as source_error:
+    hashes = manager.determine_envoy_hashes_from_source()
+
+  assert not hashes
+  assert str(source_error.value) == \
+    "Unable to obtain the source to determine commit hashes"
+
 def test_find_all_images_from_specified_tags():
   """Verify that we can parse an image tag and deterimine the previous
   image tag.
@@ -198,6 +268,61 @@ def test_find_all_images_from_specified_tags():
       'tag3',
       'v1.16.0'
   ]
+  assert tags == expected_tags
+
+def test_find_all_images_from_specified_tags_fail():
+  """Verify that we raise an exception if no images are defined for any benchmarks"""
+
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+
+  manager = source_manager.SourceManager(job_control)
+  hashes = []
+  with pytest.raises(source_manager.SourceManagerError) as source_error:
+    hashes = manager.find_all_images_from_specified_tags()
+
+  assert not hashes
+  assert str(source_error.value) == \
+    "No images are specified in the control document"
+
+def test_find_all_images_from_specified_tags_build_envoy():
+  """Verify that return no hashes and if we have to build Envoy"""
+
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+  _generate_default_benchmark_images(job_control)
+
+  manager = source_manager.SourceManager(job_control)
+  tags = manager.find_all_images_from_specified_tags()
+
+  # Since the envoy image is not specified, we have not tags for a datum
+  expected_tags = []
+  assert tags == expected_tags
+
+@mock.patch.object(source_manager.SourceManager,
+                   'determine_envoy_hashes_from_source')
+def test_find_all_images_from_specified_tags_using_source(
+    mock_determine_envoy_hashes_from_source):
+  """Verify that return no hashes and if we have to build Envoy"""
+
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+  _generate_default_benchmark_images(job_control)
+
+  # Add an envoy image for us to use as a datum
+  job_control.images.envoy_image="envoyproxy/envoy:v1.16.0"
+
+  expected_tags = ['v1.15.2', 'v1.16.0']
+  mock_determine_envoy_hashes_from_source.return_value = expected_tags
+
+  manager = source_manager.SourceManager(job_control)
+  tags = manager.find_all_images_from_specified_tags()
   assert tags == expected_tags
 
 @mock.patch("src.lib.cmd_exec.run_command")
@@ -303,6 +428,71 @@ def test_get_image_hashes_from_disk_source(mock_copy_source_directory,
   ]
   assert hashes == expected_hashes
 
+@mock.patch.object(source_tree.SourceTree, 'get_previous_commit_hash')
+def test_get_image_hashes_from_disk_source_fail(mock_get_previous_commit_hash):
+  """Verify that we raise an exception if we are not able to determine the
+  prior hash to a specified commit."""
+
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+
+  _generate_default_benchmark_images(job_control)
+  _generate_default_envoy_source(job_control)
+
+  # Setup mocks
+  mock_get_previous_commit_hash.return_value = ''
+
+  manager = source_manager.SourceManager(job_control)
+  source_tree = manager.get_source_tree(
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+  )
+
+  hashes = []
+  with pytest.raises(source_manager.SourceManagerError) as source_error:
+    hashes = manager.get_image_hashes_from_disk_source(
+      source_tree, 'expected_baseline_hash'
+    )
+
+  assert not hashes
+  assert str(source_error.value) == \
+      "Received empty commit hash prior to [expected_baseline_hash]"
+
+def _raise_source_tree_error(commit_hash):
+  raise source_tree.SourceTreeError(f"No commit found prior to {commit_hash}")
+
+@mock.patch.object(source_tree.SourceTree, 'get_previous_commit_hash')
+def test_get_image_hashes_from_disk_source_fail2(mock_get_previous_commit_hash):
+  """Verify that we raise an exception if we are not able to determine the
+  prior hash to a specified commit."""
+
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+
+  _generate_default_benchmark_images(job_control)
+  _generate_default_envoy_source(job_control)
+
+  # Setup mocks
+  mock_get_previous_commit_hash.side_effect=_raise_source_tree_error
+
+  manager = source_manager.SourceManager(job_control)
+  source_tree = manager.get_source_tree(
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+  )
+
+  hashes = []
+  with pytest.raises(source_manager.SourceManagerError) as source_error:
+    hashes = manager.get_image_hashes_from_disk_source(
+      source_tree, 'expected_baseline_hash'
+    )
+
+  assert not hashes
+  assert str(source_error.value) == \
+      "Unable to find a commit hash prior to [expected_baseline_hash]"
+
 def test_get_source_tree():
   """Verify that we can return a source otree object.  If no sources
   are specified, we use the known default location from which to get
@@ -322,6 +512,26 @@ def test_get_source_tree():
   ]:
     source_tree = manager.get_source_tree(source_id)
     assert source_tree.get_identity() == source_id
+
+def test_get_source_tree_fail():
+  """Verify that we raise an assertion if we are not able to find a
+  source repository.
+  """
+
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+  manager = source_manager.SourceManager(job_control)
+
+  source_tree = None
+  source_id = proto_source.SourceRepository.SourceIdentity.SRCID_UNSPECIFIED
+  with pytest.raises(source_manager.SourceManagerError) as source_error:
+    source_tree = manager.get_source_tree(source_id)
+
+  assert not source_tree
+  assert str(source_error.value) == \
+      "No Source tree defined for: SRCID_UNSPECIFIED"
 
 def test_get_build_options():
   """Verify that we can retrieve specified build options"""
@@ -343,6 +553,29 @@ def test_get_build_options():
   )
   assert bazel_options
   assert all([option.parameter in expected_options for option in bazel_options])
+
+def test_get_build_options_failure():
+  """Verify that we raise an exception if no options are present in a source
+  repository.
+  """
+  job_control = proto_control.JobControl(
+      remote=False,
+      scavenging_benchmark=True
+  )
+
+  _generate_default_envoy_source(job_control)
+
+  manager = source_manager.SourceManager(job_control)
+  bazel_options = None
+
+  with pytest.raises(source_manager.SourceManagerError) as source_error:
+    bazel_options = manager.get_build_options(
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+    )
+
+  assert not bazel_options
+  assert str(source_error.value) == \
+      "No Bazel Options are defined in source: SRCID_ENVOY"
 
 def test_have_build_options():
   """Verify that we can determine if build options exist"""

@@ -132,7 +132,9 @@ class SourceManager(object):
         minimum.  We will not build those from source yet.
     """
     images = self._control.images
-    if not images:
+    if not all([
+        images.nighthawk_benchmark_image, images.nighthawk_binary_image
+    ]):
       raise SourceManagerError(
           "No images are specified in the control document")
 
@@ -240,10 +242,17 @@ class SourceManager(object):
       SourceManagerError: if we are not able to deterimine hashes prior to
         the identified commit
     """
-    previous_hash = disk_source_tree.get_previous_commit_hash(commit_hash)
-    if not previous_hash:
+
+    previous_hash = None
+    try:
+      previous_hash = disk_source_tree.get_previous_commit_hash(commit_hash)
+    except source_tree.SourceTreeError:
       raise SourceManagerError(
           f"Unable to find a commit hash prior to [{commit_hash}]")
+
+    if not previous_hash:
+      raise SourceManagerError(
+          f"Received empty commit hash prior to [{commit_hash}]")
 
     return [previous_hash, commit_hash]
 
