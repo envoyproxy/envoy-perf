@@ -68,7 +68,8 @@ py_test(
   deps = [
       "//api:schema_proto",
       ":source_tree",
-      ":shell"
+      ":shell",
+      ":constants"
   ],
 )
 

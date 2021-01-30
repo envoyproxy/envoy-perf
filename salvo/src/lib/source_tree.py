@@ -1,6 +1,5 @@
 """Manage a source location on disk"""
 import re
-import glob
 import logging
 import os
 import shutil
@@ -70,7 +69,7 @@ class SourceTree(object):
     result += f"Origin: [{self._source_repo.source_url}] "
     result += f"Branch: [{self._source_repo.branch}] "
     result += f"Hash: [{self._source_repo.commit_hash}] "
-    result += f"Workdir: [{self._source_repo.source_path}]"
+    result += f"Workdir: [{self._source_repo.source_path}] "
     result += f"Build Dir: [{self._build_dir.name}]"
 
     return result
