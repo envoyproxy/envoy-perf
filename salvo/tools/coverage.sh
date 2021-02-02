@@ -19,6 +19,7 @@ bazel coverage -t- --instrument_test_targets \
 	--test_env=PYTHON_COVERAGE=${GITHUB_WORKSPACE}/coveragepy-lcov-support/__main__.py \
   //...
 
+# Combine all coverage data into one file
 CMD="lcov"
 for file in $(find bazel-out/ -name coverage.dat)
 do
@@ -28,4 +29,7 @@ done
 mkdir -p coverage
 CMD="${CMD} -o coverage/coverage.dat"
 (${CMD})
+
+# Extract all coverage data for salvo project files
+lcov -e coverage/coverage.dat -o coverage/salvo.dat '*/salvo/src/lib/*.py'
 
