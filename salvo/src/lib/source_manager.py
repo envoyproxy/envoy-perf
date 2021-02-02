@@ -26,9 +26,7 @@ _KNOWN_REPOSITORIES = {
 BASELINE = -1
 
 def _extract_tag_from_image(image_name: str) -> str:
-  """Pull the tag from the docker image name.
-
-  If there is no tag detected, we return the passed in image name
+  """Extract the tag from the docker image name.
 
   Args:
     image_name: The docker image name
@@ -37,8 +35,6 @@ def _extract_tag_from_image(image_name: str) -> str:
     a string containing the image tag. For example:
       envoyproxy/envoy:v1.15.3 -> v1.15.3
   """
-  if ':' not in image_name:
-    return image_name
 
   return image_name.split(':')[-1]
 

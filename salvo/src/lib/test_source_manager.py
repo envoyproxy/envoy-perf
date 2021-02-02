@@ -599,5 +599,10 @@ def test_have_build_options():
   )
   assert not bazel_options
 
+  bazel_options = manager.have_build_options(
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+  )
+  assert bazel_options
+
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))
