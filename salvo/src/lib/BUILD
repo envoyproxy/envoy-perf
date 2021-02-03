@@ -62,13 +62,23 @@ py_library(
 )
 
 py_test(
+  name = "test_cmd_exec",
+  srcs = [ "test_cmd_exec.py" ],
+  srcs_version = "PY3",
+  deps = [
+      ":shell"
+  ],
+)
+
+py_test(
   name = "test_source_tree",
   srcs = [ "test_source_tree.py" ],
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
       ":source_tree",
-      ":shell"
+      ":shell",
+      ":constants"
   ],
 )
 

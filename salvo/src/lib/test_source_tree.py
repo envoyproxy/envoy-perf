@@ -6,11 +6,36 @@ import pytest
 import logging
 import subprocess
 
-from src.lib import (cmd_exec, source_tree)
+from src.lib import (cmd_exec, source_tree, constants)
 import api.source_pb2 as proto_source
 
 logging.basicConfig(level=logging.DEBUG)
 log = logging.getLogger(__name__)
+
+def test_is_tag():
+  """Verify that we can detect a hash and a git tag."""
+  commit_hash = 'obviously_not_a_tag'
+  tag_string = 'v1.15.1'
+
+  assert not source_tree.is_tag(commit_hash)
+  assert source_tree.is_tag(tag_string)
+
+def test_get_identity():
+  """Verify we can retrieve the identity out of a source repository object."""
+
+  for source_id in [
+    proto_source.SourceRepository.SourceIdentity.SRCID_UNSPECIFIED,
+    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
+    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK,
+  ]:
+    source_repository = proto_source.SourceRepository(
+      identity=source_id
+    )
+
+    tree = source_tree.SourceTree(source_repository)
+    identity = tree.get_identity()
+    assert identity == source_id
+
 
 def test_source_tree_object():
   """Verify that we throw an exception if not all required data is present."""
@@ -51,11 +76,15 @@ def test_source_tree_with_local_workdir():
     cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with("git remote -v", cmd_params)
 
-def test_get_origin_ssh():
+@mock.patch.object(source_tree.SourceTree, 'get_source_directory')
+def test_get_origin_ssh(mock_get_source_directory):
   """Verify that we can determine the origin for a local repository.
 
   In this instance the repo was cloned via ssh.
   """
+
+  mock_get_source_directory.return_value='/some_temp_directory'
+
   remote_string = 'origin  git@github.com:username/reponame.git (fetch)'
   git_cmd = "git remote -v"
 
@@ -68,16 +97,20 @@ def test_get_origin_ssh():
                   mock.MagicMock(return_value=remote_string)) as magic_mock:
     origin_url = source.get_origin()
 
-    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
+    cmd_params = cmd_exec.CommandParameters(cwd='/some_temp_directory')
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
     assert origin_url == 'git@github.com:username/reponame.git'
 
-def test_get_origin_https():
+@mock.patch.object(source_tree.SourceTree, 'get_source_directory')
+def test_get_origin_https(mock_get_source_directory):
   """Verify that we can determine the origin for a local repository.
 
   In this instance the repo was cloned via https
   """
+
+  mock_get_source_directory.return_value='/some_temp_directory'
+
   remote_string = \
       'origin	https://github.com/aws/aws-app-mesh-examples.git (fetch)'
   git_cmd = "git remote -v"
@@ -90,17 +123,51 @@ def test_get_origin_https():
   with mock.patch('src.lib.cmd_exec.run_command',
                   mock.MagicMock(return_value=remote_string)) as magic_mock:
     origin_url = source.get_origin()
-    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
+    cmd_params = cmd_exec.CommandParameters(cwd='/some_temp_directory')
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
     assert origin_url == 'https://github.com/aws/aws-app-mesh-examples.git'
 
-def _generate_source_tree_from_origin(origin):
+@mock.patch('src.lib.cmd_exec.run_command')
+@mock.patch.object(source_tree.SourceTree, 'get_source_directory')
+def test_get_origin_fail(mock_get_source_directory,
+                         mock_run_command):
+  """Verify that we raise an exception if we are unable to determine the source
+  tree origin
+  """
+
+  mock_get_source_directory.return_value='/some_temp_directory'
+  mock_run_command.return_value = 'definitely not any origin data we want'
+
+  source_repository = proto_source.SourceRepository(
+      source_path='/tmp'
+  )
+  source = source_tree.SourceTree(source_repository)
+  
+  origin = ''
+  with pytest.raises(source_tree.SourceTreeError) as source_error:
+    origin = source.get_origin()
+
+  assert not origin
+  assert str(source_error.value) == \
+    "Unable to determine the origin url from /some_temp_directory"
+
+def _generate_source_tree_from_origin(origin: str) -> source_tree.SourceTree:
   """Build a source tree from a remote url."""
   source_repository = proto_source.SourceRepository(
-      source_path='/tmp',
-      source_url=origin
+      identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
+      source_url=origin,
   )
+
+  return source_tree.SourceTree(source_repository)
+
+def _generate_source_tree_from_path(path: str) -> source_tree.SourceTree:
+  """Build a source tree from a remote url."""
+  source_repository = proto_source.SourceRepository(
+      identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
+      source_path=path,
+  )
+
   return source_tree.SourceTree(source_repository)
 
 def mock_run_command_side_effect(*function_args):
@@ -145,13 +212,37 @@ Use '--' to separate paths from revisions, like this:
 """
     return git_output
 
+  elif function_args[0] == (
+      "git rev-list --no-merges "
+      "--committer='GitHub <noreply@github.com>' "
+      "--max-count=1 HEAD"):
+    return 'random_head_hash'
+
   elif function_args[0] == "git status":
     return "Your branch is up to date with \'some_random_branch\'"
 
   raise NotImplementedError(f"Unhandled arguments: {function_args}")
 
+def test_get_source_directory():
+  """Verify that the source tree returns its location on disk."""
+
+  tree = _generate_source_tree_from_origin('foo')
+  directory = tree.get_source_directory()
+
+  assert directory.startswith(constants.SALVO_TMP)
+
+@mock.patch('shutil.copytree')
+def test_copy_source_directory(mock_copytree):
+  """verify that we are able to copy a source tree to a temporary directory"""
+
+  mock_copytree.return_value = None
+
+  tree = _generate_source_tree_from_path('/test_copy_source_directory')
+  result = tree.copy_source_directory()
+  assert result
+
 @mock.patch("src.lib.cmd_exec.run_command")
-def test_source_tree_pull(mock_run_command):
+def test_pull(mock_run_command):
   """Verify that we can clone a repository ensuring that the process completed
      without errors.
   """
@@ -176,75 +267,85 @@ def test_source_tree_pull(mock_run_command):
   origin_url = source.get_origin()
   assert origin_url == origin
 
-def mock_run_command_side_effect_failure(*function_args):
-  """Mock run_command side effect for a failed checkout operation.
+def test_pull_fail():
+  """Verify that we cannot a clone a repository without a remote url."""
 
-  Args:
-    function_args:  This is a list of arguments passed to the mocked
-      function.  In this case the first entry is the shell command being
-      executed and the second parameter is the cmd_exec.CommandParameters
-      tuple containing the working directory.
+  source = _generate_source_tree_from_path('/not_a_remote_url')
 
-      We are most interested in the contents of the first entry.
-  """
+  result = source.pull()
+  assert not result
 
-  if function_args[0] == 'git status':
-    raise subprocess.CalledProcessError(1, "msg")
-  elif function_args[0] == 'git remote -v':
-    return \
-        ("origin  https://github.com/someawesomeproject/repo.git (fetch)\n"
-         "origin  https://github.com/someawesomeproject/repo.git (push)")
-  elif function_args[0] == \
-      'git clone https://github.com/someawesomeproject/repo.git .':
-    return "Something failed during a clone...'"
+@mock.patch.object(source_tree.SourceTree, 'is_up_to_date')
+def test_pull_fail_up_to_date(mock_is_up_to_date):
+  """Verify that we do not clone a repository that is already up to date."""
 
-  raise NotImplementedError(f"Unhandled arguments: {function_args}")
+  origin = 'https://www.github.com/_some_random_repo_/repo.git'
+  source = _generate_source_tree_from_origin(origin)
 
-@mock.patch("src.lib.cmd_exec.run_command")
-def test_source_tree_pull_failure(mock_run_command):
+  mock_is_up_to_date.return_value = True
+  result = source.pull()
+
+  assert result
+
+@mock.patch('src.lib.cmd_exec.run_command')
+@mock.patch.object(source_tree.SourceTree, 'is_up_to_date')
+def test_pull_fail_incomplete_operation(mock_is_up_to_date,
+                                        mock_run_command):
   """Verify that we can clone a repository and detect an incomplete
      operation.
   """
   origin = 'https://github.com/someawesomeproject/repo.git'
   source = _generate_source_tree_from_origin(origin)
 
-  mock_run_command.side_effect = mock_run_command_side_effect_failure
-
-  git_status = 'git status'
-  git_clone = 'git clone https://github.com/someawesomeproject/repo.git .'
-  cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
+  mock_is_up_to_date.return_value = False
+  mock_run_command.return_value = "Not the cloning output we expect to see"
 
   result = source.pull()
   assert not result
 
-  calls = [
-      mock.call(git_status, cmd_params),
-      mock.call(git_clone, cmd_params)
-  ]
-  mock_run_command.assert_has_calls(calls)
-
-  assert source.get_origin() == origin
-
-def test_retrieve_head_hash():
-  """Verify that we can determine the hash for the head commit."""
-
+@mock.patch('src.lib.cmd_exec.run_command')
+@mock.patch.object(source_tree.SourceTree, 'pull')
+def test_checkout_commit_hash(mock_pull, mock_run_command):
+  """Verify that we can checkout a specified commit hash."""
   origin = 'https://github.com/someawesomeproject/repo.git'
   source = _generate_source_tree_from_origin(origin)
 
-  git_cmd = ("git rev-list --no-merges --committer='GitHub <noreply@github.com>'"
-            " --max-count=1 HEAD")
-  git_output = "some_long_hex_string_that_is_the_hash"
+  source._source_repo.commit_hash = '012345678abcdef'
+  mock_run_command.return_value = "HEAD is now at 01234567"
+  mock_pull.return_value = True
+  result = source.checkout_commit_hash()
 
-  with mock.patch('src.lib.cmd_exec.run_command',
-                  mock.MagicMock(return_value=git_output)) as magic_mock:
-    hash_string = source.get_head_hash()
-    cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
-    magic_mock.assert_called_once_with(git_cmd, cmd_params)
-
-    assert hash_string == git_output
+  assert result
 
 @mock.patch('src.lib.cmd_exec.run_command')
-def test_get_previous_commit(mock_check_output):
+@mock.patch.object(source_tree.SourceTree, 'pull')
+def test_checkout_commit_hash_fail(mock_pull, mock_run_command):
+  """Verify that we can detect a failed git checkout."""
+  origin = 'https://github.com/someawesomeproject/repo.git'
+  source = _generate_source_tree_from_origin(origin)
+
+  source._source_repo.commit_hash = '012345678abcdef'
+  mock_run_command.return_value = "HEAD is now at not_our_hash"
+  mock_pull.return_value = True
+  result = source.checkout_commit_hash()
+
+  assert not result
+
+@mock.patch('src.lib.cmd_exec.run_command')
+def test_get_head_hash(mock_run_command):
+  """Verify that we can determine the most recent HEAD hash when "latest" is
+  used as an mage tag
+  """
+
+  mock_run_command.side_effect = mock_run_command_side_effect
+  origin = 'https://github.com/someawesomeproject/repo.git'
+  source = _generate_source_tree_from_origin(origin)
+
+  head_hash = source.get_head_hash()
+  assert head_hash == "random_head_hash"
+
+@mock.patch('src.lib.cmd_exec.run_command')
+def test_get_previous_commit_hash(mock_check_output):
   """
     Verify that we can identify one commit prior to a specified hash.
     """
@@ -256,6 +357,27 @@ def test_get_previous_commit(mock_check_output):
   mock_check_output.return_value = 'fake_commit_hash_2'
   hash_string = source.get_previous_commit_hash(commit_hash)
   assert hash_string == 'fake_commit_hash_2'
+
+@mock.patch('src.lib.cmd_exec.run_command')
+def test_get_previous_commit_hash_fail(mock_check_output):
+  """
+    Verify that we can identify one commit prior to a specified hash.
+    """
+  origin = 'https://github.com/_some_random_repo_/repo.git'
+  source = _generate_source_tree_from_origin(origin)
+
+  commit_hash = 'fake_commit_hash_1'
+
+  # Don't return an error, or a hash
+  mock_check_output.return_value = ''
+
+  hash_string = ''
+  with pytest.raises(source_tree.SourceTreeError) as source_error:
+    hash_string = source.get_previous_commit_hash(commit_hash)
+
+  assert not hash_string
+  assert str(source_error.value) == \
+    'No commit found prior to fake_commit_hash_1'
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_get_previous_commit_fail(mock_check_output):
@@ -275,7 +397,7 @@ def test_get_previous_commit_fail(mock_check_output):
   assert "fatal: ambiguous argument \'invalid_hash_reference\'" in \
       str(source_error.value)
 
-def test_parent_branch_ahead():
+def testget_revs_behind_parent_branch():
   """Verify that we can determine how many commits beind the local source tree
      lags behind the remote repository.
   """
@@ -298,7 +420,7 @@ nothing to commit, working tree clean
     assert isinstance(commit_count, int)
     assert commit_count == 99
 
-def test_parent_branch_up_to_date():
+def testget_revs_behind_parent_branch_up_to_date():
   """Verify that we can determine how many commits beind the local source tree
      lags behind the remote repository.
   """
@@ -322,7 +444,7 @@ Changes not staged for commit:
     assert isinstance(commit_count, int)
     assert commit_count == 0
 
-def test_branch_up_to_date():
+def test_is_up_to_date():
   """Verify that we can determine a source tree is up to date."""
 
   origin = 'https://github.com/someawesomeproject/repo.git'
@@ -361,14 +483,6 @@ v1.16.0
     assert tags_list
     assert tags_list == expected_tags_list
 
-def test_is_tag():
-  """Verify that we can detect a hash and a git tag."""
-  commit_hash = 'obviously_not_a_tag'
-  tag_string = 'v1.15.1'
-
-  assert not source_tree.is_tag(commit_hash)
-  assert source_tree.is_tag(tag_string)
-
 def test_get_previous_tag():
   """Verify that we can identify the previous tag for a given release."""
 
@@ -393,6 +507,26 @@ v1.16.0
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
     assert previous_tag == previous_tag
+
+
+def test_get_previous_tag_fail():
+  """Verify that we raise an exception if we try to retrieve tags using a
+  hash
+  """
+
+  origin = 'https://github.com/someawesomeproject/repo.git'
+  source = _generate_source_tree_from_origin(origin)
+
+  current_tag = 'not_a_tag'
+
+  previous_tag = False
+
+  with pytest.raises(source_tree.SourceTreeError) as source_error:
+    previous_tag = source.get_previous_tag(current_tag)
+
+  assert not previous_tag
+  assert str(source_error.value) == \
+    'The tag specified is not the expected format'
 
 def test_get_previous_n_tag():
   """Verify that we can identify the previous tag for a given release."""
