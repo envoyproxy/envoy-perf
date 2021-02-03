@@ -215,7 +215,8 @@ def test_determine_envoy_hashes_from_source2(mock_source_tree_pull,
 def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory,
                                                       mock_source_tree_pull):
   """
-  Verify that we can determine Envoy hashes from a source repository
+  Verify that an exception is raised when we cannot determine Envoy hashes
+  from a job control object
   """
   job_control = proto_control.JobControl(
       remote=False,
