@@ -8,6 +8,7 @@ import logging
 
 from google.protobuf import json_format
 from src.lib import constants
+
 import api.docker_volume_pb2 as proto_docker_volume
 
 log = logging.getLogger(__name__)
@@ -39,20 +40,20 @@ def generate_volume_config(output_dir: str, test_dir: str = '') -> dict:
   # Setup the docker socket
   properties = proto_docker_volume.VolumeProperties()
   properties.bind = constants.DOCKER_SOCKET_PATH
-  properties.mode = 'rw'
+  properties.mode = constants.MOUNT_READ_WRITE
   volume_cfg.volumes[constants.DOCKER_SOCKET_PATH].CopyFrom(properties)
 
   # Setup the output directory
   properties = proto_docker_volume.VolumeProperties()
   properties.bind = output_dir
-  properties.mode = 'rw'
+  properties.mode = constants.MOUNT_READ_WRITE
   volume_cfg.volumes[output_dir].CopyFrom(properties)
 
   # Setup the test directory
   if test_dir:
     properties = proto_docker_volume.VolumeProperties()
     properties.bind = constants.NIGHTHAWK_EXTERNAL_TEST_DIR
-    properties.mode = 'ro'
+    properties.mode = constants.MOUNT_READ_ONLY
     volume_cfg.volumes[test_dir].CopyFrom(properties)
 
   volume_json = {}
