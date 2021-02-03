@@ -97,7 +97,7 @@ def _generate_default_envoy_source(job_control):
   source_repo.commit_hash = 'expected_baseline_hash'
 
 @mock.patch("src.lib.cmd_exec.run_command")
-def test_get_envoy_hashes_for_benchmark(mock_run_command):
+def test_get_envoy_hashes_for_benchmark_minimal(mock_run_command):
   """Verify that we can determine the current and previous image
      tags from a minimal job control object.
   """
@@ -115,7 +115,7 @@ def test_get_envoy_hashes_for_benchmark(mock_run_command):
   manager = source_manager.SourceManager(job_control)
   hashes = manager.get_envoy_hashes_for_benchmark()
 
-  assert hashes == ['mocked_hash_the_sequel', 'latest']
+  assert hashes == {'mocked_hash_the_sequel', 'latest'}
 
 @mock.patch("src.lib.cmd_exec.run_command")
 def test_get_image_hashes_from_disk_source(mock_run_command):
@@ -138,10 +138,10 @@ def test_get_image_hashes_from_disk_source(mock_run_command):
   )
   envoy_source_tree = source_tree.SourceTree(source_repo)
 
-  expected_hashes = [
+  expected_hashes = {
       'expected_previous_commit_hash',
       'expected_baseline_hash'
-  ]
+  }
 
   origin = envoy_source_tree.get_origin()
   assert origin
@@ -174,7 +174,7 @@ def test_determine_envoy_hashes_from_source(mock_copy_source_directory,
   manager = source_manager.SourceManager(job_control)
 
   hashes = manager.determine_envoy_hashes_from_source()
-  expected_hashes = ['mocked_hash_the_sequel', 'mocked_hash']
+  expected_hashes = {'mocked_hash_the_sequel', 'mocked_hash'}
 
   assert hashes == expected_hashes
 
@@ -206,7 +206,7 @@ def test_determine_envoy_hashes_from_source2(mock_source_tree_pull,
   manager = source_manager.SourceManager(job_control)
 
   hashes = manager.determine_envoy_hashes_from_source()
-  expected_hashes = ['v1.15.2', 'v1.16.0']
+  expected_hashes = {'v1.15.2', 'v1.16.0'}
 
   assert hashes == expected_hashes
 
@@ -263,12 +263,12 @@ def test_find_all_images_from_specified_tags():
   tags = manager.find_all_images_from_specified_tags()
 
   # We test all extra tags first and the specified image tags is always last
-  expected_tags = [
+  expected_tags = {
       'tag1',
       'tag2',
       'tag3',
       'v1.16.0'
-  ]
+  }
   assert tags == expected_tags
 
 def test_find_all_images_from_specified_tags_fail():
@@ -301,7 +301,7 @@ def test_find_all_images_from_specified_tags_build_envoy():
   tags = manager.find_all_images_from_specified_tags()
 
   # Since the envoy image is not specified, we have not tags for a datum
-  expected_tags = []
+  expected_tags = set()
   assert tags == expected_tags
 
 @mock.patch.object(source_manager.SourceManager,
@@ -347,16 +347,17 @@ def test_find_all_images_from_specified_sources(mock_copy_source_directory,
   manager = source_manager.SourceManager(job_control)
 
   hashes = manager.find_all_images_from_specified_sources()
-  expected_hashes = [
+  expected_hashes = {
       'expected_previous_commit_hash',
       'expected_baseline_hash'
-  ]
+  }
   assert hashes == expected_hashes
 
 @mock.patch("src.lib.cmd_exec.run_command")
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
-def test_get_envoy_hashes_for_benchmark(mock_copy_source_directory,
-                                        mock_run_command):
+def test_get_envoy_hashes_for_benchmark_additional_hashes(
+    mock_copy_source_directory,
+    mock_run_command):
   """Verify that we can determine the hashes for the baseline and previous
   Envoy Image.
   """
@@ -387,14 +388,14 @@ def test_get_envoy_hashes_for_benchmark(mock_copy_source_directory,
   # Since both a source and image was specified, we benchmark
   # the source at its current and previous commit, as well as
   # the other specified image tags.
-  expected_hashes = [
+  expected_hashes = {
       'tag1',
       'tag2',
       'tag3',
       'v1.16.0',
       'expected_previous_commit_hash',
       'expected_baseline_hash'
-  ]
+  }
   assert hashes == expected_hashes
 
 @mock.patch("src.lib.cmd_exec.run_command")
@@ -416,17 +417,17 @@ def test_get_image_hashes_from_disk_source(mock_copy_source_directory,
   mock_run_command.side_effect = _run_command_side_effect
 
   manager = source_manager.SourceManager(job_control)
-  source_tree = manager.get_source_tree(
+  tree = manager.get_source_tree(
       proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
   )
   hashes = manager.get_image_hashes_from_disk_source(
-    source_tree, 'expected_baseline_hash'
+      tree, 'expected_baseline_hash'
   )
 
-  expected_hashes = [
+  expected_hashes = {
       'expected_previous_commit_hash',
       'expected_baseline_hash'
-  ]
+  }
   assert hashes == expected_hashes
 
 @mock.patch.object(source_tree.SourceTree, 'get_previous_commit_hash')
@@ -446,14 +447,14 @@ def test_get_image_hashes_from_disk_source_fail(mock_get_previous_commit_hash):
   mock_get_previous_commit_hash.return_value = ''
 
   manager = source_manager.SourceManager(job_control)
-  source_tree = manager.get_source_tree(
+  tree = manager.get_source_tree(
       proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
   )
 
-  hashes = []
+  hashes = {}
   with pytest.raises(source_manager.SourceManagerError) as source_error:
     hashes = manager.get_image_hashes_from_disk_source(
-      source_tree, 'expected_baseline_hash'
+        tree, 'expected_baseline_hash'
     )
 
   assert not hashes
@@ -480,14 +481,14 @@ def test_get_image_hashes_from_disk_source_fail2(mock_get_previous_commit_hash):
   mock_get_previous_commit_hash.side_effect=_raise_source_tree_error
 
   manager = source_manager.SourceManager(job_control)
-  source_tree = manager.get_source_tree(
+  tree = manager.get_source_tree(
       proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
   )
 
-  hashes = []
+  hashes = {}
   with pytest.raises(source_manager.SourceManagerError) as source_error:
     hashes = manager.get_image_hashes_from_disk_source(
-      source_tree, 'expected_baseline_hash'
+        tree, 'expected_baseline_hash'
     )
 
   assert not hashes
@@ -511,8 +512,8 @@ def test_get_source_tree():
        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
   ]:
-    source_tree = manager.get_source_tree(source_id)
-    assert source_tree.get_identity() == source_id
+    tree = manager.get_source_tree(source_id)
+    assert tree.get_identity() == source_id
 
 def test_get_source_tree_fail():
   """Verify that we raise an assertion if we are not able to find a
@@ -525,12 +526,12 @@ def test_get_source_tree_fail():
   )
   manager = source_manager.SourceManager(job_control)
 
-  source_tree = None
+  tree = None
   source_id = proto_source.SourceRepository.SourceIdentity.SRCID_UNSPECIFIED
   with pytest.raises(source_manager.SourceManagerError) as source_error:
-    source_tree = manager.get_source_tree(source_id)
+    tree = manager.get_source_tree(source_id)
 
-  assert not source_tree
+  assert not tree
   assert str(source_error.value) == \
       "No Source tree defined for: SRCID_UNSPECIFIED"
 
