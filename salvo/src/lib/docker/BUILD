@@ -37,3 +37,14 @@ py_test(
         ":docker_volume",
     ],
 )
+
+py_test(
+    name = "test_docker_volume",
+    srcs = ["test_docker_volume.py"],
+    srcs_version = "PY3",
+    deps = [
+        "//api:schema_proto",
+        "//src/lib:constants",
+        ":docker_volume",
+    ],
+)

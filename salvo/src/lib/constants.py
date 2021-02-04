@@ -19,3 +19,6 @@ NIGHTHAWK_EXTERNAL_TEST_DIR = ('/usr/local/bin/benchmarks/benchmarks.runfiles'
 OPT_LLVM = '/opt/llvm/bin/'
 USR_BIN = '/usr/bin'
 
+# Strings used when generating the volume mount map for a container
+MOUNT_READ_ONLY = 'ro'
+MOUNT_READ_WRITE = 'rw'

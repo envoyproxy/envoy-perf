@@ -11,63 +11,82 @@ from unittest import mock
 from src.lib import constants
 from src.lib.docker import docker_image
 
-
-def test_pull_image():
+@mock.patch.object(docker_image.DockerImage, 'list_images')
+@mock.patch.object(docker.models.images.ImageCollection, 'pull')
+def test_pull_image(mock_pull, mock_list_images):
   """Test retrieving an image.
 
   Verify that we can pull a docker image specifying only
   its name and tag
   """
-
-  if not os.path.exists(constants.DOCKER_SOCKET_PATH):
-    pytest.skip("Skipping docker test since no socket is available")
+  mock_list_images.return_value = []
+  mock_pull.return_value = mock.MagicMock()
 
   new_docker_image = docker_image.DockerImage()
   container = new_docker_image.pull_image("amazonlinux:2")
   assert container is not None
 
-
-def test_run_image():
-  """Test executing a command in an image.
-
-  Verify that we can construct the parameters needed to execute
-  a given docker image.  We verify that the output contains
-  the expected output from the issued command
+@mock.patch.object(docker_image.DockerImage, 'list_images')
+@mock.patch.object(docker.models.images.ImageCollection, 'get')
+def test_pull_image_return_existing(mock_pull, mock_list_images):
+  """Verify that we return an existing image if it is already local instead
+  of re-pulling it.
   """
-
-  if not os.path.exists(constants.DOCKER_SOCKET_PATH):
-    pytest.skip("Skipping docker test since no socket is available")
-
-  env = ['key1=val1', 'key2=val2']
-  cmd = ['uname', '-r']
-  image_name = 'amazonlinux:2'
+  mock_list_images.return_value = ['amazonlinux:2']
+  mock_pull.return_value = mock.MagicMock()
 
   new_docker_image = docker_image.DockerImage()
-  run_parameters = docker_image.DockerRunParameters(
-      environment=env,
-      command=cmd,
-      volumes={},
-      network_mode='host',
-      tty=True
-  )
-  result = new_docker_image.run_image(image_name, run_parameters)
+  container = new_docker_image.pull_image("amazonlinux:2")
+  assert container is not None
 
-  assert result is not None
-  assert re.match(r'[0-9\-a-z]', result.decode('utf-8')) is not None
+@mock.patch.object(docker.models.images.ImageCollection, 'list')
+def test_list_images(mock_list_images):
+  """Verify that we can list all existing cached docker images."""
 
-
-def test_list_images():
-  """Test listing available images.
-
-  Verify that we can list all existing cached docker images.
-  """
-
-  if not os.path.exists(constants.DOCKER_SOCKET_PATH):
-    pytest.skip("Skipping docker test since no socket is available")
+  expected_image_tags = ['image:1', 'image:2', 'image:3']
+  mock_list_images.return_value = \
+    map(lambda tag: mock.Mock(tags=[tag]), expected_image_tags)
 
   new_docker_image = docker_image.DockerImage()
   images = new_docker_image.list_images()
-  assert images != []
+  assert images == expected_image_tags
+
+@mock.patch('docker.from_env')
+def test_get_client(mock_docker):
+  """Verify that we can return a reference to the instantiated
+  docker client.
+  """
+  mock_docker.return_value = mock.Mock()
+
+  new_docker_image = docker_image.DockerImage()
+  docker_client = new_docker_image.get_docker_client()
+  assert docker_client
+
+
+@mock.patch.object(docker_image.DockerImage, 'stop_image')
+@mock.patch.object(docker_image.DockerImage, 'list_processes')
+@mock.patch.object(docker.models.containers.ContainerCollection, 'run')
+def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
+  """Verify that we execute the specified docker image"""
+
+  # Mock the actual docker client invocation to return output from the container
+  mock_docker_run.return_value = "docker output"
+  mock_docker_list.return_value = ['dummy_image']
+  mock_docker_stop.return_value = None
+
+  new_docker_image = docker_image.DockerImage()
+  run_parameters = docker_image.DockerRunParameters(
+    environment={},
+    command='bash',
+    volumes={},
+    network_mode='host',
+    tty=False,
+  )
+  output = new_docker_image.run_image('test_image', run_parameters)
+
+  assert output == 'docker output'
+  mock_docker_run.assert_called_once_with('test_image', stdout=True,
+      stderr=True, detach=False, **run_parameters._asdict())
 
 def test_list_processes():
   """Verify that we can list running images."""
