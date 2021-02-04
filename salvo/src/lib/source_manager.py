@@ -2,7 +2,7 @@
 This module abstracts the higher level functions of managing source code
 """
 import logging
-from typing import List
+from typing import Set
 
 from src.lib import source_tree
 
@@ -21,9 +21,6 @@ _KNOWN_REPOSITORIES = {
       'https://github.com/envoyproxy/nighthawk.git'
 }
 
-# In the list of benchmarks to execute, the Baseline image is always
-# the last entry
-BASELINE = -1
 
 def _extract_tag_from_image(image_name: str) -> str:
   """Extract the tag from the docker image name.
@@ -62,11 +59,11 @@ class SourceManager(object):
     for source_id, _ in _KNOWN_REPOSITORIES.items():
       self._source_tree[source_id] = self._create_source_tree(source_id)
 
-  def determine_envoy_hashes_from_source(self) -> List[str]:
+  def determine_envoy_hashes_from_source(self) -> Set[str]:
     """Determine the previous commit hash or tag from the baseline envoy image.
 
     Returns:
-      a List containing current and previous commit hashes needed to identify
+      a set containing current and previous commit hashes needed to identify
         the envoy image for benchmarking.
 
     Raises:
@@ -114,7 +111,7 @@ class SourceManager(object):
 
     return commit_hash
 
-  def find_all_images_from_specified_tags(self) -> List[str]:
+  def find_all_images_from_specified_tags(self) -> Set[str]:
     """Find all images required for benchmarking from the images specified
        in the job control object.
 
@@ -139,31 +136,33 @@ class SourceManager(object):
       log.debug("No Envoy image defined in control document. "
                 "Sources and a hash should be specified so that we can "
                 "build the image")
-      return []
+      return set()
 
     # Let's see if additional images are specified.  If so, return
     # them all in a list.
 
-    hash_list = []
+    hash_set = set()
     # NOTE: The baseline is always the last image in our list
     additional_images = images.additional_envoy_images
     if additional_images:
       additional_tags = [_extract_tag_from_image(image) \
           for image in images.additional_envoy_images]
-      hash_list.extend(additional_tags)
-      hash_list.append(_extract_tag_from_image(envoy_image))
+
+      # Do not add hashes that we have already discovered
+      hash_set = hash_set.union(additional_tags)
+      hash_set.add(_extract_tag_from_image(envoy_image))
     else:
       # We have to deduce the previous image by commit hash
-      hash_list = self.determine_envoy_hashes_from_source()
+      hash_set = self.determine_envoy_hashes_from_source()
 
-    return hash_list
+    return hash_set
 
-  def find_all_images_from_specified_sources(self) -> List[str]:
+  def find_all_images_from_specified_sources(self) -> Set[str]:
     """Find all images required for benchmarking from the source and hashes
        specified in the job control object.
 
     Returns:
-      a list of commit hashes or tags needed to identify docker images
+      a Set of commit hashes or tags needed to identify docker images
         needed for the benchmark execution.
 
     Raises:
@@ -171,7 +170,7 @@ class SourceManager(object):
         document. We require the nighthawk images to be specified at a
         minimum.  We will not build those from source yet.
     """
-    hash_list = []
+    hash_set = set()
 
     source_repo = self.get_source_repository(
         proto_source.SourceRepository.SRCID_ENVOY
@@ -180,23 +179,23 @@ class SourceManager(object):
     # We have a source, see whether additional hashes are specified
     addtional_hashes = source_repo.additional_hashes
     if addtional_hashes:
-      hash_list.extend(addtional_hashes)
+      hash_set = hash_set.union(addtional_hashes)
 
     # Was a specific hash specified? Use it as the baseline
     if source_repo.commit_hash and addtional_hashes:
-      hash_list.append(source_repo.commit_hash)
-      return hash_list
+      hash_set = hash_set.union(source_repo.commit_hash)
+      return hash_set
 
     # If we don't have a commit_hash specified and no additional hashes
     # we need to do discovery
     if source_repo.commit_hash:
       tree = self.get_source_tree(proto_source.SourceRepository.SRCID_ENVOY)
-      hash_list = self.get_image_hashes_from_disk_source(
+      hash_set = self.get_image_hashes_from_disk_source(
           tree, source_repo.commit_hash)
 
-    return hash_list
+    return hash_set
 
-  def get_envoy_hashes_for_benchmark(self) -> List[str]:
+  def get_envoy_hashes_for_benchmark(self) -> Set[str]:
     """Determine the hashes for the baseline and previous Envoy Image.
 
     Using the name and tag for the envoy image specified in the control
@@ -207,7 +206,7 @@ class SourceManager(object):
     images for benchmarking and will not do any hash deduction.
 
     Returns:
-      A List of commit hashes or tags that identify the envoy image for
+      A Set of commit hashes or tags that identify the envoy image for
        the baseline benchmark, and the previous envoy image the results
        are compared against
     """
@@ -217,13 +216,14 @@ class SourceManager(object):
 
     # Fall back to sources next
     source_tags = self.find_all_images_from_specified_sources()
-    image_hashes.extend(source_tags)
 
-    return image_hashes
+    # Don't add tags for images we already discovered
+    return image_hashes.union(source_tags)
+
 
   def get_image_hashes_from_disk_source(
       self, disk_source_tree: source_tree.SourceTree,
-      commit_hash: str) -> List[str]:
+      commit_hash: str) -> Set[str]:
     """Determine the previous hash to the specified commit.
 
     Args:
@@ -232,7 +232,7 @@ class SourceManager(object):
         determine its predecessor
 
     Returns:
-      a List of commit hashes discovered.
+      a Set of commit hashes discovered.
 
     Raises:
       SourceManagerError: if we are not able to deterimine hashes prior to
@@ -250,7 +250,7 @@ class SourceManager(object):
       raise SourceManagerError(
           f"Received empty commit hash prior to [{commit_hash}]")
 
-    return [previous_hash, commit_hash]
+    return set([previous_hash, commit_hash])
 
   def get_source_repository(self, \
       source_id: proto_source.SourceRepository.SourceIdentity) \

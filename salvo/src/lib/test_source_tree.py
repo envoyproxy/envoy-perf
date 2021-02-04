@@ -143,7 +143,7 @@ def test_get_origin_fail(mock_get_source_directory,
       source_path='/tmp'
   )
   source = source_tree.SourceTree(source_repository)
-  
+
   origin = ''
   with pytest.raises(source_tree.SourceTreeError) as source_error:
     origin = source.get_origin()
