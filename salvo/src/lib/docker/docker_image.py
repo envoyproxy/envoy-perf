@@ -4,6 +4,7 @@ This module contains abstracts running a docker image.
 
 import collections
 import logging
+import requests
 
 # Ref: https://docker-py.readthedocs.io/en/stable/index.html
 import docker
@@ -21,6 +22,9 @@ DockerRunParameters = collections.namedtuple("DockerRunParameters", [
     'network_mode', # a string that specifies the network stack used
     'tty'           # a boolean indicating if a pseudo-tty is allocated
 ])
+
+class DockerImagePullError(Exception):
+  """This error is raised if an image pull is unsuccessful"""
 
 class DockerImage():
   """This class is a wrapper to encapsulate docker operations.
@@ -44,10 +48,23 @@ class DockerImage():
 
     Returns:
         The Image that was pulled
+
+    Raises:
+      DockerImagePullError: if the image pull is not successful
     """
+
+    image = None
     existing_images = self.list_images()
     if image_name not in existing_images:
-      image = self._client.images.pull(image_name)
+      log.debug(f"Pulling image: {image_name}")
+      try:
+        image = self._client.images.pull(image_name)
+      except docker.errors.ImageNotFound as image_not_found_error:
+        log.error(f"Unable to pull image {image_name}: {image_not_found_error}")
+        raise DockerImagePullError(image_not_found_error)
+      except requests.exceptions.HTTPError as http_error:
+        log.error(f"HTTP Error pulling image: {image_name}: {http_error}")
+        raise DockerImagePullError(http_error)
     else:
       image = self._client.images.get(image_name)
 

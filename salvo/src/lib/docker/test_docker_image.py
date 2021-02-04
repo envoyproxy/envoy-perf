@@ -2,22 +2,17 @@
 Test Docker interactions
 """
 
-import os
-import re
 import pytest
 import docker
+import requests
 from unittest import mock
 
-from src.lib import constants
 from src.lib.docker import docker_image
 
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'pull')
 def test_pull_image(mock_pull, mock_list_images):
-  """Test retrieving an image.
-
-  Verify that we can pull a docker image specifying only
-  its name and tag
+  """Verify that we can pull a docker image specifying only its name and tag.
   """
   mock_list_images.return_value = []
   mock_pull.return_value = mock.MagicMock()
@@ -25,6 +20,35 @@ def test_pull_image(mock_pull, mock_list_images):
   new_docker_image = docker_image.DockerImage()
   container = new_docker_image.pull_image("amazonlinux:2")
   assert container is not None
+
+def pull_exceptions_side_effect(image_name):
+  if image_name == 'NotFound':
+    raise docker.errors.ImageNotFound("image_not_found")
+  if image_name == 'HttpError':
+    raise requests.exceptions.HTTPError("http_retrieval_failed")
+
+@mock.patch.object(docker_image.DockerImage, 'list_images')
+@mock.patch.object(docker.models.images.ImageCollection, 'pull')
+def test_pull_image_fail(mock_pull, mock_list_images):
+  """Verify that an exception is raised if we are not able to successfully pull
+  a docker image
+  """
+  mock_list_images.return_value = []
+  mock_pull.side_effect = pull_exceptions_side_effect
+
+  new_docker_image = docker_image.DockerImage()
+  container = None
+  with pytest.raises(docker_image.DockerImagePullError) as not_found:
+    container = new_docker_image.pull_image("NotFound")
+
+  assert not container
+  assert str(not_found.value) == "image_not_found"
+
+  with pytest.raises(docker_image.DockerImagePullError) as http_error:
+    container = new_docker_image.pull_image("HttpError")
+
+  assert not container
+  assert str(http_error.value) == "http_retrieval_failed"
 
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'get')
@@ -70,7 +94,8 @@ def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
   """Verify that we execute the specified docker image"""
 
   # Mock the actual docker client invocation to return output from the container
-  mock_docker_run.return_value = "docker output"
+  mock_docker_output = "docker output"
+  mock_docker_run.return_value = mock_docker_output
   mock_docker_list.return_value = ['dummy_image']
   mock_docker_stop.return_value = None
 
@@ -82,9 +107,8 @@ def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
     network_mode='host',
     tty=False,
   )
-  output = new_docker_image.run_image('test_image', run_parameters)
-
-  assert output == 'docker output'
+  assert new_docker_image.run_image('test_image', run_parameters) == \
+      mock_docker_output
   mock_docker_run.assert_called_once_with('test_image', stdout=True,
       stderr=True, detach=False, **run_parameters._asdict())
 
