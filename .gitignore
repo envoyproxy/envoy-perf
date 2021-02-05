@@ -1,4 +1,6 @@
 **/*.pyc
+**/*.rej
+**/*.orig
 **/*.swp
 **/.vscode/*
 **/__pycache__/*

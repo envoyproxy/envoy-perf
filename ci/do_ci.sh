@@ -29,7 +29,7 @@ function test_salvo() {
   pushd salvo
 
   install_deps
-  bazel test //...
+  tools/coverage.sh
 
   popd
 }
