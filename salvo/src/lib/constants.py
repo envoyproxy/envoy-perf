@@ -22,3 +22,9 @@ USR_BIN = '/usr/bin'
 # Strings used when generating the volume mount map for a container
 MOUNT_READ_ONLY = 'ro'
 MOUNT_READ_WRITE = 'rw'
+
+# Define the well known build target for the envoy-static binary
+ENVOY_BINARY_BUILD_TARGET = "//source/exe:envoy-static"
+
+# Define the location of the compiled envoy-static binary
+ENVOY_BINARY_TARGET_OUTPUT_PATH = "bazel-bin/source/exe/envoy-static"
