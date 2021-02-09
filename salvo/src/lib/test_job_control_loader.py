@@ -117,15 +117,16 @@ def _validate_job_control_object(job_control):
 
   # Verify environment
   assert job_control.environment is not None
-  assert job_control.environment.test_version == job_control.environment.IPV_V4ONLY
+  assert job_control.environment.test_version == \
+      job_control.environment.IPV_V4ONLY
   assert job_control.environment.variables is not None
   assert 'TMP_DIR' in job_control.environment.variables
   assert job_control.environment.output_dir is not None
   assert job_control.environment.output_dir == '/home/ubuntu/nighthawk_output'
   assert job_control.environment.test_dir is not None
   assert job_control.environment.test_dir == '/home/ubuntu/nighthawk_tests'
-
-  assert job_control.environment.variables['TMP_DIR'] == "/home/ubuntu/nighthawk_output"
+  assert job_control.environment.variables['TMP_DIR'] == \
+      "/home/ubuntu/nighthawk_output"
 
 
 def test_control_doc_parse_yaml():
@@ -268,32 +269,111 @@ def test_generate_control_doc():
   # Verify that we the serialized data is json consumable
   _serialize_and_read_object(job_control)
 
-
-def _test_docker_volume_generation():
-  """Verify construction of the volume mount map.
-
-  This test creates the volume and mount map we provide to a docker container.
-  We verify that the structure can be serialized and read as JSON.
+def test_bazel_options():
+  """Verify that we can specify bazel options and can handle dashes
+     in the strings.
   """
-  volume_cfg = proto_docker_volume.Volume()
+  job_control = proto_control.JobControl(
+      remote=True,
+      scavenging_benchmark=True
+  )
 
-  props = proto_docker_volume.VolumeProperties()
-  props.bind = constants.DOCKER_SOCKET_PATH
-  props.mode = 'ro'
-  volume_cfg.volumes[constants.DOCKER_SOCKET_PATH].CopyFrom(props)
+  envoy_source = job_control.source.add()
+  envoy_source.identity = \
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+  envoy_source.source_path = "/home/ubuntu/envoy"
+  envoy_source.branch = "master"
+  envoy_source.commit_hash = "random_commit_hash_string"
+  option = envoy_source.bazel_options.add()
+  option.parameter = "--jobs 4"
 
-  props = proto_docker_volume.VolumeProperties()
-  props.bind = '/home/ubuntu/nighthawk_output'
-  props.mode = 'rw'
-  volume_cfg.volumes['/home/ubuntu/nighthawk_output'].CopyFrom(props)
+  option = envoy_source.bazel_options.add()
+  option.parameter = "--define tcmalloc=gperftools"
 
-  props = proto_docker_volume.VolumeProperties()
-  props.bind = constants.NIGHTHAWK_EXTERNAL_TEST_DIR
-  props.mode = 'rw'
-  volume_cfg.volumes[constants.NIGHTHAWK_EXTERNAL_TEST_DIR].CopyFrom(props)
+    # Verify that we the serialized data is json consumable
+  _serialize_and_read_object(job_control)
 
-  # Verify that we the serialized data is json consumable
-  _serialize_and_read_object(volume_cfg)
+def test_read_bazel_options():
+
+  control_json = """
+  {
+    "remote": false,
+    "dockerizedBenchmark": true,
+    "source": [
+      {
+        "identity": "SRCID_ENVOY",
+        "sourcePath": "/home/ubuntu/envoy",
+        "branch": "some_random_branch",
+        "commitHash": "random_commit_hash_string",
+        "bazelOptions": [
+          {
+            "parameter": "--jobs 4"
+          },
+          {
+            "parameter": "--define tcmalloc=gperftools"
+          }
+        ]
+      }
+    ]
+  }
+  """
+  # Write JSON contents to a temporary file that we clean up once
+  # the object is parsed
+  job_control = None
+  with tempfile.NamedTemporaryFile(mode='w', delete=False) as tmp:
+    tmp.write(control_json)
+    tmp.close()
+    job_control = job_ctrl.load_control_doc(tmp.name)
+    os.unlink(tmp.name)
+
+  _validate_job_control_object_with_options(job_control)
+
+def _validate_job_control_object_with_options(job_control):
+  """Verification method for a job control object with bazel options
+
+  Args:
+      job_control: The Protocol Buffer object whose data fields
+        are to be examined and verified
+
+  Returns:
+      None
+  """
+  assert job_control is not None
+
+  # Verify execution location
+  assert not job_control.remote
+
+  # Verify configured benchmark
+  assert job_control.dockerized_benchmark
+  assert not job_control.scavenging_benchmark
+  assert not job_control.binary_benchmark
+
+  # Verify sources
+  assert job_control.source is not None or job_control.source != []
+  assert len(job_control.source) == 1
+
+  source = job_control.source[0]
+  assert source.identity == \
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+  assert source.source_path == "/home/ubuntu/envoy"
+  assert not source.source_url
+  assert source.branch == "some_random_branch"
+  assert source.commit_hash == "random_commit_hash_string"
+
+  # Verify Bazel Options in source
+  bazel_options = source.bazel_options
+  assert bazel_options is not None
+
+  for option in bazel_options:
+    assert option.parameter
+
+    if option.parameter == "--jobs 4":
+      saw_jobs = True
+    elif option.parameter == "--define tcmalloc=gperftools":
+      saw_gperftools = True
+
+  assert saw_jobs
+  assert saw_gperftools
 
 
 if __name__ == '__main__':
