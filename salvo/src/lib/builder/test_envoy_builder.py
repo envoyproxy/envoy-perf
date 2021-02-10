@@ -29,22 +29,20 @@ def _check_call_side_effect(args, parameters):
   if args == "bazel clean":
     return "INFO: Starting clean"
   elif args == "bazel build -c opt " + constants.ENVOY_BINARY_BUILD_TARGET:
-    return "foo"
+    return "building..."
   elif args == ("cp -fv bazel-bin/source/exe/envoy-static "
                 "build_release_stripped/envoy"):
     return "copied..."
-  elif args == (("objcopy --strip-debug bazel-bin/source/exe/envoy-static "
-                 "build_release_stripped/envoy")):
+  elif args == ("objcopy --strip-debug bazel-bin/source/exe/envoy-static "
+                "build_release_stripped/envoy"):
     return "stripped..."
-  elif args == (("docker build -f ci/Dockerfile-envoy -t "
-                 "envoyproxy/envoy-dev:v1.16.0 --build-arg "
-                 "TARGETPLATFORM='.' .")):
+  elif args == ("docker build -f ci/Dockerfile-envoy -t "
+                "envoyproxy/envoy-dev:v1.16.0 --build-arg "
+                "TARGETPLATFORM='.' ."):
     return "docker build output..."
 
   raise NotImplementedError(f"Unhandled arguments in call: {args}")
 
-@mock.patch.object(envoy_builder.EnvoyBuilder, 'create_docker_image')
-@mock.patch.object(envoy_builder.EnvoyBuilder, 'stage_envoy')
 @mock.patch('src.lib.cmd_exec.run_check_command')
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'checkout_commit_hash')
@@ -52,16 +50,12 @@ def _check_call_side_effect(args, parameters):
 def test_build_envoy_image_from_source(mock_copy_source,
                                        mock_checkout_hash,
                                        mock_run_command,
-                                       mock_run_check_command,
-                                       mock_stage_envoy,
-                                       mock_create_docker_image):
+                                       mock_run_check_command):
   """Verify the calls made to build an envoy image from a source tree."""
   mock_copy_source.return_value = None
   mock_checkout_hash.return_value = None
   mock_run_command.side_effect = _check_call_side_effect
   mock_run_check_command.side_effect = _check_call_side_effect
-  mock_stage_envoy.return_value = None
-  mock_create_docker_image.return_value = None
 
   manager = _generate_default_source_manager()
   builder = envoy_builder.EnvoyBuilder(manager)
@@ -69,8 +63,6 @@ def test_build_envoy_image_from_source(mock_copy_source,
 
   mock_copy_source.assert_called_once()
   mock_checkout_hash.assert_called_once()
-  mock_stage_envoy.assert_called_once_with(False)
-  mock_create_docker_image.assert_called_once()
 
 @mock.patch.object(source_manager.SourceManager, 'get_source_repository')
 def test_build_envoy_image_from_source_fail(mock_get_source_tree):
@@ -98,12 +90,10 @@ def test_stage_envoy(mock_run_command):
   mock_run_command.side_effect = _check_call_side_effect
 
   calls = [
-    mock.call(("cp -fv bazel-bin/source/exe/envoy-static "
-              "build_release_stripped/envoy"),
-              mock.ANY),
-    mock.call(("objcopy --strip-debug bazel-bin/source/exe/envoy-static "
-              "build_release_stripped/envoy"),
-              mock.ANY)
+      mock.call(("cp -fv bazel-bin/source/exe/envoy-static "
+                 "build_release_stripped/envoy"), mock.ANY),
+      mock.call(("objcopy --strip-debug bazel-bin/source/exe/envoy-static "
+                 "build_release_stripped/envoy"), mock.ANY)
   ]
   manager = _generate_default_source_manager()
   builder = envoy_builder.EnvoyBuilder(manager)
@@ -119,13 +109,18 @@ def test_create_docker_image(mock_run_command, mock_glob):
   image.
   """
   mock_run_command.side_effect = _check_call_side_effect
-  mock_glob.return_value = ['file1', 'file2']
+  mock_glob.return_value = ['docker_ignore_file1', 'docker_ignore_file2']
 
   manager = _generate_default_source_manager()
   builder = envoy_builder.EnvoyBuilder(manager)
   builder.create_docker_image()
 
-  mock_run_command.assert_called_once()
+  calls = [
+      mock.call(("docker build -f ci/Dockerfile-envoy -t "
+                 "envoyproxy/envoy-dev:v1.16.0 --build-arg "
+                 "TARGETPLATFORM='.' ."), mock.ANY)
+  ]
+  mock_run_command.assert_has_calls(calls)
 
 def _generate_default_source_manager():
   """Build a default SourceRepository object."""
