@@ -19,6 +19,11 @@ NIGHTHAWK_EXTERNAL_TEST_DIR = ('/usr/local/bin/benchmarks/benchmarks.runfiles'
 OPT_LLVM = '/opt/llvm/bin/'
 USR_BIN = '/usr/bin'
 
+# The NightHawk benchmark and binary docker images are created using the respective
+# scripts below
+NH_BENCHMARK_IMAGE_SCRIPT = "ci/docker/benchmark_build.sh"
+NH_BINARY_IMAGE_SCRIPT = "ci/docker/docker_build.sh"
+
 # Strings used when generating the volume mount map for a container
 MOUNT_READ_ONLY = 'ro'
 MOUNT_READ_WRITE = 'rw'

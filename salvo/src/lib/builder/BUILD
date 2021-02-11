@@ -43,6 +43,19 @@ py_library(
     ],
 )
 
+py_library(
+    name = "nighthawk_builder",
+    srcs = [
+        "nighthawk_builder.py",
+    ],
+    deps = [
+        "//api:schema_proto",
+        "//src/lib:shell",
+        "//src/lib:source_tree",
+        ":base_builder"
+    ],
+)
+
 py_test(
   name = "test_envoy_builder",
   srcs = [ "test_envoy_builder.py" ],
@@ -61,8 +74,24 @@ py_test(
   srcs = [ "test_base_builder.py" ],
   srcs_version = "PY3",
   deps = [
+      "//api:schema_proto",
       "//src/lib:source_manager",
       ":base_builder",
+  ],
+)
+
+py_test(
+  name = "test_nighthawk_builder",
+  srcs = [ "test_nighthawk_builder.py" ],
+  srcs_version = "PY3",
+  deps = [
+      "//api:schema_proto",
+      "//src/lib/common:file_ops",
+      "//src/lib:constants",
+      "//src/lib:shell",
+      "//src/lib:source_tree",
+      "//src/lib:source_manager",
+      ":nighthawk_builder",
   ],
 )
 
