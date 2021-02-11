@@ -31,36 +31,67 @@ class EnvoyBuilder(base_builder.BaseBuilder):
       manager: The source manager object handling the source needed
         to build Envoy
     """
-    pass
+    super(EnvoyBuilder, self).__init__(manager)
+    self._source_tree = self._source_manager.get_source_tree(
+        proto_source.SourceRepository.SRCID_ENVOY
+    )
+
+    self._source_repo = self._source_manager.get_source_repository(
+        proto_source.SourceRepository.SRCID_ENVOY
+    )
+    self.set_build_dir(self._source_tree.get_source_directory())
 
   def _validate(self) -> None:
     """Validate the identity of the source defined from which Envoy is
     built.
     """
-    pass
+    if self._source_repo.identity != proto_source.SourceRepository.SRCID_ENVOY:
+      raise EnvoyBuilderError("This class builds Envoy only.")
 
   def clean_envoy(self) -> None:
     """Remove all build artifacts."""
-    pass
+    self._validate()
+    self._run_bazel_clean()
 
   def build_envoy(self) -> None:
-    """Run bazel build to generate the envoy-static binary."""
-    pass
+    """Run bazel build to generate the envoy-static."""
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+    cmd = "bazel build {bazel_options}".format(
+        bazel_options=self._generate_bazel_options(
+            proto_source.SourceRepository.SRCID_ENVOY
+        )
+    )
+    if not cmd.endswith(" "):
+      cmd += " "
+    cmd += constants.ENVOY_BINARY_BUILD_TARGET
+    cmd_exec.run_check_command(cmd, cmd_params)
 
   def build_envoy_image_from_source(self) -> None:
     """Build an Envoy docker image from source.
 
-    This method performs a few steps. It compiles the envoy binary,
-    stages it for inclusion in a docker image, and builds the docker
-    image.
+    This method performs all the steps necessary to generate an Envoy docker
+    image
 
     Returns:
       None
     """
-    pass
+
+    self._validate()
+    self._source_tree.copy_source_directory()
+    self._source_tree.checkout_commit_hash()
+    self.clean_envoy()
+    self.build_envoy()
+    self.stage_envoy(False)
+    self.create_docker_image()
 
   def stage_envoy(self, strip_binary: bool) -> None:
     """Copy and optionally strip the Envoy binary.
+
+    After we compile Envoy, copy the binary into a platform directory
+    for inclusion in the docker image. It is unclear the intent of the
+    'targetplatform' parameter in the Dockerfile, so we use a static
+    string. Ultimately the compiled binary is staged for packaging in
+    the resulting image.
 
     Args:
       strip_binary: determines whether we use objcopy to strip debug
@@ -73,12 +104,52 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     Returns:
       None
     """
-    pass
+    # Stage the envoy binary for the docker image
+    dir_mode = 0o755
+    pwd = os.getcwd()
+    os.chdir(self._build_dir)
+
+    if not os.path.exists('build_release_stripped'):
+      os.mkdir('build_release_stripped', dir_mode)
+
+    os.chdir(pwd)
+
+    cmd = "objcopy --strip-debug " if strip_binary else "cp -fv "
+    cmd += constants.ENVOY_BINARY_TARGET_OUTPUT_PATH
+    cmd += " build_release_stripped/envoy"
+
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+    cmd_exec.run_command(cmd, cmd_params)
 
   def _generate_docker_ignore(self) -> None:
     """Generate a dockerignore file to reduce the context size."""
-    pass
+
+    omit_from_dockerignore = ['configs', 'build_release_stripped', 'ci']
+
+    pwd = os.getcwd()
+    os.chdir(self._build_dir)
+
+    discovered_files = glob.glob('*')
+    files_to_write = filter(
+        lambda f: f not in omit_from_dockerignore, discovered_files
+    )
+
+    with open('.dockerignore', 'w') as dockerignore:
+      for entry in files_to_write:
+        dockerignore.write("{entry}\n".format(entry=entry))
+
+    os.chdir(pwd)
 
   def create_docker_image(self) -> None:
     """Build a docker image with the newly compiled Envoy binary."""
-    pass
+
+    self._generate_docker_ignore()
+    commit_hash = self._source_repo.commit_hash
+
+    cmd = "docker build "
+    cmd += "-f ci/Dockerfile-envoy "
+    cmd += "-t envoyproxy/envoy-dev:{hash} ".format(hash=commit_hash)
+    cmd += "--build-arg TARGETPLATFORM=\'.\' ."
+
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+    cmd_exec.run_command(cmd, cmd_params)

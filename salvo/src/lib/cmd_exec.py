@@ -32,8 +32,8 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
       The output produced by the command
 
   Raises:
-    subprocess.CalledProcessError if there was a failure executing the specified
-      command
+    subprocess.CalledProcessError: if the command exits with a non-zero exit
+      code
   """
 
   # Because the stdout/stderr from nighthawk can be large, we redirect it to
@@ -70,3 +70,27 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
 
   return output
 
+def run_check_command(cmd: str, parameters: CommandParameters) -> None:
+  """Run the specified command checking its exit status.
+
+  Args:
+      cmd: The command to be executed
+      parameters: Additional arguments provided to check_output. Most
+        importantly, we specify 'cwd' which is the intended working directory
+        where the command is to be executed.  Other parameters supported
+        by the subprocess module will be added as they become necessary for
+        execution.
+
+  Raises:
+    subprocess.CalledProcessError: if the command exits with a non-zero exit
+      code
+  """
+  try:
+    log.debug(f"Executing command: [{cmd}] with args [{parameters._asdict()}]")
+    cmd_array = shlex.split(cmd)
+    subprocess.check_call(
+        cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
+
+  except subprocess.CalledProcessError as process_error:
+    log.error(f"Unable to execute [{cmd}]: {process_error}")
+    raise
