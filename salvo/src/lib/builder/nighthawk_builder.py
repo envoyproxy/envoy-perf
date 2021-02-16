@@ -77,8 +77,15 @@ class NightHawkBuilder(base_builder.BaseBuilder):
       a SourceTree pointing to the location on disk where we can build
         artifacts
     """
-    pass
 
+    self._validate()
+    if not self._source_tree.pull():
+      self._source_tree.copy_source_directory()
+    self._build_dir = self._source_tree.get_source_directory()
+
+    log.debug(f"NightHawk source path: [{self._build_dir}]")
+
+    self._run_bazel_clean()
 
   def build_nighthawk_benchmarks(self) -> None:
     """Build the NightHawk benchmarks target.
@@ -86,19 +93,46 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     This target is required for the scavenging benchmark. It is also a pre-
     requisite to building the benchmark container image
     """
-    pass
+
+    self.prepare_nighthawk_source()
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+
+    bazel_options = self._generate_bazel_options(
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
+    )
+    cmd = "bazel build {bazel_options} //benchmarks:benchmarks".format(
+        bazel_options=bazel_options
+    )
+    output = cmd_exec.run_command(cmd, cmd_params)
+
+    log.debug(f"Nighthawk build output: {output}")
 
   def build_nighthawk_binaries(self) -> None:
     """Build the NightHawk client and server binaries.
 
     This is a pre-requisite to building the nighthawk binary docker image
     """
-    pass
+    self.prepare_nighthawk_source()
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+
+    bazel_options = self._generate_bazel_options(
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
+    )
+    cmd = "bazel build {bazel_options} //:nighthawk".format(
+        bazel_options=bazel_options
+    )
+    output = cmd_exec.run_command(cmd, cmd_params)
+
+    log.debug(f"Nighthawk build output: {output}")
 
   def build_nighthawk_benchmark_image(self) -> None:
     """Build the NightHawk benchmark docker image."""
-    pass
+    self.build_nighthawk_benchmarks()
+    _execute_docker_image_script(constants.NH_BENCHMARK_IMAGE_SCRIPT,
+                                 self._build_dir)
 
   def build_nighthawk_binary_image(self) -> None:
     """Build the NightHawk binary docker image."""
-    pass
+    self.build_nighthawk_binaries()
+    _execute_docker_image_script(constants.NH_BINARY_IMAGE_SCRIPT,
+                                 self._build_dir)
