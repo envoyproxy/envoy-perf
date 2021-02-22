@@ -59,7 +59,7 @@ def build_envoy_image_from_source(manager: source_manager.SourceManager,
   Returns:
     a tag of the Envoy image built
   """
-  pass
+  return ''
 
 def generate_envoy_image_name_from_tag(image_tag: str) -> str:
   """Given an image tag, determine the prefix and construct thee full name.
@@ -70,7 +70,7 @@ def generate_envoy_image_name_from_tag(image_tag: str) -> str:
   Returns:
     The full name for the envoy docker image
   """
-  pass
+  return ''
 
 def get_envoy_image_prefix(image_hash: str) -> str:
   """Get the image prefix based on the commit hash.
@@ -84,7 +84,7 @@ def get_envoy_image_prefix(image_hash: str) -> str:
   Returns:
     The prefix used to generate the full Envoy docker image name
   """
-  pass
+  return ''
 
 def build_nighthawk_benchmark_image_from_source(
     manager: source_manager.SourceManager) -> None:
