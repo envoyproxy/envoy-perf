@@ -26,7 +26,13 @@ def build_envoy_docker_image(manager: source_manager.SourceManager,
   Returns:
     None
   """
-  pass
+
+  builder = envoy_builder.EnvoyBuilder(manager)
+  source_repo = manager.get_source_repository(
+      proto_source.SourceRepository.SRCID_ENVOY
+  )
+  source_repo.commit_hash = commit_hash
+  builder.build_envoy_image_from_source()
 
 def build_missing_envoy_docker_image(
     manager: source_manager.SourceManager,
@@ -45,7 +51,23 @@ def build_missing_envoy_docker_image(
     envoy_image_tag: A commit hash or tag for which we need to
       build an envoy_image
   """
-  pass
+
+  have_build_options = manager.have_build_options(
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
+
+  log.debug(f"Build options exist?: {have_build_options}")
+
+  # Determine whether the image we need already exists on the local system
+  existing_images = []
+  if not have_build_options:
+    new_docker_image = docker_image.DockerImage()
+    existing_images = new_docker_image.list_images()
+
+  log.debug(f"Existing image tags: {existing_images}")
+
+  image_name = generate_envoy_image_name_from_tag(envoy_image_tag)
+  if image_name not in existing_images:
+    build_envoy_docker_image(manager, envoy_image_tag)
 
 def build_envoy_image_from_source(manager: source_manager.SourceManager,
                                   image_tag: str) -> str:
@@ -59,7 +81,14 @@ def build_envoy_image_from_source(manager: source_manager.SourceManager,
   Returns:
     a tag of the Envoy image built
   """
-  return ''
+
+  log.debug(f"Building Envoy image for {image_tag} from source")
+
+  build_missing_envoy_docker_image(manager, image_tag)
+
+  envoy_image = generate_envoy_image_name_from_tag(image_tag)
+
+  return envoy_image
 
 def generate_envoy_image_name_from_tag(image_tag: str) -> str:
   """Given an image tag, determine the prefix and construct thee full name.
@@ -70,7 +99,9 @@ def generate_envoy_image_name_from_tag(image_tag: str) -> str:
   Returns:
     The full name for the envoy docker image
   """
-  return ''
+  image_prefix = get_envoy_image_prefix(image_tag)
+  envoy_image = "{prefix}:{hash}".format(prefix=image_prefix, hash=image_tag)
+  return envoy_image
 
 def get_envoy_image_prefix(image_hash: str) -> str:
   """Get the image prefix based on the commit hash.
@@ -84,7 +115,8 @@ def get_envoy_image_prefix(image_hash: str) -> str:
   Returns:
     The prefix used to generate the full Envoy docker image name
   """
-  return ''
+  return "envoyproxy/envoy" if source_tree.is_tag(image_hash) \
+    else "envoyproxy/envoy-dev"
 
 def build_nighthawk_benchmark_image_from_source(
     manager: source_manager.SourceManager) -> None:
@@ -95,7 +127,10 @@ def build_nighthawk_benchmark_image_from_source(
       The source manager can navigate the commit hashes or tags to determine
       the endpoints for the benchmark
   """
-  pass
+
+  # TODO: Inject the builder object into this method
+  builder = nighthawk_builder.NightHawkBuilder(manager)
+  builder.build_nighthawk_benchmark_image()
 
 def build_nighthawk_binary_image_from_source(
     manager: source_manager.SourceManager) -> None:
@@ -106,4 +141,7 @@ def build_nighthawk_binary_image_from_source(
       The source manager can navigate the commit hashes or tags to determine
       the endpoints for the benchmark
   """
-  pass
+
+  # TODO: Inject the builder object into this method
+  builder = nighthawk_builder.NightHawkBuilder(manager)
+  builder.build_nighthawk_binary_image()
