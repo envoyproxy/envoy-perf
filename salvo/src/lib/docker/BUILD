@@ -17,6 +17,21 @@ py_library(
 )
 
 py_library(
+    name = "docker_image_builder",
+    srcs = [
+        "docker_image_builder.py",
+    ],
+    deps = [
+        "//api:schema_proto",
+        "//src/lib:constants",
+        "//src/lib:source_manager",
+        "//src/lib/docker:docker_image",
+        "//src/lib/builder:envoy_builder",
+        "//src/lib/builder:nighthawk_builder",
+    ],
+)
+
+py_library(
     name = "docker_volume",
     srcs = [
         "docker_volume.py",
@@ -46,5 +61,21 @@ py_test(
         "//api:schema_proto",
         "//src/lib:constants",
         ":docker_volume",
+    ],
+)
+
+py_test(
+    name = "test_docker_image_builder",
+    srcs = ["test_docker_image_builder.py"],
+    srcs_version = "PY3",
+    deps = [
+        "//api:schema_proto",
+        "//src/lib:constants",
+        "//src/lib:source_tree",
+        ":docker_image",
+        ":docker_volume",
+        ":docker_image_builder",
+        "//src/lib/builder:envoy_builder",
+        "//src/lib/builder:nighthawk_builder"
     ],
 )
