@@ -1,7 +1,6 @@
 import pytest
 import subprocess
 from unittest import mock
-import unittest
 from src.lib import cmd_exec
 
 
@@ -61,6 +60,24 @@ def test_run_command_fail(mock_check_call):
   output = ''
   with pytest.raises(subprocess.CalledProcessError) as process_error:
     output = cmd_exec.run_command(cmd, cmd_parameters)
+
+  assert not output
+  assert f"Command \'{cmd}\' returned non-zero exit status" in \
+    str(process_error.value)
+
+@mock.patch('subprocess.check_call')
+def test_run_check_command_fail(mock_check_call):
+  """Verify that a CalledProcessError is bubbled to the caller if the command
+  fails.
+  """
+  mock_check_call.side_effect = check_call_side_effect
+
+  cmd_parameters = cmd_exec.CommandParameters(cwd='/tmp')
+  cmd = 'command_error'
+
+  output = ''
+  with pytest.raises(subprocess.CalledProcessError) as process_error:
+    output = cmd_exec.run_check_command(cmd, cmd_parameters)
 
   assert not output
   assert f"Command \'{cmd}\' returned non-zero exit status" in \

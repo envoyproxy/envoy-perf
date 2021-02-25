@@ -4,7 +4,7 @@ This module abstracts the higher level functions of managing source code
 import logging
 from typing import Set
 
-from src.lib import source_tree
+from src.lib import (constants, source_tree)
 
 import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
@@ -16,9 +16,9 @@ log = logging.getLogger(__name__)
 """
 _KNOWN_REPOSITORIES = {
     proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY: \
-      'https://github.com/envoyproxy/envoy.git',
+      constants.ENVOY_GITHUB_REPO,
     proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK: \
-      'https://github.com/envoyproxy/nighthawk.git'
+      constants.NIGHTHAWK_GITHUB_REPO
 }
 
 

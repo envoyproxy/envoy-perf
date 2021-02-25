@@ -24,6 +24,12 @@ _TAG_REGEX = r'^v\d\.\d+\.\d+'
 # we get https://github.com/envoyproxy/envoy.git in an enumerated group
 _GIT_ORIGIN_REGEX = r'^origin\s*([\w:@\.\/-]+)\s\(fetch\)$'
 
+# _REPO_STATUS_REGEX matches the output of "git status" so that we can
+# determine how many commits are outstanding. For example, from:
+# Your branch is ahead of 'original/master' by 1 commit.
+# We extract the branch 'original/master' and the digit '1'
+_REPO_STATUS_REGEX = r'.*ahead of \'(.*)\' by (\d+) commit'
+
 class SourceTreeError(Exception):
   """Raised if we encounter a condition from which we cannot recover, when
      manipulating SourceTree objects.
@@ -184,7 +190,16 @@ class SourceTree(object):
 
     output_directory = self.get_source_directory()
 
-    log.debug(f"Copying tree from {self._source_repo.source_path} to {output_directory}")
+    # copytree will fail if the destination directory exists.
+    # TemporaryDirectory objects create the underlying directory. We use
+    # copytree since it allows us to ignore bazel files. That said, if
+    # the output directory exists, delete the path and it will be
+    # recreated.
+    if os.path.exists(output_directory):
+      file_ops.delete_directory(output_directory)
+
+    log.debug(f"Copying tree from {self._source_repo.source_path} "
+              f"to {output_directory}")
     ignore_bazel = shutil.ignore_patterns('bazel-*')
     shutil.copytree(self._source_repo.source_path, output_directory,
                     symlinks=False, ignore=ignore_bazel)
@@ -205,7 +220,8 @@ class SourceTree(object):
 
     source_name = proto_source.SourceRepository.SourceIdentity.Name(
         self._source_repo.identity)
-    log.debug(f"Pulling [{source_name}] from origin: [{self._source_repo.source_url}]")
+    log.debug(f"Pulling [{source_name}] from origin: "
+              f"[{self._source_repo.source_url}]")
 
     if not self._source_repo.source_url:
       log.debug("No url specified for source. Cannot pull.")
@@ -220,11 +236,9 @@ class SourceTree(object):
     if not self._source_repo.source_url:
       self._source_repo.source_url = self.get_origin()
 
-    output_dir = self.get_source_directory()
-
     # Clone into the working directory
     cmd = "git clone {origin} .".format(origin=self._source_repo.source_url)
-    cmd_params = cmd_exec.CommandParameters(cwd=output_dir)
+    cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
     output = cmd_exec.run_command(cmd, cmd_params)
     expected = 'Cloning into \'.\''
 
@@ -249,9 +263,8 @@ class SourceTree(object):
       self.pull()
 
     if self._source_repo.commit_hash:
-      output_directory = self.get_source_directory()
       cmd = "git checkout {hash}".format(hash=self._source_repo.commit_hash)
-      cmd_params = cmd_exec.CommandParameters(cwd=output_directory)
+      cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
       output = cmd_exec.run_command(cmd, cmd_params)
 
       # HEAD is now at <8 chars of hash>
@@ -274,8 +287,7 @@ class SourceTree(object):
     cmd = ("git rev-list --no-merges --committer='GitHub <noreply@github.com>' "
            "--max-count=1 HEAD")
 
-    output_directory = self.get_source_directory()
-    cmd_params = cmd_exec.CommandParameters(cwd=output_directory)
+    cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
     return cmd_exec.run_command(cmd, cmd_params)
 
   def get_previous_commit_hash(self, current_commit: str,
@@ -313,8 +325,7 @@ class SourceTree(object):
         revisions=revisions, commit=current_commit
     )
 
-    output_directory = self.get_source_directory()
-    cmd_params = cmd_exec.CommandParameters(cwd=output_directory)
+    cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
     hash_list = cmd_exec.run_command(cmd, cmd_params)
 
     # Check whether we got an error from git
@@ -325,17 +336,16 @@ class SourceTree(object):
     # lines that may have trailed the original git output
     for commit_hash in hash_list.split('\n')[::-1]:
       if commit_hash:
-        log.debug(f"Returning {commit_hash} as the previous commit to {current_commit}")
+        log.debug(f"Returning {commit_hash} as the previous commit to "
+                  f"{current_commit}")
         return commit_hash
 
     raise SourceTreeError(f"No commit found prior to {current_commit}")
 
   def get_revs_behind_parent_branch(self) -> int:
     """Get the number of commits behind the parent branch.
-
     Determine how many commits the current branch on disk is behind the
     parent branch.  If we are up to date, return zero
-
     Returns:
       an integer with the number of commits the local source lags
        behind the parent branch
@@ -356,7 +366,7 @@ class SourceTree(object):
     # or determine whether git believes we are up to date:
     #
     # Your branch is up to date with 'origin/master'.
-    ahead = re.compile(r'.*ahead of \'(.*)\' by (\d+) commit[s]')
+    ahead = re.compile(_REPO_STATUS_REGEX)
     up_to_date = re.compile(r'Your branch is up to date with \'(.*)\'')
 
     for line in status_output.split('\n'):
@@ -390,8 +400,7 @@ class SourceTree(object):
     self._validate()
 
     cmd = "git tag --list --sort v:refname"
-    output_directory = self.get_source_directory()
-    cmd_params = cmd_exec.CommandParameters(cwd=output_directory)
+    cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
     tag_output = cmd_exec.run_command(cmd, cmd_params)
 
     tag_list = [tag.strip() for tag in tag_output.split('\n') if tag]

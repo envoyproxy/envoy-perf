@@ -1,7 +1,6 @@
 """
 Test envoy building operations
 """
-import logging
 import pytest
 from unittest import mock
 
@@ -9,8 +8,6 @@ import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
 from src.lib.builder import nighthawk_builder
 from src.lib import (cmd_exec, constants, source_tree, source_manager)
-
-logging.basicConfig(level=logging.DEBUG)
 
 @mock.patch.object(source_manager.SourceManager, 'get_source_repository')
 def test_prepare_nighthawk_source_fail(mock_get_source_tree):
