@@ -13,6 +13,7 @@ import api.source_pb2 as proto_source
 from src.lib.benchmark import fully_dockerized_benchmark as full_docker
 from src.lib.benchmark import base_benchmark
 from src.lib.docker import docker_image
+from src.lib import constants
 
 def _generate_images(
     job_control: proto_control.JobControl) -> proto_image.DockerImages:
@@ -55,7 +56,7 @@ def _generate_envoy_source(
   """
   envoy_source = job_control.source.add(
       identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
-      source_url="https://github.com/envoyproxy/envoy.git",
+      source_url=constants.ENVOY_GITHUB_REPO,
       branch="master",
       commit_hash="hash_doesnt_really_matter_here"
   )
