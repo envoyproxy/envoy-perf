@@ -33,3 +33,7 @@ ENVOY_BINARY_BUILD_TARGET = "//source/exe:envoy-static"
 
 # Define the location of the compiled envoy-static binary
 ENVOY_BINARY_TARGET_OUTPUT_PATH = "bazel-bin/source/exe/envoy-static"
+
+# Define the default locations of NightHawk and Envoy
+NIGHTHAWK_GITHUB_REPO = 'https://github.com/envoyproxy/nighthawk.git'
+ENVOY_GITHUB_REPO = 'https://github.com/envoyproxy/envoy.git'

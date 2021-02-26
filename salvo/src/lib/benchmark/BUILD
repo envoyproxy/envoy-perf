@@ -34,6 +34,7 @@ py_test(
   deps = [
       "//api:schema_proto",
       "//src/lib/docker:docker_image",
+      "//src/lib:constants",
       ":benchmark"
   ],
 )

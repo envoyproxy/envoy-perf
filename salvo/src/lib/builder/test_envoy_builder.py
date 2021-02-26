@@ -1,7 +1,6 @@
 """
 Test envoy building operations
 """
-import logging
 import pytest
 from unittest import mock
 
@@ -9,8 +8,6 @@ import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
 from src.lib.builder import envoy_builder
 from src.lib import (constants, source_tree, source_manager)
-
-logging.basicConfig(level=logging.DEBUG)
 
 def _check_call_side_effect(args, parameters):
   """Examine the incoming arguments for command execution and return the

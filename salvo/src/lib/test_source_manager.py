@@ -1,16 +1,12 @@
 """
 Test source management operations needed for executing benchmarks
 """
-import logging
 import pytest
 from unittest import mock
 
 from src.lib import (source_manager, source_tree)
 import api.control_pb2 as proto_control
 import api.source_pb2 as proto_source
-
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
 
 def _verify_cwd(**kwargs):
   """Verify cwd is defined in kwargs."""

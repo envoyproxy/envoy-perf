@@ -2,7 +2,6 @@
 Test Docker image build logic.  Most of these test are shallow and do not
 verify the git operations being automated.
 """
-import logging
 import pytest
 from unittest import mock
 
@@ -14,8 +13,10 @@ from src.lib.builder import (envoy_builder, nighthawk_builder)
 import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
 
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+_generate_image_name_from_tag_mock_name = \
+    'src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag'
+_build_envoy_docker_image_mock_name = \
+    'src.lib.docker.docker_image_builder.build_envoy_docker_image'
 
 def generate_image_manager_with_source_url():
   """Generate a source manager with a job control specifying remote repos
@@ -46,7 +47,7 @@ def test_build_envoy_docker_image(mock_envoy_builder):
   mock_envoy_builder.assert_called_once()
 
 
-@mock.patch('src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag')
+@mock.patch(_generate_image_name_from_tag_mock_name)
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 def test_build_missing_envoy_docker_image(mock_list_images,
                                           mock_generate_image_from_tag):
@@ -57,8 +58,7 @@ def test_build_missing_envoy_docker_image(mock_list_images,
   mock_generate_image_from_tag.return_value = "envoy/envoy-dev:envoy_tag"
 
   manager = generate_image_manager_with_source_url()
-  with mock.patch(
-      'src.lib.docker.docker_image_builder.build_envoy_docker_image',
+  with mock.patch(_build_envoy_docker_image_mock_name,
       mock.MagicMock()) as mock_build_image:
     image_builder.build_missing_envoy_docker_image(manager, 'envoy_tag')
     mock_build_image.assert_called_once_with(manager, 'envoy_tag')
@@ -67,7 +67,7 @@ def test_build_missing_envoy_docker_image(mock_list_images,
   mock_generate_image_from_tag.assert_called_once_with('envoy_tag')
 
 
-@mock.patch('src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag')
+@mock.patch(_generate_image_name_from_tag_mock_name)
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 def test_build_missing_envoy_docker_image_image_present(
     mock_list_images, mock_generate_image_from_tag):
@@ -79,8 +79,7 @@ def test_build_missing_envoy_docker_image_image_present(
   mock_generate_image_from_tag.return_value = image_tag
 
   manager = generate_image_manager_with_source_url()
-  with mock.patch(
-      'src.lib.docker.docker_image_builder.build_envoy_docker_image',
+  with mock.patch(_build_envoy_docker_image_mock_name,
       mock.MagicMock()) as mock_build_image:
     image_builder.build_missing_envoy_docker_image(manager, 'envoy_tag')
 
@@ -93,8 +92,7 @@ def test_build_missing_envoy_docker_image_image_present(
 
 
 @mock.patch.object(source_manager.SourceManager, 'have_build_options')
-@mock.patch(
-    'src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag')
+@mock.patch(_generate_image_name_from_tag_mock_name)
 def test_build_missing_envoy_docker_image_options_present(
     mock_generate_image_from_tag, mock_build_options):
   """Verify we build an image if build options are present"""
@@ -104,8 +102,7 @@ def test_build_missing_envoy_docker_image_options_present(
   mock_build_options.return_vaue = True
 
   manager = generate_image_manager_with_source_url()
-  with mock.patch(
-      'src.lib.docker.docker_image_builder.build_envoy_docker_image',
+  with mock.patch(_build_envoy_docker_image_mock_name,
       mock.MagicMock()) as mock_build_image:
     image_builder.build_missing_envoy_docker_image(manager, 'envoy_tag')
     mock_build_image.assert_called_once_with(manager, 'envoy_tag')
@@ -114,8 +111,7 @@ def test_build_missing_envoy_docker_image_options_present(
   mock_generate_image_from_tag.assert_called_once_with('envoy_tag')
 
 
-@mock.patch(
-    'src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag')
+@mock.patch(_generate_image_name_from_tag_mock_name)
 @mock.patch(
     'src.lib.docker.docker_image_builder.build_missing_envoy_docker_image')
 def test_build_envoy_image_from_source(mock_build_missing_image,
@@ -144,15 +140,14 @@ def test_generate_envoy_image_name_from_tag():
       'definitely_not_a_tag')
   assert image_name == "envoyproxy/envoy-dev:definitely_not_a_tag"
 
-  image_name = image_builder.generate_envoy_image_name_from_tag(
-      'v1.1.1')
+  image_name = image_builder.generate_envoy_image_name_from_tag('v1.1.1')
   assert image_name == "envoyproxy/envoy:v1.1.1"
 
 def test_get_image_prefix():
   """Verify we return the correct image prefix given a tag or hash"""
   expected_values = {
-    'not_a_tag' : 'envoyproxy/envoy-dev',
-    'v1.1.1': 'envoyproxy/envoy'
+      'not_a_tag': 'envoyproxy/envoy-dev',
+      'v1.1.1': 'envoyproxy/envoy'
   }
 
   for key, value in expected_values.items():
@@ -160,7 +155,7 @@ def test_get_image_prefix():
 
 
 @mock.patch.object(nighthawk_builder.NightHawkBuilder,
-    'build_nighthawk_benchmark_image')
+                   'build_nighthawk_benchmark_image')
 def test_build_nighthawk_benchmark_image_from_source(mock_benchmark_image):
   """Verify that we build the nighthawk benchmark container from a source
   tree.
@@ -172,7 +167,7 @@ def test_build_nighthawk_benchmark_image_from_source(mock_benchmark_image):
 
 
 @mock.patch.object(nighthawk_builder.NightHawkBuilder,
-    'build_nighthawk_binary_image')
+                   'build_nighthawk_binary_image')
 def test_build_nighthawk_binary_image_from_source(mock_binary_image):
   """Verify that we build the nighthawk binary container from a source
   tree.

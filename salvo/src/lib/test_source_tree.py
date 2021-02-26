@@ -3,14 +3,11 @@ Test source_tree operations needed for executing benchmarks
 """
 from unittest import mock
 import pytest
-import logging
 import subprocess
 
 from src.lib import (cmd_exec, source_tree, constants)
-import api.source_pb2 as proto_source
 
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
+import api.source_pb2 as proto_source
 
 def test_is_tag():
   """Verify that we can detect a hash and a git tag."""
@@ -24,18 +21,17 @@ def test_get_identity():
   """Verify we can retrieve the identity out of a source repository object."""
 
   for source_id in [
-    proto_source.SourceRepository.SourceIdentity.SRCID_UNSPECIFIED,
-    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
-    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK,
+      proto_source.SourceRepository.SourceIdentity.SRCID_UNSPECIFIED,
+      proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
+      proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK,
   ]:
     source_repository = proto_source.SourceRepository(
-      identity=source_id
+        identity=source_id
     )
 
     tree = source_tree.SourceTree(source_repository)
     identity = tree.get_identity()
     assert identity == source_id
-
 
 def test_source_tree_object():
   """Verify that we throw an exception if not all required data is present."""
@@ -83,7 +79,7 @@ def test_get_origin_ssh(mock_get_source_directory):
   In this instance the repo was cloned via ssh.
   """
 
-  mock_get_source_directory.return_value='/some_temp_directory'
+  mock_get_source_directory.return_value = '/some_temp_directory'
 
   remote_string = 'origin  git@github.com:username/reponame.git (fetch)'
   git_cmd = "git remote -v"
@@ -109,7 +105,7 @@ def test_get_origin_https(mock_get_source_directory):
   In this instance the repo was cloned via https
   """
 
-  mock_get_source_directory.return_value='/some_temp_directory'
+  mock_get_source_directory.return_value = '/some_temp_directory'
 
   remote_string = \
       'origin	https://github.com/aws/aws-app-mesh-examples.git (fetch)'
@@ -206,10 +202,10 @@ def mock_run_command_side_effect(*function_args):
       "git rev-list --no-merges "
       "--committer=\'GitHub <noreply@github.com>\' "
       "--max-count=2 invalid_hash_reference"):
-    git_output = """fatal: ambiguous argument 'invalid_hash_reference': unknown revision or path not in the working tree.
-Use '--' to separate paths from revisions, like this:
-'git <command> [<revision>...] -- [<file>...]'
-"""
+    git_output = ("fatal: ambiguous argument 'invalid_hash_reference': "
+                  "unknown revision or path not in the working tree.\n"
+                  "Use '--' to separate paths from revisions, like this:\n"
+                  "git <command> [<revision>...] -- [<file>...]")
     return git_output
 
   elif function_args[0] == (
@@ -430,7 +426,6 @@ def testget_revs_behind_parent_branch_up_to_date():
   git_cmd = 'git status'
   git_output = """On branch master
 Your branch is up to date with 'origin/master'.
-
 Changes not staged for commit:
   (use "git add <file>..." to update what will be committed)
   (use "git checkout -- <file>..." to discard changes in working directory)
@@ -495,7 +490,7 @@ v1.16.0
   source = _generate_source_tree_from_origin(origin)
 
   current_tag = 'v1.16.0'
-  previous_tag = 'v1.15.2'
+  expected_tag = 'v1.15.2'
 
   git_cmd = "git tag --list --sort v:refname"
 
@@ -506,7 +501,7 @@ v1.16.0
     cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
-    assert previous_tag == previous_tag
+    assert expected_tag == previous_tag
 
 
 def test_get_previous_tag_fail():
@@ -542,7 +537,7 @@ v1.16.0
   source = _generate_source_tree_from_origin(origin)
 
   current_tag = 'v1.16.0'
-  previous_tag = 'v1.14.5'
+  expected_tag = 'v1.14.5'
 
   git_cmd = "git tag --list --sort v:refname"
 
@@ -554,7 +549,7 @@ v1.16.0
     cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
     magic_mock.assert_called_once_with(git_cmd, cmd_params)
 
-    assert previous_tag == previous_tag
+    assert expected_tag == previous_tag
 
 def test_source_tree_with_disk_files():
   """Verify that we can get hash data from a source tree on disk."""

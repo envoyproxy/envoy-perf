@@ -3,15 +3,11 @@ Test Docker volume generation
 """
 import json
 import pytest
-import logging
 from unittest import mock
 from google.protobuf import json_format
 
 from src.lib import constants
 from src.lib.docker import docker_volume
-
-logging.basicConfig(level=logging.DEBUG)
-log = logging.getLogger(__name__)
 
 def test_generate_volume_config():
   """Verify the volume mount map can be created with no test directory

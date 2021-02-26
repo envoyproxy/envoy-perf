@@ -7,12 +7,10 @@ import tempfile
 import pytest
 
 from google.protobuf import json_format
-from src.lib import constants
 from src.lib import job_control_loader as job_ctrl
 
 import api.control_pb2 as proto_control
 import api.source_pb2 as proto_source
-import api.docker_volume_pb2 as proto_docker_volume
 
 
 def _write_object_to_disk(pb_obj, path):
