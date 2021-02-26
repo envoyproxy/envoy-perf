@@ -5,15 +5,19 @@ package(
 )
 
 py_library(
-    name = "benchmark",
-    data = [
-        "base_benchmark.py",
-        "fully_dockerized_benchmark.py"
-    ],
-    deps = [
-        "//src/lib/docker:docker_image",
-        "//src/lib/docker:docker_volume",
-    ],
+  name = "benchmark",
+  srcs = [
+      "base_benchmark.py",
+      "fully_dockerized_benchmark.py",
+      "scavenging_benchmark.py"
+  ],
+  srcs_version = "PY3",
+  deps = [
+      "//src/lib/docker:docker_image",
+      "//src/lib/docker:docker_volume",
+      "//src/lib/builder:nighthawk_builder",
+      "//src/lib/builder:envoy_builder"
+  ],
 )
 
 py_test(
@@ -28,13 +32,29 @@ py_test(
 )
 
 py_test(
+  name = "test_scavenging_benchmark",
+  srcs = [
+    "test_scavenging_benchmark.py",
+    "test_common.py"
+  ],
+  srcs_version = "PY3",
+  deps = [
+      "//api:schema_proto",
+      "//src/lib:source_manager",
+      ":benchmark"
+  ],
+)
+
+py_test(
   name = "test_fully_dockerized_benchmark",
-  srcs = [ "test_fully_dockerized_benchmark.py" ],
+  srcs = [
+    "test_fully_dockerized_benchmark.py",
+    "test_common.py"
+  ],
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
       "//src/lib/docker:docker_image",
-      "//src/lib:constants",
       ":benchmark"
   ],
 )
