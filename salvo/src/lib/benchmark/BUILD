@@ -35,7 +35,7 @@ py_test(
   name = "test_scavenging_benchmark",
   srcs = [
     "test_scavenging_benchmark.py",
-    "test_common.py"
+    "generate_benchmark_test_objects.py"
   ],
   srcs_version = "PY3",
   deps = [
@@ -49,7 +49,7 @@ py_test(
   name = "test_fully_dockerized_benchmark",
   srcs = [
     "test_fully_dockerized_benchmark.py",
-    "test_common.py"
+    "generate_benchmark_test_objects.py"
   ],
   srcs_version = "PY3",
   deps = [
