@@ -1,7 +1,7 @@
 """
-Base Benchmark object module that contains
-options common to all execution methods
+Base Benchmark object module that contains common methods for all benchmarks
 """
+import abc
 import os
 import logging
 from typing import List
@@ -14,6 +14,11 @@ import api.env_pb2 as proto_env
 
 log = logging.getLogger(__name__)
 
+_VARIABLES_TO_CLEAR_AND_RESTORE = [
+ 'RUNFILES_MANIFEST_FILE'  # This variable is set by the outer bazel
+                           # invocation and negatively impacts invoking
+                           # bazel to run the scavenging benchmark
+]
 
 def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   """Build the volume structure needed to run a container.
@@ -34,7 +39,7 @@ class BenchmarkError(Exception):
   """Errror raised in a benchmark for an unresolvable condition."""
 
 
-class BaseBenchmark(object):
+class BaseBenchmark(abc.ABC):
   """Base Benchmark class with common functions for all invocations."""
 
   def __init__(self, job_control: proto_control.JobControl,
@@ -159,8 +164,13 @@ class BaseBenchmark(object):
     """
     return self._docker_image.run_image(image_name, run_parameters)
 
+  @abc.abstractmethod
   def execute_benchmark(self) -> None:
-    raise NotImplementedError("Method must be implemented in a derived class")
+    """Run a benchmark
+
+    Classes derived from BaseBenchmark must override execute_benchmark since the
+    execution steps differ among the supported benchmarks
+    """
 
 class BenchmarkEnvironmentError(Exception):
   """An Error raised if the environment variables required are not
@@ -169,12 +179,6 @@ class BenchmarkEnvironmentError(Exception):
 
 class BenchmarkEnvController():
   """Benchmark Environment Controller context class."""
-
-  _VARS_TO_CLEAR_AND_RESTORE = [
-     'RUNFILES_MANIFEST_FILE'  # This variable is set by the outer bazel
-                               # invocation and negatively impacts invoking
-                               # bazel to run the scavenging benchmark
-  ]
 
   def __init__(self, environment: proto_env.EnvironmentVars) -> None:
     """Initialize the environment controller with the environment object."""
@@ -214,7 +218,7 @@ class BenchmarkEnvController():
 
   def _preserve_and_clear_special_vars(self) -> None:
     """Store the name and value for any special variables."""
-    for variable in BenchmarkEnvController._VARS_TO_CLEAR_AND_RESTORE:
+    for variable in _VARIABLES_TO_CLEAR_AND_RESTORE:
       if variable in os.environ:
         self._preserved_vars[variable] = os.environ[variable]
         del os.environ[variable]

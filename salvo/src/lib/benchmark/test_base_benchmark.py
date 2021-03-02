@@ -56,15 +56,6 @@ def test_no_environment_variables_exception():
   assert str(environment_error.value) == \
       "No IP version is specified for the benchmark"
 
-def test_no_job_control_exception():
-  """Test that we raise an exception if the job control is not defined."""
-  environ = proto_env.EnvironmentVars()
-
-  with pytest.raises(base_benchmark.BenchmarkError) as benchmark_error:
-    _ = base_benchmark.BaseBenchmark(None, "Unnamed")
-
-  assert str(benchmark_error.value) == "No control object received"
-
 def test_minimal_environment_variables():
   """Test that setting the required variables works and no extra variables are
      set.
@@ -91,23 +82,6 @@ def test_minimal_environment_variables():
 
     for (key, _) in not_expected_vars.items():
       assert key not in os.environ
-
-def test_base_method_exception_raised():
-  """Test that we raise an exception if we do not override the base
-  execute_benchmark method.
-  """
-  job_control = proto_control.JobControl(
-      remote=False
-  )
-
-  benchmark = base_benchmark.BaseBenchmark(job_control, "Unnamed")
-
-  assert 'Unnamed' == benchmark.get_name()
-  with pytest.raises(NotImplementedError) as implementation_error:
-    benchmark.execute_benchmark()
-
-  assert str(implementation_error.value) == \
-      "Method must be implemented in a derived class"
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))
