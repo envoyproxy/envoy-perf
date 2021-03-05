@@ -6,6 +6,7 @@ import copy
 import pytest
 
 import api.env_pb2 as proto_env
+import api.control_pb2 as proto_control
 from src.lib.benchmark import base_benchmark
 
 def test_environment_variables():
@@ -60,7 +61,7 @@ def test_minimal_environment_variables():
      set.
   """
   environ = proto_env.EnvironmentVars()
-  environ.test_version = environ.IPV_V4ONLY
+  environ.test_version = environ.IPV_V6ONLY
 
   benchmark_env_controller = base_benchmark.BenchmarkEnvController(environ)
 
@@ -73,7 +74,7 @@ def test_minimal_environment_variables():
   }
 
   expected_vars = {
-      'ENVOY_IP_TEST_VERSIONS': 'v4only',
+      'ENVOY_IP_TEST_VERSIONS': 'v6only',
   }
   with benchmark_env_controller:
     for (key, value) in expected_vars.items():
@@ -81,7 +82,6 @@ def test_minimal_environment_variables():
 
     for (key, _) in not_expected_vars.items():
       assert key not in os.environ
-
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

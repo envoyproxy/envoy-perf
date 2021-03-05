@@ -8,7 +8,6 @@ https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 import logging
 
 import api.control_pb2 as proto_control
-import api.image_pb2 as proto_image
 from src.lib.benchmark import base_benchmark
 from src.lib.docker import docker_image
 
@@ -20,8 +19,9 @@ class FullyDockerizedBenchmarkError(Exception):
   """
 
 class Benchmark(base_benchmark.BaseBenchmark):
-  """This is the base class from which all benchmark objecs are derived.
-     All common methods for benchmarks should be defined here.
+  """This benchmark class is the fully dockerized benchmark.  Docker images
+     containing the benchmark scripts, binaries, and envoy are used to execute
+     the tests.
   """
 
   def __init__(
@@ -53,55 +53,6 @@ class Benchmark(base_benchmark.BaseBenchmark):
     if verify_source:
       self._verify_sources(images)
 
-    return
-
-  def _verify_sources(self, images: proto_image.DockerImages) -> None:
-    """Validate that sources are available to build a missing image.
-
-    Verify that a source definition exists tht can build a missing
-    image needed for the benchmark.
-
-    Returns:
-        None
-
-    Raises:
-        an FullyDockerizedBenchmarkError if no source definitions
-          allow us to build missing docker images.
-    """
-    source = self.get_source()
-    if not source:
-      raise FullyDockerizedBenchmarkError("No source configuration specified")
-
-    can_build_envoy = False
-    can_build_nighthawk = False
-
-    for source_def in source:
-      # Cases:
-      # Missing envoy image -> Need to see an envoy source definition
-      # Missing at least one nighthawk image -> Need to see a nighthawk source
-
-      if source_def.identity == source_def.SRCID_UNSPECIFIED:
-        raise FullyDockerizedBenchmarkError("No source identity specified")
-
-      if not images.envoy_image \
-          and source_def.identity == source_def.SRCID_ENVOY and \
-          (source_def.source_path or source_def.source_url):
-        can_build_envoy = True
-
-      if (not images.nighthawk_benchmark_image or not images.nighthawk_binary_image) \
-          and source_def.identity == source_def.SRCID_NIGHTHAWK and \
-          (source_def.source_path or source_def.source_url):
-        can_build_nighthawk = True
-
-      if (not images.envoy_image and not can_build_envoy) or \
-          (not images.nighthawk_benchmark_image or not images.nighthawk_binary_image) \
-              and not can_build_nighthawk:
-        # If the Envoy image is specified, then the validation failed for
-        # NightHawk and vice versa
-        message = "No source specified to build unspecified {image} image".format(
-            image="NightHawk" if images.envoy_image else "Envoy")
-        raise FullyDockerizedBenchmarkError(message)
-
   def execute_benchmark(self) -> None:
     """Prepare input artifacts and run the benchmark.
 
@@ -112,8 +63,9 @@ class Benchmark(base_benchmark.BaseBenchmark):
         None
 
     Raises:
-      NotImplementedError if the benchmark is configured to execute
+      NotImplementedError: if the benchmark is configured to execute
         remotely.
+      BenchmarkError: if the benchmark fails to execute successfully
     """
     self._validate()
 
@@ -161,5 +113,10 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     log.info(f"Benchmark output: {output_dir}")
 
-    return
+    # Establishing success here requires that we examine the output produced by
+    # NightHawk. If the latency output exists we can be relatively certain that
+    # all containers were able to run and execute the specified tests
+    if not "benchmark_http_client" in result.decode('utf-8'):
+      raise base_benchmark.BenchmarkError(
+          "Unable to assert that the benchmark executed successfully")
 

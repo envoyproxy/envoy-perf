@@ -1,13 +1,12 @@
 """
-Base Benchmark object module that contains
-options common to all execution methods
+Base Benchmark object module that contains common methods for all benchmarks
 """
+import abc
 import os
 import logging
 from typing import List
 
 from src.lib.docker import (docker_image, docker_volume)
-
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import api.source_pb2 as proto_source
@@ -15,6 +14,11 @@ import api.env_pb2 as proto_env
 
 log = logging.getLogger(__name__)
 
+_VARIABLES_TO_CLEAR_AND_RESTORE = [
+    'RUNFILES_MANIFEST_FILE'  # This variable is set by the outer bazel
+                              # invocation and negatively impacts invoking
+                              # bazel to run the scavenging benchmark
+]
 
 def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   """Build the volume structure needed to run a container.
@@ -35,7 +39,7 @@ class BenchmarkError(Exception):
   """Errror raised in a benchmark for an unresolvable condition."""
 
 
-class BaseBenchmark(object):
+class BaseBenchmark(abc.ABC):
   """Base Benchmark class with common functions for all invocations."""
 
   def __init__(self, job_control: proto_control.JobControl,
@@ -61,8 +65,63 @@ class BaseBenchmark(object):
     self._build_envoy = False
     self._build_nighthawk = False
 
-    log.debug("Running benchmark: %s %s", "Remote" if self._mode_remote \
-      else "Local", self._benchmark_name)
+    log.debug(f"Running benchmark: %s {self._benchmark_name} [{self}]",
+              "Remote" if self._mode_remote else "Local")
+
+  def get_name(self) -> str:
+    """Return the name of the benchmark being executed."""
+    return self._benchmark_name
+
+  def get_image(self) -> str:
+    """Return the name of the envoy image being tested."""
+    return self._control.images.envoy_image
+
+  def _verify_sources(self, images: proto_image.DockerImages) -> None:
+    """Validate that sources are available to build a missing image.
+
+    Verify that a source definition exists that can build a missing
+    image needed for the benchmark.
+
+    Args:
+      images: The defined images and versions needed to conduct the
+        benchmark
+
+    Returns:
+        None
+
+    Raises:
+        BenchmarkError: if no source definitions allow us to build missing
+          docker images.
+    """
+    source = self.get_source()
+    if not source:
+      raise BenchmarkError("No source configuration specified")
+
+    can_build_envoy = False
+    can_build_nighthawk = False
+
+    for source_def in source:
+      # Cases:
+      # Missing envoy image -> Need to see an envoy source definition
+      # Missing at least one nighthawk image -> Need to see a nighthawk source
+
+      if source_def.identity == source_def.SRCID_UNSPECIFIED:
+        raise BenchmarkError("No source identity specified")
+
+      if not images.envoy_image \
+          and source_def.identity == source_def.SRCID_ENVOY:
+        can_build_envoy = True
+
+      if (not images.nighthawk_benchmark_image or not images.nighthawk_binary_image) \
+          and source_def.identity == source_def.SRCID_NIGHTHAWK:
+        can_build_nighthawk = True
+
+    if not images.envoy_image and not can_build_envoy:
+      raise BenchmarkError("No source specified to build Envoy image")
+
+    if (not images.nighthawk_benchmark_image or not images.nighthawk_binary_image) \
+        and not can_build_nighthawk:
+      raise BenchmarkError("No source specified to build NightHawk image")
 
   def is_remote(self) -> bool:
     """Return a boolean indicating whether the test is to be executed
@@ -105,40 +164,33 @@ class BaseBenchmark(object):
     """
     return self._docker_image.run_image(image_name, run_parameters)
 
-  def pull_images(self) -> List[str]:
-    """Retrieve all images necessary for the benchmark.
+  @abc.abstractmethod
+  def execute_benchmark(self) -> None:
+    """Run a benchmark
 
-    Retrieve the NightHawk and Envoy images defined in the control
-    object.
+    A class derived from BaseBenchmark is responsible for building and staging
+    the required binaries, tests, and any other artifacts for running a
+    benchmark.
 
-    Returns:
-        a List of required image names that are retrievable. If any image is
-          unavailable, we return an empty list. The intent is for the caller to
-          build the necessary images.
+    For example in the scavenging benchmark, that class must prepare
+    the NightHawk benchmark and binary docker image, as well as build an Envoy
+    docker image for the version being tested, if none of these artifacts are
+    already available.
 
-    Raises:
-        BenchmarkError: if a requested image is unavailable.
+    Once all artifact preparation is done, execute benchmark is called where
+    the enviroment variables required to run the benchmark are populated and
+    the command to invoke the benchmark is built and executed.
+
+    Classes derived from BaseBenchmark must override execute_benchmark since
+    this is a common operation shared by all benchmarks and the individual
+    execution steps differ among them.
+
+    The method should raise a BenchmarkError if the test fails to complete.
+
+    All output from the NightHawk invocation is written to the location defined
+    by the TMPDIR environment variable which is populated from the "output_dir"
+    field in the job control document.
     """
-    retrieved_images = []
-    images = self.get_images()
-
-    for image in [
-        images.nighthawk_benchmark_image,
-        images.nighthawk_binary_image,
-        images.envoy_image
-    ]:
-      # If the image name is not defined, we will have an empty string.
-      # For unit testing we'll keep this behavior. For true usage, we
-      # should raise an exception when the benchmark class performs its
-      # validation
-      if image:
-        retrieved_image = self._docker_image.pull_image(image)
-        log.debug(f"Retrieved image: {retrieved_image} for {image}")
-        if retrieved_image is None:
-          raise BenchmarkError("Unable to retrieve image: %s" % image)
-        retrieved_images.append(retrieved_image)
-
-    return retrieved_images
 
 class BenchmarkEnvironmentError(Exception):
   """An Error raised if the environment variables required are not
@@ -151,6 +203,7 @@ class BenchmarkEnvController():
   def __init__(self, environment: proto_env.EnvironmentVars) -> None:
     """Initialize the environment controller with the environment object."""
     self._environment = environment
+    self._preserved_vars = {}
 
   def _set_environment_vars(self) -> None:
     """Build the environment variable map used to launch an image.
@@ -176,9 +229,23 @@ class BenchmarkEnvController():
       os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v6only'
 
     if environment.envoy_path:
+      log.debug(f"Setting ENVOY_PATH={environment.envoy_path}")
       os.environ['ENVOY_PATH'] = environment.envoy_path
 
     for key, value in environment.variables.items():
+      log.debug(f"Setting environment {key}={value}")
+      os.environ[key] = value
+
+  def _preserve_and_clear_special_vars(self) -> None:
+    """Store the name and value for any special variables."""
+    for variable in _VARIABLES_TO_CLEAR_AND_RESTORE:
+      if variable in os.environ:
+        self._preserved_vars[variable] = os.environ[variable]
+        del os.environ[variable]
+
+  def _restore_special_vars(self):
+    """Restore any saved environment variables."""
+    for key, value in self._preserved_vars.items():
       os.environ[key] = value
 
   def _clear_environment_vars(self) -> None:
@@ -198,19 +265,13 @@ class BenchmarkEnvController():
       if key in os.environ:
         del os.environ[key]
 
-  def execute_benchmark(self) -> None:
-    """Interface that must be implemented to execute a given
-       benchmark.
-
-    Raises:
-      NotImplementedError: if this method is not overridden
-    """
-    raise NotImplementedError("Execute Benchmark must be implemented")
-
   def __enter__(self):
     """Sets the environment variables specified in the control document."""
+
+    self._preserve_and_clear_special_vars()
     self._set_environment_vars()
 
   def __exit__(self, type_param, value, traceback):
     """Clears any environment variables specified in the control document."""
     self._clear_environment_vars()
+    self._restore_special_vars()
