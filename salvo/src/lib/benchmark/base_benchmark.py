@@ -15,9 +15,9 @@ import api.env_pb2 as proto_env
 log = logging.getLogger(__name__)
 
 _VARIABLES_TO_CLEAR_AND_RESTORE = [
- 'RUNFILES_MANIFEST_FILE'  # This variable is set by the outer bazel
-                           # invocation and negatively impacts invoking
-                           # bazel to run the scavenging benchmark
+    'RUNFILES_MANIFEST_FILE'  # This variable is set by the outer bazel
+                              # invocation and negatively impacts invoking
+                              # bazel to run the scavenging benchmark
 ]
 
 def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
@@ -165,7 +165,7 @@ class BaseBenchmark(abc.ABC):
     return self._docker_image.run_image(image_name, run_parameters)
 
   @abc.abstractmethod
-  def execute_benchmark(self) -> bool:
+  def execute_benchmark(self) -> None:
     """Run a benchmark
 
     A class derived from BaseBenchmark is responsible for building and staging
@@ -173,7 +173,7 @@ class BaseBenchmark(abc.ABC):
     benchmark.
 
     For example in the scavenging benchmark, that class must prepare
-    the NightHawk benchamrk and binary docker image, as well as build an Envoy
+    the NightHawk benchmark and binary docker image, as well as build an Envoy
     docker image for the version being tested, if none of these artifacts are
     already available.
 
@@ -185,10 +185,11 @@ class BaseBenchmark(abc.ABC):
     this is a common operation shared by all benchmarks and the individual
     execution steps differ among them.
 
-    The method should return a boolean to indicate the success of the benchmark
-    execution. All output from the NightHawk invocation is written to the
-    location defined by the TMPDIR environment variable which is populated from
-    the "output_dir" field in the job control document.
+    The method should raise a BenchmarkError if the test fails to complete.
+
+    All output from the NightHawk invocation is written to the location defined
+    by the TMPDIR environment variable which is populated from the "output_dir"
+    field in the job control document.
     """
 
 class BenchmarkEnvironmentError(Exception):

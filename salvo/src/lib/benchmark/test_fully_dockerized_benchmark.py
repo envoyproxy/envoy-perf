@@ -6,16 +6,17 @@ import pytest
 from unittest import mock
 
 import api.control_pb2 as proto_control
-import api.image_pb2 as proto_image
-import api.env_pb2 as proto_environ
-import api.source_pb2 as proto_source
 
 from src.lib.benchmark import fully_dockerized_benchmark as full_docker
 from src.lib.benchmark import (generate_benchmark_test_objects, base_benchmark)
 from src.lib.docker import docker_image
 
-def test_execute_benchmark_using_images_only():
+
+@mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
+def test_execute_benchmark_using_images_only(mock_run_image):
   """Validate we execute the benchmark with only images specified."""
+
+  mock_run_image.return_value = b'benchmark_http_client output'
 
   # create a valid configuration defining images only for benchmark
   job_control = generate_benchmark_test_objects.generate_default_job_control()
@@ -34,13 +35,10 @@ def test_execute_benchmark_using_images_only():
   )
 
   # Calling execute_benchmark shoud not throw an exception
-  # Mock the container invocation so that we don't try to pull an image
-  with mock.patch('src.lib.benchmark.base_benchmark.BaseBenchmark.run_image') \
-      as benchmark_run_image_mock:
-    benchmark.execute_benchmark()
-    benchmark_run_image_mock.assert_called_once_with(
-        'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
-        run_parameters)
+  benchmark.execute_benchmark()
+  mock_run_image.assert_called_once_with(
+      'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
+      run_parameters)
 
 def test_execute_benchmark_no_image_or_sources():
   """Verify that the validation logic raises an exception since we are unable to
@@ -63,10 +61,14 @@ def test_execute_benchmark_no_image_or_sources():
 
   assert str(validation_error.value) == "No source configuration specified"
 
-def test_execute_benchmark_with_envoy_source():
+@mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
+def test_execute_benchmark_with_envoy_source(mock_run_image):
   """Validate that if sources are defined that enable us to build the Envoy
   image we do not throw an exception.
   """
+
+  mock_run_image.return_value = b'benchmark_http_client output'
+
   # create a valid configuration with a missing Envoy image
   job_control = generate_benchmark_test_objects.generate_default_job_control()
 
@@ -86,13 +88,10 @@ def test_execute_benchmark_with_envoy_source():
       tty=True
   )
 
-  # Mock the container invocation so that we don't try to pull an image
-  with mock.patch('src.lib.benchmark.base_benchmark.BaseBenchmark.run_image') \
-      as docker_mock:
-    benchmark.execute_benchmark()
-    docker_mock.assert_called_once_with(
-        'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
-        run_parameters)
+  benchmark.execute_benchmark()
+  mock_run_image.assert_called_once_with(
+      'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag',
+      run_parameters)
 
 def test_execute_benchmark_missing_envoy_source():
   """Validate that although sources are defined for NightHawk we raise an
@@ -108,7 +107,8 @@ def test_execute_benchmark_missing_envoy_source():
   images.envoy_image = ""
 
   # Change the source identity to NightHawk
-  envoy_source = generate_benchmark_test_objects.generate_envoy_source(job_control)
+  envoy_source = generate_benchmark_test_objects.generate_envoy_source(
+      job_control)
   envoy_source.identity = envoy_source.SRCID_NIGHTHAWK
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")

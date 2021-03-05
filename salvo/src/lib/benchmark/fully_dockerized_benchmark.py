@@ -8,7 +8,6 @@ https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 import logging
 
 import api.control_pb2 as proto_control
-import api.image_pb2 as proto_image
 from src.lib.benchmark import base_benchmark
 from src.lib.docker import docker_image
 
@@ -54,7 +53,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     if verify_source:
       self._verify_sources(images)
 
-  def execute_benchmark(self) -> bool:
+  def execute_benchmark(self) -> None:
     """Prepare input artifacts and run the benchmark.
 
     Construct the volume, environment variables, and command line
@@ -64,8 +63,9 @@ class Benchmark(base_benchmark.BaseBenchmark):
         None
 
     Raises:
-      NotImplementedError if the benchmark is configured to execute
+      NotImplementedError: if the benchmark is configured to execute
         remotely.
+      BenchmarkError: if the benchmark fails to execute successfully
     """
     self._validate()
 
@@ -116,4 +116,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     # Establishing success here requires that we examine the output produced by
     # NightHawk. If the latency output exists we can be relatively certain that
     # all containers were able to run and execute the specified tests
-    return "benchmark_http_client" in result
+    if not "benchmark_http_client" in result.decode('utf-8'):
+      raise base_benchmark.BenchmarkError(
+          "Unable to assert that the benchmark executed successfully")
+
