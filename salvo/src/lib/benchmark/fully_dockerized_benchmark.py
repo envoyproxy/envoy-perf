@@ -54,7 +54,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     if verify_source:
       self._verify_sources(images)
 
-  def execute_benchmark(self) -> None:
+  def execute_benchmark(self) -> bool:
     """Prepare input artifacts and run the benchmark.
 
     Construct the volume, environment variables, and command line
@@ -112,3 +112,8 @@ class Benchmark(base_benchmark.BaseBenchmark):
     log.debug(f"Output: {len(result)} bytes")
 
     log.info(f"Benchmark output: {output_dir}")
+
+    # Establishing success here requires that we examine the output produced by
+    # NightHawk. If the latency output exists we can be relatively certain that
+    # all containers were able to run and execute the specified tests
+    return "benchmark_http_client" in result

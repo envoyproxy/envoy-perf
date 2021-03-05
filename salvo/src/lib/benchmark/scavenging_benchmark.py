@@ -81,7 +81,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     self._benchmark_dir = nighthawk_source.get_source_directory()
     log.debug(f"NightHawk benchmark dir {self._benchmark_dir}")
 
-  def execute_benchmark(self) -> None:
+  def execute_benchmark(self) -> bool:
     """Execute the scavenging benchmark."""
 
     self._validate()
@@ -114,8 +114,12 @@ class Benchmark(base_benchmark.BaseBenchmark):
            "benchmarks/")
     cmd_params = cmd_exec.CommandParameters(cwd=self._benchmark_dir)
 
+    success = False
     with environment_controller:
       try:
         cmd_exec.run_command(cmd, cmd_params)
+        success = True
       except subprocess.CalledProcessError as cpe:
         log.error(f"Unable to execute the benchmark: {cpe}")
+
+    return success

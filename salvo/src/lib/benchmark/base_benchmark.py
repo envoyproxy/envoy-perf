@@ -79,7 +79,7 @@ class BaseBenchmark(abc.ABC):
   def _verify_sources(self, images: proto_image.DockerImages) -> None:
     """Validate that sources are available to build a missing image.
 
-    Verify that a source definition exists tht can build a missing
+    Verify that a source definition exists that can build a missing
     image needed for the benchmark.
 
     Args:
@@ -165,11 +165,30 @@ class BaseBenchmark(abc.ABC):
     return self._docker_image.run_image(image_name, run_parameters)
 
   @abc.abstractmethod
-  def execute_benchmark(self) -> None:
+  def execute_benchmark(self) -> bool:
     """Run a benchmark
 
-    Classes derived from BaseBenchmark must override execute_benchmark since the
-    execution steps differ among the supported benchmarks
+    A class derived from BaseBenchmark is responsible for building and staging
+    the required binaries, tests, and any other artifacts for running a
+    benchmark.
+
+    For example in the scavenging benchmark, that class must prepare
+    the NightHawk benchamrk and binary docker image, as well as build an Envoy
+    docker image for the version being tested, if none of these artifacts are
+    already available.
+
+    Once all artifact preparation is done, execute benchmark is called where
+    the enviroment variables required to run the benchmark are populated and
+    the command to invoke the benchmark is built and executed.
+
+    Classes derived from BaseBenchmark must override execute_benchmark since
+    this is a common operation shared by all benchmarks and the individual
+    execution steps differ among them.
+
+    The method should return a boolean to indicate the success of the benchmark
+    execution. All output from the NightHawk invocation is written to the
+    location defined by the TMPDIR environment variable which is populated from
+    the "output_dir" field in the job control document.
     """
 
 class BenchmarkEnvironmentError(Exception):
