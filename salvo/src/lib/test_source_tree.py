@@ -3,9 +3,7 @@ Test source_tree operations needed for executing benchmarks
 """
 from unittest import mock
 import pytest
-import io
 import subprocess
-import tempfile
 
 from src.lib import (cmd_exec, source_tree, constants)
 
