@@ -183,7 +183,7 @@ class SourceManager(object):
 
     # Was a specific hash specified? Use it as the baseline
     if source_repo.commit_hash and addtional_hashes:
-      hash_set = hash_set.union(source_repo.commit_hash)
+      hash_set = hash_set.union([source_repo.commit_hash])
       return hash_set
 
     # If we don't have a commit_hash specified and no additional hashes

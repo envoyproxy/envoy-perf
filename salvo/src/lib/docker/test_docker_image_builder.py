@@ -13,6 +13,8 @@ from src.lib.builder import (envoy_builder, nighthawk_builder)
 import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
 
+_default_envoy_image_tag = "envoy/envoy-dev:envoy_tag"
+
 _generate_image_name_from_tag_mock_name = \
     'src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag'
 _build_envoy_docker_image_mock_name = \
@@ -55,7 +57,7 @@ def test_build_missing_envoy_docker_image(mock_list_images,
   are present"""
 
   mock_list_images.return_value = []
-  mock_generate_image_from_tag.return_value = "envoy/envoy-dev:envoy_tag"
+  mock_generate_image_from_tag.return_value = _default_envoy_image_tag
 
   manager = generate_image_manager_with_source_url()
   with mock.patch(_build_envoy_docker_image_mock_name,
@@ -121,12 +123,12 @@ def test_build_envoy_image_from_source(mock_build_missing_image,
   """
 
   mock_build_missing_image.return_value = None
-  mock_generate_image_from_tag.return_value = "envoy/envoy-dev:envoy_tag"
+  mock_generate_image_from_tag.return_value = _default_envoy_image_tag
 
   manager = generate_image_manager_with_source_url()
   image_tag = image_builder.build_envoy_image_from_source(manager, 'envoy_tag')
 
-  assert image_tag == "envoy/envoy-dev:envoy_tag"
+  assert image_tag == _default_envoy_image_tag
   mock_generate_image_from_tag.assert_called_once()
   mock_build_missing_image.assert_called_once_with(manager, 'envoy_tag')
 

@@ -6,9 +6,8 @@ package(
 
 py_library(
     name = "file_ops",
-    data = [
-        "file_ops.py",
-    ],
+    srcs = [ "file_ops.py" ],
+    srcs_version = "PY3",
 )
 
 py_test(

@@ -7,7 +7,7 @@ package(
 )
 
 py_library(
-    name = "job_control",
+    name = "job_control_loader",
     srcs = [
         "job_control_loader.py",
     ],
@@ -32,9 +32,9 @@ py_test(
     srcs = ["test_job_control_loader.py"],
     srcs_version = "PY3",
     deps = [
-        ":constants",
-        ":job_control",
         "//api:schema_proto",
+        ":constants",
+        ":job_control_loader",
     ],
 )
 
@@ -57,6 +57,7 @@ py_library(
         "source_manager.py",
     ],
     deps = [
+        ":constants",
         ":source_tree",
     ],
 )

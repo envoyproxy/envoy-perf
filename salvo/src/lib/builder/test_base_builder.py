@@ -9,7 +9,6 @@ import api.source_pb2 as proto_source
 class DerivedBuilder(base_builder.BaseBuilder):
   def __init__(self, manager: source_manager.SourceManager):
     super(DerivedBuilder, self).__init__(manager)
-    pass
 
   def do_something(self):
     self._validate()
