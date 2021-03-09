@@ -20,6 +20,9 @@ def _run_command_side_effect(*args):
 
   Args:
     args: the list of arguments received by the mocked function
+
+  Raises:
+    NotImplementedError: if this method is invoked for an unexpected command
   """
   _verify_cwd(**args[1]._asdict())
 
@@ -64,7 +67,7 @@ v1.15.2
 v1.16.0
 """
 
-  raise Exception(f"Unhandled input in side effect: {args}")
+  raise NotImplementedError(f"Unhandled input in side effect: {args}")
 
 def _generate_default_benchmark_images(job_control):
   """Generate a default image configuration for the job control object.

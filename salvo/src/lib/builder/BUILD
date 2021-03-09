@@ -26,6 +26,7 @@ py_library(
         "//src/lib/common:file_ops",
         "//src/lib:constants",
         "//src/lib:shell",
+        "//src/lib:source_manager",
         ":bazel_setup",
     ],
 )

@@ -61,7 +61,7 @@ def test_open_yaml_as_json():
       temp_data.write(_TEST_YAML)
 
     with pytest.raises(json.decoder.JSONDecodeError) as decode_error:
-      json_data = file_ops.open_json(temp_json.name)
+      _ = file_ops.open_json(temp_json.name)
 
     assert 'Expecting value' in str(decode_error.value)
 
