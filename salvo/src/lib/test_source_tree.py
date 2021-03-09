@@ -9,7 +9,7 @@ from src.lib import (cmd_exec, source_tree, constants)
 
 import api.source_pb2 as proto_source
 
-_default_https_repo_url = 'https://github.com/someawesomeproject/repo.git'
+_DEFAULT_HTTPS_REPO_URL = 'https://github.com/someawesomeproject/repo.git'
 
 def test_is_tag():
   """Verify that we can detect a hash and a git tag."""
@@ -184,9 +184,9 @@ def mock_run_command_side_effect(*function_args):
   elif function_args[0] == 'git remote -v':
     return \
         ("origin  {url} (fetch)\n"
-         "origin  {url} (push)").format(url=_default_https_repo_url)
+         "origin  {url} (push)").format(url=_DEFAULT_HTTPS_REPO_URL)
   elif function_args[0] == \
-      'git clone {url} .'.format(url=_default_https_repo_url):
+      'git clone {url} .'.format(url=_DEFAULT_HTTPS_REPO_URL):
     return "Cloning into \'.\'"
 
   elif function_args[0] == (
@@ -240,7 +240,7 @@ def test_pull(mock_run_command):
   """Verify that we can clone a repository ensuring that the process completed
      without errors.
   """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
 
   source = _generate_source_tree_from_origin(origin)
   mock_run_command.side_effect = mock_run_command_side_effect
@@ -249,7 +249,7 @@ def test_pull(mock_run_command):
   assert result
 
   git_status = 'git status'
-  git_clone = 'git clone {url} .'.format(url=_default_https_repo_url)
+  git_clone = 'git clone {url} .'.format(url=_DEFAULT_HTTPS_REPO_URL)
   cmd_params = cmd_exec.CommandParameters(cwd=mock.ANY)
 
   calls = [
@@ -273,7 +273,7 @@ def test_pull_fail():
 def test_pull_fail_up_to_date(mock_is_up_to_date):
   """Verify that we do not clone a repository that is already up to date."""
 
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   mock_is_up_to_date.return_value = True
@@ -288,7 +288,7 @@ def test_pull_fail_incomplete_operation(mock_is_up_to_date,
   """Verify that we can clone a repository and detect an incomplete
      operation.
   """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   mock_is_up_to_date.return_value = False
@@ -301,7 +301,7 @@ def test_pull_fail_incomplete_operation(mock_is_up_to_date,
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_checkout_commit_hash(mock_pull, mock_run_command):
   """Verify that we can checkout a specified commit hash."""
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   source._source_repo.commit_hash = '012345678abcdef'
@@ -315,7 +315,7 @@ def test_checkout_commit_hash(mock_pull, mock_run_command):
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_checkout_commit_hash_fail(mock_pull, mock_run_command):
   """Verify that we can detect a failed git checkout."""
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   source._source_repo.commit_hash = '012345678abcdef'
@@ -332,7 +332,7 @@ def test_get_head_hash(mock_run_command):
   """
 
   mock_run_command.side_effect = mock_run_command_side_effect
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   head_hash = source.get_head_hash()
@@ -343,7 +343,7 @@ def test_get_previous_commit_hash(mock_check_output):
   """
     Verify that we can identify one commit prior to a specified hash.
     """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   commit_hash = 'fake_commit_hash_1'
@@ -357,7 +357,7 @@ def test_get_previous_commit_hash_fail(mock_check_output):
   """
     Verify that we can identify one commit prior to a specified hash.
     """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   commit_hash = 'fake_commit_hash_1'
@@ -378,7 +378,7 @@ def test_get_previous_commit_fail(mock_check_output):
   """Verify that we can identify a failure when attempting to manage commit
      hashes.
   """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   commit_hash = 'invalid_hash_reference'
@@ -395,7 +395,7 @@ def testget_revs_behind_parent_branch():
   """Verify that we can determine how many commits beind the local source tree
      lags behind the remote repository.
   """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   st = _generate_source_tree_from_origin(origin)
 
   git_cmd = 'git status'
@@ -418,7 +418,7 @@ def testget_revs_behind_parent_branch_up_to_date():
   """Verify that we can determine how many commits beind the local source tree
      lags behind the remote repository.
   """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   git_cmd = 'git status'
@@ -440,7 +440,7 @@ Changes not staged for commit:
 def test_is_up_to_date():
   """Verify that we can determine a source tree is up to date."""
 
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   with mock.patch(
@@ -458,7 +458,7 @@ v1.15.2
 v1.16.0
 """
 
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   git_cmd = "git tag --list --sort v:refname"
@@ -484,7 +484,7 @@ v1.15.2
 v1.16.0
 """
 
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   current_tag = 'v1.16.0'
@@ -507,7 +507,7 @@ def test_get_previous_tag_fail():
   hash
   """
 
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   current_tag = 'not_a_tag'
@@ -531,7 +531,7 @@ v1.15.1
 v1.15.2
 v1.16.0
 """
-  origin = _default_https_repo_url
+  origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
   current_tag = 'v1.16.0'
