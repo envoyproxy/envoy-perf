@@ -4,9 +4,11 @@ This is a framework that abstracts executing multiple benchmarks of the Envoy Pr
 
 ## Example Control Documents
 
-The control document defines the data needed to execute a benchmark. At the moment, the fully dockerized benchmark is the only one supported. This benchmark discoveres user supplied tests for execution and uses docker images to run the tests. In the example below, the user supplied tests files are located in `/home/ubuntu/nighthawk_tests` and are mapped to a volume in the docker container.
+The control document defines the data needed to execute a benchmark. At the moment, we support the fully dockerized benchmark and the scavenging benchmark.  The work for the binary benchmark is in progress.
 
-To run the benchmark, create a file with the following example contents:
+The Fully Dockerized Benchmark discoveres user supplied tests for execution and uses docker images to run the tests. In the example below, the user supplied tests files are located in `/home/ubuntu/nighthawk_tests` and are mapped to a volume in the docker container.
+
+To run the dockerized benchmark, create a file with the following example contents:
 
 JSON Example:
 
@@ -18,7 +20,7 @@ JSON Example:
     "reuseNhImages": true,
     "nighthawkBenchmarkImage": "envoyproxy/nighthawk-benchmark-dev:latest",
     "nighthawkBinaryImage": "envoyproxy/nighthawk-dev:latest",
-    "envoyImage": "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
+    "envoyImage": "envoyproxy/envoy:v1.16.0"
   },
   "environment": {
     "testVersions": IPV_V4ONLY,
@@ -43,36 +45,67 @@ images:
   reuseNhImages: true
   nighthawkBenchmarkImage: 'envoyproxy/nighthawk-benchmark-dev:latest'
   nighthawkBinaryImage: 'envoyproxy/nighthawk-dev:latest'
-  envoyImage: "envoyproxy/envoy-dev:f61b096f6a2dd3a9c74b9a9369a6ea398dbe1f0f"
+  envoyImage: "envoyproxy/envoy:v1.16.0"
 ```
 
-In both examples, the envoy image being tested is a specific hash. This hash can be replaced with "latest" to test the most recently created image against the previous image built from the prior Envoys master commit.
+In both examples above, the envoy image being tested is a specific tag. This tag can be replaced with "latest" to test the most recently created image against the previous image built from the prior tag. If a commit hash is used, we find the previous commit hash and benchmark that container.  In summary, tags are compared to tags, hashes are compared to hashes.
+
+The 'Scavenging' Benchmark runs the benchmark on the local machine and uses a specified Envoy image for testing.  Tests are discovered in the specified directory in the Environment object:
+
+```yaml
+remote: false
+scavengingBenchmark: true
+environment:
+  envoyPath: envoy
+  outputDir: /home/ubuntu/nighthawk_output
+  testDir: /home/ubuntu/nighthawk_tests
+  testVersion: IPV_V4ONLY
+images:
+  nighthawkBenchmarkImage: envoyproxy/nighthawk-benchmark-dev:latest
+  nighthawkBinaryImage: envoyproxy/nighthawk-dev:latest
+  envoyImage: envoyproxy/envoy:v1.16.0
+  reuseNhImages: true
+source:
+- identity: SRCID_ENVOY
+  commit_hash: v1.16.0
+  source_url: https://github.com/envoyproxy/envoy.git
+  bazelOptions:
+  - parameter: --jobs 4
+  - parameter: --define tcmalloc=gperftools
+- identity: SRCID_NIGHTHAWK
+  source_url: https://github.com/envoyproxy/nighthawk.git
+```
+
+In this example, the v1.16.0 Envoy tag is pulled and an Envoy image generated where the Envoy binary has profiling enabled.  The user may specify option strings supported by bazel to adjust the compilation process.
 
 ## Building Salvo
 
+To build salvo, use the following command:
+
 ```bash
-bazel build //:salvo
+bazel build //...
 ```
 
 ## Running Salvo
 
+The resulting 'binary' in the bazel-bin directory can then be invoked with a job control document:
+
 ```bash
-bazel-bin/salvo --job ~/test_data/demo_jobcontrol.yaml
+bazel-bin/salvo --job <path to>/demo_jobcontrol.yaml
 ```
+
+Salvo creates a symlink in the local directory to the location of the  output artifacts for each Envoy version tested.
 
 ## Testing Salvo
 
+From the envoy-perf project directory, run the do_ci.sh script with the "test" argument. Since this installs packages packages, it will need to be run as root.
 
-From the root package directory, run the do_ci.sh script with the "test" argument. Since this installs packages packages, it will need to be run as root.
+To test Salvo itself, change into the salvo directory and use:
+
 ```bash
-bazel test //src/...
+bazel test //...
 ```
 
 ## Dependencies
 
-The `install_deps.sh` script will install any dependencies needed to run salvo. 
-
-* python 3.6+
-* git
-* docker
-* tuned/tunedadm (eventually)
+The `install_deps.sh` script can be used to install any dependencies required by Salvo.
