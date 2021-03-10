@@ -62,6 +62,19 @@ py_library(
     ],
 )
 
+py_library(
+    name = "run_benchmark",
+    srcs = [
+        "run_benchmark.py",
+    ],
+    deps = [
+        "//src/lib/benchmark:benchmark",
+        "//src/lib/common:file_ops",
+        "//src/lib/docker:docker_image_builder",
+        ":source_manager",
+    ],
+)
+
 py_test(
   name = "test_cmd_exec",
   srcs = [ "test_cmd_exec.py" ],
