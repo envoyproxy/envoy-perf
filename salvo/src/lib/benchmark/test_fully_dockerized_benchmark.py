@@ -7,9 +7,10 @@ from unittest import mock
 
 import api.control_pb2 as proto_control
 
-from src.lib.benchmark import fully_dockerized_benchmark as full_docker
-from src.lib.benchmark import (generate_benchmark_test_objects, base_benchmark)
+from src.lib.benchmark import (fully_dockerized_benchmark as full_docker,
+                               base_benchmark)
 from src.lib.docker_management import docker_image
+from src.lib import generate_test_objects
 
 
 @mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
@@ -19,10 +20,10 @@ def test_execute_benchmark_using_images_only(mock_run_image):
   mock_run_image.return_value = b'benchmark_http_client output'
 
   # create a valid configuration defining images only for benchmark
-  job_control = generate_benchmark_test_objects.generate_default_job_control()
+  job_control = generate_test_objects.generate_default_job_control()
 
-  generate_benchmark_test_objects.generate_images(job_control)
-  generate_benchmark_test_objects.generate_environment(job_control)
+  generate_test_objects.generate_images(job_control)
+  generate_test_objects.generate_environment(job_control)
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
@@ -45,12 +46,12 @@ def test_execute_benchmark_no_image_or_sources():
   build a required Envoy image.
   """
   # create a valid configuration with a missing Envoy image
-  job_control = generate_benchmark_test_objects.generate_default_job_control()
+  job_control = generate_test_objects.generate_default_job_control()
 
-  images = generate_benchmark_test_objects.generate_images(job_control)
+  images = generate_test_objects.generate_images(job_control)
   images.envoy_image = ""
 
-  generate_benchmark_test_objects.generate_environment(job_control)
+  generate_test_objects.generate_environment(job_control)
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
@@ -70,13 +71,13 @@ def test_execute_benchmark_with_envoy_source(mock_run_image):
   mock_run_image.return_value = b'benchmark_http_client output'
 
   # create a valid configuration with a missing Envoy image
-  job_control = generate_benchmark_test_objects.generate_default_job_control()
+  job_control = generate_test_objects.generate_default_job_control()
 
-  images = generate_benchmark_test_objects.generate_images(job_control)
+  images = generate_test_objects.generate_images(job_control)
   images.envoy_image = ""
 
-  generate_benchmark_test_objects.generate_envoy_source(job_control)
-  generate_benchmark_test_objects.generate_environment(job_control)
+  generate_test_objects.generate_envoy_source(job_control)
+  generate_test_objects.generate_environment(job_control)
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
@@ -103,11 +104,11 @@ def test_execute_benchmark_missing_envoy_source():
       scavenging_benchmark=True
   )
 
-  images = generate_benchmark_test_objects.generate_images(job_control)
+  images = generate_test_objects.generate_images(job_control)
   images.envoy_image = ""
 
   # Change the source identity to NightHawk
-  envoy_source = generate_benchmark_test_objects.generate_envoy_source(
+  envoy_source = generate_test_objects.generate_envoy_source(
       job_control)
   envoy_source.identity = envoy_source.SRCID_NIGHTHAWK
 
@@ -130,11 +131,11 @@ def test_execute_benchmark_missing_nighthawk_binary_image():
       scavenging_benchmark=True
   )
 
-  images = generate_benchmark_test_objects.generate_images(job_control)
+  images = generate_test_objects.generate_images(job_control)
   images.nighthawk_binary_image = ""
 
   # Generate a default Envoy source object.
-  generate_benchmark_test_objects.generate_envoy_source(job_control)
+  generate_test_objects.generate_envoy_source(job_control)
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 
   # Calling execute_benchmark raise an exception from validate()
@@ -154,11 +155,11 @@ def test_execute_benchmark_missing_nighthawk_benchmark_image():
       scavenging_benchmark=True
   )
 
-  images = generate_benchmark_test_objects.generate_images(job_control)
+  images = generate_test_objects.generate_images(job_control)
   images.nighthawk_benchmark_image = ""
 
   # Generate a default Envoy source object
-  generate_benchmark_test_objects.generate_envoy_source(job_control)
+  generate_test_objects.generate_envoy_source(job_control)
 
   benchmark = full_docker.Benchmark(job_control, "test_benchmark")
 

@@ -8,6 +8,7 @@ py_binary(
     srcs_version = "PY3",
     deps = [
         "//api:schema_proto",
+        "//src/lib:run_benchmark",
         "//src/lib:job_control_loader",
     ],
 )
