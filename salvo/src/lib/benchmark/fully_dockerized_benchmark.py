@@ -9,7 +9,7 @@ import logging
 
 import api.control_pb2 as proto_control
 from src.lib.benchmark import base_benchmark
-from src.lib.docker import docker_image
+from src.lib.docker_management import docker_image
 
 log = logging.getLogger(__name__)
 

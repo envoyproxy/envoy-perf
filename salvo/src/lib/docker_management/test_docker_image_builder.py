@@ -6,8 +6,8 @@ import pytest
 from unittest import mock
 
 from src.lib import source_manager
-from src.lib.docker import docker_image_builder as image_builder
-from src.lib.docker import docker_image
+from src.lib.docker_management import docker_image_builder as image_builder
+from src.lib.docker_management import docker_image
 from src.lib.builder import (envoy_builder, nighthawk_builder)
 
 import api.source_pb2 as proto_source
@@ -16,9 +16,9 @@ import api.control_pb2 as proto_control
 _DEFAULT_ENVOY_IMAGE_TAG = "envoy/envoy-dev:envoy_tag"
 
 _generate_image_name_from_tag_mock_name = \
-    'src.lib.docker.docker_image_builder.generate_envoy_image_name_from_tag'
+    'src.lib.docker_management.docker_image_builder.generate_envoy_image_name_from_tag'
 _build_envoy_docker_image_mock_name = \
-    'src.lib.docker.docker_image_builder.build_envoy_docker_image'
+    'src.lib.docker_management.docker_image_builder.build_envoy_docker_image'
 
 def generate_image_manager_with_source_url():
   """Generate a source manager with a job control specifying remote repos
@@ -115,7 +115,7 @@ def test_build_missing_envoy_docker_image_options_present(
 
 @mock.patch(_generate_image_name_from_tag_mock_name)
 @mock.patch(
-    'src.lib.docker.docker_image_builder.build_missing_envoy_docker_image')
+    'src.lib.docker_management.docker_image_builder.build_missing_envoy_docker_image')
 def test_build_envoy_image_from_source(mock_build_missing_image,
                                        mock_generate_image_from_tag):
   """Verify that we return the tag of a constructed image.  This is a shallow

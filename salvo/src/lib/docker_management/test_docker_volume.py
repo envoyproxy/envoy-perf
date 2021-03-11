@@ -7,7 +7,7 @@ from unittest import mock
 from google.protobuf import json_format
 
 from src.lib import constants
-from src.lib.docker import docker_volume
+from src.lib.docker_management import docker_volume
 
 def test_generate_volume_config():
   """Verify the volume mount map can be created with no test directory

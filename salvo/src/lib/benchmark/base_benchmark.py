@@ -6,7 +6,7 @@ import os
 import logging
 from typing import List
 
-from src.lib.docker import (docker_image, docker_volume)
+from src.lib.docker_management import (docker_image, docker_volume)
 import api.control_pb2 as proto_control
 import api.image_pb2 as proto_image
 import api.source_pb2 as proto_source
@@ -33,7 +33,6 @@ def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
         entry for the external test directory
   """
   return docker_volume.generate_volume_config(output_dir, test_dir)
-
 
 class BenchmarkError(Exception):
   """Errror raised in a benchmark for an unresolvable condition."""

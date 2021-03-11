@@ -13,8 +13,8 @@ py_library(
   ],
   srcs_version = "PY3",
   deps = [
-      "//src/lib/docker:docker_image",
-      "//src/lib/docker:docker_volume",
+      "//src/lib/docker_management:docker_image",
+      "//src/lib/docker_management:docker_volume",
       "//src/lib/builder:nighthawk_builder",
       "//src/lib/builder:envoy_builder"
   ],
@@ -26,7 +26,7 @@ py_test(
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
-      "//src/lib/docker:docker_image",
+      "//src/lib/docker_management:docker_image",
       ":benchmark"
   ],
 )
@@ -54,7 +54,7 @@ py_test(
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
-      "//src/lib/docker:docker_image",
+      "//src/lib/docker_management:docker_image",
       ":benchmark"
   ],
 )

@@ -9,7 +9,7 @@ import api.control_pb2 as proto_control
 
 from src.lib.benchmark import fully_dockerized_benchmark as full_docker
 from src.lib.benchmark import (generate_benchmark_test_objects, base_benchmark)
-from src.lib.docker import docker_image
+from src.lib.docker_management import docker_image
 
 
 @mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
