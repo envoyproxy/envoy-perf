@@ -25,9 +25,9 @@ py_library(
         "//api:schema_proto",
         "//src/lib:constants",
         "//src/lib:source_manager",
-        "//src/lib/docker:docker_image",
         "//src/lib/builder:envoy_builder",
         "//src/lib/builder:nighthawk_builder",
+        ":docker_image",
     ],
 )
 

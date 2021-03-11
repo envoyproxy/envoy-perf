@@ -7,7 +7,7 @@ import docker
 import requests
 from unittest import mock
 
-from src.lib.docker import docker_image
+from src.lib.docker_management import docker_image
 
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'pull')

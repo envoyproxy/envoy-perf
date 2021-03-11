@@ -4,7 +4,7 @@ This module manages the steps needed to build missing docker images
 import logging
 
 from src.lib import (source_tree, source_manager)
-from src.lib.docker import docker_image
+from src.lib.docker_management import docker_image
 from src.lib.builder import (envoy_builder, nighthawk_builder)
 import api.source_pb2 as proto_source
 
