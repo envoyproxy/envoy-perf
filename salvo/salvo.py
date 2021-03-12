@@ -2,11 +2,10 @@
 
 import argparse
 import logging
-import os
-import site
 import sys
 
 from src.lib.job_control_loader import load_control_doc
+from src.lib import run_benchmark
 
 LOGFORMAT = "%(asctime)s: %(process)d [ %(levelname)-5s] [%(module)-5s] %(message)s"
 
@@ -23,6 +22,8 @@ def setup_logging(loglevel: int=logging.DEBUG) -> None:
     loglevel configures the level of the logger.  The default is DEBUG
       level logging
   """
+  logging.getLogger('docker').setLevel(logging.ERROR)
+  logging.getLogger('urllib3').setLevel(logging.ERROR)
 
   logging.basicConfig(format=LOGFORMAT, level=loglevel)
 
@@ -38,8 +39,7 @@ def setup_options() -> argparse.Namespace:
   parser.add_argument('--job',
                       dest='jobcontrol',
                       help='specify the location for the job control json document')
-  # FIXME: Add an option to generate a default job Control JSON/YAML
-
+  # TODO: Add an option to generate a default job Control JSON/YAML
   return parser.parse_args()
 
 def main() -> int:
@@ -60,10 +60,16 @@ def main() -> int:
     return 1
 
   job_control = load_control_doc(args.jobcontrol)
+  if job_control is None:
+    log.error(f"Unable to load or parse job control: {args.jobcontrol}")
+    return 1
 
-  log.debug("Job definition:\n%s\n%s\n%s\n", '=' * 20, job_control, '=' * 20)
+  bar = '=' * 20
+  log.debug(f"Job definition:\n{bar}\n{job_control}\n{bar}\n")
 
   # Execute the benchmark given the contents of the job control file
+  benchmark = run_benchmark.BenchmarkRunner(job_control)
+  benchmark.execute()
 
   return 0
 
