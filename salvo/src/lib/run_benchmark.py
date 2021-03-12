@@ -63,7 +63,7 @@ class BenchmarkRunner(object):
 
     if self._control.scavenging_benchmark:
       current_benchmark_name = "Scavenging Benchmark"
-      job_control_list = self.generate_job_control_for_envoy_images()
+      job_control_list = self._generate_job_control_for_envoy_images()
 
       for job_control in job_control_list:
         benchmark = scavenging.Benchmark(job_control, current_benchmark_name)
@@ -71,7 +71,7 @@ class BenchmarkRunner(object):
 
     elif self._control.dockerized_benchmark:
       current_benchmark_name = "Fully Dockerized Benchmark"
-      job_control_list = self.generate_job_control_for_envoy_images()
+      job_control_list = self._generate_job_control_for_envoy_images()
 
       for job_control in job_control_list:
         benchmark = fulldocker.Benchmark(job_control, current_benchmark_name)
@@ -84,7 +84,7 @@ class BenchmarkRunner(object):
     if not self._test:
       raise NotImplementedError(f"No [{current_benchmark_name}] defined")
 
-  def generate_job_control_for_envoy_images(self) \
+  def _generate_job_control_for_envoy_images(self) \
       -> List[proto_control.JobControl]:
     """Determine the required envoy images needed for the benchmark.
 
@@ -103,7 +103,7 @@ class BenchmarkRunner(object):
     self._pull_or_build_nighthawk_images_for_benchmark()
 
     log.debug(f"Using {envoy_images} for benchmark")
-    job_control_list = self.create_job_control_for_images(envoy_images)
+    job_control_list = self._create_job_control_for_images(envoy_images)
 
     return job_control_list
 
@@ -266,7 +266,7 @@ class BenchmarkRunner(object):
     # Create a symbolic link pointing to 'output_dir' named 'image_tag'.
     os.symlink(output_dir, image_tag)
 
-  def create_job_control_for_images(
+  def _create_job_control_for_images(
       self, envoy_images: Set[str]) -> List[proto_control.JobControl]:
     """Create new job control objects for each benchmark
 
