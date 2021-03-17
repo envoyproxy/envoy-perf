@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+MINIMUM_THRESHOLD=97.0
+
 # This script executes all tests and then evaluates the code coverage
 # for Salvo.  All individual coverage files are merged to provide one
 # report for the entire codebase
@@ -45,3 +48,17 @@ mkdir -p coverage/html
 genhtml coverage/salvo.dat -o coverage/html
 echo "HTML coverage report generated, view by running:"
 echo "  (cd coverage/html && python3 -m http.server)"
+
+# Examine the coverage summary and extract the overall coverage percentage.
+# If the reported threshold drops below the specified threshold, then we
+# fail the build.  There is likely a way to get this from the genhtml output
+# so that we don't have to execute lcov an additional time.  However this works.
+COVERAGE_PERCENTAGE=$(lcov --summary coverage/salvo.dat 2>&1 | grep lines | awk '{print $2}'| tr -d \%)
+
+if (( $(echo "${COVERAGE_PERCENTAGE} < ${MINIMUM_THRESHOLD}" | bc -l) ))
+then
+  echo "Test coverage percentage has dipped below ${MINIMUM_THRESHOLD}%"
+  exit 1
+fi
+
+exit 0

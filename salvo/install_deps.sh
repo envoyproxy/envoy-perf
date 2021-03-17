@@ -21,7 +21,7 @@ fi
 
 
 pip3 install --upgrade --user pip
-pip3 install --upgrade --user setuptool
+pip3 install --upgrade --user setuptools
 pip3 install --user -r requirements.txt
 
 touch ${HOME}/.salvo_deps_installed
