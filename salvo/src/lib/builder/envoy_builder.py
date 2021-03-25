@@ -66,21 +66,36 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     cmd += constants.ENVOY_BINARY_BUILD_TARGET
     cmd_exec.run_check_command(cmd, cmd_params)
 
-  def build_envoy_image_from_source(self) -> None:
-    """Build an Envoy docker image from source.
+  def build_envoy_binary_from_source(self) -> str:
+    """Build an Envoy binary from source.
 
-    This method performs all the steps necessary to generate an Envoy docker
-    image
+    This method cleans the working directory, compiles the binary,
+    and returns the name of the final envoy binary.
 
     Returns:
-      None
+      A string representation of the path to the created binary
     """
 
     self._validate()
     self._source_tree.copy_source_directory()
     self._source_tree.checkout_commit_hash()
+
     self.clean_envoy()
     self.build_envoy()
+
+    return os.path.join(self._build_dir, constants.ENVOY_BINARY_TARGET_OUTPUT_PATH)
+
+  def build_envoy_image_from_source(self) -> None:
+    """Build an Envoy docker image from source.
+
+    This method performs a few steps. It compiles the envoy binary,
+    stages it for inclusion in a docker image, and builds the docker
+    image.
+
+    Returns:
+      None
+    """
+    self.build_envoy_binary_from_source()
     self.stage_envoy(False)
     self.create_docker_image()
 

@@ -6,7 +6,8 @@ import api.control_pb2 as proto_control
 from src.lib import (generate_test_objects, source_manager, run_benchmark)
 from src.lib.docker_management import (docker_image, docker_image_builder)
 from src.lib.benchmark import (scavenging_benchmark,
-                               fully_dockerized_benchmark as full_docker)
+                               fully_dockerized_benchmark as full_docker,
+                               binary_benchmark as binbench)
 
 import logging
 logging.basicConfig(level=logging.DEBUG)
@@ -21,6 +22,21 @@ _BUILD_NIGHTHAWK_BENCHMARK_IMAGE_FROM_SOURCE = \
     ('src.lib.docker_management.docker_image_builder'
      '.build_nighthawk_benchmark_image_from_source')
 
+@mock.patch('os.symlink')
+@mock.patch.object(source_manager.SourceManager, 'have_build_options')
+def test_binary_benchmark_setup(
+    mock_have_build_options,
+    mock_symlink):
+  """Verify that the unique methods to the binary benchmark workflow are in order"""
+  job_control = proto_control.JobControl(
+      remote=False,
+      binary_benchmark=True
+  )
+  generate_test_objects.generate_envoy_source(job_control)
+  generate_test_objects.generate_nighthawk_source(job_control)
+
+  benchmark = run_benchmark.BenchmarkRunner(job_control)
+  mock_symlink.assert_called_with('source_url__hash_doesnt_really_matter_here__master', 'source_url__hash_doesnt_really_matter_here__master')
 
 @mock.patch('os.symlink')
 @mock.patch.object(full_docker.Benchmark, 'run_image')
@@ -151,7 +167,7 @@ def test_benchmark_failure_if_no_benchmark_selected():
     _ = run_benchmark.BenchmarkRunner(job_control)
 
   assert str(not_implemented.value) == \
-      "No [Unspecified Benchmark] defined"
+      "No [Unspecified Benchmark] defined yet"
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

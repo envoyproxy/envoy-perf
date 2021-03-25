@@ -8,6 +8,7 @@ py_library(
   name = "benchmark",
   srcs = [
       "base_benchmark.py",
+      "binary_benchmark.py",
       "fully_dockerized_benchmark.py",
       "scavenging_benchmark.py"
   ],
@@ -39,10 +40,23 @@ py_test(
   srcs_version = "PY3",
   deps = [
       "//api:schema_proto",
-      "//src/lib:source_manager",
       "//src/lib:generate_test_objects",
       ":benchmark"
   ],
+)
+
+py_test(
+  name = "test_binary_benchmark",
+  srcs = [
+    "test_binary_benchmark.py"
+  ],
+  srcs_version = "PY3",
+  deps = [
+      "//api:schema_proto",
+      "//src/lib/docker_management:docker_image",
+      "//src/lib:generate_test_objects",
+      ":benchmark"
+  ]
 )
 
 py_test(
