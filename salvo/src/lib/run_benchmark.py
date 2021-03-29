@@ -167,10 +167,11 @@ class BenchmarkRunner(object):
        Args:
         images: the DockerImages appearing in the control object
     """
-    di = docker_image.DockerImage()
+
     pull_result = False
     try:
-      pull_result = di.pull_image(images.nighthawk_benchmark_image)
+      image_manager = docker_image.DockerImage()
+      pull_result = image_manager.pull_image(images.nighthawk_benchmark_image)
     except docker_image.DockerImagePullError:
       log.error(f"Image pull failed for {images.nighthawk_benchmark_image}")
 
