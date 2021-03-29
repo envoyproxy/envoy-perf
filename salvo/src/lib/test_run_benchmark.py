@@ -167,7 +167,7 @@ def test_benchmark_failure_if_no_benchmark_selected():
     _ = run_benchmark.BenchmarkRunner(job_control)
 
   assert str(not_implemented.value) == \
-      "No [Unspecified Benchmark] defined yet"
+      "No [Unspecified Benchmark] defined"
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

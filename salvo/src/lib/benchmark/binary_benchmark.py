@@ -100,7 +100,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
       # We don't have the necessary sources or binaries to run Envoy,
       # but we can proceed using Nighthawk's test server as a fallback.
       log.warning("Skipping Envoy preparation - no sources/binaries were provided."
-        "Will proceed with Nighthawk test server.")
+                  "Will proceed with Nighthawk test server.")
       return
     if self.envoy_binary_path:
       if not (os.path.exists(self.envoy_binary_path) \
@@ -108,7 +108,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
         # If an "Envoy" is specified, but is not a valid executable file,
         # try to proceed anyway using Nighthawk's test server.
         log.warning("ENVOY_PATH environment variable specified, but invalid."
-          "Falling back to Nighthawk test server.")
+                    "Falling back to Nighthawk test server.")
         self.use_fallback = True
         return
       # We already have a binary, no need to build
@@ -132,18 +132,18 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     #todo: refactor args, have frontend specify them via protobuf
     cmd = ("bazel test "
-          "--test_summary=detailed "
-          "--test_output=all "
-          "--test_arg=--log-cli-level=info "
-          "--test_env=ENVOY_IP_TEST_VERSIONS=v4only "
-          "--test_env=HEAPPROFILE= "
-          "--test_env=HEAPCHECK= "
-          "--cache_test_results=no "
-          "--compilation_mode=opt "
-          "--cxxopt=-g "
-          "--cxxopt=-ggdb3 "
-          "--define tcmalloc=gperftools "
-          "//benchmarks:* ")
+           "--test_summary=detailed "
+           "--test_output=all "
+           "--test_arg=--log-cli-level=info "
+           "--test_env=ENVOY_IP_TEST_VERSIONS=v4only "
+           "--test_env=HEAPPROFILE= "
+           "--test_env=HEAPCHECK= "
+           "--cache_test_results=no "
+           "--compilation_mode=opt "
+           "--cxxopt=-g "
+           "--cxxopt=-ggdb3 "
+           "--define tcmalloc=gperftools "
+           "//benchmarks:* ")
 
     cmd_params = cmd_exec.CommandParameters(cwd=self._benchmark_dir)
 

@@ -11,6 +11,16 @@ import api.control_pb2 as proto_control
 from src.lib.benchmark import binary_benchmark
 from src.lib import generate_test_objects
 
+_BUILD_NIGHTHAWK_BENCHMARKS = \
+    ('src.lib.builder.nighthawk_builder.NightHawkBuilder'
+     '.build_nighthawk_benchmarks')
+_BUILD_NIGHTHAWK_BINARIES = \
+    ('src.lib.builder.nighthawk_builder.NightHawkBuilder'
+     '.build_nighthawk_binaries')
+_BUILD_ENVOY_BINARY = \
+    ('src.lib.builder.envoy_builder.EnvoyBuilder'
+     '.build_envoy_binary_from_source')
+
 def test_no_sources():
   """Test benchmark validation logic.
 
@@ -32,9 +42,9 @@ def test_no_sources():
   assert str(validation_error.value) == "No source configuration specified"
 
 # Mock the build invocations so we don't actually try to build this big chungus
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_benchmarks')
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_binaries')
-@patch('src.lib.builder.envoy_builder.EnvoyBuilder.build_envoy_binary_from_source')
+@patch(_BUILD_NIGHTHAWK_BENCHMARKS)
+@patch(_BUILD_NIGHTHAWK_BINARIES)
+@patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
 def test_source_to_build_binaries(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
   """Validate we can build binaries from source.
@@ -88,9 +98,9 @@ def test_no_source_to_build_nh():
       "No source specified to build Nighthawk"
 
 # Mock the build invocations so we don't actually try to build this big chungus
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_benchmarks')
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_binaries')
-@patch('src.lib.builder.envoy_builder.EnvoyBuilder.build_envoy_binary_from_source')
+@patch(_BUILD_NIGHTHAWK_BENCHMARKS)
+@patch(_BUILD_NIGHTHAWK_BINARIES)
+@patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
 def test_fallback_envoy(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
   """Validate that we proceed when Envoy sources are not present
@@ -116,9 +126,9 @@ def test_fallback_envoy(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_b
   mock_nh_bench_build.assert_called_once()
   mock_nh_bin_build.assert_called_once()
 
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_benchmarks')
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_binaries')
-@patch('src.lib.builder.envoy_builder.EnvoyBuilder.build_envoy_binary_from_source')
+@patch(_BUILD_NIGHTHAWK_BENCHMARKS)
+@patch(_BUILD_NIGHTHAWK_BINARIES)
+@patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
 def test_envoy_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
   """Validate that an exception is raised which halts the benchmark execution
@@ -145,9 +155,9 @@ def test_envoy_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock
   mock_nh_bench_build.assert_called_once()
   mock_nh_bin_build.assert_called_once()
 
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_benchmarks')
-@patch('src.lib.builder.nighthawk_builder.NightHawkBuilder.build_nighthawk_binaries')
-@patch('src.lib.builder.envoy_builder.EnvoyBuilder.build_envoy_binary_from_source')
+@patch(_BUILD_NIGHTHAWK_BENCHMARKS)
+@patch(_BUILD_NIGHTHAWK_BINARIES)
+@patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
 def test_nh_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
   """Validate that an exception is raised which halts the benchmark execution
