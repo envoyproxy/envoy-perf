@@ -31,15 +31,23 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
   def __init__(
     self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
-    """ Initialize the benchmark class."""
+    """ Initializes the benchmark class
+
+    Args:
+        job_control: The protobuf object containing the parameters and locations
+          of benchmark artifacts
+        benchmark_name: The name of the benchmark to execute
+
+    Raises:
+        BaseBenchmarkError: if no job control object is specified
+    """
 
     super(Benchmark, self).__init__(job_control, benchmark_name)
     self._benchmark_dir = None
-    self.envoy_binary_path = job_control.environment.variables['ENVOY_PATH']
-    self.envoy_builder = None
-    self.nighthawk_builder = None
-    self.source_manager = source_manager.SourceManager(job_control)
-    self.use_fallback = False
+    self._envoy_binary_path = job_control.environment.variables['ENVOY_PATH']
+    self._envoy_builder = None
+    self._nighthawk_builder = None
+    self._source_manager = source_manager.SourceManager(job_control)
 
   def _validate(self) -> None:
     """Validate that all data required for running a benchmark exists.
@@ -49,6 +57,9 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     Returns:
         None
+
+    Raises:
+        BinaryBenchmarkError: Source configuration is missing, invalid, or incomplete
     """
 
     source = self.get_source()
@@ -73,9 +84,8 @@ class Benchmark(base_benchmark.BaseBenchmark):
     if not can_build_nighthawk:
       raise BinaryBenchmarkError("No source specified to build Nighthawk")
 
-    if not (can_build_envoy or self.envoy_binary_path):
-      self.use_fallback = True
-      log.warning("No Envoy source or binary was specified. Falling back to Nighthawk test server.")
+    if not (can_build_envoy or self._envoy_binary_path):
+      raise BinaryBenchmarkError("No Envoy source or binary was specified")
 
 
   def _prepare_nighthawk(self) -> None:
@@ -86,37 +96,31 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     """
 
-    self.nighthawk_builder = nighthawk_builder.NightHawkBuilder(self.source_manager)
-    self.nighthawk_builder.build_nighthawk_binaries()
-    self.nighthawk_builder.build_nighthawk_benchmarks()
+    self._nighthawk_builder = nighthawk_builder.NightHawkBuilder(self._source_manager)
+    self._nighthawk_builder.build_nighthawk_binaries()
+    self._nighthawk_builder.build_nighthawk_benchmarks()
 
-    nighthawk_source = self.source_manager.get_source_tree(
+    nighthawk_source = self._source_manager.get_source_tree(
         proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
     )
     self._benchmark_dir = nighthawk_source.get_source_directory()
 
   def _prepare_envoy(self) -> None:
-    if self.use_fallback:
-      # We don't have the necessary sources or binaries to run Envoy,
-      # but we can proceed using Nighthawk's test server as a fallback.
-      log.warning("Skipping Envoy preparation - no sources/binaries were provided."
-                  "Will proceed with Nighthawk test server.")
-      return
-    if self.envoy_binary_path:
-      if not (os.path.exists(self.envoy_binary_path) \
-          and os.access(self.envoy_binary_path, os.X_OK)):
-        # If an "Envoy" is specified, but is not a valid executable file,
-        # try to proceed anyway using Nighthawk's test server.
-        log.warning("ENVOY_PATH environment variable specified, but invalid."
-                    "Falling back to Nighthawk test server.")
-        self.use_fallback = True
-        return
+    """Prepare the envoy source for the benchmark.
+
+    Raises:
+      BinaryBenchmarkError: an invalid envoy binary is specified via ENVOY_PATH
+    """
+    if self._envoy_binary_path:
+      if not (os.path.exists(self._envoy_binary_path) \
+          and os.access(self._envoy_binary_path, os.X_OK)):
+        raise BinaryBenchmarkError("ENVOY_PATH environment variable specified, but invalid")
       # We already have a binary, no need to build
       log.info("Using Envoy binary specified in ENVOY_PATH environment variable")
       return
 
-    self.envoy_builder = envoy_builder.EnvoyBuilder(self.source_manager)
-    self.envoy_binary_path = self.envoy_builder.build_envoy_binary_from_source()
+    self._envoy_builder = envoy_builder.EnvoyBuilder(self._source_manager)
+    self._envoy_binary_path = self._envoy_builder.build_envoy_binary_from_source()
 
 
   def execute_benchmark(self) -> None:
@@ -155,8 +159,8 @@ class Benchmark(base_benchmark.BaseBenchmark):
     binary_benchmark_vars = {
       'TMPDIR': env.output_dir
     }
-    if self.envoy_binary_path:
-      binary_benchmark_vars['ENVOY_PATH'] = self.envoy_binary_path
+    if self._envoy_binary_path:
+      binary_benchmark_vars['ENVOY_PATH'] = self._envoy_binary_path
 
     log.debug(f"Using environment: {binary_benchmark_vars}")
 

@@ -66,7 +66,7 @@ def test_source_to_build_binaries(mock_cmd, mock_envoy_build, mock_nh_bin_build,
   benchmark = binary_benchmark.Benchmark(job_control, "test_benchmark")
 
   benchmark.execute_benchmark()
-  assert benchmark.envoy_binary_path == mock_envoy_path
+  assert benchmark._envoy_binary_path == mock_envoy_path
   mock_envoy_build.assert_called_once()
   mock_nh_bench_build.assert_called_once()
   mock_nh_bin_build.assert_called_once()
@@ -100,31 +100,29 @@ def test_no_source_to_build_nh():
 # Mock the build invocations so we don't actually try to build this big chungus
 @patch(_BUILD_NIGHTHAWK_BENCHMARKS)
 @patch(_BUILD_NIGHTHAWK_BINARIES)
-@patch(_BUILD_ENVOY_BINARY)
-@patch('src.lib.cmd_exec.run_command')
-def test_fallback_envoy(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
-  """Validate that we proceed when Envoy sources are not present
+def test_no_valid_envoy_binary(mock_nh_bin_build, mock_nh_bench_build):
+  """Validate that we fail when Envoy sources are not present,
+  and no binary is specified.
 
-  Validate that a fallback to the Nighthawk test server is triggered
-  when no Envoy sources or binaries are specified.
-
-  We do not expect the validation logic to throw an exception
+  We expect an unhandled exception to surface from _prepare_envoy()
   """
   # create a valid configuration with a missing both NightHawk container images
   job_control = proto_control.JobControl(
       remote=False,
       binary_benchmark=True
   )
+  job_control.environment.variables['ENVOY_PATH'] = '/dev/null/foo'
 
   generate_test_objects.generate_nighthawk_source(job_control)
   generate_test_objects.generate_environment(job_control)
   benchmark = binary_benchmark.Benchmark(job_control, "test_benchmark")
 
-  benchmark.execute_benchmark()
-  assert benchmark.use_fallback
-  mock_envoy_build.assert_not_called()
-  mock_nh_bench_build.assert_called_once()
-  mock_nh_bin_build.assert_called_once()
+  with pytest.raises(Exception) as validation_exception:
+    benchmark.execute_benchmark()
+
+  assert str(validation_exception.value) == \
+      "ENVOY_PATH environment variable specified, but invalid"
+
 
 @patch(_BUILD_NIGHTHAWK_BENCHMARKS)
 @patch(_BUILD_NIGHTHAWK_BINARIES)
@@ -150,7 +148,7 @@ def test_envoy_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock
     benchmark.execute_benchmark()
 
   assert str(build_exception.value) == "Command 'foo' returned non-zero exit status 1."
-  assert not benchmark.envoy_binary_path
+  assert not benchmark._envoy_binary_path
   # We expect the nighthawk build to occur before the Envoy build fails
   mock_nh_bench_build.assert_called_once()
   mock_nh_bin_build.assert_called_once()
@@ -181,7 +179,7 @@ def test_nh_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh
     benchmark.execute_benchmark()
 
   assert str(build_exception.value) == "Command 'bar' returned non-zero exit status 1."
-  assert not benchmark.envoy_binary_path
+  assert not benchmark._envoy_binary_path
   # We expect the nighthawk binary build to occur
   # before the benchmark build fails
   mock_nh_bin_build.assert_called_once()

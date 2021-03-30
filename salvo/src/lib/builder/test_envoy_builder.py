@@ -44,6 +44,26 @@ def _check_call_side_effect(args, parameters):
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'checkout_commit_hash')
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
+def test_build_envoy_binary_from_source(mock_copy_source,
+                                       mock_checkout_hash,
+                                       mock_run_command,
+                                       mock_run_check_command):
+  """Verify the calls made to build an envoy binary from source."""
+  mock_copy_source.return_value = None
+  mock_checkout_hash.return_value = None
+  mock_run_command.side_effect = _check_call_side_effect
+  mock_run_check_command.side_effect = _check_call_side_effect
+
+  manager = _generate_default_source_manager()
+  builder = envoy_builder.EnvoyBuilder(manager)
+  binary_path = builder.build_envoy_binary_from_source()
+
+  assert constants.ENVOY_BINARY_TARGET_OUTPUT_PATH in binary_path
+
+@mock.patch('src.lib.cmd_exec.run_check_command')
+@mock.patch('src.lib.cmd_exec.run_command')
+@mock.patch.object(source_tree.SourceTree, 'checkout_commit_hash')
+@mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 def test_build_envoy_image_from_source(mock_copy_source,
                                        mock_checkout_hash,
                                        mock_run_command,

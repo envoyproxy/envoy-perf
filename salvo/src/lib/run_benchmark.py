@@ -7,8 +7,11 @@ import logging
 import os
 from typing import (List, Set)
 
-from src.lib.benchmark import (fully_dockerized_benchmark as fulldocker,
-  scavenging_benchmark as scavenging, binary_benchmark as binbench, base_benchmark)
+from src.lib.benchmark import fully_dockerized_benchmark as fulldocker
+from src.lib.benchmark import scavenging_benchmark as scavenging
+from src.lib.benchmark import binary_benchmark as binbench
+from src.lib.benchmark import base_benchmark
+
 from src.lib.docker_management import (docker_image, docker_image_builder)
 from src.lib import source_manager
 
@@ -119,7 +122,7 @@ class BenchmarkRunner(object):
     commits to be tested. These will be spawned into multiple Binary Benchmark jobs.
 
     Raises:
-      Exception: when multiple competing repositories of Envoy/Nighthawk are specified.
+      BenchmarkRunnerError: when multiple competing repositories of Envoy/Nighthawk are specified.
     """
 
     # Find the specified version of Nighthawk and use it for all job controls
@@ -128,11 +131,12 @@ class BenchmarkRunner(object):
     for source_item in self._control.source:
       if source_item.identity == proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:
         if nighthawk_source:
-          raise Exception("Multiple Nighthawk sources specified. Please specify only one.")
+          raise BenchmarkRunnerError("Multiple Nighthawk sources specified."
+                                     "Please specify only one.")
         nighthawk_source = source_item
 
     if not nighthawk_source:
-      raise Exception("No Nighthawk sources specified")
+      raise BenchmarkRunnerError("No Nighthawk sources specified")
 
     log.info("Using Nighthawk sources at " \
       + getattr(nighthawk_source, nighthawk_source.WhichOneof('source_location')))
@@ -141,11 +145,12 @@ class BenchmarkRunner(object):
     for source_item in self._control.source:
       if source_item.identity == proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:
         if envoy_source:
-          raise Exception("Multiple Envoy sources specified. Please specify only one.")
+          raise BenchmarkRunnerError("Multiple Envoy sources specified."
+                                     "Please specify only one.")
         envoy_source = source_item
 
     if not envoy_source:
-      raise Exception("No Envoy sources specified")
+      raise BenchmarkRunnerError("No Envoy sources specified")
 
     envoy_hashes = [envoy_source.commit_hash]
     for envoy_hash in envoy_source.additional_hashes:
