@@ -37,9 +37,6 @@ class Benchmark(base_benchmark.BaseBenchmark):
         job_control: The protobuf object containing the parameters and locations
           of benchmark artifacts
         benchmark_name: The name of the benchmark to execute
-
-    Raises:
-        BaseBenchmarkError: if no job control object is specified
     """
 
     super(Benchmark, self).__init__(job_control, benchmark_name)

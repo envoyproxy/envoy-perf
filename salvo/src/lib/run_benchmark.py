@@ -9,7 +9,7 @@ from typing import (List, Set)
 
 from src.lib.benchmark import fully_dockerized_benchmark as fulldocker
 from src.lib.benchmark import scavenging_benchmark as scavenging
-from src.lib.benchmark import binary_benchmark as binbench
+from src.lib.benchmark import binary_benchmark
 from src.lib.benchmark import base_benchmark
 
 from src.lib.docker_management import (docker_image, docker_image_builder)
@@ -85,7 +85,7 @@ class BenchmarkRunner(object):
       job_control_list = self._generate_job_control_for_binaries()
 
       for job_control in job_control_list:
-        benchmark = binbench.Benchmark(job_control, current_benchmark_name)
+        benchmark = binary_benchmark.Benchmark(job_control, current_benchmark_name)
         self._test.append(benchmark)
 
     if not self._test:
