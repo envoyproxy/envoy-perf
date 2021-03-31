@@ -9,7 +9,9 @@ from typing import (List, Set)
 
 from src.lib.benchmark import fully_dockerized_benchmark as fulldocker
 from src.lib.benchmark import scavenging_benchmark as scavenging
+from src.lib.benchmark import binary_benchmark
 from src.lib.benchmark import base_benchmark
+
 from src.lib.docker_management import (docker_image, docker_image_builder)
 from src.lib import source_manager
 
@@ -79,7 +81,12 @@ class BenchmarkRunner(object):
 
     elif self._control.binary_benchmark:
       current_benchmark_name = "Binary Benchmark"
-      job_control_list = []
+      # Not working with docker images here, so use custom binary-oriented job control generation
+      job_control_list = self._generate_job_control_for_binaries()
+
+      for job_control in job_control_list:
+        benchmark = binary_benchmark.Benchmark(job_control, current_benchmark_name)
+        self._test.append(benchmark)
 
     if not self._test:
       raise NotImplementedError(f"No [{current_benchmark_name}] defined")
@@ -106,6 +113,55 @@ class BenchmarkRunner(object):
     job_control_list = self._create_job_control_for_images(envoy_images)
 
     return job_control_list
+
+  def _generate_job_control_for_binaries(self) \
+    -> List[proto_control.JobControl]:
+    """Determine the required source configurations needed for a binary benchmark.
+
+    Find the specified version of Nighthawk, Envoy, and all additional Envoy
+    commits to be tested. These will be spawned into multiple Binary Benchmark jobs.
+
+    Raises:
+      BenchmarkRunnerError: when multiple competing repositories of Envoy/Nighthawk are specified.
+    """
+
+    # Find the specified version of Nighthawk and use it for all job controls
+    nighthawk_source = None
+
+    for source_item in self._control.source:
+      if source_item.identity == proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:
+        if nighthawk_source:
+          raise BenchmarkRunnerError("Multiple Nighthawk sources specified."
+                                     "Please specify only one.")
+        nighthawk_source = source_item
+
+    if not nighthawk_source:
+      raise BenchmarkRunnerError("No Nighthawk sources specified")
+
+    log.info("Using Nighthawk sources at " \
+      + getattr(nighthawk_source, nighthawk_source.WhichOneof('source_location')))
+
+    envoy_source = None
+    for source_item in self._control.source:
+      if source_item.identity == proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:
+        if envoy_source:
+          raise BenchmarkRunnerError("Multiple Envoy sources specified."
+                                     "Please specify only one.")
+        envoy_source = source_item
+
+    if not envoy_source:
+      raise BenchmarkRunnerError("No Envoy sources specified")
+
+    envoy_hashes = [envoy_source.commit_hash]
+    for envoy_hash in envoy_source.additional_hashes:
+      envoy_hashes.append(envoy_hash)
+
+    jobs = []
+    for envoy_version in envoy_hashes:
+      jobs.append(
+        self._create_new_source_job_control(nighthawk_source, envoy_source, envoy_version))
+
+    return jobs
 
   def _pull_or_build_nh_benchmark_image(self, \
                                         images: proto_image.DockerImages) \
@@ -242,29 +298,49 @@ class BenchmarkRunner(object):
 
     return new_job_control
 
-  def _create_symlink_for_test_artifacts(self, output_dir: str,
-                                         image_tag: str) -> None:
-    """Create a symlink linking the artifacts for easy identification.
-
-    Creates a symlink named with the value of 'image_tag' which points to the
-    output directory containing the artifacts for the image beign tested.  The
-    target of the link is the tag or commit hash from which the docker image
-    was created.  This is analogous to the set of bazel-* directories created
-    in a build.
-
+  def _create_new_source_job_control(self, nh_source, envoy_source, envoy_hash) \
+    -> proto_control.JobControl:
+    """Duplicate the job control for a specific benchmark run.
+    This method creates a new job control object for a single binary benchmark
     Args:
-      output_dir: The location on disk where output artifacts are placed
-      image_tag: The tag or commit hash for the image used for the symlink name
-
+      nh_source: the nighthawk source to run
+      envoy_source: the envoy source to test
     Returns:
-      None
+      A job control document containing the Nighthawk and Envoy source specified
     """
 
-    if os.path.islink(image_tag) and output_dir == os.readlink(image_tag):
-      return
+    # Generate a unique identifier for the individual run
+    # 1. Specifies whether source is provided via source_path or source_url
+    # 2. Specifies the primary commit hash or tag, if provided
+    # 3. Specifies the branch, if provided
+    # Ex: source_url__v1.16.0__branch_name
+    identifier = str(envoy_source.WhichOneof('source_location'))
 
-    # Create a symbolic link pointing to 'output_dir' named 'image_tag'.
-    os.symlink(output_dir, image_tag)
+    if envoy_hash:
+      identifier += '__'
+      identifier += envoy_hash
+    if envoy_source.branch:
+      identifier += '__'
+      identifier += envoy_source.branch
+
+    # Create a new SourceRepository representing just one Envoy build target
+    new_envoy_source = proto_source.SourceRepository()
+    new_envoy_source.CopyFrom(envoy_source)
+    new_envoy_source.commit_hash = envoy_hash
+    del new_envoy_source.additional_hashes[:]
+
+    output_dir = os.path.join(self._control.environment.output_dir, identifier)
+    new_job_control = proto_control.JobControl()
+    new_job_control.CopyFrom(self._control)
+    del new_job_control.source[:]
+    new_job_control.source.extend([nh_source, new_envoy_source])
+    new_job_control.environment.output_dir = output_dir
+    log.debug(f"Creating new Binary job for {new_envoy_source}")
+    log.debug(f"Job:\n{new_job_control}")
+
+    self._create_symlink_for_test_artifacts(output_dir, identifier)
+
+    return new_job_control
 
   def _create_job_control_for_images(
       self, envoy_images: Set[str]) -> List[proto_control.JobControl]:
@@ -296,6 +372,30 @@ class BenchmarkRunner(object):
       job_control_list.append(new_job_control)
 
     return job_control_list
+
+  def _create_symlink_for_test_artifacts(self, output_dir: str,
+                                         image_tag: str) -> None:
+    """Create a symlink linking the artifacts for easy identification.
+
+    Creates a symlink named with the value of 'image_tag' which points to the
+    output directory containing the artifacts for the image beign tested.  The
+    target of the link is the tag or commit hash from which the docker image
+    was created.  This is analogous to the set of bazel-* directories created
+    in a build.
+
+    Args:
+      output_dir: The location on disk where output artifacts are placed
+      image_tag: The tag or commit hash for the image used for the symlink name
+
+    Returns:
+      None
+    """
+
+    if os.path.islink(image_tag) and output_dir == os.readlink(image_tag):
+      return
+
+    # Create a symbolic link pointing to 'output_dir' named 'image_tag'.
+    os.symlink(output_dir, image_tag)
 
   def execute(self) -> None:
     """Run the instantiated benchmark.
