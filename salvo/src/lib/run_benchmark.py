@@ -141,23 +141,16 @@ class BenchmarkRunner(object):
     log.info("Using Nighthawk sources at " \
       + getattr(nighthawk_source, nighthawk_source.WhichOneof('source_location')))
 
-    envoy_source = None
-    for source_item in self._control.source:
-      if source_item.identity == proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:
-        if envoy_source:
-          raise BenchmarkRunnerError("Multiple Envoy sources specified."
-                                     "Please specify only one.")
-        envoy_source = source_item
-
-    if not envoy_source:
-      raise BenchmarkRunnerError("No Envoy sources specified")
-
-    envoy_hashes = [envoy_source.commit_hash]
-    for envoy_hash in envoy_source.additional_hashes:
-      envoy_hashes.append(envoy_hash)
+    base_envoy_source = self._source_manager.get_source_repository(
+        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+    )
+    envoy_hashes = self._source_manager.get_envoy_hashes_for_benchmark()
 
     jobs = []
     for envoy_version in envoy_hashes:
+      envoy_source = proto_source.SourceRepository()
+      envoy_source.CopyFrom(base_envoy_source)
+      envoy_source.commit_hash = envoy_version
       jobs.append(
         self._create_new_source_job_control(nighthawk_source, envoy_source, envoy_version))
 
@@ -333,6 +326,7 @@ class BenchmarkRunner(object):
     new_job_control = proto_control.JobControl()
     new_job_control.CopyFrom(self._control)
     del new_job_control.source[:]
+
     new_job_control.source.extend([nh_source, new_envoy_source])
     new_job_control.environment.output_dir = output_dir
     log.debug(f"Creating new Binary job for {new_envoy_source}")
@@ -393,6 +387,9 @@ class BenchmarkRunner(object):
 
     if os.path.islink(image_tag) and output_dir == os.readlink(image_tag):
       return
+
+    if not os.path.isdir(output_dir):
+      os.makedirs(output_dir, 0o755)
 
     # Create a symbolic link pointing to 'output_dir' named 'image_tag'.
     os.symlink(output_dir, image_tag)

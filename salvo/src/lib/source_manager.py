@@ -128,8 +128,14 @@ class SourceManager(object):
     if not all([
         images.nighthawk_benchmark_image, images.nighthawk_binary_image
     ]):
-      raise SourceManagerError(
-          "No images are specified in the control document")
+        # Determine whether we have sources for building NightHawk
+        nighthawk_source = self.get_source_tree(
+            proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
+        )
+        if not nighthawk_source:
+          raise SourceManagerError(
+              "No images are specified or able to be built from the "
+              "control document")
 
     envoy_image = images.envoy_image
     if not envoy_image:

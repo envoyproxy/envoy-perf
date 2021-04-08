@@ -23,20 +23,22 @@ _BUILD_NIGHTHAWK_BENCHMARK_IMAGE_FROM_SOURCE = \
      '.build_nighthawk_benchmark_image_from_source')
 
 @mock.patch('os.symlink')
-@mock.patch.object(source_manager.SourceManager, 'have_build_options')
-def test_binary_benchmark_setup(
-    mock_have_build_options,
-    mock_symlink):
+@mock.patch.object(source_manager.SourceManager, 'get_envoy_hashes_for_benchmark')
+def test_binary_benchmark_setup(mock_get_hashes, mock_symlink):
   """Verify that the unique methods to the binary benchmark workflow are in order"""
   job_control = proto_control.JobControl(
       remote=False,
       binary_benchmark=True
   )
+  mock_get_hashes.return_value = [ "jedi", "padawan" ]
   generate_test_objects.generate_envoy_source(job_control)
   generate_test_objects.generate_nighthawk_source(job_control)
 
-  benchmark = run_benchmark.BenchmarkRunner(job_control)
-  mock_symlink.assert_called_with('source_url__hash_doesnt_really_matter_here__master', 'source_url__hash_doesnt_really_matter_here__master')
+  _ = run_benchmark.BenchmarkRunner(job_control)
+  mock_symlink.has_calls([
+    mock.call('source_url__padawan__master'),
+    mock.call('source_url__jedi__master')]
+  )
 
 @mock.patch('os.symlink')
 @mock.patch.object(full_docker.Benchmark, 'run_image')
