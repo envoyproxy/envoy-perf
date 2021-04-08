@@ -46,6 +46,22 @@ class Benchmark(base_benchmark.BaseBenchmark):
     self._nighthawk_builder = None
     self._source_manager = source_manager.SourceManager(job_control)
 
+  def get_image(self) -> str:
+    """Return the commit hash string for the Envoy version being tested.
+
+    Since the binary benchmark does not use images, we supply the branch.
+    This string is used in the output log banner indicating the current
+    object version being tested.
+
+    Return:
+      a string containing the commit hash matching the binary under test
+    """
+
+    envoy_source = self._source_manager.get_source_repository(
+        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
+    )
+    return envoy_source.commit_hash if envoy_source.commit_hash else "Unset"
+
   def _validate(self) -> None:
     """Validate that all data required for running a benchmark exists.
 

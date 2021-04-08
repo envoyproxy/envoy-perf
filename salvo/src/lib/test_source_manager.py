@@ -239,6 +239,7 @@ def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory
   assert str(source_error.value) == \
     "Unable to obtain the source to determine commit hashes"
 
+
 def test_find_all_images_from_specified_tags():
   """Verify that we can parse an image tag and deterimine the previous
   image tag.
@@ -270,13 +271,16 @@ def test_find_all_images_from_specified_tags():
   }
   assert tags == expected_tags
 
-def test_find_all_images_from_specified_tags_fail():
+@mock.patch.object(source_manager.SourceManager, 'get_source_tree')
+def test_find_all_images_from_specified_tags_fail(mock_source_tree):
   """Verify that we raise an exception if no images are defined for any benchmarks"""
 
   job_control = proto_control.JobControl(
       remote=False,
       scavenging_benchmark=True
   )
+
+  mock_source_tree.return_value = None
 
   manager = source_manager.SourceManager(job_control)
   hashes = []
@@ -285,7 +289,7 @@ def test_find_all_images_from_specified_tags_fail():
 
   assert not hashes
   assert str(source_error.value) == \
-    "No images are specified in the control document"
+    "No images are specified or able to be built from the control document"
 
 def test_find_all_images_from_specified_tags_build_envoy():
   """Verify that return no hashes and if we have to build Envoy"""

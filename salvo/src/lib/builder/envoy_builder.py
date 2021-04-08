@@ -63,6 +63,14 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     )
     if not cmd.endswith(" "):
       cmd += " "
+
+    # Encountered this message building on Ubuntu 20.04
+    # 'user_link_flags' is deprecated and will be removed soon.
+    # It may be temporarily re-enabled by setting
+    # --incompatible_require_linker_input_cc_api=false
+    if os.getenv('SALVO_WORKAROUND_LINK_ERROR'):
+      cmd += "--incompatible_require_linker_input_cc_api=false "
+
     cmd += constants.ENVOY_BINARY_BUILD_TARGET
     cmd_exec.run_check_command(cmd, cmd_params)
 
