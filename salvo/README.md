@@ -24,7 +24,7 @@ JSON Example:
     "envoyImage": "envoyproxy/envoy:v1.16.0"
   },
   "environment": {
-    "testVersions": IPV_V4ONLY,
+    "testVersion": IPV_V4ONLY,
     "envoyPath": "envoy",
     "outputDir": "/home/ubuntu/nighthawk_output",
     "testDir": "/home/ubuntu/nighthawk_tests"
@@ -41,7 +41,7 @@ environment:
   envoyPath: 'envoy'
   outputDir: '/home/ubuntu/nighthawk_output'
   testDir: '/home/ubuntu/nighthawk_tests'
-  testVersions: IPV_V4ONLY
+  testVersion: IPV_V4ONLY
 images:
   reuseNhImages: true
   nighthawkBenchmarkImage: 'envoyproxy/nighthawk-benchmark-dev:latest'
