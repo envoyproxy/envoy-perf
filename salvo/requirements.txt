@@ -17,7 +17,7 @@ jmespath==0.10.0
 networkx==2.5
 ninja==1.10.0.post2
 pluggy==0.6.0
-py==1.5.2
+py==1.10.0
 pybind11==2.6.1
 pygobject==3.26.1
 pytest==3.3.2
