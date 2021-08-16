@@ -64,7 +64,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     if not cmd.endswith(" "):
       cmd += " "
 
-    # Encountered this message building on Ubuntu 20.04
+    # Encountered this message building on Ubuntu 20.04:
     # 'user_link_flags' is deprecated and will be removed soon.
     # It may be temporarily re-enabled by setting
     # --incompatible_require_linker_input_cc_api=false
@@ -93,6 +93,42 @@ class EnvoyBuilder(base_builder.BaseBuilder):
 
     return os.path.join(self._build_dir, constants.ENVOY_BINARY_TARGET_OUTPUT_PATH)
 
+  def build_su_exec(self) -> None:
+    """Run bazel build to generate the su-exec binary needed in Envoy docker images."""
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+    cmd = "bazel build {bazel_options}".format(
+        bazel_options=self._generate_bazel_options(
+            proto_source.SourceRepository.SRCID_ENVOY
+        )
+    )
+    if not cmd.endswith(" "):
+      cmd += " "
+
+    cmd += "external:su-exec"
+    cmd_exec.run_check_command(cmd, cmd_params)
+
+  def stage_su_exec(self) -> None:
+    """Copy the su-exec binary used in the Envoy docker image
+
+    Returns:
+      None
+    """
+    dir_mode = 0o755
+    # The su-exec packaging in the Dockerfile does not use the
+    # TARGETPLATFORM suffix. The destination directory is the
+    # build_release string as used below
+    dest_path = os.path.join(self._build_dir, 'build_release')
+    if not os.path.exists(dest_path):
+      os.mkdir(dest_path, dir_mode)
+
+    cmd = "cp -fv "
+    cmd += "bazel-bin/external/com_github_ncopa_suexec/su-exec "
+    cmd += "build_release/su-exec"
+
+    cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
+    cmd_exec.run_command(cmd, cmd_params)
+
+
   def build_envoy_image_from_source(self) -> None:
     """Build an Envoy docker image from source.
 
@@ -100,11 +136,16 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     stages it for inclusion in a docker image, and builds the docker
     image.
 
+    su-exec was added as an additional binary.  That dependency is
+    built and staged for packaging into the Envoy docker image also.
+
     Returns:
       None
     """
     self.build_envoy_binary_from_source()
     self.stage_envoy(False)
+    self.build_su_exec()
+    self.stage_su_exec()
     self.create_docker_image()
 
   def stage_envoy(self, strip_binary: bool) -> None:
@@ -129,13 +170,10 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     """
     # Stage the envoy binary for the docker image
     dir_mode = 0o755
-    pwd = os.getcwd()
-    os.chdir(self._build_dir)
-
-    if not os.path.exists('build_release_stripped'):
-      os.mkdir('build_release_stripped', dir_mode)
-
-    os.chdir(pwd)
+    
+    dest_path = os.path.join(self._build_dir, 'build_release_stripped')
+    if not os.path.exists(dest_path):
+      os.mkdir(dest_path, dir_mode)
 
     cmd = "objcopy --strip-debug " if strip_binary else "cp -fv "
     cmd += constants.ENVOY_BINARY_TARGET_OUTPUT_PATH
@@ -147,7 +185,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
   def _generate_docker_ignore(self) -> None:
     """Generate a dockerignore file to reduce the context size."""
 
-    omit_from_dockerignore = ['configs', 'build_release_stripped', 'ci']
+    omit_from_dockerignore = ['configs', 'build_release', 'build_release_stripped', 'ci']
 
     pwd = os.getcwd()
     os.chdir(self._build_dir)
