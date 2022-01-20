@@ -181,6 +181,11 @@ class DockerImageController():
     """
 
     client = self._image.get_docker_client()
-    return client.containers.run(image_name, stdout=True,
+    try:
+      return client.containers.run(image_name, stdout=True,
                                  stderr=True, detach=False,
                                  **run_parameters._asdict())
+    except docker.errors.ContainerError as e:
+      error_logs = e.container.logs()
+      log.error(f"Failed to run benchmarking test in image: {image_name}, error message: {e}, container logs: {error_logs}")
+      exit()
