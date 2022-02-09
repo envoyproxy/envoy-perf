@@ -96,7 +96,7 @@ In both examples above, the envoy image being tested is a specific tag. This tag
 
 ### Scavenging Benchmark
 
-The 'Scavenging' Benchmark runs the benchmark on the local machine and uses a specified Envoy image for testing. Tests are discovered in the specified directory in the Environment object:
+The Scavenging Benchmark builds and runs [Nighthawk benchmark testsuite](https://github.com/envoyproxy/nighthawk/tree/main/benchmarks) on the local machine and uses a specified Envoy image for testing. Tests are discovered in the specified directory in the Environment object:
 
 ```yaml
 remote: false
@@ -112,12 +112,6 @@ images:
   envoyImage: envoyproxy/envoy:v1.21.0
   reuseNhImages: true
 source:
-- identity: SRCID_ENVOY
-  commit_hash: v1.21.0
-  source_url: https://github.com/envoyproxy/envoy.git
-  bazelOptions:
-  - parameter: --jobs 4
-  - parameter: --define tcmalloc=gperftools
 - identity: SRCID_NIGHTHAWK
   source_url: https://github.com/envoyproxy/nighthawk.git
 ```
@@ -125,10 +119,6 @@ source:
 `scavengingBenchmark`: It will run scavenging benchmarks.
 
 `source.identity`: Specify whether this source location is Envoy or Nighthawk.
-
-`source.commit_hash`: Specify a commit hash if applicable. If not specified we will determine this from the source tree. We will also use this field to identify the corresponding Nighthawk or Envoy image used for the benchmark.
-
-`source.BazelOption`: A list of compiler options and flags to supply to bazel when building the source of Nighthawk or Envoy. 
 
 In this example, the v1.21.0 Envoy tag is pulled and an Envoy image generated where the Envoy binary has profiling enabled. The user may specify option strings supported by bazel to adjust the compilation process.
 
@@ -152,11 +142,18 @@ source:
 - identity: SRCID_ENVOY
   commit_hash: v1.21.0
   source_url: https://github.com/envoyproxy/envoy.git
+  bazelOptions:
+  - parameter: --jobs 4
+  - parameter: --define tcmalloc=gperftools
 - identity: SRCID_NIGHTHAWK
   source_url: https://github.com/envoyproxy/nighthawk.git
 ```
 
 `binaryBenchmark`: It will run binary benchmarks.
+
+`source.commit_hash`: Specify a commit hash if applicable. If not specified we will determine this from the source tree. We will also use this field to identify the corresponding Nighthawk or Envoy image used for the benchmark.
+
+`source.BazelOption`: A list of compiler options and flags to supply to bazel when building the source of Nighthawk or Envoy. 
 
 
 ## Running Salvo
