@@ -30,8 +30,10 @@ This section will describe the whole workflow to use Salvo to Measure Performanc
     Before using Salvo, you need to install its dependencies. The [install_deps.sh](./install_deps.sh) script can be used to install any dependencies required by Salvo. 
 
     ```bash
-    ./install_deps.sh
+    sudo ./install_deps.sh
     ```
+
+    You can install fortio CLI command to gain the visualized benchmarking report, the installation method: https://github.com/fortio/fortio#installation
 
 4. Build Salvo
 
@@ -94,7 +96,9 @@ This section will describe the whole workflow to use Salvo to Measure Performanc
 
       https://github.com/envoyproxy/nighthawk/blob/main/test/integration/integration_test_fixtures.py
     
-      Then, the `_run_benchmark` function provides some configurable parameters used by Nighthawk client to send test requests, such as `rps`, `duration`, `request_body_size` and so on. By default, Nighthawk will use closed-loop mode, because closed-loop testing can be useful to get a sense of the maximum requests per second that can be squeezed out of a system (irrespective of the high latency incurred), as well as for comparing numbers with other load generators that use this methodology. More details about closed-loop mode: https://github.com/envoyproxy/nighthawk/blob/main/docs/root/terminology.md#closed-loop
+      Then, the `_run_benchmark` function provides some configurable parameters used by Nighthawk client to send test requests, such as `rps`, `duration`, `request_body_size` and so on. More details about Nighthawk's arguments: https://github.com/envoyproxy/nighthawk/blob/main/api/client/options.proto
+
+      By default, Nighthawk will use closed-loop mode, because closed-loop testing can be useful to get a sense of the maximum requests per second that can be squeezed out of a system (irrespective of the high latency incurred), as well as for comparing numbers with other load generators that use this methodology. More details about closed-loop mode: https://github.com/envoyproxy/nighthawk/blob/main/docs/root/terminology.md#closed-loop
 
       Finally, `_run_benchmark` function defines the format of result outputs after the benchmark is done.
 
