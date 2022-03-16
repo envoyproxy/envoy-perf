@@ -56,15 +56,51 @@ A/B Testing. And we will use [Binary Benchmark](./README.md#binary-benchmark) as
     bazel build //...
     ```
 
-5. Binary Benchmark Configuration
+5. Set up commits for evaluation
+
+    This step will introduce the workflow of setting up commits for evaluation if you haven't
+    committed your code changes. If you have set up commits somewhere Salvo can fetch, plase ingore 
+    this step.
+
+    5.1. Create a local fork of Envoy repository. We will take the forked repo:
+    https://github.com/gyohuangxin/envoy as the example.
+
+    5.2. Clone the forked repo and create a new branch:
+
+     ```bash
+     git clone https://github.com/gyohuangxin/envoy 
+     cd envoy && git checkout -b benchmark_testing 
+     ```
+
+    5.3. Set up commits for your two approaches:
+         
+     ```bash
+     # Apply code changes for approach one.
+     git add . && git commit -m "This is approach one."
+
+     # Apply code changes for approach two.
+     git add . && git commit -m "This is approach two."
+     ```
+
+    5.4. Push the two commits to the remote forked repo:
+
+     ```bash
+     git push origin benchmark_testing
+     ```
+
+6. Binary Benchmark Configuration
     
-    For an example, you committed two Envoy code changes to your forked repo:
-    "https://github.com/gyohuangxin/envoy" and the commit hashes were
+    Currently, you have committed two Envoy code changes to the forked repo:
+    "https://github.com/gyohuangxin/envoy" and the commit hashes are
     "c2e1c0d0da61f3fec25f48f8bd63e4a76db8a2a9" and "e95717bcd0672910826de4a9bb2f402f6e057b2c".
+    **These commits are fake and just for the sake of examples.**
+
+    [TODO]: <> (These commits are fake now, we should convert them to real commits)
+
     Then you want to measure their performance change to Envoy v1.21.0 as the baseline and choose
-    the commit which has the better performance. 
-    
-    You can compose the configuration of Salvo as below:
+    the commit which has the better performance. You can compose the configuration of Salvo in YAML.
+    For example, you can create an configuration YAML file named `binary_benchmark.yaml` and store
+    it in anywhere Salvo can read from.
 
     ```yaml
     remote: false
@@ -113,7 +149,9 @@ A/B Testing. And we will use [Binary Benchmark](./README.md#binary-benchmark) as
     this section we will build the latest Nighthawk version. You can find more details about
     configuration fields from [APIs definition](./api). 
 
-6. Details of test cases
+7. Details of test cases
+
+    [TODO]: <> (add the link of test_architecure.md here to introduce the architecure of Salvo)
 
     The Benchmark Framework is developed via PyTest Framework. Therefore, the test cases file is
     defined as a python file contains the test cases. The
@@ -160,15 +198,15 @@ A/B Testing. And we will use [Binary Benchmark](./README.md#binary-benchmark) as
         More test cases examples:
         https://github.com/envoyproxy/nighthawk/blob/8d6947b2d4b41edf0ea95a811d129c7a81629b86/benchmarks/test/test_discovery.py#L92-#L119
 
-7. Run Salvo
+8. Run Salvo
 
     To run Salvo, use the following command:
 
     ```bash
-    bazel-bin/salvo --job <path to>/<binary_benchmark>.yaml
+    bazel-bin/salvo --job <path to>/binary_benchmark.yaml
     ```
 
-8. The Benchmark Result 
+9. The Benchmark Result 
 
     Salvo creates a symlink in the local directory to the location of the output artifacts for each
     Envoy version tested.
