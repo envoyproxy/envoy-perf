@@ -6,7 +6,11 @@ This is a framework that abstracts executing multiple benchmarks of the Envoy Pr
 
 ## Goals of Salvo
 
-Salvo allows Envoy developers to perform A/B testing to monitor performance change of Envoy. Salvo provides the local excution mode allowing developers to run a benchark on their own machine and also provides the remote excution mode to run a benchmark on a remote machine, such as a remote CI system.
+Salvo allows Envoy developers to perform A/B testing to monitor performance change of Envoy. Salvo provides the local execution mode allowing developers to run a benchmark on their own machine and also provides the remote execution mode to run a benchmark on a remote machine, such as a remote CI system.
+
+## About this section
+
+This section will give a brief overview of Salvo's building, usage and results. If you want to dive into using Salvo to measure Envoy's performance change with an A/B testing, please read the detailed workflow documentation: [ENVOY_DEVELOP_WORKFLOW.md](./ENVOY_DEVELOP_WORKFLOW.md)
 
 ## Dependencies
 
@@ -22,7 +26,7 @@ bazel build //...
 
 ## Benchmark Test Cases for Salvo
 
-Benchmark test cases for Salvo are defined as Python files with test cases written in pytest framework, here is an example: https://github.com/envoyproxy/nighthawk/blob/main/benchmarks/test/test_discovery.py. Users can provide thier own Python files of test cases into Salvo.
+Benchmark test cases for Salvo are defined as Python files with test cases written in pytest framework, here is an example: https://github.com/envoyproxy/nighthawk/blob/main/benchmarks/test/test_discovery.py. Users can provide their own Python files of test cases into Salvo.
 
 ## Control Documents
 
@@ -72,7 +76,7 @@ images:
   envoyImage: "envoyproxy/envoy:v1.21.0"
 ```
 
-`remote`: Whether to enable remote excution mode.
+`remote`: Whether to enable remote execution mode.
 
 `dockerizedBenchmark`: It will run fully dockerized benchmarks.
 
@@ -84,7 +88,7 @@ images:
 
 `environment.envoyPath`: Envoy is called 'Envoy' in the Envoy Docker image.
 
-`images.reuseNhImages`: Whether to reuse Nighthawk image if it exsists on the machine.
+`images.reuseNhImages`: Whether to reuse Nighthawk image if it exists on the machine.
 
 `images.nighthawkBenchmarkImage`: The image of Nighthawk benchmarking tests.   
 
