@@ -21,7 +21,7 @@ py==1.10.0
 pybind11==2.6.1
 pygobject==3.27.0
 pytest==3.3.2
-python-apt==1.6.5+ubuntu0.3
+python-apt==2.0.0+ubuntu0.20.4.1
 python-dateutil==2.8.1
 pytype==2020.11.12
 PyYAML==5.4
