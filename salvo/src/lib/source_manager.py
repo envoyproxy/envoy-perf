@@ -188,8 +188,6 @@ class SourceManager(object):
     if additional_hashes:
       hash_set = hash_set.union(additional_hashes)
 
-    # If additional_hashes are specified, return them and source repo commit
-    # If test_single_commit are specified, just return source repo commit
     if source_repo.commit_hash and (additional_hashes or test_single_commit):
       hash_set = hash_set.union([source_repo.commit_hash])
       return hash_set

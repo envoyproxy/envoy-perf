@@ -36,7 +36,7 @@ message DockerImages {
   repeated string additional_envoy_images = 5;
 
   // If this field is ture and additional_envoy_images is not defined, we will
-  // only test envoy_image which is defined in envoy_image field. It's useful
+  // only test envoy image which is defined in envoy_image field. It's useful
   // for the scenario that someone want to test different configuration with 
   // specific envoy image.
   bool test_single_image = 6;

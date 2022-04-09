@@ -94,7 +94,7 @@ images:
 
 `images.nighthawkBinaryImage`: Nighthawk tools will be sourced from this Docker image.
 
-`images.envoyImage`: The specific Envoy docker image to test.
+`images.envoyImage`: The specific Envoy docker image to test. If only `images.envoyImage` is defined, we will find the previous image built from the prior tag. If you want to specify additional images for which we benchmark for analysis, specify a list of image strings at `images.additional_envoy_images` filed, eg: [ "envoyproxy/envoy-dev:7da2adee8962c202999e96cb41e899deb34faf48",..]. If you only want to test the specified envoy image, specify `images.test_single_image` as `True`. `images.additional_envoy_images` and `images.test_single_image` cannot be defined at the same time.
 
 In both examples above, the envoy image being tested is a specific tag. This tag can be replaced with "latest" to test the most recently created image against the previous image built from the prior tag. If a commit hash is used, we find the previous commit hash and benchmark that container. In summary, tags are compared to tags, hashes are compared to hashes.
 
@@ -155,7 +155,7 @@ source:
 
 `binaryBenchmark`: It will run binary benchmarks.
 
-`source.commit_hash`: Specify a commit hash if applicable. If not specified we will determine this from the source tree. We will also use this field to identify the corresponding Nighthawk or Envoy image used for the benchmark.
+`source.commit_hash`: Specify a commit hash if applicable. If not specified we will determine this from the source tree. We will also use this field to identify the corresponding Nighthawk or Envoy image used for the benchmark. If only `source.commit_hash`is defined, we will find the previous commit hash. If you want to specify additional commit hashes for which we benchmark for analysis, specify a list of commit hashes strings at `source.additional_hashes` filed, eg: [ "b435d3a3baa39f1a15cd68625da085cfa16ae957",..]. If you only want to test the specified envoy commit, specify `source.test_single_commit` as `True`. `source.additional_hashes` and `source.test_single_commit` cannot be defined at the same time.
 
 `source.BazelOption`: A list of compiler options and flags to supply to bazel when building the source of Nighthawk or Envoy. 
 
