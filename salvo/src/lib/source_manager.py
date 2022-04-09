@@ -142,13 +142,19 @@ class SourceManager(object):
 
     hash_set = set()
     # NOTE: The baseline is always the last image in our list
+    test_single_image = images.test_single_image
     additional_images = images.additional_envoy_images
+    if test_single_image and additional_images:
+      raise SourceManagerError(
+          '"additional_envoy_image" cannot be set with "test_single_image" enabled')
     if additional_images:
       additional_tags = [_extract_tag_from_image(image) \
           for image in images.additional_envoy_images]
 
       # Do not add hashes that we have already discovered
       hash_set = hash_set.union(additional_tags)
+      hash_set.add(_extract_tag_from_image(envoy_image))
+    elif test_single_image:
       hash_set.add(_extract_tag_from_image(envoy_image))
     else:
       # We have to deduce the previous image by commit hash
@@ -174,12 +180,17 @@ class SourceManager(object):
     source_repo = self.get_source_repository(proto_source.SourceRepository.SRCID_ENVOY)
 
     # We have a source, see whether additional hashes are specified
-    addtional_hashes = source_repo.additional_hashes
-    if addtional_hashes:
-      hash_set = hash_set.union(addtional_hashes)
+    test_single_commit= source_repo.test_single_commit
+    additional_hashes = source_repo.additional_hashes
+    if test_single_commit and additional_hashes:
+      raise SourceManagerError(
+          '"additional_hashes" cannot be set with "test_single_commit" enabled')
+    if additional_hashes:
+      hash_set = hash_set.union(additional_hashes)
 
-    # Was a specific hash specified? Use it as the baseline
-    if source_repo.commit_hash and addtional_hashes:
+    # If additional_hashes are specified, return them and source repo commit
+    # If test_single_commit are specified, just return source repo commit
+    if source_repo.commit_hash and (additional_hashes or test_single_commit):
       hash_set = hash_set.union([source_repo.commit_hash])
       return hash_set
 

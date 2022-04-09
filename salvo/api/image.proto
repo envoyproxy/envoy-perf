@@ -34,4 +34,10 @@ message DockerImages {
   // defined and benchmark the discovered image.
   // eg: [ "envoyproxy/envoy-dev:7da2adee8962c202999e96cb41e899deb34faf48",..]
   repeated string additional_envoy_images = 5;
+
+  // If this field is ture and additional_envoy_images is not defined, we will
+  // only test envoy_image which is defined in envoy_image field. It's useful
+  // for the scenario that someone want to test different configuration with 
+  // specific envoy image.
+  bool test_single_image = 6;
 }

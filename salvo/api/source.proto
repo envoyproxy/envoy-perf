@@ -53,4 +53,10 @@ message SourceRepository {
   // A list of compiler options and flags to supply to bazel when building
   // the source of NightHawk or Envoy
   repeated BazelOption bazel_options = 7;
+
+  // If this field is ture and additional_envoy_images is not defined, we will
+  // only test envoy_image which is defined in envoy_image field. It's useful
+  // for the scenario that someone want to test different configuration with 
+  // specific envoy image.
+  bool test_single_commit = 8;
 }
