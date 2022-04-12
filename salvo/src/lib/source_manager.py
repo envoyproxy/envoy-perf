@@ -10,14 +10,13 @@ import api.source_pb2 as proto_source
 import api.control_pb2 as proto_control
 
 log = logging.getLogger(__name__)
-
 """The KNOWN_REPOSITORIES map contains the known remote locations for the
    source code needed to build Envoy and NightHawk
 """
 _KNOWN_REPOSITORIES = {
-    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY: \
+    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:  \
       constants.ENVOY_GITHUB_REPO,
-    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK: \
+    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:  \
       constants.NIGHTHAWK_GITHUB_REPO
 }
 
@@ -35,10 +34,12 @@ def _extract_tag_from_image(image_name: str) -> str:
 
   return image_name.split(':')[-1]
 
+
 class SourceManagerError(Exception):
   """Raised when an unrecoverable error is encountered while working with
      a source tree.
   """
+
 
 class SourceManager(object):
   """This class is a manager for SourceTree objects.
@@ -71,23 +72,19 @@ class SourceManager(object):
         or tag
     """
     envoy_source_tree = self.get_source_tree(
-        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
 
     result = envoy_source_tree.pull()
     if not result:
-      log.error(
-          f"Unable to pull source from origin.  Copying source instead")
+      log.error(f"Unable to pull source from origin.  Copying source instead")
       result = envoy_source_tree.copy_source_directory()
 
     if not result:
-      raise SourceManagerError(
-          "Unable to obtain the source to determine commit hashes")
+      raise SourceManagerError("Unable to obtain the source to determine commit hashes")
 
     commit_hash = self._get_image_hash(envoy_source_tree)
 
-    return self.get_image_hashes_from_disk_source(
-        envoy_source_tree, commit_hash)
+    return self.get_image_hashes_from_disk_source(envoy_source_tree, commit_hash)
 
   def _get_image_hash(self, envoy_source):
     """Return the tag for the identified Envoy image.
@@ -125,17 +122,13 @@ class SourceManager(object):
         minimum.  We will not build those from source yet.
     """
     images = self._control.images
-    if not all([
-        images.nighthawk_benchmark_image, images.nighthawk_binary_image
-    ]):
-        # Determine whether we have sources for building NightHawk
-        nighthawk_source = self.get_source_tree(
-            proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-        )
-        if not nighthawk_source:
-          raise SourceManagerError(
-              "No images are specified or able to be built from the "
-              "control document")
+    if not all([images.nighthawk_benchmark_image, images.nighthawk_binary_image]):
+      # Determine whether we have sources for building NightHawk
+      nighthawk_source = self.get_source_tree(
+          proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
+      if not nighthawk_source:
+        raise SourceManagerError("No images are specified or able to be built from the "
+                                 "control document")
 
     envoy_image = images.envoy_image
     if not envoy_image:
@@ -178,9 +171,7 @@ class SourceManager(object):
     """
     hash_set = set()
 
-    source_repo = self.get_source_repository(
-        proto_source.SourceRepository.SRCID_ENVOY
-    )
+    source_repo = self.get_source_repository(proto_source.SourceRepository.SRCID_ENVOY)
 
     # We have a source, see whether additional hashes are specified
     addtional_hashes = source_repo.additional_hashes
@@ -196,8 +187,7 @@ class SourceManager(object):
     # we need to do discovery
     if source_repo.commit_hash:
       tree = self.get_source_tree(proto_source.SourceRepository.SRCID_ENVOY)
-      hash_set = self.get_image_hashes_from_disk_source(
-          tree, source_repo.commit_hash)
+      hash_set = self.get_image_hashes_from_disk_source(tree, source_repo.commit_hash)
 
     return hash_set
 
@@ -226,10 +216,8 @@ class SourceManager(object):
     # Don't add tags for images we already discovered
     return image_hashes.union(source_tags)
 
-
-  def get_image_hashes_from_disk_source(
-      self, disk_source_tree: source_tree.SourceTree,
-      commit_hash: str) -> Set[str]:
+  def get_image_hashes_from_disk_source(self, disk_source_tree: source_tree.SourceTree,
+                                        commit_hash: str) -> Set[str]:
     """Determine the previous hash to the specified commit.
 
     Args:
@@ -249,12 +237,10 @@ class SourceManager(object):
     try:
       previous_hash = disk_source_tree.get_previous_commit_hash(commit_hash)
     except source_tree.SourceTreeError:
-      raise SourceManagerError(
-          f"Unable to find a commit hash prior to [{commit_hash}]")
+      raise SourceManagerError(f"Unable to find a commit hash prior to [{commit_hash}]")
 
     if not previous_hash:
-      raise SourceManagerError(
-          f"Received empty commit hash prior to [{commit_hash}]")
+      raise SourceManagerError(f"Received empty commit hash prior to [{commit_hash}]")
 
     return set([previous_hash, commit_hash])
 
@@ -279,21 +265,17 @@ class SourceManager(object):
     # Filter source objects that do not match the source_id and return the
     # first remaining object. We expect one source repository defined for
     # NightHawk and Envoy, so one object is filtered out and one should remain
-    source = next(
-        filter(lambda s: s.identity == source_id, self._control.source), None)
+    source = next(filter(lambda s: s.identity == source_id, self._control.source), None)
 
     # See if any of the known sources can work for the ID if none was specified
     if not source and source_id in _KNOWN_REPOSITORIES:
       log.debug(f"Using default location for {source_name}")
-      source = proto_source.SourceRepository(
-          identity=source_id,
-          source_url=_KNOWN_REPOSITORIES[source_id]
-      )
+      source = proto_source.SourceRepository(identity=source_id,
+                                             source_url=_KNOWN_REPOSITORIES[source_id])
       log.debug(f"{source_name} configured with:\n{source}")
 
     if not source:
-      raise SourceManagerError(
-          f"Unable to find a source with the requested ID: {source_name}")
+      raise SourceManagerError(f"Unable to find a source with the requested ID: {source_name}")
 
     return source
 
@@ -330,8 +312,7 @@ class SourceManager(object):
 
     if source_id not in self._source_tree:
       source_name = proto_source.SourceRepository.SourceIdentity.Name(source_id)
-      raise SourceManagerError(
-          f"No Source tree defined for: {source_name}")
+      raise SourceManagerError(f"No Source tree defined for: {source_name}")
 
     return self._source_tree[source_id]
 
@@ -358,8 +339,7 @@ class SourceManager(object):
 
     if not bazel_options:
       source_name = proto_source.SourceRepository.SourceIdentity.Name(source_id)
-      raise SourceManagerError(
-          f"No Bazel Options are defined in source: {source_name}")
+      raise SourceManagerError(f"No Bazel Options are defined in source: {source_name}")
 
     return bazel_options
 

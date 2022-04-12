@@ -9,6 +9,7 @@ import api.control_pb2 as proto_control
 from src.lib.builder import envoy_builder
 from src.lib import (constants, source_tree, source_manager)
 
+
 def _check_call_side_effect(args, parameters):
   """Examine the incoming arguments for command execution and return the
   expected or unexpected output.
@@ -29,8 +30,7 @@ def _check_call_side_effect(args, parameters):
     return "building..."
   elif args == "bazel build -c opt external:su-exec":
     return "building su-exec ..."
-  elif args == ("cp -fv bazel-bin/source/exe/envoy-static "
-                "build_release_stripped/envoy"):
+  elif args == ("cp -fv bazel-bin/source/exe/envoy-static " "build_release_stripped/envoy"):
     return "copied..."
   elif args == ("cp -fv bazel-bin/external/com_github_ncopa_suexec/su-exec "
                 "build_release/su-exec"):
@@ -45,14 +45,13 @@ def _check_call_side_effect(args, parameters):
 
   raise NotImplementedError(f"Unhandled arguments in call: {args}")
 
+
 @mock.patch('src.lib.cmd_exec.run_check_command')
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'checkout_commit_hash')
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
-def test_build_envoy_binary_from_source(mock_copy_source,
-                                       mock_checkout_hash,
-                                       mock_run_command,
-                                       mock_run_check_command):
+def test_build_envoy_binary_from_source(mock_copy_source, mock_checkout_hash, mock_run_command,
+                                        mock_run_check_command):
   """Verify the calls made to build an envoy binary from source."""
   mock_copy_source.return_value = None
   mock_checkout_hash.return_value = None
@@ -65,13 +64,12 @@ def test_build_envoy_binary_from_source(mock_copy_source,
 
   assert constants.ENVOY_BINARY_TARGET_OUTPUT_PATH in binary_path
 
+
 @mock.patch('src.lib.cmd_exec.run_check_command')
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'checkout_commit_hash')
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
-def test_build_envoy_image_from_source(mock_copy_source,
-                                       mock_checkout_hash,
-                                       mock_run_command,
+def test_build_envoy_image_from_source(mock_copy_source, mock_checkout_hash, mock_run_command,
                                        mock_run_check_command):
   """Verify the calls made to build an envoy image from a source tree."""
   mock_copy_source.return_value = None
@@ -86,14 +84,14 @@ def test_build_envoy_image_from_source(mock_copy_source,
   mock_copy_source.assert_called_once()
   mock_checkout_hash.assert_called_once()
 
+
 @mock.patch.object(source_manager.SourceManager, 'get_source_repository')
 def test_build_envoy_image_from_source_fail(mock_get_source_tree):
   """Verify an exception is raised if the source identity is invalid"""
 
   nighthawk_source_repo = proto_source.SourceRepository(
       identity=proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK,
-      source_path='/some_random_not_envoy_directory'
-  )
+      source_path='/some_random_not_envoy_directory')
 
   mock_get_source_tree.return_value = nighthawk_source_repo
   manager = _generate_default_source_manager()
@@ -103,6 +101,7 @@ def test_build_envoy_image_from_source_fail(mock_get_source_tree):
     builder.build_envoy_image_from_source()
 
   assert str(builder_error.value) == "This class builds Envoy only."
+
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_stage_envoy(mock_run_command):
@@ -124,6 +123,7 @@ def test_stage_envoy(mock_run_command):
 
   mock_run_command.assert_has_calls(calls)
 
+
 @mock.patch('glob.glob')
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_create_docker_image(mock_run_command, mock_glob):
@@ -144,16 +144,16 @@ def test_create_docker_image(mock_run_command, mock_glob):
   ]
   mock_run_command.assert_has_calls(calls)
 
+
 def _generate_default_source_manager():
   """Build a default SourceRepository object."""
 
   control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
-  control.source.add(
-      identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
-      source_path='/some_random_envoy_directory',
-      commit_hash='v1.16.0'
-  )
+  control.source.add(identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
+                     source_path='/some_random_envoy_directory',
+                     commit_hash='v1.16.0')
   return source_manager.SourceManager(control)
+
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

@@ -9,6 +9,7 @@ import api.env_pb2 as proto_env
 import api.control_pb2 as proto_control
 from src.lib.benchmark import base_benchmark
 
+
 def test_environment_variables():
   """Test that the specified environment variables are set for a
       benchmark.
@@ -42,6 +43,7 @@ def test_environment_variables():
   for (key, value) in expected_vars.items():
     assert environment_variables[key] == value
 
+
 def test_no_environment_variables_exception():
   """Test that we raise an exception if the environment is not configured."""
   environ = proto_env.EnvironmentVars()
@@ -55,6 +57,7 @@ def test_no_environment_variables_exception():
 
   assert str(environment_error.value) == \
       "No IP version is specified for the benchmark"
+
 
 def test_minimal_environment_variables():
   """Test that setting the required variables works and no extra variables are
@@ -82,6 +85,7 @@ def test_minimal_environment_variables():
 
     for (key, _) in not_expected_vars.items():
       assert key not in os.environ
+
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

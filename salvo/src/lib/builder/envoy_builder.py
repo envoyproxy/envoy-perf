@@ -18,6 +18,7 @@ class EnvoyBuilderError(Exception):
      building Envoy components.
   """
 
+
 class EnvoyBuilder(base_builder.BaseBuilder):
   """This class encapsulates the logic to build the envoy binary
      and container image from source.
@@ -33,12 +34,10 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     """
     super(EnvoyBuilder, self).__init__(manager)
     self._source_tree = self._source_manager.get_source_tree(
-        proto_source.SourceRepository.SRCID_ENVOY
-    )
+        proto_source.SourceRepository.SRCID_ENVOY)
 
     self._source_repo = self._source_manager.get_source_repository(
-        proto_source.SourceRepository.SRCID_ENVOY
-    )
+        proto_source.SourceRepository.SRCID_ENVOY)
     self.set_build_dir(self._source_tree.get_source_directory())
 
   def _validate(self) -> None:
@@ -57,10 +56,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     """Run bazel build to generate the envoy-static."""
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
     cmd = "bazel build {bazel_options}".format(
-        bazel_options=self._generate_bazel_options(
-            proto_source.SourceRepository.SRCID_ENVOY
-        )
-    )
+        bazel_options=self._generate_bazel_options(proto_source.SourceRepository.SRCID_ENVOY))
     if not cmd.endswith(" "):
       cmd += " "
 
@@ -97,10 +93,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     """Run bazel build to generate the su-exec binary needed in Envoy docker images."""
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
     cmd = "bazel build {bazel_options}".format(
-        bazel_options=self._generate_bazel_options(
-            proto_source.SourceRepository.SRCID_ENVOY
-        )
-    )
+        bazel_options=self._generate_bazel_options(proto_source.SourceRepository.SRCID_ENVOY))
     if not cmd.endswith(" "):
       cmd += " "
 
@@ -127,7 +120,6 @@ class EnvoyBuilder(base_builder.BaseBuilder):
 
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
     cmd_exec.run_command(cmd, cmd_params)
-
 
   def build_envoy_image_from_source(self) -> None:
     """Build an Envoy docker image from source.
@@ -170,7 +162,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     """
     # Stage the envoy binary for the docker image
     dir_mode = 0o755
-    
+
     dest_path = os.path.join(self._build_dir, 'build_release_stripped')
     if not os.path.exists(dest_path):
       os.mkdir(dest_path, dir_mode)
@@ -191,9 +183,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     os.chdir(self._build_dir)
 
     discovered_files = glob.glob('*')
-    files_to_write = filter(
-        lambda f: f not in omit_from_dockerignore, discovered_files
-    )
+    files_to_write = filter(lambda f: f not in omit_from_dockerignore, discovered_files)
 
     with open('.dockerignore', 'w') as dockerignore:
       for entry in files_to_write:

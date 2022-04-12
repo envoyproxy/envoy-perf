@@ -15,16 +15,20 @@ log = logging.getLogger(__name__)
 # TODO(abaptiste): consider using pytype annotations in the NamedTuple
 
 # Provides parameters required for executing a docker container
-DockerRunParameters = collections.namedtuple("DockerRunParameters", [
-    'environment',  # a dict with environment variables to set in the container
-    'command',      # a lexical split string containing the command to execute
-    'volumes',      # a dict with the volumes mounted in the container
-    'network_mode', # a string that specifies the network stack used
-    'tty'           # a boolean indicating if a pseudo-tty is allocated
-])
+DockerRunParameters = collections.namedtuple(
+    "DockerRunParameters",
+    [
+        'environment',  # a dict with environment variables to set in the container
+        'command',  # a lexical split string containing the command to execute
+        'volumes',  # a dict with the volumes mounted in the container
+        'network_mode',  # a string that specifies the network stack used
+        'tty'  # a boolean indicating if a pseudo-tty is allocated
+    ])
+
 
 class DockerImagePullError(Exception):
   """This error is raised if an image pull is unsuccessful"""
+
 
 class DockerImage():
   """This class is a wrapper to encapsulate docker operations.
@@ -93,8 +97,7 @@ class DockerImage():
     """
     return self._client
 
-  def run_image(self, image_name: str,
-                run_parameters: DockerRunParameters) -> bytearray:
+  def run_image(self, image_name: str, run_parameters: DockerRunParameters) -> bytearray:
     """Execute the identified docker image using the docker controller.
 
     This method runs the specified image using the arguments specified in
@@ -128,6 +131,7 @@ class DockerImage():
     container = self._client.containers.get(image_name)
     container.stop()
 
+
 class DockerImageController():
   """Manage docker images and stop lingering processes that we spawn."""
 
@@ -158,15 +162,13 @@ class DockerImageController():
     """
     running_images = self._image.list_processes()
 
-    images_to_stop = filter(lambda img: img not in self._running_procs,
-                            running_images)
+    images_to_stop = filter(lambda img: img not in self._running_procs, running_images)
 
     for image_name in images_to_stop:
       log.debug(f"Stopping image: {image_name}")
       self._image.stop_image(image_name)
 
-  def run(self, image_name: str,
-          run_parameters: DockerRunParameters) -> bytearray:
+  def run(self, image_name: str, run_parameters: DockerRunParameters) -> bytearray:
     """Use the docker client to execute the specified container.
 
     Args:
@@ -182,10 +184,14 @@ class DockerImageController():
 
     client = self._image.get_docker_client()
     try:
-      return client.containers.run(image_name, stdout=True,
-                                 stderr=True, detach=False,
-                                 **run_parameters._asdict())
+      return client.containers.run(image_name,
+                                   stdout=True,
+                                   stderr=True,
+                                   detach=False,
+                                   **run_parameters._asdict())
     except docker.errors.ContainerError as e:
       error_logs = e.container.logs()
-      log.error(f"Failed to run benchmarking test in image: {image_name}, error message: {e}, container logs: {error_logs}")
+      log.error(
+          f"Failed to run benchmarking test in image: {image_name}, error message: {e}, container logs: {error_logs}"
+      )
       exit()

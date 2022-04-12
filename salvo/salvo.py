@@ -12,7 +12,7 @@ LOGFORMAT = "%(asctime)s: %(process)d [ %(levelname)-5s] [%(module)-5s] %(messag
 log = logging.getLogger()
 
 
-def setup_logging(loglevel: int=logging.DEBUG) -> None:
+def setup_logging(loglevel: int = logging.DEBUG) -> None:
   """Basic logging configuration.
 
   Configure the logger with our defined format and set the log level which
@@ -41,6 +41,7 @@ def setup_options() -> argparse.Namespace:
                       help='specify the location for the job control json document')
   # TODO: Add an option to generate a default job Control JSON/YAML
   return parser.parse_args()
+
 
 def main() -> int:
   """Driver module for benchmark.

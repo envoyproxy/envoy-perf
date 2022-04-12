@@ -21,6 +21,7 @@ _BUILD_ENVOY_BINARY = \
     ('src.lib.builder.envoy_builder.EnvoyBuilder'
      '.build_envoy_binary_from_source')
 
+
 def test_no_sources():
   """Test benchmark validation logic.
 
@@ -41,12 +42,14 @@ def test_no_sources():
 
   assert str(validation_error.value) == "No source configuration specified"
 
+
 # Mock the build invocations so we don't actually try to build this big chungus
 @patch(_BUILD_NIGHTHAWK_BENCHMARKS)
 @patch(_BUILD_NIGHTHAWK_BINARIES)
 @patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
-def test_source_to_build_binaries(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
+def test_source_to_build_binaries(mock_cmd, mock_envoy_build, mock_nh_bin_build,
+                                  mock_nh_bench_build):
   """Validate we can build binaries from source.
 
   Validate that sources are defined that enable us to build Envoy/Nighthawk
@@ -71,6 +74,7 @@ def test_source_to_build_binaries(mock_cmd, mock_envoy_build, mock_nh_bin_build,
   mock_nh_bench_build.assert_called_once()
   mock_nh_bin_build.assert_called_once()
 
+
 def test_no_source_to_build_nh():
   """Validate that we fail the entire process in the absence of NH sources
 
@@ -80,10 +84,7 @@ def test_no_source_to_build_nh():
   We expect the validation logic to throw an exception
   """
   # create a valid configuration with a missing NightHawk container image
-  job_control = proto_control.JobControl(
-      remote=False,
-      binary_benchmark=True
-  )
+  job_control = proto_control.JobControl(remote=False, binary_benchmark=True)
 
   generate_test_objects.generate_envoy_source(job_control)
   generate_test_objects.generate_environment(job_control)
@@ -97,6 +98,7 @@ def test_no_source_to_build_nh():
   assert str(validation_exception.value) == \
       "No source specified to build Nighthawk"
 
+
 # Mock the build invocations so we don't actually try to build this big chungus
 @patch(_BUILD_NIGHTHAWK_BENCHMARKS)
 @patch(_BUILD_NIGHTHAWK_BINARIES)
@@ -107,10 +109,7 @@ def test_no_valid_envoy_binary(mock_nh_bin_build, mock_nh_bench_build):
   We expect an unhandled exception to surface from _prepare_envoy()
   """
   # create a valid configuration with a missing both NightHawk container images
-  job_control = proto_control.JobControl(
-      remote=False,
-      binary_benchmark=True
-  )
+  job_control = proto_control.JobControl(remote=False, binary_benchmark=True)
   job_control.environment.variables['ENVOY_PATH'] = '/dev/null/foo'
 
   generate_test_objects.generate_nighthawk_source(job_control)
@@ -153,6 +152,7 @@ def test_envoy_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock
   mock_nh_bench_build.assert_called_once()
   mock_nh_bin_build.assert_called_once()
 
+
 @patch(_BUILD_NIGHTHAWK_BENCHMARKS)
 @patch(_BUILD_NIGHTHAWK_BINARIES)
 @patch(_BUILD_ENVOY_BINARY)
@@ -186,6 +186,7 @@ def test_nh_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh
   # Raising an exception during the nighthawk build should prevent control flow
   # from proceeding to build Envoy
   mock_envoy_build.assert_not_called()
+
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

@@ -32,6 +32,7 @@ def check_call_side_effect(args, **kwargs):
 
   raise NotImplementedError(f"Unhandled args={args} and kwargs={kwargs}")
 
+
 @mock.patch('subprocess.check_call')
 def test_run_command(mock_check_call):
   """Verify that we can return the output from a check_call call."""
@@ -46,6 +47,7 @@ def test_run_command(mock_check_call):
   cmd = 'spanish_output_stderr'
   output = cmd_exec.run_command(cmd, cmd_parameters)
   assert output == 'No te hablas una palabra del espanol en stderr'
+
 
 @mock.patch('subprocess.check_call')
 def test_run_command_fail(mock_check_call):
@@ -65,6 +67,7 @@ def test_run_command_fail(mock_check_call):
   assert f"Command \'{cmd}\' returned non-zero exit status" in \
     str(process_error.value)
 
+
 @mock.patch('subprocess.check_call')
 def test_run_check_command_fail(mock_check_call):
   """Verify that a CalledProcessError is bubbled to the caller if the command
@@ -83,6 +86,6 @@ def test_run_check_command_fail(mock_check_call):
   assert f"Command \'{cmd}\' returned non-zero exit status" in \
     str(process_error.value)
 
+
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))
-

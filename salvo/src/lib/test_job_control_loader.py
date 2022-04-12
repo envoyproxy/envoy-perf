@@ -232,10 +232,7 @@ def test_generate_control_doc():
   This method reads a JSON representation of the job control document,
   serializes it, then verifies that the serialized data can be re-read.
   """
-  job_control = proto_control.JobControl(
-      remote=True,
-      scavenging_benchmark=True
-  )
+  job_control = proto_control.JobControl(remote=True, scavenging_benchmark=True)
 
   nighthawk_source = job_control.source.add()
   nighthawk_source.identity = \
@@ -267,14 +264,12 @@ def test_generate_control_doc():
   # Verify that we the serialized data is json consumable
   _serialize_and_read_object(job_control)
 
+
 def test_bazel_options():
   """Verify that we can specify bazel options and can handle dashes
      in the strings.
   """
-  job_control = proto_control.JobControl(
-      remote=True,
-      scavenging_benchmark=True
-  )
+  job_control = proto_control.JobControl(remote=True, scavenging_benchmark=True)
 
   envoy_source = job_control.source.add()
   envoy_source.identity = \
@@ -288,8 +283,9 @@ def test_bazel_options():
   option = envoy_source.bazel_options.add()
   option.parameter = "--define tcmalloc=gperftools"
 
-    # Verify that we the serialized data is json consumable
+  # Verify that we the serialized data is json consumable
   _serialize_and_read_object(job_control)
+
 
 def test_read_bazel_options():
 
@@ -325,6 +321,7 @@ def test_read_bazel_options():
     os.unlink(tmp.name)
 
   _validate_job_control_object_with_options(job_control)
+
 
 def _validate_job_control_object_with_options(job_control):
   """Verification method for a job control object with bazel options

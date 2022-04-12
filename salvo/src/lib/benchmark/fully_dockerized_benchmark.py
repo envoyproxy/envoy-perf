@@ -13,10 +13,12 @@ from src.lib.docker_management import docker_image
 
 log = logging.getLogger(__name__)
 
+
 class FullyDockerizedBenchmarkError(Exception):
   """Error rasied when running a fully dockerized benchmark in cases
      where we cannot make progress due to abnormal conditions.
   """
+
 
 class Benchmark(base_benchmark.BaseBenchmark):
   """This benchmark class is the fully dockerized benchmark.  Docker images
@@ -24,8 +26,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
      the tests.
   """
 
-  def __init__(
-      self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
+  def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the benchmark class."""
     super(Benchmark, self).__init__(job_control, benchmark_name)
 
@@ -89,16 +90,14 @@ class Benchmark(base_benchmark.BaseBenchmark):
     volumes = base_benchmark.get_docker_volumes(output_dir, test_dir)
     log.debug(f"Using Volumes: {volumes}")
 
-    environment_controller = base_benchmark.BenchmarkEnvController(
-        self._control.environment)
+    environment_controller = base_benchmark.BenchmarkEnvController(self._control.environment)
 
     run_parameters = docker_image.DockerRunParameters(
         command=['./benchmarks', '--log-cli-level=info', '-vvvv'],
         environment=image_vars,
         volumes=volumes,
         network_mode='host',
-        tty=True
-    )
+        tty=True)
 
     # TODO: We need to capture stdout and stderr to a file to catch docker
     # invocation issues. This may help with the escaping that we see happening
@@ -119,4 +118,3 @@ class Benchmark(base_benchmark.BaseBenchmark):
     if not "benchmark_http_client" in result.decode('utf-8'):
       raise base_benchmark.BenchmarkError(
           "Unable to assert that the benchmark executed successfully")
-

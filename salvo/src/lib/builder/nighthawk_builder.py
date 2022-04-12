@@ -9,10 +9,12 @@ import api.source_pb2 as proto_source
 
 log = logging.getLogger(__name__)
 
+
 class NightHawkBuilderError(Exception):
   """An error raised when an unrecoverable situation occurs when
      building NightHawk components.
   """
+
 
 def _execute_docker_image_script(script: str, build_dir: str) -> None:
   """Run the specified script to build a docker image.
@@ -35,6 +37,7 @@ def _execute_docker_image_script(script: str, build_dir: str) -> None:
   output = cmd_exec.run_command(script, cmd_params)
   log.debug(f"NightHawk Docker image output for {script}: {output}")
 
+
 class NightHawkBuilder(base_builder.BaseBuilder):
   """This class encapsulates the logic to build the nighthawk binaries
       benchmark scripts, and container images from source.
@@ -51,20 +54,17 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     """
     super(NightHawkBuilder, self).__init__(manager)
     self._source_repo = self._source_manager.get_source_repository(
-        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
 
     self._source_tree = self._source_manager.get_source_tree(
-        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
 
   def _validate(self) -> None:
     """ Verify the identity of the source being used."""
 
     if not self._source_repo or self._source_repo.identity != \
         proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:
-      raise NightHawkBuilderError(
-          "This module supports building NightHawk Only")
+      raise NightHawkBuilderError("This module supports building NightHawk Only")
 
   def prepare_nighthawk_source(self) -> None:
     """Stage the nighthawk source in a directory where we can manipulate it.
@@ -98,11 +98,8 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
 
     bazel_options = self._generate_bazel_options(
-        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-    )
-    cmd = "bazel build {bazel_options} //benchmarks:benchmarks".format(
-        bazel_options=bazel_options
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
+    cmd = "bazel build {bazel_options} //benchmarks:benchmarks".format(bazel_options=bazel_options)
     output = cmd_exec.run_command(cmd, cmd_params)
 
     log.debug(f"Nighthawk build output: {output}")
@@ -116,11 +113,8 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
 
     bazel_options = self._generate_bazel_options(
-        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-    )
-    cmd = "bazel build {bazel_options} //:nighthawk".format(
-        bazel_options=bazel_options
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
+    cmd = "bazel build {bazel_options} //:nighthawk".format(bazel_options=bazel_options)
     output = cmd_exec.run_command(cmd, cmd_params)
 
     log.debug(f"Nighthawk build output: {output}")
@@ -128,11 +122,9 @@ class NightHawkBuilder(base_builder.BaseBuilder):
   def build_nighthawk_benchmark_image(self) -> None:
     """Build the NightHawk benchmark docker image."""
     self.build_nighthawk_benchmarks()
-    _execute_docker_image_script(constants.NH_BENCHMARK_IMAGE_SCRIPT,
-                                 self._build_dir)
+    _execute_docker_image_script(constants.NH_BENCHMARK_IMAGE_SCRIPT, self._build_dir)
 
   def build_nighthawk_binary_image(self) -> None:
     """Build the NightHawk binary docker image."""
     self.build_nighthawk_binaries()
-    _execute_docker_image_script(constants.NH_BINARY_IMAGE_SCRIPT,
-                                 self._build_dir)
+    _execute_docker_image_script(constants.NH_BINARY_IMAGE_SCRIPT, self._build_dir)

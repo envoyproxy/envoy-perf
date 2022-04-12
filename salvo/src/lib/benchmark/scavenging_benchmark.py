@@ -17,10 +17,12 @@ from src.lib import (cmd_exec, source_manager)
 
 log = logging.getLogger(__name__)
 
+
 class ScavengingBenchmarkError(Exception):
   """Error rasied when running a scavenging benchmark in cases
      where we cannot make progress due to abnormal conditions.
   """
+
 
 class Benchmark(base_benchmark.BaseBenchmark):
   """This benchmark class is the scavenging benchmark. We build the nighthawk
@@ -28,8 +30,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
      benchmarks directory
   """
 
-  def __init__(
-      self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
+  def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the benchmark class."""
 
     self._benchmark_dir = None
@@ -76,8 +77,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     self._nighthawk_builder.build_nighthawk_benchmarks()
 
     nighthawk_source = manager.get_source_tree(
-        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
     self._benchmark_dir = nighthawk_source.get_source_directory()
     log.debug(f"NightHawk benchmark dir {self._benchmark_dir}")
 
@@ -122,6 +122,4 @@ class Benchmark(base_benchmark.BaseBenchmark):
       try:
         cmd_exec.run_command(cmd, cmd_params)
       except subprocess.CalledProcessError as cpe:
-        raise base_benchmark.BenchmarkError(
-                f"Unable to execute the benchmark: {cpe}")
-
+        raise base_benchmark.BenchmarkError(f"Unable to execute the benchmark: {cpe}")

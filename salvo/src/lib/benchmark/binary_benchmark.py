@@ -24,13 +24,13 @@ class BinaryBenchmarkError(Exception):
      where we cannot make progress due to abnormal conditions.
   """
 
+
 class Benchmark(base_benchmark.BaseBenchmark):
   """This benchmark class is the binary benchmark. We use a path to an Envoy
      binary to execute the Nighthawk benchmarks using that specific build.
   """
 
-  def __init__(
-    self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
+  def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """ Initializes the benchmark class
 
     Args:
@@ -58,8 +58,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     """
 
     envoy_source = self._source_manager.get_source_repository(
-        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
     return envoy_source.commit_hash if envoy_source.commit_hash else "Unset"
 
   def _validate(self) -> None:
@@ -100,7 +99,6 @@ class Benchmark(base_benchmark.BaseBenchmark):
     if not (can_build_envoy or self._envoy_binary_path):
       raise BinaryBenchmarkError("No Envoy source or binary was specified")
 
-
   def _prepare_nighthawk(self) -> None:
     """Prepare the nighthawk source for the benchmark.
 
@@ -114,8 +112,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     self._nighthawk_builder.build_nighthawk_benchmarks()
 
     nighthawk_source = self._source_manager.get_source_tree(
-        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
     self._benchmark_dir = nighthawk_source.get_source_directory()
 
   def _prepare_envoy(self) -> None:
@@ -134,7 +131,6 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     self._envoy_builder = envoy_builder.EnvoyBuilder(self._source_manager)
     self._envoy_binary_path = self._envoy_builder.build_envoy_binary_from_source()
-
 
   def execute_benchmark(self) -> None:
     """Execute the binary benchmark
@@ -169,9 +165,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     # 'TMPDIR' is required for successful operation.  This is the output
     # directory for all produced NightHawk artifacts
-    binary_benchmark_vars = {
-      'TMPDIR': env.output_dir
-    }
+    binary_benchmark_vars = {'TMPDIR': env.output_dir}
     if self._envoy_binary_path:
       binary_benchmark_vars['ENVOY_PATH'] = self._envoy_binary_path
 

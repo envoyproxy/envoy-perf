@@ -16,9 +16,10 @@ log = logging.getLogger(__name__)
 
 _VARIABLES_TO_CLEAR_AND_RESTORE = [
     'RUNFILES_MANIFEST_FILE'  # This variable is set by the outer bazel
-                              # invocation and negatively impacts invoking
-                              # bazel to run the scavenging benchmark
+    # invocation and negatively impacts invoking
+    # bazel to run the scavenging benchmark
 ]
+
 
 def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   """Build the volume structure needed to run a container.
@@ -34,6 +35,7 @@ def get_docker_volumes(output_dir: str, test_dir: str = '') -> dict:
   """
   return docker_volume.generate_volume_config(output_dir, test_dir)
 
+
 class BenchmarkError(Exception):
   """Errror raised in a benchmark for an unresolvable condition."""
 
@@ -41,8 +43,7 @@ class BenchmarkError(Exception):
 class BaseBenchmark(abc.ABC):
   """Base Benchmark class with common functions for all invocations."""
 
-  def __init__(self, job_control: proto_control.JobControl,
-               benchmark_name: str) -> None:
+  def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the Base Benchmark class.
 
     Args:
@@ -191,10 +192,12 @@ class BaseBenchmark(abc.ABC):
     field in the job control document.
     """
 
+
 class BenchmarkEnvironmentError(Exception):
   """An Error raised if the environment variables required are not
      able to be set.
   """
+
 
 class BenchmarkEnvController():
   """Benchmark Environment Controller context class."""
@@ -220,8 +223,7 @@ class BenchmarkEnvController():
     environment = self._environment
 
     if environment.test_version == environment.IPV_UNSPECIFIED:
-      raise BenchmarkEnvironmentError(
-          "No IP version is specified for the benchmark")
+      raise BenchmarkEnvironmentError("No IP version is specified for the benchmark")
     elif environment.test_version == environment.IPV_V4ONLY:
       os.environ['ENVOY_IP_TEST_VERSIONS'] = 'v4only'
     elif environment.test_version == environment.IPV_V6ONLY:
