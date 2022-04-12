@@ -265,6 +265,7 @@ def test_find_all_images_from_specified_tags_fail(mock_source_tree):
   assert str(source_error.value) == \
     "No images are specified or able to be built from the control document"
 
+
 def test_find_image_single():
   """Verify that we can just find specific image with test_single_image enabled"""
   job_control = proto_control.JobControl(
@@ -275,20 +276,19 @@ def test_find_image_single():
   _generate_default_benchmark_images(job_control)
 
   # Add an envoy image and specify additional versions to test
-  job_control.images.envoy_image="envoyproxy/envoy:v1.16.0"
+  job_control.images.envoy_image = "envoyproxy/envoy:v1.16.0"
 
   # Specify test_single_image as true
-  job_control.images.test_single_image=True
+  job_control.images.test_single_image = True
 
   manager = source_manager.SourceManager(job_control)
 
   tags = manager.find_all_images_from_specified_tags()
 
   # We test all extra tags first and the specified image tags is always last
-  expected_tags = {
-      'v1.16.0'
-  }
+  expected_tags = {'v1.16.0'}
   assert tags == expected_tags
+
 
 @mock.patch.object(source_manager.SourceManager, 'get_source_tree')
 def test_find_image_single_fail(mock_source_tree):
@@ -303,15 +303,13 @@ def test_find_image_single_fail(mock_source_tree):
   _generate_default_benchmark_images(job_control)
 
   # Add an envoy image and specify additional versions to test
-  job_control.images.envoy_image="envoyproxy/envoy:v1.16.0"
+  job_control.images.envoy_image = "envoyproxy/envoy:v1.16.0"
 
   # Specify test_single_image as true
-  job_control.images.test_single_image=True
+  job_control.images.test_single_image = True
 
-  for index in range(1,4):
-    job_control.images.additional_envoy_images.append(
-        "envoyproxy/envoy:tag{i}".format(i=index)
-    )
+  for index in range(1, 4):
+    job_control.images.additional_envoy_images.append("envoyproxy/envoy:tag{i}".format(i=index))
 
   manager = source_manager.SourceManager(job_control)
 
@@ -324,6 +322,7 @@ def test_find_image_single_fail(mock_source_tree):
   assert not hashes
   assert str(source_error.value) == \
     '"additional_envoy_image" cannot be set with "test_single_image" enabled'
+
 
 def test_find_all_images_from_specified_tags_build_envoy():
   """Verify that return no hashes and if we have to build Envoy"""
@@ -415,25 +414,18 @@ def test_get_envoy_hashes_for_benchmark_additional_hashes(mock_copy_source_direc
 
 @mock.patch("src.lib.cmd_exec.run_command")
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
-<<<<<<< HEAD
-def test_get_image_hashes_from_disk_source(mock_copy_source_directory, mock_run_command):
-=======
-def test_find_all_images_from_specified_sources_single(
-                                                mock_copy_source_directory,
-                                                mock_run_command):
+def test_find_all_images_from_specified_sources_single(mock_copy_source_directory,
+                                                       mock_run_command):
   """Verify that we raise an exception if both test_single_commit and
   additional_hashes are set
    """
-  job_control = proto_control.JobControl(
-      remote=False,
-      scavenging_benchmark=True
-  )
+  job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
   _generate_default_envoy_source(job_control)
 
   # Specify test_single_commit as true
-  job_control.source[0].test_single_commit=True
+  job_control.source[0].test_single_commit = True
 
   # Setup mocks
   mock_copy_source_directory.return_value = True
@@ -441,38 +433,31 @@ def test_find_all_images_from_specified_sources_single(
 
   manager = source_manager.SourceManager(job_control)
   hashes = manager.find_all_images_from_specified_sources()
-  expected_hashes = {
-      'expected_baseline_hash'
-  }
+  expected_hashes = {'expected_baseline_hash'}
   assert hashes == expected_hashes
+
 
 @mock.patch("src.lib.cmd_exec.run_command")
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
-def test_find_all_images_from_specified_sources_single_fail(
-                                                mock_copy_source_directory,
-                                                mock_run_command):
+def test_find_all_images_from_specified_sources_single_fail(mock_copy_source_directory,
+                                                            mock_run_command):
   """Verify that we can deterimine commit hash from a source tree
   with single mode enabled.
   """
-  job_control = proto_control.JobControl(
-      remote=False,
-      scavenging_benchmark=True
-  )
+  job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
   _generate_default_envoy_source(job_control)
 
   # Specify test_single_commit as true
-  job_control.source[0].test_single_commit=True
+  job_control.source[0].test_single_commit = True
 
   # Setup mocks
   mock_copy_source_directory.return_value = True
   mock_run_command.side_effect = _run_command_side_effect
 
-  for index in range(1,4):
-    job_control.source[0].additional_hashes.append(
-      "02dff6e0235e2f497fb57eb0b7c07cc091c538df"
-    )
+  for index in range(1, 4):
+    job_control.source[0].additional_hashes.append("02dff6e0235e2f497fb57eb0b7c07cc091c538df")
 
   manager = source_manager.SourceManager(job_control)
 
@@ -483,11 +468,10 @@ def test_find_all_images_from_specified_sources_single_fail(
   assert str(source_error.value) == \
     '"additional_hashes" cannot be set with "test_single_commit" enabled'
 
+
 @mock.patch("src.lib.cmd_exec.run_command")
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
-def test_get_image_hashes_from_disk_source(mock_copy_source_directory,
-                                           mock_run_command):
->>>>>>> [Salvo] Add single test mode in Salvo
+def test_get_image_hashes_from_disk_source(mock_copy_source_directory, mock_run_command):
   """Verify that we can determine previous hash for a specified commit."""
 
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)

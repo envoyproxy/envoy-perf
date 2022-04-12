@@ -54,9 +54,10 @@ message SourceRepository {
   // the source of NightHawk or Envoy
   repeated BazelOption bazel_options = 7;
 
-  // If this field is ture and additional_hashes is not defined, we will
+  // If this field is true and additional_hashes is not defined, we will
   // only test envoy commit which is defined in commit_hash field. It's useful
   // for the scenario that someone want to test different configuration with 
-  // specific envoy commit.
+  // specific envoy commit. test_single_commit and additional_hashes are
+  // mutually exclusive and cannot be defined at the same time
   bool test_single_commit = 8;
 }

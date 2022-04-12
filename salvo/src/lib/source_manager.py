@@ -14,9 +14,9 @@ log = logging.getLogger(__name__)
    source code needed to build Envoy and NightHawk
 """
 _KNOWN_REPOSITORIES = {
-    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:  \
+    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:   \
       constants.ENVOY_GITHUB_REPO,
-    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:  \
+    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:   \
       constants.NIGHTHAWK_GITHUB_REPO
 }
 
@@ -180,7 +180,7 @@ class SourceManager(object):
     source_repo = self.get_source_repository(proto_source.SourceRepository.SRCID_ENVOY)
 
     # We have a source, see whether additional hashes are specified
-    test_single_commit= source_repo.test_single_commit
+    test_single_commit = source_repo.test_single_commit
     additional_hashes = source_repo.additional_hashes
     if test_single_commit and additional_hashes:
       raise SourceManagerError(
