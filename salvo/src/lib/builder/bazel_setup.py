@@ -5,6 +5,7 @@ import os
 
 from src.lib import constants
 
+
 def get_clang_dir() -> str:
   """Return the directory prefix where clang resides.
 
@@ -20,6 +21,7 @@ def get_clang_dir() -> str:
       return path
 
   return ''
+
 
 def setup_clang_env() -> None:
   """Set the environment variables to use clang as a compiler."""

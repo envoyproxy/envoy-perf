@@ -12,10 +12,12 @@ import api.source_pb2 as proto_source
 
 log = logging.getLogger(__name__)
 
+
 class BaseBuilderError(Exception):
   """An error raised from the BaseBuilder class if we encounter a
   situation where no progress can be made
   """
+
 
 class BaseBuilder():
   """BaseBuilder class encapsulating common build methods and objects managing

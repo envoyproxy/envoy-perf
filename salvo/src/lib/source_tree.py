@@ -30,10 +30,12 @@ _GIT_ORIGIN_REGEX = r'^origin\s*([\w:@\.\/-]+)\s\(fetch\)$'
 # We extract the branch 'original/master' and the digit '1'
 _REPO_STATUS_REGEX = r'.*ahead of \'(.*)\' by (\d+) commit'
 
+
 class SourceTreeError(Exception):
   """Raised if we encounter a condition from which we cannot recover, when
      manipulating SourceTree objects.
   """
+
 
 def is_tag(image_tag: str) -> bool:
   """Determine whether a an image tag is a commit hash or a version tag."""
@@ -99,10 +101,8 @@ class SourceTree(object):
     # We have neither a source url nor source on disk.
     # - This is a non starter and we cannot operate further. We don't know where
     #   to get the source for building anything
-    if all([not self._source_repo.source_path,
-            not self._source_repo.source_url]):
-      raise SourceTreeError(
-          "No origin is defined or can be deduced from the path")
+    if all([not self._source_repo.source_path, not self._source_repo.source_url]):
+      raise SourceTreeError("No origin is defined or can be deduced from the path")
 
     # We have a source url and no source on disk -> good.
     # - We can clone the url to a temporary disk location and work in that
@@ -122,8 +122,7 @@ class SourceTree(object):
       return True
 
     log.debug(f"Validation failed for source tree: {self}")
-    raise SourceTreeError(
-        "Insufficient information in source definition for it to be usable")
+    raise SourceTreeError("Insufficient information in source definition for it to be usable")
 
   def get_origin(self) -> str:
     """Detect the origin url from where the code is fetched.
@@ -157,9 +156,7 @@ class SourceTree(object):
           break
 
     if not origin_url:
-      raise SourceTreeError(
-          f"Unable to determine the origin url from {output_directory}"
-      )
+      raise SourceTreeError(f"Unable to determine the origin url from {output_directory}")
 
     return origin_url
 
@@ -198,11 +195,12 @@ class SourceTree(object):
     if os.path.exists(output_directory):
       file_ops.delete_directory(output_directory)
 
-    log.debug(f"Copying tree from {self._source_repo.source_path} "
-              f"to {output_directory}")
+    log.debug(f"Copying tree from {self._source_repo.source_path} " f"to {output_directory}")
     ignore_bazel = shutil.ignore_patterns('bazel-*')
-    shutil.copytree(self._source_repo.source_path, output_directory,
-                    symlinks=False, ignore=ignore_bazel)
+    shutil.copytree(self._source_repo.source_path,
+                    output_directory,
+                    symlinks=False,
+                    ignore=ignore_bazel)
 
     return True
 
@@ -218,10 +216,8 @@ class SourceTree(object):
 
     self._validate()
 
-    source_name = proto_source.SourceRepository.SourceIdentity.Name(
-        self._source_repo.identity)
-    log.debug(f"Pulling [{source_name}] from origin: "
-              f"[{self._source_repo.source_url}]")
+    source_name = proto_source.SourceRepository.SourceIdentity.Name(self._source_repo.identity)
+    log.debug(f"Pulling [{source_name}] from origin: " f"[{self._source_repo.source_url}]")
 
     if not self._source_repo.source_url:
       log.debug("No url specified for source. Cannot pull.")
@@ -243,7 +239,6 @@ class SourceTree(object):
     expected = 'Cloning into \'.\''
 
     return expected in output
-
 
   def checkout_commit_hash(self) -> bool:
     """Checks out the specified commit hash in the source tree
@@ -290,8 +285,7 @@ class SourceTree(object):
     cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
     return cmd_exec.run_command(cmd, cmd_params)
 
-  def get_previous_commit_hash(self, current_commit: str,
-                               revisions: int = 2) -> str:
+  def get_previous_commit_hash(self, current_commit: str, revisions: int = 2) -> str:
     """Return the specified number of commits behind the current commit hash.
 
     Args:
@@ -321,9 +315,7 @@ class SourceTree(object):
       current_commit = self.get_head_hash()
 
     cmd = "git rev-list --no-merges --committer='GitHub <noreply@github.com>' "
-    cmd += "--max-count={revisions} {commit}".format(
-        revisions=revisions, commit=current_commit
-    )
+    cmd += "--max-count={revisions} {commit}".format(revisions=revisions, commit=current_commit)
 
     cmd_params = cmd_exec.CommandParameters(cwd=self.get_source_directory())
     hash_list = cmd_exec.run_command(cmd, cmd_params)
@@ -336,8 +328,7 @@ class SourceTree(object):
     # lines that may have trailed the original git output
     for commit_hash in hash_list.split('\n')[::-1]:
       if commit_hash:
-        log.debug(f"Returning {commit_hash} as the previous commit to "
-                  f"{current_commit}")
+        log.debug(f"Returning {commit_hash} as the previous commit to " f"{current_commit}")
         return commit_hash
 
     raise SourceTreeError(f"No commit found prior to {current_commit}")

@@ -27,6 +27,7 @@ class BenchmarkRunnerError(Exception):
      a benchmark.
   """
 
+
 class BenchmarkRunner(object):
   """This class contains the logic to validate input artifacts and
      perform a benchmark.
@@ -142,8 +143,7 @@ class BenchmarkRunner(object):
       + getattr(nighthawk_source, nighthawk_source.WhichOneof('source_location')))
 
     base_envoy_source = self._source_manager.get_source_repository(
-        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY
-    )
+        proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
     envoy_hashes = self._source_manager.get_envoy_hashes_for_benchmark()
 
     jobs = []
@@ -151,8 +151,8 @@ class BenchmarkRunner(object):
       envoy_source = proto_source.SourceRepository()
       envoy_source.CopyFrom(base_envoy_source)
       envoy_source.commit_hash = envoy_version
-      jobs.append(
-        self._create_new_source_job_control(nighthawk_source, envoy_source, envoy_version))
+      jobs.append(self._create_new_source_job_control(nighthawk_source, envoy_source,
+                                                      envoy_version))
 
     return jobs
 
@@ -175,12 +175,9 @@ class BenchmarkRunner(object):
 
     if not pull_result:
       log.debug(f"Attempting to build {images.nighthawk_benchmark_image}")
-      docker_image_builder.build_nighthawk_benchmark_image_from_source(
-          self._source_manager
-      )
+      docker_image_builder.build_nighthawk_benchmark_image_from_source(self._source_manager)
 
-  def _pull_or_build_nh_binary_image(self,
-                                     images: proto_image.DockerImages) -> None:
+  def _pull_or_build_nh_binary_image(self, images: proto_image.DockerImages) -> None:
     """Attempt to pull the NightHawk Binary Image.  Build it if it is
        unavailable.
 
@@ -197,9 +194,7 @@ class BenchmarkRunner(object):
 
     if not pull_result:
       log.debug(f"Attempting to build {images.nighthawk_binary_image}")
-      docker_image_builder.build_nighthawk_binary_image_from_source(
-          self._source_manager
-      )
+      docker_image_builder.build_nighthawk_binary_image_from_source(self._source_manager)
 
   def _pull_or_build_nighthawk_images_for_benchmark(self):
     """Pull the nighthawk docker iamges needed for benchmarks.  If an image
@@ -223,8 +218,7 @@ class BenchmarkRunner(object):
     self._pull_or_build_nh_benchmark_image(images)
     self._pull_or_build_nh_binary_image(images)
 
-  def _pull_or_build_envoy_images_for_benchmark(
-      self, image_hashes: Set[str]) -> Set[str]:
+  def _pull_or_build_envoy_images_for_benchmark(self, image_hashes: Set[str]) -> Set[str]:
     """Pull the docker images needed for the benchmarks. If an image is not
        available build it.
 
@@ -246,8 +240,7 @@ class BenchmarkRunner(object):
 
     for image_hash in image_hashes:
       image_prefix = docker_image_builder.get_envoy_image_prefix(image_hash)
-      envoy_image = "{prefix}:{hash}".format(prefix=image_prefix,
-                                             hash=image_hash)
+      envoy_image = "{prefix}:{hash}".format(prefix=image_prefix, hash=image_hash)
 
       image_object = None
       try:
@@ -257,9 +250,7 @@ class BenchmarkRunner(object):
 
       if have_build_options or not image_object:
         log.debug(f"Attempting to build {envoy_image}")
-        docker_image_builder.build_envoy_image_from_source(
-            self._source_manager, image_hash
-        )
+        docker_image_builder.build_envoy_image_from_source(self._source_manager, image_hash)
 
       envoy_images.add(envoy_image)
 
@@ -336,8 +327,8 @@ class BenchmarkRunner(object):
 
     return new_job_control
 
-  def _create_job_control_for_images(
-      self, envoy_images: Set[str]) -> List[proto_control.JobControl]:
+  def _create_job_control_for_images(self,
+                                     envoy_images: Set[str]) -> List[proto_control.JobControl]:
     """Create new job control objects for each benchmark
 
     Copy the original job control document and set the envoy images with the
@@ -357,8 +348,7 @@ class BenchmarkRunner(object):
     job_control_list = []
 
     if len(envoy_images) < 2:
-      raise base_benchmark.BenchmarkError(
-          f"Missing an image name for benchmark: {envoy_images}")
+      raise base_benchmark.BenchmarkError(f"Missing an image name for benchmark: {envoy_images}")
 
     for image_name in envoy_images:
       # Create a new Job Control object for each image being tested
@@ -367,8 +357,7 @@ class BenchmarkRunner(object):
 
     return job_control_list
 
-  def _create_symlink_for_test_artifacts(self, output_dir: str,
-                                         image_tag: str) -> None:
+  def _create_symlink_for_test_artifacts(self, output_dir: str, image_tag: str) -> None:
     """Create a symlink linking the artifacts for easy identification.
 
     Creates a symlink named with the value of 'image_tag' which points to the
@@ -411,11 +400,9 @@ class BenchmarkRunner(object):
     """
     if self._control.remote:
       # Kick things off in parallel
-      raise NotImplementedError(
-          "Remote benchmarks have not been implemented yet")
+      raise NotImplementedError("Remote benchmarks have not been implemented yet")
 
     bar = '=' * 20
     for benchmark in self._test:
-      log.info(f"{bar} Running {benchmark.get_name()} for "
-               f"{benchmark.get_image()} {bar}")
+      log.info(f"{bar} Running {benchmark.get_name()} for " f"{benchmark.get_image()} {bar}")
       benchmark.execute_benchmark()

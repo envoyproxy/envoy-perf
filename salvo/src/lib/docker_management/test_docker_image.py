@@ -9,6 +9,7 @@ from unittest import mock
 
 from src.lib.docker_management import docker_image
 
+
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'pull')
 def test_pull_image(mock_pull, mock_list_images):
@@ -21,11 +22,13 @@ def test_pull_image(mock_pull, mock_list_images):
   container = new_docker_image.pull_image("amazonlinux:2")
   assert container is not None
 
+
 def pull_exceptions_side_effect(image_name):
   if image_name == 'NotFound':
     raise docker.errors.ImageNotFound("image_not_found")
   if image_name == 'HttpError':
     raise requests.exceptions.HTTPError("http_retrieval_failed")
+
 
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'pull')
@@ -50,6 +53,7 @@ def test_pull_image_fail(mock_pull, mock_list_images):
   assert not container
   assert str(http_error.value) == "http_retrieval_failed"
 
+
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'get')
 def test_pull_image_return_existing(mock_pull, mock_list_images):
@@ -63,6 +67,7 @@ def test_pull_image_return_existing(mock_pull, mock_list_images):
   container = new_docker_image.pull_image("amazonlinux:2")
   assert container is not None
 
+
 @mock.patch.object(docker.models.images.ImageCollection, 'list')
 def test_list_images(mock_list_images):
   """Verify that we can list all existing cached docker images."""
@@ -74,6 +79,7 @@ def test_list_images(mock_list_images):
   new_docker_image = docker_image.DockerImage()
   images = new_docker_image.list_images()
   assert images == expected_image_tags
+
 
 @mock.patch('docker.from_env')
 def test_get_client(mock_docker):
@@ -101,25 +107,25 @@ def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
 
   new_docker_image = docker_image.DockerImage()
   run_parameters = docker_image.DockerRunParameters(
-    environment={},
-    command='bash',
-    volumes={},
-    network_mode='host',
-    tty=False,
+      environment={},
+      command='bash',
+      volumes={},
+      network_mode='host',
+      tty=False,
   )
   assert new_docker_image.run_image('test_image', run_parameters) == \
       mock_docker_output
-  mock_docker_run.assert_called_once_with('test_image', stdout=True,
-      stderr=True, detach=False, **run_parameters._asdict())
+  mock_docker_run.assert_called_once_with('test_image',
+                                          stdout=True,
+                                          stderr=True,
+                                          detach=False,
+                                          **run_parameters._asdict())
+
 
 def test_list_processes():
   """Verify that we can list running images."""
 
-  expected_name_list = [
-      "prefix/image_1",
-      "prefix/image_2",
-      "prefix/image_3"
-  ]
+  expected_name_list = ["prefix/image_1", "prefix/image_2", "prefix/image_3"]
 
   expected_image_list = []
   for image_name in expected_name_list:
@@ -136,6 +142,7 @@ def test_list_processes():
     image_list = new_docker_image.list_processes()
     image_list_mock.assert_called_once_with(filters=image_filter)
     assert image_list == expected_name_list
+
 
 def test_stop_image():
   """Verify that we invoke the proper call to stop a docker image."""
@@ -154,6 +161,7 @@ def test_stop_image():
 
     image_get_mock.assert_called_once_with(test_image_name)
     mock_container.stop.assert_called_once()
+
 
 if __name__ == '__main__':
   raise SystemExit(pytest.main(['-s', '-v', __file__]))

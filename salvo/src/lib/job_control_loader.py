@@ -32,8 +32,7 @@ def _load_json_doc(filename: str) -> proto_control.JobControl:
   except FileNotFoundError as file_not_found:
     log.exception(f"Unable to load {filename}: {file_not_found}")
   except json_format.Error as json_parse_error:
-    log.exception(
-        f"Unable to parse JSON contents {filename}: {json_parse_error}")
+    log.exception(f"Unable to parse JSON contents {filename}: {json_parse_error}")
 
   return contents
 
@@ -56,15 +55,14 @@ def _load_yaml_doc(filename: str) -> proto_control.JobControl:
   try:
     with open(filename, 'r') as yaml_doc:
       contents = yaml.load(yaml_doc.read())
-      contents = json_format.Parse(
-          json.dumps(contents), proto_control.JobControl())
+      contents = json_format.Parse(json.dumps(contents), proto_control.JobControl())
   except FileNotFoundError as file_not_found:
     log.exception(f"Unable to load {filename}: {file_not_found}")
   except json_format.Error as yaml_parse_error:
-    log.exception(
-        f"Unable to parse YAML contents {filename}: {yaml_parse_error}")
+    log.exception(f"Unable to parse YAML contents {filename}: {yaml_parse_error}")
 
   return contents
+
 
 def load_control_doc(filename: str) -> proto_control.JobControl:
   """Return a JobControl object from the identified filename.
@@ -104,4 +102,3 @@ def load_control_doc(filename: str) -> proto_control.JobControl:
         log.info(f"Parsing {filename} as YAML failed.")
 
   return contents
-

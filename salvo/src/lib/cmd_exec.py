@@ -12,10 +12,13 @@ import tempfile
 log = logging.getLogger(__name__)
 
 # Encapsulates parameters and their values required to execute a command
-CommandParameters = typing.NamedTuple("CommandParameters", [
-    ('cwd', str), # A string specifying the working directory of the executing
-                  # command
-])
+CommandParameters = typing.NamedTuple(
+    "CommandParameters",
+    [
+        ('cwd', str),  # A string specifying the working directory of the executing
+        # command
+    ])
+
 
 def run_command(cmd: str, parameters: CommandParameters) -> str:
   """Run the specified command returning its output to the caller.
@@ -42,16 +45,13 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
   # failed command execution.
   output = ''
   params = parameters._asdict()
-  tmpfile = tempfile.TemporaryFile(
-      mode='w+', dir=params['cwd'], prefix='cmd_output'
-  )
+  tmpfile = tempfile.TemporaryFile(mode='w+', dir=params['cwd'], prefix='cmd_output')
 
   try:
     log.debug(f"Executing command: [{cmd}] with args [{parameters._asdict()}]")
     cmd_array = shlex.split(cmd)
 
-    subprocess.check_call(cmd_array, stdout=tmpfile, stderr=tmpfile,
-                          **parameters._asdict())
+    subprocess.check_call(cmd_array, stdout=tmpfile, stderr=tmpfile, **parameters._asdict())
 
   except subprocess.CalledProcessError as process_error:
     log.error(f"Unable to execute [{cmd}]: {process_error}")
@@ -69,6 +69,7 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
     log.debug(f"Returning output: [{output}]")
 
   return output
+
 
 def run_check_command(cmd: str, parameters: CommandParameters) -> None:
   """Run the specified command checking its exit status.
@@ -88,8 +89,7 @@ def run_check_command(cmd: str, parameters: CommandParameters) -> None:
   try:
     log.debug(f"Executing command: [{cmd}] with args [{parameters._asdict()}]")
     cmd_array = shlex.split(cmd)
-    subprocess.check_call(
-        cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
+    subprocess.check_call(cmd_array, stderr=subprocess.STDOUT, **parameters._asdict())
 
   except subprocess.CalledProcessError as process_error:
     log.error(f"Unable to execute [{cmd}]: {process_error}")
