@@ -2,19 +2,26 @@
 
 ## What is Salvo
 
-This is a framework that abstracts executing multiple benchmarks of the Envoy Proxy using [Nighthawk](https://github.com/envoyproxy/nighthawk).
+This is a framework that abstracts executing multiple benchmarks of the Envoy Proxy using 
+[Nighthawk](https://github.com/envoyproxy/nighthawk).
 
 ## Goals of Salvo
 
-Salvo allows Envoy developers to perform A/B testing to monitor performance change of Envoy. Salvo provides the local execution mode allowing developers to run a benchmark on their own machine and also provides the remote execution mode to run a benchmark on a remote machine, such as a remote CI system.
+Salvo allows Envoy developers to perform A/B testing to monitor performance change of Envoy. Salvo
+provides the local execution mode allowing developers to run a benchmark on their own machine and
+also provides the remote execution mode to run a benchmark on a remote machine, such as a remote CI
+system.
 
 ## About this section
 
-This section will give a brief overview of Salvo's building, usage and results. If you want to dive into using Salvo to measure Envoy's performance change with an A/B testing, please read the detailed workflow documentation: [ENVOY_DEVELOP_WORKFLOW.md](./ENVOY_DEVELOP_WORKFLOW.md)
+This section will give a brief overview of Salvo's building, usage and results. If you want to dive
+into using Salvo to measure Envoy's performance change with an A/B testing, please read the detailed
+workflow documentation: [ENVOY_DEVELOP_WORKFLOW.md](./ENVOY_DEVELOP_WORKFLOW.md)
 
 ## Dependencies
 
-The [`install_deps.sh`](./install_deps.sh) script can be used to install any dependencies required by Salvo.
+The [`install_deps.sh`](./install_deps.sh) script can be used to install any dependencies required
+by Salvo.
 
 ## Building Salvo
 
@@ -26,15 +33,21 @@ bazel build //...
 
 ## Benchmark Test Cases for Salvo
 
-Benchmark test cases for Salvo are defined as Python files with test cases written in pytest framework, here is an example: https://github.com/envoyproxy/nighthawk/blob/main/benchmarks/test/test_discovery.py. Users can provide their own Python files of test cases into Salvo.
+Benchmark test cases for Salvo are defined as Python files with test cases written in pytest
+framework, here is an example:
+https://github.com/envoyproxy/nighthawk/blob/main/benchmarks/test/test_discovery.py. Users can
+provide their own Python files of test cases into Salvo.
 
 ## Control Documents
 
-The control document defines the data needed to execute a benchmark. We support the fully dockerized benchmark, the scavenging benchmark and the binary benchmark. 
+The control document defines the data needed to execute a benchmark. We support the fully dockerized
+benchmark, the scavenging benchmark and the binary benchmark. 
 
 ### Fully Dockerized Benchmark
 
-The Fully Dockerized Benchmark discoveres user supplied tests for execution and uses docker images to run the tests. In the example below, the user supplied tests files are located in `/home/ubuntu/nighthawk_tests` and are mapped to a volume in the docker container.
+The Fully Dockerized Benchmark discoveres user supplied tests for execution and uses docker images
+to run the tests. In the example below, the user supplied tests files are located in
+`/home/ubuntu/nighthawk_tests` and are mapped to a volume in the docker container.
 
 To run the dockerized benchmark, create a file with the following example contents:
 
@@ -82,9 +95,13 @@ images:
 
 `environment.outputDir`: The directory where benchmark results will be placed.
 
-`environment.testDir`: The directory where test case files placed, it's optional. If you want to provide your own test cases, put test files like [this one](https://github.com/envoyproxy/nighthawk/blob/main/benchmarks/test/test_discovery.py) into the testDir.
+`environment.testDir`: The directory where test case files placed, it's optional. If you want to
+provide your own test cases, put test files like
+[this one](https://github.com/envoyproxy/nighthawk/blob/main/benchmarks/test/test_discovery.py)
+into the testDir.
 
-`environment.testVersion`: Specify the ip address family to use, choose from "IPV_V4ONLY", "IPV_V6ONLY" and "ALL".
+`environment.testVersion`: Specify the ip address family to use, choose from "IPV_V4ONLY",
+"IPV_V6ONLY" and "ALL".
 
 `environment.envoyPath`: Envoy is called 'Envoy' in the Envoy Docker image.
 
@@ -94,13 +111,25 @@ images:
 
 `images.nighthawkBinaryImage`: Nighthawk tools will be sourced from this Docker image.
 
-`images.envoyImage`: The specific Envoy docker image to test. If only `images.envoyImage` is defined, we will find the previous image built from the prior tag. If you want to specify additional images for which we benchmark for analysis, specify a list of image strings at `images.additional_envoy_images` filed, eg: [ "envoyproxy/envoy-dev:7da2adee8962c202999e96cb41e899deb34faf48",..]. If you only want to test the specified envoy image, specify `images.test_single_image` as `True`. `images.additional_envoy_images` and `images.test_single_image` cannot be defined at the same time.
+`images.envoyImage`: The specific Envoy docker image to test. If only `images.envoyImage` is
+defined, we will find the previous image built from the prior tag. If you want to specify additional
+images for which we benchmark for analysis, specify a list of image strings at
+`images.additional_envoy_images` filed,
+eg: [ "envoyproxy/envoy-dev:7da2adee8962c202999e96cb41e899deb34faf48",..].
+If you only want to test the specified envoy image, specify `images.test_single_image` as `True`.
+`images.additional_envoy_images` and `images.test_single_image` cannot be defined at the same time.
 
-In both examples above, the envoy image being tested is a specific tag. This tag can be replaced with "latest" to test the most recently created image against the previous image built from the prior tag. If a commit hash is used, we find the previous commit hash and benchmark that container. In summary, tags are compared to tags, hashes are compared to hashes.
+In both examples above, the envoy image being tested is a specific tag. This tag can be replaced
+with "latest" to test the most recently created image against the previous image built from the
+prior tag. If a commit hash is used, we find the previous commit hash and benchmark that container.
+In summary, tags are compared to tags, hashes are compared to hashes.
 
 ### Scavenging Benchmark
 
-The Scavenging Benchmark builds and runs [Nighthawk benchmark testsuite](https://github.com/envoyproxy/nighthawk/tree/main/benchmarks) on the local machine and uses a specified Envoy image for testing. Tests are discovered in the specified directory in the Environment object:
+The Scavenging Benchmark builds and runs
+[Nighthawk benchmark testsuite](https://github.com/envoyproxy/nighthawk/tree/main/benchmarks) on the
+local machine and uses a specified Envoy image for testing. Tests are discovered in the specified
+directory in the Environment object:
 
 ```yaml
 remote: false
@@ -124,11 +153,16 @@ source:
 
 `source.identity`: Specify whether this source location is Envoy or Nighthawk.
 
-In this example, the v1.21.0 Envoy tag is pulled and an Envoy image generated where the Envoy binary has profiling enabled. The user may specify option strings supported by bazel to adjust the compilation process.
+In this example, the v1.21.0 Envoy tag is pulled and an Envoy image generated where the Envoy binary
+has profiling enabled. The user may specify option strings supported by bazel to adjust the
+compilation process.
 
 ### Binary Benchmark
 
-The binary benchmark runs an envoy binary as the test target.  The binary is compiled from the source commit specified. As is the case with other benchmarks as well, the previous commit is deduced and a benchmark is executed for these code points. All Nighthawk components are built from source. This benchmark runs on the local host directly.
+The binary benchmark runs an envoy binary as the test target.  The binary is compiled from the
+source commit specified. As is the case with other benchmarks as well, the previous commit is
+deduced and a benchmark is executed for these code points. All Nighthawk components are built from
+source. This benchmark runs on the local host directly.
 
 Example Job Control specification for executing a binary benchmark:
 
@@ -155,9 +189,16 @@ source:
 
 `binaryBenchmark`: It will run binary benchmarks.
 
-`source.commit_hash`: Specify a commit hash if applicable. If not specified we will determine this from the source tree. We will also use this field to identify the corresponding Nighthawk or Envoy image used for the benchmark. If only `source.commit_hash`is defined, we will find the previous commit hash. If you want to specify additional commit hashes for which we benchmark for analysis, specify a list of commit hashes strings at `source.additional_hashes` filed, eg: [ "b435d3a3baa39f1a15cd68625da085cfa16ae957",..]. If you only want to test the specified envoy commit, specify `source.test_single_commit` as `True`. `source.additional_hashes` and `source.test_single_commit` cannot be defined at the same time.
+`source.commit_hash`: Specify a commit hash if applicable. If not specified we will determine this
+from the source tree. We will also use this field to identify the corresponding Nighthawk or Envoy
+image used for the benchmark. If only `source.commit_hash`is defined, we will find the previous
+commit hash. If you want to specify additional commit hashes for which we benchmark for analysis,
+specify a list of commit hashes strings at `source.additional_hashes` filed, eg: [ "b435d3a3baa39f1a15cd68625da085cfa16ae957",..]. If you only want to test the specified envoy commit,
+specify `source.test_single_commit` as `True`. `source.additional_hashes` and
+`source.test_single_commit` cannot be defined at the same time.
 
-`source.BazelOption`: A list of compiler options and flags to supply to bazel when building the source of Nighthawk or Envoy. 
+`source.BazelOption`: A list of compiler options and flags to supply to bazel when building the
+source of Nighthawk or Envoy. 
 
 
 ## Running Salvo
@@ -168,7 +209,8 @@ The resulting 'binary' in the bazel-bin directory can then be invoked with a job
 bazel-bin/salvo --job <path to>/demo_jobcontrol.yaml
 ```
 
-Salvo creates a symlink in the local directory to the location of the  output artifacts for each Envoy version tested.
+Salvo creates a symlink in the local directory to the location of the  output artifacts for each
+Envoy version tested.
 
 ## Example Benchmark outputs of Salvo
 
@@ -260,7 +302,8 @@ upstream_rq_total                       30000       1000.00
 
 ## Testing Salvo
 
-From the envoy-perf project directory, run the do_ci.sh script with the "test" argument. Since this installs packages packages, it will need to be run as root.
+From the envoy-perf project directory, run the do_ci.sh script with the "test" argument. Since this
+installs packages packages, it will need to be run as root.
 
 To test Salvo itself, change into the salvo directory and use:
 
