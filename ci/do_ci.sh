@@ -34,6 +34,35 @@ function test_salvo() {
   popd
 }
 
+# Check the Salvo python files format
+function check_format() {
+  echo "Checking the Salvo python files format"
+  pushd salvo
+
+  tools/format_python_tools.sh check
+
+  popd
+}
+
+# Fix the Salvo python files format
+function fix_format() {
+  echo "Fixing the Salvo python files format"
+  pushd salvo
+
+  tools/format_python_tools.sh fix 
+
+  popd
+}
+
+# Calacute Salvo test coverage
+function coverage() {
+  echo "Calcuting the Salvo test coverage"
+  pushd salvo
+
+  tools/coverage.sh
+
+  popd
+}
 
 # Set the build target. If no parameters are specified
 # we default to "build"
@@ -45,6 +74,15 @@ case $build_target in
     ;;
   "test")
     test_salvo
+    ;;
+  "check_format")
+    check_format
+    ;;
+  "fix_format")
+    fix_format
+    ;;
+  "coverage")
+    coverage
     ;;
   *)
     ;;

@@ -18,6 +18,20 @@ jobs:
     steps:
       - checkout
       - run: ci/do_ci.sh test
+  check-format:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh check_format
+  coverage:
+    docker:
+      - image: *envoy-build-image
+    resource_class: xlarge
+    steps:
+      - checkout
+      - run: ci/do_ci.sh coverage
 
 workflows:
   version: 2
