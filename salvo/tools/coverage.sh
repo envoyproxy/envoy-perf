@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-MINIMUM_THRESHOLD=97.0
+MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.0}
 
 # This script executes all tests and then evaluates the code coverage
 # for Salvo.  All individual coverage files are merged to provide one

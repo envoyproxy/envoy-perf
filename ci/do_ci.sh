@@ -56,9 +56,10 @@ function fix_format() {
 
 # Calacute Salvo test coverage
 function coverage() {
-  echo "Calcuting the Salvo test coverage"
+  echo "Calcuting the Salvo unit tests coverage"
   pushd salvo
 
+  export MINIMUM_THRESHOLD=99
   tools/coverage.sh
 
   popd
@@ -85,6 +86,8 @@ case $build_target in
     coverage
     ;;
   *)
+    echo "must be one of [build, test, check_format, fix_format, coverage]"
+    exit 1
     ;;
 esac
 

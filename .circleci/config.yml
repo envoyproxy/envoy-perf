@@ -25,7 +25,7 @@ jobs:
     steps:
       - checkout
       - run: ci/do_ci.sh check_format
-  coverage:
+  unit_tests_coverage:
     docker:
       - image: *envoy-build-image
     resource_class: xlarge
