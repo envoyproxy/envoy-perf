@@ -57,8 +57,9 @@ COVERAGE_PERCENTAGE=$(lcov --summary coverage/salvo.dat 2>&1 | grep lines | awk 
 
 if (( $(echo "${COVERAGE_PERCENTAGE} < ${MINIMUM_THRESHOLD}" | bc -l) ))
 then
-  echo "Test coverage percentage has dipped below ${MINIMUM_THRESHOLD}%"
+  echo "Test coverage percentage ${COVERAGE_PERCENTAGE}% has dipped below ${MINIMUM_THRESHOLD}%"
   exit 1
 fi
 
+echo "Tests coverage ${COVERAGE_PERCENTAGE}% was higher than or equest to ${MINIMUM_THRESHOLD}%"
 exit 0
