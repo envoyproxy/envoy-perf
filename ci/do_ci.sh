@@ -49,6 +49,7 @@ function fix_format() {
   echo "Fixing the Salvo python files format"
   pushd salvo
 
+  install_deps
   tools/format_python_tools.sh fix 
 
   popd
@@ -59,7 +60,9 @@ function coverage() {
   echo "Calcuting the Salvo unit tests coverage"
   pushd salvo
 
+  ehco "Setting the minimum threshold of coverage to 99%"
   export MINIMUM_THRESHOLD=99
+  install_deps
   tools/coverage.sh
 
   popd
