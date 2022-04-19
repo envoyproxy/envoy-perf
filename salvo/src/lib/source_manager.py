@@ -14,9 +14,9 @@ log = logging.getLogger(__name__)
    source code needed to build Envoy and NightHawk
 """
 _KNOWN_REPOSITORIES = {
-    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:   \
+    proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY:    \
       constants.ENVOY_GITHUB_REPO,
-    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:   \
+    proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:    \
       constants.NIGHTHAWK_GITHUB_REPO
 }
 
