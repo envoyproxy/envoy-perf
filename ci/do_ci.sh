@@ -60,8 +60,8 @@ function coverage() {
   echo "Calcuting the Salvo unit tests coverage"
   pushd salvo
 
-  echo "Setting the minimum threshold of coverage to 99%"
   export MINIMUM_THRESHOLD=99
+  echo "Setting the minimum threshold of coverage to ${MINIMUM_THRESHOLD}%"
   install_deps
   tools/coverage.sh
 
