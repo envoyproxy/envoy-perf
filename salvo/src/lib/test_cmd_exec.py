@@ -64,8 +64,7 @@ def test_run_command_fail(mock_check_call):
     output = cmd_exec.run_command(cmd, cmd_parameters)
 
   assert not output
-  assert f"Command \'{cmd}\' returned non-zero exit status" in \
-    str(process_error.value)
+  assert f"Command \'{cmd}\' returned non-zero exit status" in str(process_error.value)
 
 
 @mock.patch('subprocess.check_call')
@@ -83,8 +82,7 @@ def test_run_check_command_fail(mock_check_call):
     output = cmd_exec.run_check_command(cmd, cmd_parameters)
 
   assert not output
-  assert f"Command \'{cmd}\' returned non-zero exit status" in \
-    str(process_error.value)
+  assert f"Command \'{cmd}\' returned non-zero exit status" in str(process_error.value)
 
 
 if __name__ == '__main__':

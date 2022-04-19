@@ -115,8 +115,7 @@ class BenchmarkRunner(object):
 
     return job_control_list
 
-  def _generate_job_control_for_binaries(self) \
-    -> List[proto_control.JobControl]:
+  def _generate_job_control_for_binaries(self) -> List[proto_control.JobControl]:
     """Determine the required source configurations needed for a binary benchmark.
 
     Find the specified version of Nighthawk, Envoy, and all additional Envoy
@@ -139,8 +138,8 @@ class BenchmarkRunner(object):
     if not nighthawk_source:
       raise BenchmarkRunnerError("No Nighthawk sources specified")
 
-    log.info("Using Nighthawk sources at " \
-      + getattr(nighthawk_source, nighthawk_source.WhichOneof('source_location')))
+    log.info("Using Nighthawk sources at " +
+             getattr(nighthawk_source, nighthawk_source.WhichOneof('source_location')))
 
     base_envoy_source = self._source_manager.get_source_repository(
         proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
@@ -156,9 +155,7 @@ class BenchmarkRunner(object):
 
     return jobs
 
-  def _pull_or_build_nh_benchmark_image(self, \
-                                        images: proto_image.DockerImages) \
-                                        -> None:
+  def _pull_or_build_nh_benchmark_image(self, images: proto_image.DockerImages) -> None:
     """Attempt to pull the NightHawk Benchmark Image.  Build the image if
        unavailable.
 
@@ -282,8 +279,8 @@ class BenchmarkRunner(object):
 
     return new_job_control
 
-  def _create_new_source_job_control(self, nh_source, envoy_source, envoy_hash) \
-    -> proto_control.JobControl:
+  def _create_new_source_job_control(self, nh_source, envoy_source,
+                                     envoy_hash) -> proto_control.JobControl:
     """Duplicate the job control for a specific benchmark run.
     This method creates a new job control object for a single binary benchmark
     Args:

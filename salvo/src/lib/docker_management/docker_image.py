@@ -123,8 +123,7 @@ class DockerImage():
   def list_processes(self) -> List[str]:
     """List running containers."""
     image_filter = {'status': 'running'}
-    return [container.name for container in \
-        self._client.containers.list(filters=image_filter)]
+    return [container.name for container in self._client.containers.list(filters=image_filter)]
 
   def stop_image(self, image_name: str) -> None:
     """Stops a running container."""

@@ -73,8 +73,7 @@ def test_list_images(mock_list_images):
   """Verify that we can list all existing cached docker images."""
 
   expected_image_tags = ['image:1', 'image:2', 'image:3']
-  mock_list_images.return_value = \
-    map(lambda tag: mock.Mock(tags=[tag]), expected_image_tags)
+  mock_list_images.return_value = map(lambda tag: mock.Mock(tags=[tag]), expected_image_tags)
 
   new_docker_image = docker_image.DockerImage()
   images = new_docker_image.list_images()

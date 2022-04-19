@@ -74,7 +74,7 @@ class SourceManager(object):
 
     result = envoy_source_tree.pull()
     if not result:
-      log.error(f"Unable to pull source from origin.  Copying source instead")
+      log.error("Unable to pull source from origin.  Copying source instead")
       result = envoy_source_tree.copy_source_directory()
 
     if not result:
@@ -146,8 +146,7 @@ class SourceManager(object):
       raise SourceManagerError(
           '"additional_envoy_image" cannot be set with "test_single_image" enabled')
     if additional_images:
-      additional_tags = [_extract_tag_from_image(image) \
-          for image in images.additional_envoy_images]
+      additional_tags = [_extract_tag_from_image(image) for image in images.additional_envoy_images]
 
       # Do not add hashes that we have already discovered
       hash_set = hash_set.union(additional_tags)
@@ -251,9 +250,9 @@ class SourceManager(object):
 
     return set([previous_hash, commit_hash])
 
-  def get_source_repository(self, \
-      source_id: proto_source.SourceRepository.SourceIdentity) \
-      -> proto_source.SourceRepository:
+  def get_source_repository(
+      self,
+      source_id: proto_source.SourceRepository.SourceIdentity) -> proto_source.SourceRepository:
     """Find and return the source repository object with the specified id
 
     Args:
@@ -286,9 +285,8 @@ class SourceManager(object):
 
     return source
 
-  def _create_source_tree(self, \
-      source_id: proto_source.SourceRepository.SourceIdentity) \
-      -> source_tree.SourceTree:
+  def _create_source_tree(
+      self, source_id: proto_source.SourceRepository.SourceIdentity) -> source_tree.SourceTree:
     """Creates a source tree object from a SourceRepository.
 
     Args:
@@ -301,9 +299,8 @@ class SourceManager(object):
     repo = self.get_source_repository(source_id)
     return source_tree.SourceTree(repo)
 
-  def get_source_tree(self, \
-      source_id: proto_source.SourceRepository.SourceIdentity) \
-      -> source_tree.SourceTree:
+  def get_source_tree(
+      self, source_id: proto_source.SourceRepository.SourceIdentity) -> source_tree.SourceTree:
     """Returns the source tree object identified by source_id.
 
     Args:
@@ -323,9 +320,8 @@ class SourceManager(object):
 
     return self._source_tree[source_id]
 
-  def get_build_options(self, \
-      source_id: proto_source.SourceRepository.SourceIdentity) \
-      -> proto_source.BazelOption:
+  def get_build_options(
+      self, source_id: proto_source.SourceRepository.SourceIdentity) -> proto_source.BazelOption:
     """Determine whether build options are specified in the control object
     and return them
 
@@ -350,9 +346,7 @@ class SourceManager(object):
 
     return bazel_options
 
-  def have_build_options(self, \
-      source_id: proto_source.SourceRepository.SourceIdentity) \
-      -> bool:
+  def have_build_options(self, source_id: proto_source.SourceRepository.SourceIdentity) -> bool:
     """Determine whether build options are specified in the control object
        and return a boolean.  This is used to determine whether we build
        images or use the already available images

@@ -114,8 +114,7 @@ def get_envoy_image_prefix(image_hash: str) -> str:
   Returns:
     The prefix used to generate the full Envoy docker image name
   """
-  return "envoyproxy/envoy" if source_tree.is_tag(image_hash) \
-    else "envoyproxy/envoy-dev"
+  return "envoyproxy/envoy" if source_tree.is_tag(image_hash) else "envoyproxy/envoy-dev"
 
 
 def build_nighthawk_benchmark_image_from_source(manager: source_manager.SourceManager) -> None:
