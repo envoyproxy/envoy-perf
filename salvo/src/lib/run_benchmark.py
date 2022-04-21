@@ -23,15 +23,11 @@ log = logging.getLogger(__name__)
 
 
 class BenchmarkRunnerError(Exception):
-  """An error raised if if an unrecoverable condition arises when executing
-     a benchmark.
-  """
+  """An error raised if if an unrecoverable condition arises when executing a benchmark."""
 
 
 class BenchmarkRunner(object):
-  """This class contains the logic to validate input artifacts and
-     perform a benchmark.
-  """
+  """This class contains the logic to validate input artifacts and perform a benchmark."""
 
   def __init__(self, control: proto_control.JobControl) -> None:
     """Initialize the benchmark object.
@@ -61,7 +57,6 @@ class BenchmarkRunner(object):
     Raises:
       NotImplementedError: for tests and/or modes that are not yet implemented.
     """
-
     current_benchmark_name = "Unspecified Benchmark"
 
     if self._control.scavenging_benchmark:
@@ -99,7 +94,6 @@ class BenchmarkRunner(object):
     Find the commit hashes or tags for all envoy images, build images if
     necessary.
     """
-
     # Get the images that we are benchmarking. Source Manager will
     # determine the commit hashes for the images used for benchmarks
     image_hashes = self._source_manager.get_envoy_hashes_for_benchmark()
@@ -124,7 +118,6 @@ class BenchmarkRunner(object):
     Raises:
       BenchmarkRunnerError: when multiple competing repositories of Envoy/Nighthawk are specified.
     """
-
     # Find the specified version of Nighthawk and use it for all job controls
     nighthawk_source = None
 
@@ -156,13 +149,11 @@ class BenchmarkRunner(object):
     return jobs
 
   def _pull_or_build_nh_benchmark_image(self, images: proto_image.DockerImages) -> None:
-    """Attempt to pull the NightHawk Benchmark Image.  Build the image if
-       unavailable.
+    """Attempt to pull the NightHawk Benchmark Image. Build the image if unavailable.
 
-       Args:
-        images: the DockerImages appearing in the control object
+    Args:
+      images: the DockerImages appearing in the control object
     """
-
     pull_result = False
     try:
       image_manager = docker_image.DockerImage()
@@ -175,13 +166,11 @@ class BenchmarkRunner(object):
       docker_image_builder.build_nighthawk_benchmark_image_from_source(self._source_manager)
 
   def _pull_or_build_nh_binary_image(self, images: proto_image.DockerImages) -> None:
-    """Attempt to pull the NightHawk Binary Image.  Build it if it is
-       unavailable.
+    """Attempt to pull the NightHawk Binary Image.  Build it if it is unavailable.
 
-      Args:
-        images: the DockerImages appearing in the control object
+    Args:
+      images: the DockerImages appearing in the control object
     """
-
     pull_result = False
     try:
       image_manager = docker_image.DockerImage()
@@ -226,7 +215,6 @@ class BenchmarkRunner(object):
       a Set of envoy image tags required for the benchmark:
         eg ["envoyproxy/envoy:v1.X.X", ...]
     """
-
     have_build_options = self._source_manager.have_build_options(
         proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
 
@@ -266,7 +254,6 @@ class BenchmarkRunner(object):
     Returns:
       A job control document containing the hash and image name being tested
     """
-
     image_hash = envoy_image.split(':')[-1]
     output_dir = os.path.join(self._control.environment.output_dir, image_hash)
 
@@ -289,7 +276,6 @@ class BenchmarkRunner(object):
     Returns:
       A job control document containing the Nighthawk and Envoy source specified
     """
-
     # Generate a unique identifier for the individual run
     # 1. Specifies whether source is provided via source_path or source_url
     # 2. Specifies the primary commit hash or tag, if provided
@@ -341,7 +327,6 @@ class BenchmarkRunner(object):
     Raises:
       BenchmarkError: if there are less than 2 images detected
     """
-
     job_control_list = []
 
     if len(envoy_images) < 2:
@@ -370,7 +355,6 @@ class BenchmarkRunner(object):
     Returns:
       None
     """
-
     if os.path.islink(image_tag) and output_dir == os.readlink(image_tag):
       return
 

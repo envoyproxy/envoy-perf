@@ -1,7 +1,4 @@
-"""
-Test the fully dockerized benchmark class
-"""
-
+"""Test the fully dockerized benchmark class"""
 import pytest
 import subprocess
 from unittest.mock import patch
@@ -103,8 +100,7 @@ def test_no_source_to_build_nh():
 @patch(_BUILD_NIGHTHAWK_BENCHMARKS)
 @patch(_BUILD_NIGHTHAWK_BINARIES)
 def test_no_valid_envoy_binary(mock_nh_bin_build, mock_nh_bench_build):
-  """Validate that we fail when Envoy sources are not present,
-  and no binary is specified.
+  """Validate that we fail when Envoy sources are not present, and no binary is specified.
 
   We expect an unhandled exception to surface from _prepare_envoy()
   """
@@ -128,8 +124,8 @@ def test_no_valid_envoy_binary(mock_nh_bin_build, mock_nh_bench_build):
 @patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
 def test_envoy_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
-  """Validate that an exception is raised which halts the benchmark execution
-  when the Envoy build fails
+  """Validate that an exception is raised which halts the benchmark execution when the Envoy build \
+  fails.
 
   We expect an unhandled exception to surface from _prepare_envoy
   """
@@ -158,8 +154,8 @@ def test_envoy_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock
 @patch(_BUILD_ENVOY_BINARY)
 @patch('src.lib.cmd_exec.run_command')
 def test_nh_build_failure(mock_cmd, mock_envoy_build, mock_nh_bin_build, mock_nh_bench_build):
-  """Validate that an exception is raised which halts the benchmark execution
-  when the Nighthawk build fails
+  """Validate that an exception is raised which halts the benchmark execution when the Nighthawk \
+  build fails.
 
   We expect an unhandled exception to surface from _prepare_nighthawk
   """

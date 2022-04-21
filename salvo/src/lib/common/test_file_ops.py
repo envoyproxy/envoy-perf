@@ -1,6 +1,4 @@
-"""
-Test source_tree operations needed for executing benchmarks
-"""
+"""Test source_tree operations needed for executing benchmarks."""
 import pytest
 
 import os
@@ -34,12 +32,14 @@ key3:
 
 
 def _validate_test_data(file_data):
+  """Validate test data."""
   assert file_data
   assert all(map(lambda key: key in file_data, ["key", "key2", "key3"]))
   assert file_data['key3'] == ['but', 'this', 'one', 'is', 'mine']
 
 
 def test_open_json():
+  """Verify we can open json file."""
   with tempfile.NamedTemporaryFile() as temp_json:
     with open(temp_json.name, 'w') as temp_data:
       temp_data.write(_TEST_JSON)
@@ -49,6 +49,7 @@ def test_open_json():
 
 
 def test_open_yaml():
+  """Verify we can open yaml file."""
   with tempfile.NamedTemporaryFile() as temp_yaml:
     with open(temp_yaml.name, 'w') as temp_data:
       temp_data.write(_TEST_YAML)
@@ -58,6 +59,7 @@ def test_open_yaml():
 
 
 def test_open_yaml_as_json():
+  """Verify it will raise an error when decoding yaml file as json format."""
   with tempfile.NamedTemporaryFile() as temp_json:
     with open(temp_json.name, 'w') as temp_data:
       temp_data.write(_TEST_YAML)
@@ -69,6 +71,7 @@ def test_open_yaml_as_json():
 
 
 def test_open_json_as_yaml():
+  """Verify it will raise an error when decoding json file as yaml format."""
   with tempfile.NamedTemporaryFile() as temp_yaml:
     with open(temp_yaml.name, 'w') as temp_data:
       temp_data.write(_TEST_JSON)
@@ -78,6 +81,7 @@ def test_open_json_as_yaml():
 
 
 def test_delete_directory():
+  """Verify we can delete directory."""
   with mock.patch('shutil.rmtree') as magic_mock:
     file_ops.delete_directory('this_is_my_directory')
 
@@ -85,6 +89,7 @@ def test_delete_directory():
 
 
 def test_get_random_dir():
+  """Verify we can get random directory."""
   temp_path = file_ops.get_random_dir('my_test_path')
   assert temp_path
   parent_dir = os.path.dirname(temp_path.name)

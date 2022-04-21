@@ -1,6 +1,4 @@
-"""
-Test envoy building operations
-"""
+"""Test envoy building operations."""
 import pytest
 from unittest import mock
 
@@ -11,8 +9,7 @@ from src.lib import (constants, source_tree, source_manager)
 
 
 def _check_call_side_effect(args, parameters):
-  """Examine the incoming arguments for command execution and return the
-  expected or unexpected output.
+  """Examine the incoming arguments for command execution and return the expected or unexpected output.
 
   Args:
     args: The arguments supplied to the mocked function
@@ -21,7 +18,6 @@ def _check_call_side_effect(args, parameters):
     usually this returns a string containing the command output.  In
       some cases we may raise an exception.
   """
-
   assert 'cwd' in parameters._asdict()
 
   if args == "bazel clean":
@@ -87,8 +83,7 @@ def test_build_envoy_image_from_source(mock_copy_source, mock_checkout_hash, moc
 
 @mock.patch.object(source_manager.SourceManager, 'get_source_repository')
 def test_build_envoy_image_from_source_fail(mock_get_source_tree):
-  """Verify an exception is raised if the source identity is invalid"""
-
+  """Verify an exception is raised if the source identity is invalid."""
   nighthawk_source_repo = proto_source.SourceRepository(
       identity=proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK,
       source_path='/some_random_not_envoy_directory')
@@ -105,9 +100,7 @@ def test_build_envoy_image_from_source_fail(mock_get_source_tree):
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_stage_envoy(mock_run_command):
-  """Verify the commands used to stage the envoy binary for docker image
-  construction.
-  """
+  """Verify the commands used to stage the envoy binary for docker image construction."""
   mock_run_command.side_effect = _check_call_side_effect
 
   calls = [
@@ -127,9 +120,7 @@ def test_stage_envoy(mock_run_command):
 @mock.patch('glob.glob')
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_create_docker_image(mock_run_command, mock_glob):
-  """Verify that we issue the correct commands to build an envoy docker
-  image.
-  """
+  """Verify that we issue the correct commands to build an envoy docker image."""
   mock_run_command.side_effect = _check_call_side_effect
   mock_glob.return_value = ['docker_ignore_file1', 'docker_ignore_file2']
 
@@ -147,7 +138,6 @@ def test_create_docker_image(mock_run_command, mock_glob):
 
 def _generate_default_source_manager():
   """Build a default SourceRepository object."""
-
   control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   control.source.add(identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
                      source_path='/some_random_envoy_directory',

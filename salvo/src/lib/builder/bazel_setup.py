@@ -1,6 +1,4 @@
-"""
-This module sets up environment variables required to execute bazel salvo.
-"""
+"""This module sets up environment variables required to execute bazel salvo."""
 import os
 
 from src.lib import constants
@@ -25,7 +23,6 @@ def get_clang_dir() -> str:
 
 def setup_clang_env() -> None:
   """Set the environment variables to use clang as a compiler."""
-
   # Use CC from the environment if specified. If not, use clang
   # TODO: We need additional sanity checks to ensure that the binaries
   #       we are trying to use exist and fail fast if they are absent.

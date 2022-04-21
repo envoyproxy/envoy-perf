@@ -1,7 +1,4 @@
-"""
-Test the fully dockerized benchmark class
-"""
-
+"""Test the fully dockerized benchmark class"""
 import pytest
 from unittest import mock
 
@@ -15,7 +12,6 @@ from src.lib import generate_test_objects
 @mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
 def test_execute_benchmark_using_images_only(mock_run_image):
   """Validate we execute the benchmark with only images specified."""
-
   mock_run_image.return_value = b'benchmark_http_client output'
 
   # create a valid configuration defining images only for benchmark
@@ -40,8 +36,8 @@ def test_execute_benchmark_using_images_only(mock_run_image):
 
 
 def test_execute_benchmark_no_image_or_sources():
-  """Verify that the validation logic raises an exception since we are unable to
-  build a required Envoy image.
+  """Verify that the validation logic raises an exception since we are unable to build a required
+  Envoy image.
   """
   # create a valid configuration with a missing Envoy image
   job_control = generate_test_objects.generate_default_job_control()
@@ -63,10 +59,9 @@ def test_execute_benchmark_no_image_or_sources():
 
 @mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
 def test_execute_benchmark_with_envoy_source(mock_run_image):
-  """Validate that if sources are defined that enable us to build the Envoy
-  image we do not throw an exception.
+  """Validate that if sources are defined that enable us to build the Envoy image we do not throw an
+  exception.
   """
-
   mock_run_image.return_value = b'benchmark_http_client output'
 
   # create a valid configuration with a missing Envoy image
@@ -93,8 +88,8 @@ def test_execute_benchmark_with_envoy_source(mock_run_image):
 
 
 def test_execute_benchmark_missing_envoy_source():
-  """Validate that although sources are defined for NightHawk we raise an
-  exception due to the inability to build Envoy.
+  """Validate that although sources are defined for NightHawk we raise an exception due to the
+  inability to build Envoy.
   """
   # create a configuration with a missing Envoy image
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
@@ -117,8 +112,8 @@ def test_execute_benchmark_missing_envoy_source():
 
 
 def test_execute_benchmark_missing_nighthawk_binary_image():
-  """Validate that no sources are defined that enable us to build the missing
-  NightHawk benchmark image resulting in a raised exception.
+  """Validate that no sources are defined that enable us to build the missing NightHawk benchmark
+  image resulting in a raised exception.
   """
   # create a valid configuration with a missing NightHawk container image
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
@@ -139,8 +134,8 @@ def test_execute_benchmark_missing_nighthawk_binary_image():
 
 
 def test_execute_benchmark_missing_nighthawk_benchmark_image():
-  """Validate an exception is raised if we cannot build the unspecified
-  NightHawk benchmark image.
+  """Validate an exception is raised if we cannot build the unspecified NightHawk benchmark
+  image.
   """
   # create a valid configuration with a missing both NightHawk container images
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)

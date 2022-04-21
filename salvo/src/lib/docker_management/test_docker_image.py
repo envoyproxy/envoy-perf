@@ -1,7 +1,4 @@
-"""
-Test Docker interactions
-"""
-
+"""Test Docker interactions"""
 import pytest
 import docker
 import requests
@@ -13,8 +10,7 @@ from src.lib.docker_management import docker_image
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'pull')
 def test_pull_image(mock_pull, mock_list_images):
-  """Verify that we can pull a docker image specifying only its name and tag.
-  """
+  """Verify that we can pull a docker image specifying only its name and tag."""
   mock_list_images.return_value = []
   mock_pull.return_value = mock.MagicMock()
 
@@ -24,6 +20,7 @@ def test_pull_image(mock_pull, mock_list_images):
 
 
 def pull_exceptions_side_effect(image_name):
+  """Raise errros when image is not found or it has network issues."""
   if image_name == 'NotFound':
     raise docker.errors.ImageNotFound("image_not_found")
   if image_name == 'HttpError':
@@ -57,9 +54,7 @@ def test_pull_image_fail(mock_pull, mock_list_images):
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'get')
 def test_pull_image_return_existing(mock_pull, mock_list_images):
-  """Verify that we return an existing image if it is already local instead
-  of re-pulling it.
-  """
+  """Verify that we return an existing image if it is already local instead of re-pulling it."""
   mock_list_images.return_value = ['amazonlinux:2']
   mock_pull.return_value = mock.MagicMock()
 
@@ -71,7 +66,6 @@ def test_pull_image_return_existing(mock_pull, mock_list_images):
 @mock.patch.object(docker.models.images.ImageCollection, 'list')
 def test_list_images(mock_list_images):
   """Verify that we can list all existing cached docker images."""
-
   expected_image_tags = ['image:1', 'image:2', 'image:3']
   mock_list_images.return_value = map(lambda tag: mock.Mock(tags=[tag]), expected_image_tags)
 
@@ -82,9 +76,7 @@ def test_list_images(mock_list_images):
 
 @mock.patch('docker.from_env')
 def test_get_client(mock_docker):
-  """Verify that we can return a reference to the instantiated
-  docker client.
-  """
+  """Verify that we can return a reference to the instantiated docker client."""
   mock_docker.return_value = mock.Mock()
 
   new_docker_image = docker_image.DockerImage()
@@ -97,7 +89,6 @@ def test_get_client(mock_docker):
 @mock.patch.object(docker.models.containers.ContainerCollection, 'run')
 def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
   """Verify that we execute the specified docker image"""
-
   # Mock the actual docker client invocation to return output from the container
   mock_docker_output = "docker output"
   mock_docker_run.return_value = mock_docker_output
@@ -123,7 +114,6 @@ def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
 
 def test_list_processes():
   """Verify that we can list running images."""
-
   expected_name_list = ["prefix/image_1", "prefix/image_2", "prefix/image_3"]
 
   expected_image_list = []
@@ -145,7 +135,6 @@ def test_list_processes():
 
 def test_stop_image():
   """Verify that we invoke the proper call to stop a docker image."""
-
   test_image_name = "some_random_running_docker_image"
 
   mock_container = docker.models.containers.Container()

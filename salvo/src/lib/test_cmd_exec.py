@@ -1,3 +1,4 @@
+"""Test command execution needed for executing benchmarks"""
 import pytest
 import subprocess
 from unittest import mock
@@ -13,7 +14,6 @@ def check_call_side_effect(args, **kwargs):
       We are most interestd in stdout and stderr since these are the conduits
       via which we get the command output
   """
-
   cmd = args[0]
   if cmd == 'spanish_output_stdout':
     assert 'stdout' in kwargs
@@ -36,7 +36,6 @@ def check_call_side_effect(args, **kwargs):
 @mock.patch('subprocess.check_call')
 def test_run_command(mock_check_call):
   """Verify that we can return the output from a check_call call."""
-
   mock_check_call.side_effect = check_call_side_effect
 
   cmd_parameters = cmd_exec.CommandParameters(cwd='/tmp')

@@ -1,6 +1,4 @@
-"""
-Base Benchmark object module that contains common methods for all benchmarks
-"""
+"""Base Benchmark object module that contains common methods for all benchmarks"""
 import abc
 import os
 import logging
@@ -124,8 +122,7 @@ class BaseBenchmark(abc.ABC):
       raise BenchmarkError("No source specified to build NightHawk image")
 
   def is_remote(self) -> bool:
-    """Return a boolean indicating whether the test is to be executed
-       locally or remotely.
+    """Return a boolean indicating whether the test is to be executed locally or remotely.
 
     Returns:
         Whether or not the benchmark runs locally or in a remote service
@@ -141,8 +138,7 @@ class BaseBenchmark(abc.ABC):
     return self._control.images
 
   def get_source(self) -> List[proto_source.SourceRepository]:
-    """Return the source object defining locations from where
-       NightHawk or Envoy can be built.
+    """Return the source object defining locations from where NightHawk or Envoy can be built.
 
     Returns:
         The source objects specified in the control object
@@ -194,9 +190,7 @@ class BaseBenchmark(abc.ABC):
 
 
 class BenchmarkEnvironmentError(Exception):
-  """An Error raised if the environment variables required are not
-     able to be set.
-  """
+  """An Error raised if the environment variables required are not able to be set."""
 
 
 class BenchmarkEnvController():
@@ -250,8 +244,8 @@ class BenchmarkEnvController():
       os.environ[key] = value
 
   def _clear_environment_vars(self) -> None:
-    """Clear any environment variables in the job control document
-       so that we do not influence additionally executing tests.
+    """Clear any environment variables in the job control document so that we do not influence
+    additionally executing tests.
     """
     environment = self._environment
 
@@ -267,12 +261,11 @@ class BenchmarkEnvController():
         del os.environ[key]
 
   def __enter__(self):
-    """Sets the environment variables specified in the control document."""
-
+    """Set the environment variables specified in the control document."""
     self._preserve_and_clear_special_vars()
     self._set_environment_vars()
 
   def __exit__(self, type_param, value, traceback):
-    """Clears any environment variables specified in the control document."""
+    """Clear any environment variables specified in the control document."""
     self._clear_environment_vars()
     self._restore_special_vars()

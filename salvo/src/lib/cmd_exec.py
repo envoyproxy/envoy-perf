@@ -38,7 +38,6 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
     subprocess.CalledProcessError: if the command exits with a non-zero exit
       code
   """
-
   # Because the stdout/stderr from nighthawk can be large, we redirect it to
   # a temporary file and re-read the output to return to the caller.  This
   # method also appears to capture output more consistently in the event of a

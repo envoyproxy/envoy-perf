@@ -36,6 +36,9 @@ EXCLUDE="--exclude=benchmarks/tmp/*,.cache/*,*/venv/*,tools/format_python_tools.
 flake8 . ${EXCLUDE} --ignore=E114,E111,E501,F401,F811,E124,E125,E126,W504,D --count --show-source --statistics
 # D = Doc comment related checks (We check both p257 AND google conventions). 
 # TODO(#137): Fix reported formatting errors and re-enable these checks.
-# flake8 . ${EXCLUDE} --docstring-convention pep257 --select=D --count --show-source --statistics
+# Because of conflict with the automatic fix format script, we ignore: 
+# D400 First line should end with a period
+# D205 1 blank line required between summary line and description
+flake8 . ${EXCLUDE} --docstring-convention pep257 --select=D --ignore=D205,D400 --count --show-source --statistics
 # flake8 . ${EXCLUDE} --docstring-convention google --select=D --count --show-source --statistics
 

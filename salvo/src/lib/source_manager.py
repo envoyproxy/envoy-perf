@@ -1,6 +1,4 @@
-"""
-This module abstracts the higher level functions of managing source code
-"""
+"""This module abstracts the higher level functions of managing source code"""
 import logging
 from typing import Set
 
@@ -29,14 +27,11 @@ def _extract_tag_from_image(image_name: str) -> str:
     a string containing the image tag. For example:
       envoyproxy/envoy:v1.15.3 -> v1.15.3
   """
-
   return image_name.split(':')[-1]
 
 
 class SourceManagerError(Exception):
-  """Raised when an unrecoverable error is encountered while working with
-     a source tree.
-  """
+  """Raised when an unrecoverable error is encountered while working with a source tree."""
 
 
 class SourceManager(object):
@@ -212,7 +207,6 @@ class SourceManager(object):
        the baseline benchmark, and the previous envoy image the results
        are compared against
     """
-
     # Evaluate specfied images first
     image_hashes = self.find_all_images_from_specified_tags()
 
@@ -238,7 +232,6 @@ class SourceManager(object):
       SourceManagerError: if we are not able to deterimine hashes prior to
         the identified commit
     """
-
     previous_hash = None
     try:
       previous_hash = disk_source_tree.get_previous_commit_hash(commit_hash)
@@ -265,7 +258,6 @@ class SourceManager(object):
     Raises:
       SourceManagerError: If no source exists matching the specified source_id
     """
-
     source_name = proto_source.SourceRepository.SourceIdentity.Name(source_id)
 
     # Filter source objects that do not match the source_id and return the
@@ -287,7 +279,7 @@ class SourceManager(object):
 
   def _create_source_tree(
       self, source_id: proto_source.SourceRepository.SourceIdentity) -> source_tree.SourceTree:
-    """Creates a source tree object from a SourceRepository.
+    """Create a source tree object from a SourceRepository.
 
     Args:
       source_id: The identity of the source object we seek (eg.
@@ -295,13 +287,12 @@ class SourceManager(object):
     Returns:
       a source tree object managing the identified source repository
     """
-
     repo = self.get_source_repository(source_id)
     return source_tree.SourceTree(repo)
 
   def get_source_tree(
       self, source_id: proto_source.SourceRepository.SourceIdentity) -> source_tree.SourceTree:
-    """Returns the source tree object identified by source_id.
+    """Return the source tree object identified by source_id.
 
     Args:
       source_id: The identity of the source tree we seek (eg.
@@ -313,7 +304,6 @@ class SourceManager(object):
     Raises:
       SourceManagerError if no source tree is found
     """
-
     if source_id not in self._source_tree:
       source_name = proto_source.SourceRepository.SourceIdentity.Name(source_id)
       raise SourceManagerError(f"No Source tree defined for: {source_name}")
@@ -336,7 +326,6 @@ class SourceManager(object):
     Raises:
       SourceManagerError: If no options are defined in the source object
     """
-
     source = self.get_source_repository(source_id)
     bazel_options = source.bazel_options
 

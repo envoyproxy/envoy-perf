@@ -24,7 +24,6 @@ def DrawBarGraph(connection, table_name, y_axis_field, x_axis_values,
     x_axis_field: column name in the table for the x axis
     arrangement: the type of arrangement in the experiment
   """
-
   def GetListsFromDB(x_axis_values, x_axis_field, connection,
                      table_name, y_axis_field, category):
     """This function returns lists of values of a field from the DB.

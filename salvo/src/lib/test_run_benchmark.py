@@ -1,3 +1,4 @@
+"""Test benchmark running operations"""
 import pytest
 from unittest import mock
 
@@ -47,7 +48,6 @@ def test_execute_dockerized_benchmark_using_images_only(mock_hashes_for_benchmar
                                                         mock_have_build_options, mock_pull_image,
                                                         mock_execute, mock_run_image, mock_symlink):
   """Verify that we attempt to pull images if no sources are specified."""
-
   # Build a default job control object with images
   job_control = proto_control.JobControl(remote=False, dockerized_benchmark=True)
   generate_test_objects.generate_environment(job_control)
@@ -77,7 +77,6 @@ def test_execute_dockerized_benchmark_using_images_only(mock_hashes_for_benchmar
 def test_execute_using_images_only(mock_hashes_for_benchmarks, mock_have_build_options,
                                    mock_pull_image, mock_execute, mock_symlink):
   """Verify that we attempt to pull images if no sources are specified."""
-
   # Build a default job control object with images
   job_control = generate_test_objects.generate_default_job_control()
   generate_test_objects.generate_images(job_control)
@@ -98,6 +97,7 @@ def test_execute_using_images_only(mock_hashes_for_benchmarks, mock_have_build_o
 
 
 def raise_docker_pull_exception(image_name):
+  """Raise a docker image pulling error."""
   raise docker_image.DockerImagePullError(f"failed to pull image: {image_name}")
 
 
@@ -141,8 +141,7 @@ def test_execute_with_building_envoy_images(mock_hashes_for_benchmarks, mock_hav
 
 
 def test_benchmark_failure_if_no_benchmark_selected():
-  """Verify that we raise an exception if no benchmark is configured to run.
-  """
+  """Verify that we raise an exception if no benchmark is configured to run."""
   # Build a default job control object no benchmark selected
   job_control = proto_control.JobControl(remote=False)
 

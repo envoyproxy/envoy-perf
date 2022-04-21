@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+"""The main file of Salvo"""
 import argparse
 import logging
 import sys
@@ -13,7 +13,7 @@ log = logging.getLogger()
 
 
 def setup_logging(loglevel: int = logging.DEBUG) -> None:
-  """Basic logging configuration.
+  """Set up basic logging configuration.
 
   Configure the logger with our defined format and set the log level which
   defaults to debug
@@ -34,7 +34,6 @@ def setup_options() -> argparse.Namespace:
   Read all command line arguments and return a namespace with consumable
   data
   """
-
   parser = argparse.ArgumentParser(description="Salvo Benchmark Runner")
   parser.add_argument('--job',
                       dest='jobcontrol',
@@ -52,7 +51,6 @@ def main() -> int:
   The benchmark object encapsulates the different benchmark modes and it
   is responsible for selecting the correct classes to instantiate
   """
-
   args = setup_options()
   setup_logging()
 

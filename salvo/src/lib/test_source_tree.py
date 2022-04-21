@@ -1,6 +1,4 @@
-"""
-Test source_tree operations needed for executing benchmarks
-"""
+"""Test source_tree operations needed for executing benchmarks"""
 from unittest import mock
 import pytest
 import subprocess
@@ -23,7 +21,6 @@ def test_is_tag():
 
 def test_get_identity():
   """Verify we can retrieve the identity out of a source repository object."""
-
   for source_id in [
       proto_source.SourceRepository.SourceIdentity.SRCID_UNSPECIFIED,
       proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
@@ -47,9 +44,7 @@ def test_source_tree_object():
 
 
 def test_git_with_origin():
-  """Verify that at a minimum, we can work with a remote origin url
-     specified.
-  """
+  """Verify that at a minimum, we can work with a remote origin url specified."""
   source_repository = proto_source.SourceRepository(source_url='somewhere_in_github')
   source = source_tree.SourceTree(source_repository)
 
@@ -78,7 +73,6 @@ def test_get_origin_ssh(mock_get_source_directory):
 
   In this instance the repo was cloned via ssh.
   """
-
   mock_get_source_directory.return_value = '/some_temp_directory'
 
   remote_string = 'origin  git@github.com:username/reponame.git (fetch)'
@@ -103,7 +97,6 @@ def test_get_origin_https(mock_get_source_directory):
 
   In this instance the repo was cloned via https
   """
-
   mock_get_source_directory.return_value = '/some_temp_directory'
 
   remote_string = \
@@ -125,10 +118,7 @@ def test_get_origin_https(mock_get_source_directory):
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'get_source_directory')
 def test_get_origin_fail(mock_get_source_directory, mock_run_command):
-  """Verify that we raise an exception if we are unable to determine the source
-  tree origin
-  """
-
+  """Verify that we raise an exception if we are unable to determine the source tree origin."""
   mock_get_source_directory.return_value = '/some_temp_directory'
   mock_run_command.return_value = 'definitely not any origin data we want'
 
@@ -211,7 +201,6 @@ def mock_run_command_side_effect(*function_args):
 
 def test_get_source_directory():
   """Verify that the source tree returns its location on disk."""
-
   tree = _generate_source_tree_from_origin('foo')
   directory = tree.get_source_directory()
 
@@ -220,8 +209,7 @@ def test_get_source_directory():
 
 @mock.patch('shutil.copytree')
 def test_copy_source_directory(mock_copytree):
-  """verify that we are able to copy a source tree to a temporary directory"""
-
+  """Verify that we are able to copy a source tree to a temporary directory"""
   mock_copytree.return_value = None
 
   tree = _generate_source_tree_from_path('/test_copy_source_directory')
@@ -231,9 +219,7 @@ def test_copy_source_directory(mock_copytree):
 
 @mock.patch("src.lib.cmd_exec.run_command")
 def test_pull(mock_run_command):
-  """Verify that we can clone a repository ensuring that the process completed
-     without errors.
-  """
+  """Verify that we can clone a repository ensuring that the process completed without errors."""
   origin = _DEFAULT_HTTPS_REPO_URL
 
   source = _generate_source_tree_from_origin(origin)
@@ -255,7 +241,6 @@ def test_pull(mock_run_command):
 
 def test_pull_fail():
   """Verify that we cannot a clone a repository without a remote url."""
-
   source = _generate_source_tree_from_path('/not_a_remote_url')
 
   result = source.pull()
@@ -265,7 +250,6 @@ def test_pull_fail():
 @mock.patch.object(source_tree.SourceTree, 'is_up_to_date')
 def test_pull_fail_up_to_date(mock_is_up_to_date):
   """Verify that we do not clone a repository that is already up to date."""
-
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -278,9 +262,7 @@ def test_pull_fail_up_to_date(mock_is_up_to_date):
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'is_up_to_date')
 def test_pull_fail_incomplete_operation(mock_is_up_to_date, mock_run_command):
-  """Verify that we can clone a repository and detect an incomplete
-     operation.
-  """
+  """Verify that we can clone a repository and detect an incomplete operation."""
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -323,10 +305,7 @@ def test_checkout_commit_hash_fail(mock_pull, mock_run_command):
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_get_head_hash(mock_run_command):
-  """Verify that we can determine the most recent HEAD hash when "latest" is
-  used as an mage tag
-  """
-
+  """Verify that we can determine the most recent HEAD hash when "latest" is used as an mage tag."""
   mock_run_command.side_effect = mock_run_command_side_effect
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
@@ -337,9 +316,7 @@ def test_get_head_hash(mock_run_command):
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_get_previous_commit_hash(mock_check_output):
-  """
-    Verify that we can identify one commit prior to a specified hash.
-    """
+  """Verify that we can identify one commit prior to a specified hash."""
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -352,9 +329,7 @@ def test_get_previous_commit_hash(mock_check_output):
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_get_previous_commit_hash_fail(mock_check_output):
-  """
-    Verify that we can identify one commit prior to a specified hash.
-    """
+  """Verify that we can identify one commit prior to a specified hash."""
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -373,9 +348,7 @@ def test_get_previous_commit_hash_fail(mock_check_output):
 
 @mock.patch('src.lib.cmd_exec.run_command')
 def test_get_previous_commit_fail(mock_check_output):
-  """Verify that we can identify a failure when attempting to manage commit
-     hashes.
-  """
+  """Verify that we can identify a failure when attempting to manage commit hashes."""
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -391,8 +364,8 @@ def test_get_previous_commit_fail(mock_check_output):
 
 
 def testget_revs_behind_parent_branch():
-  """Verify that we can determine how many commits beind the local source tree
-     lags behind the remote repository.
+  """Verify that we can determine how many commits beind the local source tree lags behind the
+  remote repository.
   """
   origin = _DEFAULT_HTTPS_REPO_URL
   st = _generate_source_tree_from_origin(origin)
@@ -415,8 +388,8 @@ nothing to commit, working tree clean
 
 
 def testget_revs_behind_parent_branch_up_to_date():
-  """Verify that we can determine how many commits beind the local source tree
-     lags behind the remote repository.
+  """Verify that we can determine how many commits beind the local source tree lags behind the
+  remote repository.
   """
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
@@ -440,7 +413,6 @@ Changes not staged for commit:
 
 def test_is_up_to_date():
   """Verify that we can determine a source tree is up to date."""
-
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -453,12 +425,10 @@ def test_is_up_to_date():
 
 def test_list_tags():
   """Verify that we can list tags from a repository."""
-
   GIT_TAG_LIST = """
 v1.15.2
 v1.16.0
 """
-
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -478,12 +448,10 @@ v1.16.0
 
 def test_get_previous_tag():
   """Verify that we can identify the previous tag for a given release."""
-
   GIT_TAG_LIST = """
 v1.15.2
 v1.16.0
 """
-
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -506,7 +474,6 @@ def test_get_previous_tag_fail():
   """Verify that we raise an exception if we try to retrieve tags using a
   hash
   """
-
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -523,7 +490,6 @@ def test_get_previous_tag_fail():
 
 def test_get_previous_n_tag():
   """Verify that we can identify the previous tag for a given release."""
-
   GIT_TAG_LIST = """
 v1.14.5
 v1.15.0
@@ -552,7 +518,6 @@ v1.16.0
 
 def test_source_tree_with_disk_files():
   """Verify that we can get hash data from a source tree on disk."""
-
   source = source_tree.SourceTree(
       proto_source.SourceRepository(identity=proto_source.SourceRepository.SRCID_ENVOY,
                                     source_path='/tmp',

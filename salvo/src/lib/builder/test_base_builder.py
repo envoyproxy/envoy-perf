@@ -1,3 +1,4 @@
+"""Test base builder operations"""
 import pytest
 
 from src.lib import source_manager
@@ -8,18 +9,19 @@ import api.source_pb2 as proto_source
 
 
 class DerivedBuilder(base_builder.BaseBuilder):
+  """A class derived from BaseBuilder."""
 
   def __init__(self, manager: source_manager.SourceManager):
+    """Initialize the DerivedBuilder class."""
     super(DerivedBuilder, self).__init__(manager)
 
   def do_something(self):
+    """Call _validate function."""
     self._validate()
 
 
 def test_validate_must_be_overidden():
-  """Verify that the base _validate method must be overridden and raises
-  an exception otherwise.
-  """
+  """Verify that the base _validate method must be overridden and raises an exception otherwise."""
   control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   control.source.add(
       identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,

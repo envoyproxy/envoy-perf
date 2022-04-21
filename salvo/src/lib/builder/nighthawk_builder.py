@@ -1,6 +1,4 @@
-"""
-Module to build NightHawk artifacts
-"""
+"""Module to build NightHawk artifacts."""
 import logging
 
 from src.lib.builder import base_builder
@@ -11,9 +9,7 @@ log = logging.getLogger(__name__)
 
 
 class NightHawkBuilderError(Exception):
-  """An error raised when an unrecoverable situation occurs when
-     building NightHawk components.
-  """
+  """An error raised when an unrecoverable situation occurs when building NightHawk components."""
 
 
 def _execute_docker_image_script(script: str, build_dir: str) -> None:
@@ -39,13 +35,11 @@ def _execute_docker_image_script(script: str, build_dir: str) -> None:
 
 
 class NightHawkBuilder(base_builder.BaseBuilder):
-  """This class encapsulates the logic to build the nighthawk binaries
-      benchmark scripts, and container images from source.
-  """
+  """This class encapsulates the logic to build the nighthawk binaries benchmark scripts, and container images from source."""
 
   def __init__(self, manager: source_manager.SourceManager) -> None:
-    """Initialize the builder with the location of the source and the
-       commit hash at which we are operating.
+    """Initialize the builder with the location of the source and the commit hash at which we are \
+    operating.
 
     Args:
       source_repo: The SourceRepository object describing the location
@@ -60,8 +54,7 @@ class NightHawkBuilder(base_builder.BaseBuilder):
         proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
 
   def _validate(self) -> None:
-    """ Verify the identity of the source being used."""
-
+    """Verify the identity of the source being used."""
     if not self._source_repo or self._source_repo.identity != \
         proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK:
       raise NightHawkBuilderError("This module supports building NightHawk Only")
@@ -77,7 +70,6 @@ class NightHawkBuilder(base_builder.BaseBuilder):
       a SourceTree pointing to the location on disk where we can build
         artifacts
     """
-
     self._validate()
     if not self._source_tree.pull():
       self._source_tree.copy_source_directory()
@@ -93,7 +85,6 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     This target is required for the scavenging benchmark. It is also a pre-
     requisite to building the benchmark container image
     """
-
     self.prepare_nighthawk_source()
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
 
