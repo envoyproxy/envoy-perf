@@ -1,4 +1,4 @@
-"""Test the fully dockerized benchmark class"""
+"""Test the fully dockerized benchmark class."""
 import pytest
 import subprocess
 from unittest.mock import patch
@@ -73,7 +73,7 @@ def test_source_to_build_binaries(mock_cmd, mock_envoy_build, mock_nh_bin_build,
 
 
 def test_no_source_to_build_nh():
-  """Validate that we fail the entire process in the absence of NH sources
+  """Validate that we fail the entire process in the absence of NH sources.
 
   Validate that even if Envoy sources are specified, the absence of Nighthawk
   sources will cause the program to fail.

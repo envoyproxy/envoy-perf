@@ -1,4 +1,4 @@
-"""Base Benchmark object module that contains common methods for all benchmarks"""
+"""Base Benchmark object module that contains common methods for all benchmarks."""
 import abc
 import os
 import logging
@@ -162,7 +162,7 @@ class BaseBenchmark(abc.ABC):
 
   @abc.abstractmethod
   def execute_benchmark(self) -> None:
-    """Run a benchmark
+    """Run a benchmark.
 
     A class derived from BaseBenchmark is responsible for building and staging
     the required binaries, tests, and any other artifacts for running a
@@ -244,9 +244,8 @@ class BenchmarkEnvController():
       os.environ[key] = value
 
   def _clear_environment_vars(self) -> None:
-    """Clear any environment variables in the job control document so that we do not influence
-    additionally executing tests.
-    """
+    """Clear any environment variables in the job control document so that we do not influence \
+      additionally executing tests."""
     environment = self._environment
 
     # Check that the key exists before deleting it to prevent KeyErrors

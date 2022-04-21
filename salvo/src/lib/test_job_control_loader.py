@@ -317,7 +317,7 @@ def test_read_bazel_options():
 
 
 def _validate_job_control_object_with_options(job_control):
-  """Verification method for a job control object with bazel options
+  """Verification method for a job control object with bazel options.
 
   Args:
       job_control: The Protocol Buffer object whose data fields

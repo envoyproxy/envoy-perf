@@ -1,6 +1,5 @@
-"""General benchmark wrapper that validates that the job control contains all dat required for each
-known benchmark.
-"""
+"""General benchmark wrapper that validates that the job control contains all dat required for \
+  eachknown benchmark."""
 import logging
 import os
 from typing import (List, Set)
@@ -181,8 +180,8 @@ class BenchmarkRunner(object):
       docker_image_builder.build_nighthawk_binary_image_from_source(self._source_manager)
 
   def _pull_or_build_nighthawk_images_for_benchmark(self):
-    """Pull the nighthawk docker iamges needed for benchmarks.  If an image
-       remains unavailable, raise an Exception.
+    """Pull the nighthawk docker iamges needed for benchmarks. If an image remains unavailable, \
+      raise an Exception.
 
     Raises:
       BenchmarkRunnerError: if no nighthawk images appear in the control object
@@ -203,8 +202,7 @@ class BenchmarkRunner(object):
     self._pull_or_build_nh_binary_image(images)
 
   def _pull_or_build_envoy_images_for_benchmark(self, image_hashes: Set[str]) -> Set[str]:
-    """Pull the docker images needed for the benchmarks. If an image is not
-       available build it.
+    """Pull the docker images needed for the benchmarks. If an image is not available build it.
 
     Args:
       image_hashes: The envoy image hashes that we are locating images
@@ -266,11 +264,13 @@ class BenchmarkRunner(object):
 
   def _create_new_source_job_control(self, nh_source, envoy_source,
                                      envoy_hash) -> proto_control.JobControl:
-    """Duplicate the job control for a specific benchmark run.
-    This method creates a new job control object for a single binary benchmark
+    """Duplicate the job control for a specific benchmark run. This method creates a new job \
+      control object for a single binary benchmark.
+
     Args:
       nh_source: the nighthawk source to run
       envoy_source: the envoy source to test
+
     Returns:
       A job control document containing the Nighthawk and Envoy source specified
     """
@@ -310,7 +310,7 @@ class BenchmarkRunner(object):
 
   def _create_job_control_for_images(self,
                                      envoy_images: Set[str]) -> List[proto_control.JobControl]:
-    """Create new job control objects for each benchmark
+    """Create new job control objects for each benchmark.
 
     Copy the original job control document and set the envoy images with the
     tags or hashes for the previous and baseline benchmarks.  Also create

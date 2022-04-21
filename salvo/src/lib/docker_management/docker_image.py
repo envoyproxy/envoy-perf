@@ -24,7 +24,7 @@ DockerRunParameters = collections.namedtuple(
 
 
 class DockerImagePullError(Exception):
-  """This error is raised if an image pull is unsuccessful"""
+  """This error is raised if an image pull is unsuccessful."""
 
 
 class DockerImage():
@@ -40,7 +40,7 @@ class DockerImage():
     self._existing_tags = []
 
   def pull_image(self, image_name: str) -> docker.models.containers.Image:
-    """Pull the identified docker image
+    """Pull the identified docker image.
 
     Args:
         image_name: The name of the docker image that we are retrieving from

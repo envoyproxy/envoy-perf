@@ -1,6 +1,5 @@
-"""Test Docker image build logic.  Most of these test are shallow and do not verify the git
-operations being automated.
-"""
+"""Test Docker image build logic. Most of these test are shallow and do not verify the git \
+  operations being automated."""
 import pytest
 from unittest import mock
 
@@ -21,9 +20,7 @@ _build_envoy_docker_image_mock_name = \
 
 
 def generate_image_manager_with_source_url():
-  """Generate a source manager with a job control specifying remote repos
-  for images.
-  """
+  """Generate a source manager with a job control specifying remote repos for images."""
   job_control = proto_control.JobControl()
   job_control.source.add(identity=proto_source.SourceRepository.SRCID_ENVOY,
                          source_url='https://www.github.com/_some_random_repo_')
@@ -34,7 +31,7 @@ def generate_image_manager_with_source_url():
 
 @mock.patch.object(envoy_builder.EnvoyBuilder, 'build_envoy_image_from_source')
 def test_build_envoy_docker_image(mock_envoy_builder):
-  """Verify that we can build an envoy docker image"""
+  """Verify that we can build an envoy docker image."""
   mock_envoy_builder.return_value = None
 
   manager = generate_image_manager_with_source_url()
@@ -101,9 +98,8 @@ def test_build_missing_envoy_docker_image_options_present(mock_generate_image_fr
 @mock.patch(_generate_image_name_from_tag_mock_name)
 @mock.patch('src.lib.docker_management.docker_image_builder.build_missing_envoy_docker_image')
 def test_build_envoy_image_from_source(mock_build_missing_image, mock_generate_image_from_tag):
-  """Verify that we return the tag of a constructed image.  This is a shallow test and does not
-  invoke any git operations to manipulate the source.
-  """
+  """Verify that we return the tag of a constructed image.  This is a shallow test and does not \
+    invoke any git operations to manipulate the source."""
   mock_build_missing_image.return_value = None
   mock_generate_image_from_tag.return_value = _DEFAULT_ENVOY_IMAGE_TAG
 
@@ -116,9 +112,8 @@ def test_build_envoy_image_from_source(mock_build_missing_image, mock_generate_i
 
 
 def test_generate_envoy_image_name_from_tag():
-  """Verify we create the correct image name from its tag.  For images built from a release tag, we
-  use 'envoyproxy/envoy', anything else uses 'envoyproxy/envoy-dev'.
-  """
+  """Verify we create the correct image name from its tag.  For images built from a release tag, \
+    we use 'envoyproxy/envoy', anything else uses 'envoyproxy/envoy-dev'."""
   image_name = image_builder.generate_envoy_image_name_from_tag('definitely_not_a_tag')
   assert image_name == "envoyproxy/envoy-dev:definitely_not_a_tag"
 

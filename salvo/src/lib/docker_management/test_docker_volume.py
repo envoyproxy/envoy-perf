@@ -1,4 +1,4 @@
-"""Test Docker volume generation"""
+"""Test Docker volume generation."""
 import json
 import pytest
 from unittest import mock
@@ -81,7 +81,7 @@ def test_generate_volume_config_format_error(mock_json_loads):
 
 
 def verify_required_paths(volume_map, output_dir):
-  """Verify the required mounts in the volume map"""
+  """Verify the required mounts in the volume map."""
   assert constants.DOCKER_SOCKET_PATH in volume_map
   docker_map = volume_map[constants.DOCKER_SOCKET_PATH]
 

@@ -1,4 +1,4 @@
-"""Test Docker interactions"""
+"""Test Docker interactions."""
 import pytest
 import docker
 import requests
@@ -30,9 +30,7 @@ def pull_exceptions_side_effect(image_name):
 @mock.patch.object(docker_image.DockerImage, 'list_images')
 @mock.patch.object(docker.models.images.ImageCollection, 'pull')
 def test_pull_image_fail(mock_pull, mock_list_images):
-  """Verify that an exception is raised if we are not able to successfully pull
-  a docker image
-  """
+  """Verify that an exception is raised if we are not able to successfully pull a docker image."""
   mock_list_images.return_value = []
   mock_pull.side_effect = pull_exceptions_side_effect
 
@@ -88,7 +86,7 @@ def test_get_client(mock_docker):
 @mock.patch.object(docker_image.DockerImage, 'list_processes')
 @mock.patch.object(docker.models.containers.ContainerCollection, 'run')
 def test_run_image(mock_docker_run, mock_docker_list, mock_docker_stop):
-  """Verify that we execute the specified docker image"""
+  """Verify that we execute the specified docker image."""
   # Mock the actual docker client invocation to return output from the container
   mock_docker_output = "docker output"
   mock_docker_run.return_value = mock_docker_output

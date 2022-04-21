@@ -1,4 +1,4 @@
-"""Manage a source location on disk"""
+"""Manage a source location on disk."""
 import re
 import logging
 import os
@@ -32,9 +32,8 @@ _REPO_STATUS_REGEX = r'.*ahead of \'(.*)\' by (\d+) commit'
 
 
 class SourceTreeError(Exception):
-  """Raised if we encounter a condition from which we cannot recover, when manipulating SourceTree
-  objects.
-  """
+  """Raised if we encounter a condition from which we cannot recover, when manipulating SourceTree \
+    objects."""
 
 
 def is_tag(image_tag: str) -> bool:
@@ -235,7 +234,7 @@ class SourceTree(object):
     return expected in output
 
   def checkout_commit_hash(self) -> bool:
-    """Check out the specified commit hash in the source tree
+    """Check out the specified commit hash in the source tree.
 
     Returns:
       a boolean indicating whether the operation was successful
@@ -327,9 +326,9 @@ class SourceTree(object):
     raise SourceTreeError(f"No commit found prior to {current_commit}")
 
   def get_revs_behind_parent_branch(self) -> int:
-    """Get the number of commits behind the parent branch.
-    Determine how many commits the current branch on disk is behind the
-    parent branch.  If we are up to date, return zero
+    """Get the number of commits behind the parent branch. Determine how many commits the current \
+      branch on disk is behind the parent branch. If we are up to date, return zero.
+
     Returns:
       an integer with the number of commits the local source lags
        behind the parent branch

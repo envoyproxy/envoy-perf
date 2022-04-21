@@ -1,4 +1,4 @@
-"""This module defines string constants used in various parts of Salvo"""
+"""This module defines string constants used in various parts of Salvo."""
 # The DOCKER_SOCKET_PATH identifies the unix socket creatd by the docker
 # daemon. In its absense any operations interacting with docker will fail.
 DOCKER_SOCKET_PATH = '/var/run/docker.sock'

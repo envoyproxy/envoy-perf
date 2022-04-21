@@ -1,6 +1,5 @@
-"""Base builder class initializing the temporary directories and environment variables needed to
-execute bazel.
-"""
+"""Base builder class initializing the temporary directories and environment variables needed to \
+execute bazel."""
 import os
 import logging
 
@@ -13,17 +12,16 @@ log = logging.getLogger(__name__)
 
 
 class BaseBuilderError(Exception):
-  """An error raised from the BaseBuilder class if we encounter a situation where no progress can be
-  made.
-  """
+  """An error raised from the BaseBuilder class if we encounter a situation where no progress can \
+  be made."""
 
 
 class BaseBuilder():
   """BaseBuilder class encapsulating common build methods and objects managing sources."""
 
   def __init__(self, manager: source_manager.SourceManager) -> None:
-    """Initialize the builder with the location of the source and setup temporary directories needed
-    for operation.
+    """Initialize the builder with the location of the source and setup temporary directories \
+    needed for operation.
 
     Args:
       manager: The SourceManager object handling the source code used by this builder object

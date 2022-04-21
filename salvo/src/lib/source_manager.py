@@ -1,4 +1,4 @@
-"""This module abstracts the higher level functions of managing source code"""
+"""This module abstracts the higher level functions of managing source code."""
 import logging
 from typing import Set
 
@@ -102,8 +102,8 @@ class SourceManager(object):
     return commit_hash
 
   def find_all_images_from_specified_tags(self) -> Set[str]:
-    """Find all images required for benchmarking from the images specified
-       in the job control object.
+    """Find all images required for benchmarking from the images specified in the job control \
+      object.
 
     Returns:
       a list of commit hashes or tags needed to identify docker images
@@ -155,8 +155,8 @@ class SourceManager(object):
     return hash_set
 
   def find_all_images_from_specified_sources(self) -> Set[str]:
-    """Find all images required for benchmarking from the source and hashes
-       specified in the job control object.
+    """Find all images required for benchmarking from the source and hashes specified in the job \
+      control object.
 
     Returns:
       a Set of commit hashes or tags needed to identify docker images
@@ -246,7 +246,7 @@ class SourceManager(object):
   def get_source_repository(
       self,
       source_id: proto_source.SourceRepository.SourceIdentity) -> proto_source.SourceRepository:
-    """Find and return the source repository object with the specified id
+    """Find and return the source repository object with the specified id.
 
     Args:
       source_id: The identity of the source object we seek (eg.
@@ -311,8 +311,7 @@ class SourceManager(object):
 
   def get_build_options(
       self, source_id: proto_source.SourceRepository.SourceIdentity) -> proto_source.BazelOption:
-    """Determine whether build options are specified in the control object
-    and return them
+    """Determine whether build options are specified in the control object and return them.
 
     Args:
       source_id: The identity of the source object we seek (eg.
@@ -335,9 +334,8 @@ class SourceManager(object):
     return bazel_options
 
   def have_build_options(self, source_id: proto_source.SourceRepository.SourceIdentity) -> bool:
-    """Determine whether build options are specified in the control object
-       and return a boolean.  This is used to determine whether we build
-       images or use the already available images
+    """Determine whether build options are specified in the control object and return a boolean. \
+      This is used to determine whether we build images or use the already available images.
 
     Args:
       source_id: The identity of the source object we seek (eg.

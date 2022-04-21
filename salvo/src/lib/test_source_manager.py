@@ -1,4 +1,4 @@
-"""Test source management operations needed for executing benchmarks"""
+"""Test source management operations needed for executing benchmarks."""
 import pytest
 from unittest import mock
 
@@ -14,8 +14,7 @@ def _verify_cwd(**kwargs):
 
 
 def _run_command_side_effect(*args):
-  """Adjust the check_output output so that we can respond differently to
-  input arguments.
+  """Adjust the check_output output so that we can respond differently to input arguments.
 
   Args:
     args: the list of arguments received by the mocked function
@@ -82,7 +81,7 @@ def _generate_default_benchmark_images(job_control):
 
 
 def _generate_default_envoy_source(job_control):
-  """Add a source repository for Envoy
+  """Add a source repository for Envoy.
 
   Args:
     job_control:  The control object in which we insert the source repository.
@@ -95,9 +94,8 @@ def _generate_default_envoy_source(job_control):
 
 @mock.patch("src.lib.cmd_exec.run_command")
 def test_get_envoy_hashes_for_benchmark_minimal(mock_run_command):
-  """Verify that we can determine the current and previous image tags from a minimal job control
-  object.
-  """
+  """Verify that we can determine the current and previous image tags from a minimal job control \
+    object."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   image_config = _generate_default_benchmark_images(job_control)
@@ -190,9 +188,8 @@ def test_determine_envoy_hashes_from_source2(mock_source_tree_pull, mock_run_com
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory,
                                                       mock_source_tree_pull):
-  """Verify that an exception is raised when we cannot determine Envoy hashes from a job control
-  object.
-  """
+  """Verify that an exception is raised when we cannot determine Envoy hashes from a job control \
+    object."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
@@ -213,9 +210,7 @@ def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory
 
 
 def test_find_all_images_from_specified_tags():
-  """Verify that we can parse an image tag and deterimine the previous
-  image tag.
-  """
+  """Verify that we can parse an image tag and deterimine the previous image tag."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   _generate_default_benchmark_images(job_control)
 
@@ -236,7 +231,7 @@ def test_find_all_images_from_specified_tags():
 
 @mock.patch.object(source_manager.SourceManager, 'get_source_tree')
 def test_find_all_images_from_specified_tags_fail(mock_source_tree):
-  """Verify that we raise an exception if no images are defined for any benchmarks"""
+  """Verify that we raise an exception if no images are defined for any benchmarks."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   mock_source_tree.return_value = None
@@ -252,7 +247,7 @@ def test_find_all_images_from_specified_tags_fail(mock_source_tree):
 
 
 def test_find_image_single():
-  """Verify that we can just find specific image with test_single_image enabled"""
+  """Verify that we can just find specific image with test_single_image enabled."""
   job_control = proto_control.JobControl(
       remote=False,
       scavenging_benchmark=True,
@@ -308,7 +303,7 @@ def test_find_image_single_fail(mock_source_tree):
 
 
 def test_find_all_images_from_specified_tags_build_envoy():
-  """Verify that return no hashes and if we have to build Envoy"""
+  """Verify that return no hashes and if we have to build Envoy."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   _generate_default_benchmark_images(job_control)
 
@@ -322,7 +317,7 @@ def test_find_all_images_from_specified_tags_build_envoy():
 
 @mock.patch.object(source_manager.SourceManager, 'determine_envoy_hashes_from_source')
 def test_find_all_images_from_specified_tags_using_source(mock_determine_envoy_hashes_from_source):
-  """Verify that return no hashes and if we have to build Envoy"""
+  """Verify that return no hashes and if we have to build Envoy."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   _generate_default_benchmark_images(job_control)
 
@@ -361,9 +356,7 @@ def test_find_all_images_from_specified_sources(mock_copy_source_directory, mock
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 def test_get_envoy_hashes_for_benchmark_additional_hashes(mock_copy_source_directory,
                                                           mock_run_command):
-  """Verify that we can determine the hashes for the baseline and previous
-  Envoy Image.
-  """
+  """Verify that we can determine the hashes for the baseline and previous Envoy Image."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
@@ -419,9 +412,7 @@ def test_find_all_images_from_specified_sources_single(mock_copy_source_director
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 def test_find_all_images_from_specified_sources_single_fail(mock_copy_source_directory,
                                                             mock_run_command):
-  """Verify that we can deterimine commit hash from a source tree
-  with single mode enabled.
-  """
+  """Verify that we can deterimine commit hash from a source tree with single mode enabled."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
@@ -470,9 +461,8 @@ def test_get_image_hashes_from_disk_source(mock_copy_source_directory, mock_run_
 
 @mock.patch.object(source_tree.SourceTree, 'get_previous_commit_hash')
 def test_get_image_hashes_from_disk_source_fail(mock_get_previous_commit_hash):
-  """Verify that we raise an exception if we are not able to determine the prior hash to a specified
-  commit.
-  """
+  """Verify that we raise an exception if we are not able to determine the prior hash to a \
+    specified commit."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
@@ -499,9 +489,8 @@ def _raise_source_tree_error(commit_hash):
 
 @mock.patch.object(source_tree.SourceTree, 'get_previous_commit_hash')
 def test_get_image_hashes_from_disk_source_fail2(mock_get_previous_commit_hash):
-  """Verify that we raise an exception if we are not able to determine the prior hash to a specified
-  commit.
-  """
+  """Verify that we raise an exception if we are not able to determine the prior hash to a\
+    specified commit."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_benchmark_images(job_control)
@@ -523,10 +512,8 @@ def test_get_image_hashes_from_disk_source_fail2(mock_get_previous_commit_hash):
 
 
 def test_get_source_tree():
-  """Verify that we can return a source otree object.  If no sources
-  are specified, we use the known default location from which to get
-  the source code.
-  """
+  """Verify that we can return a source otree object.  If no sources are specified, we use the \
+    known default location from which to get the source code."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   manager = source_manager.SourceManager(job_control)
@@ -540,9 +527,7 @@ def test_get_source_tree():
 
 
 def test_get_source_tree_fail():
-  """Verify that we raise an assertion if we are not able to find a
-  source repository.
-  """
+  """Verify that we raise an assertion if we are not able to find a source repository."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   manager = source_manager.SourceManager(job_control)
 
@@ -557,7 +542,7 @@ def test_get_source_tree_fail():
 
 
 def test_get_build_options():
-  """Verify that we can retrieve specified build options"""
+  """Verify that we can retrieve specified build options."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_envoy_source(job_control)
@@ -575,9 +560,7 @@ def test_get_build_options():
 
 
 def test_get_build_options_failure():
-  """Verify that we raise an exception if no options are present in a source
-  repository.
-  """
+  """Verify that we raise an exception if no options are present in a source repository."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_envoy_source(job_control)
@@ -595,7 +578,7 @@ def test_get_build_options_failure():
 
 
 def test_have_build_options():
-  """Verify that we can determine if build options exist"""
+  """Verify that we can determine if build options exist."""
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 
   _generate_default_envoy_source(job_control)

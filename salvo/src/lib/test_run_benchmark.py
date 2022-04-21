@@ -1,4 +1,4 @@
-"""Test benchmark running operations"""
+"""Test benchmark running operations."""
 import pytest
 from unittest import mock
 
@@ -26,7 +26,7 @@ _BUILD_NIGHTHAWK_BENCHMARK_IMAGE_FROM_SOURCE = \
 @mock.patch('os.symlink')
 @mock.patch.object(source_manager.SourceManager, 'get_envoy_hashes_for_benchmark')
 def test_binary_benchmark_setup(mock_get_hashes, mock_symlink):
-  """Verify that the unique methods to the binary benchmark workflow are in order"""
+  """Verify that the unique methods to the binary benchmark workflow are in order."""
   job_control = proto_control.JobControl(remote=False, binary_benchmark=True)
   mock_get_hashes.return_value = ["jedi", "padawan"]
   generate_test_objects.generate_envoy_source(job_control)
@@ -114,9 +114,8 @@ def test_execute_with_building_envoy_images(mock_hashes_for_benchmarks, mock_hav
                                             mock_build_nighthawk_binary,
                                             mock_build_nighthawk_benchmark, mock_execute,
                                             mock_symlink):
-  """Verify that we invoke the build methods if we are not able to pull
-  the required images for a benchmark
-  """
+  """Verify that we invoke the build methods if we are not able to pull the required images for a \
+    benchmark."""
   # Build a default job control object with images
   job_control = generate_test_objects.generate_default_job_control()
   generate_test_objects.generate_images(job_control)

@@ -1,4 +1,4 @@
-"""Test source_tree operations needed for executing benchmarks"""
+"""Test source_tree operations needed for executing benchmarks."""
 from unittest import mock
 import pytest
 import subprocess
@@ -209,7 +209,7 @@ def test_get_source_directory():
 
 @mock.patch('shutil.copytree')
 def test_copy_source_directory(mock_copytree):
-  """Verify that we are able to copy a source tree to a temporary directory"""
+  """Verify that we are able to copy a source tree to a temporary directory."""
   mock_copytree.return_value = None
 
   tree = _generate_source_tree_from_path('/test_copy_source_directory')
@@ -364,9 +364,8 @@ def test_get_previous_commit_fail(mock_check_output):
 
 
 def testget_revs_behind_parent_branch():
-  """Verify that we can determine how many commits beind the local source tree lags behind the
-  remote repository.
-  """
+  """Verify that we can determine how many commits beind the local source tree lags behind the \
+    remote repository."""
   origin = _DEFAULT_HTTPS_REPO_URL
   st = _generate_source_tree_from_origin(origin)
 
@@ -388,9 +387,8 @@ nothing to commit, working tree clean
 
 
 def testget_revs_behind_parent_branch_up_to_date():
-  """Verify that we can determine how many commits beind the local source tree lags behind the
-  remote repository.
-  """
+  """Verify that we can determine how many commits beind the local source tree lags behind the \
+    remote repository."""
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 
@@ -471,9 +469,7 @@ v1.16.0
 
 
 def test_get_previous_tag_fail():
-  """Verify that we raise an exception if we try to retrieve tags using a
-  hash
-  """
+  """Verify that we raise an exception if we try to retrieve tags using a hash."""
   origin = _DEFAULT_HTTPS_REPO_URL
   source = _generate_source_tree_from_origin(origin)
 

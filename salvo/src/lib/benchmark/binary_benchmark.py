@@ -1,5 +1,5 @@
-"""This module contains the methods to perform a Binary benchmark using containers for the scripts,
-nighthawk binaries, and envoy.
+"""This module contains the methods to perform a Binary benchmark using containers for the \
+  scripts, nighthawk binaries, and envoy.
 
 https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 """
@@ -18,15 +18,13 @@ log = logging.getLogger(__name__)
 
 
 class BinaryBenchmarkError(Exception):
-  """Error raised when running a binary benchmark in cases where we cannot make progress due to
-  abnormal conditions.
-  """
+  """Error raised when running a binary benchmark in cases where we cannot make progress due to \
+    abnormal conditions."""
 
 
 class Benchmark(base_benchmark.BaseBenchmark):
-  """This benchmark class is the binary benchmark. We use a path to an Envoy binary to execute the
-  Nighthawk benchmarks using that specific build.
-  """
+  """This benchmark class is the binary benchmark. We use a path to an Envoy binary to execute the \
+    Nighthawk benchmarks using that specific build."""
 
   def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the benchmark class.
@@ -127,7 +125,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     self._envoy_binary_path = self._envoy_builder.build_envoy_binary_from_source()
 
   def execute_benchmark(self) -> None:
-    """Execute the binary benchmark
+    """Execute the binary benchmark.
 
     Uses either the Envoy specified in ENVOY_PATH, or one built from a
     specified source.

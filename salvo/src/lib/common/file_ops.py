@@ -1,4 +1,4 @@
-"""Module to abstract a few common file operations used in the framework"""
+"""Module to abstract a few common file operations used in the framework."""
 import json
 import shutil
 import yaml

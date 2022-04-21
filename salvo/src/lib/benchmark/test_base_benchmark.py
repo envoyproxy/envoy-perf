@@ -1,4 +1,4 @@
-"""Test the base benchmark class"""
+"""Test the base benchmark class."""
 import os
 import copy
 import pytest

@@ -1,4 +1,4 @@
-"""This module manages the steps needed to build missing docker images"""
+"""This module manages the steps needed to build missing docker images."""
 import logging
 
 from src.lib import (source_tree, source_manager)
@@ -113,7 +113,7 @@ def get_envoy_image_prefix(image_hash: str) -> str:
 
 
 def build_nighthawk_benchmark_image_from_source(manager: source_manager.SourceManager) -> None:
-  """Build the nighthawk benchmark image from source
+  """Build the nighthawk benchmark image from source.
 
   Args:
     manager: A SourceManager object that is a wrapper for git operations.
@@ -126,7 +126,7 @@ def build_nighthawk_benchmark_image_from_source(manager: source_manager.SourceMa
 
 
 def build_nighthawk_binary_image_from_source(manager: source_manager.SourceManager) -> None:
-  """Build the nighthawk binary image from source
+  """Build the nighthawk binary image from source.
 
   Args:
     manager: A SourceManager object that is a wrapper for git operations.

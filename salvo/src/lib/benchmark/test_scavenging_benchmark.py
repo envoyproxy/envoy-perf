@@ -1,4 +1,4 @@
-"""Test the scavenging benchmark class"""
+"""Test the scavenging benchmark class."""
 import pytest
 from unittest import mock
 

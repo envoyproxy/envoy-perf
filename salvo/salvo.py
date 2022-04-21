@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""The main file of Salvo"""
+"""The main file of Salvo."""
 import argparse
 import logging
 import sys
