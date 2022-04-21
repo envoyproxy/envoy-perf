@@ -79,10 +79,8 @@ def _generate_default_benchmark_images(job_control):
   """
   image_config = job_control.images
   image_config.reuse_nh_images = True
-  image_config.nighthawk_benchmark_image = \
-    "envoyproxy/nighthawk-benchmark-dev:latest"
-  image_config.nighthawk_binary_image = \
-    "envoyproxy/nighthawk-dev:latest"
+  image_config.nighthawk_benchmark_image = "envoyproxy/nighthawk-benchmark-dev:latest"
+  image_config.nighthawk_binary_image = "envoyproxy/nighthawk-dev:latest"
 
   return image_config
 
@@ -222,8 +220,7 @@ def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory
     hashes = manager.determine_envoy_hashes_from_source()
 
   assert not hashes
-  assert str(source_error.value) == \
-    "Unable to obtain the source to determine commit hashes"
+  assert str(source_error.value) == "Unable to obtain the source to determine commit hashes"
 
 
 def test_find_all_images_from_specified_tags():
@@ -262,8 +259,8 @@ def test_find_all_images_from_specified_tags_fail(mock_source_tree):
     hashes = manager.find_all_images_from_specified_tags()
 
   assert not hashes
-  assert str(source_error.value) == \
-    "No images are specified or able to be built from the control document"
+  assert str(
+      source_error.value) == "No images are specified or able to be built from the control document"
 
 
 def test_find_image_single():
@@ -320,8 +317,8 @@ def test_find_image_single_fail(mock_source_tree):
     hashes = manager.find_all_images_from_specified_tags()
 
   assert not hashes
-  assert str(source_error.value) == \
-    '"additional_envoy_image" cannot be set with "test_single_image" enabled'
+  assert str(source_error.value
+            ) == '"additional_envoy_image" cannot be set with "test_single_image" enabled'
 
 
 def test_find_all_images_from_specified_tags_build_envoy():
@@ -465,8 +462,8 @@ def test_find_all_images_from_specified_sources_single_fail(mock_copy_source_dir
   with pytest.raises(source_manager.SourceManagerError) as source_error:
     hashes = manager.find_all_images_from_specified_sources()
   assert not hashes
-  assert str(source_error.value) == \
-    '"additional_hashes" cannot be set with "test_single_commit" enabled'
+  assert str(
+      source_error.value) == '"additional_hashes" cannot be set with "test_single_commit" enabled'
 
 
 @mock.patch("src.lib.cmd_exec.run_command")

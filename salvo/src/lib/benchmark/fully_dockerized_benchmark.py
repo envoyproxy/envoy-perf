@@ -115,6 +115,6 @@ class Benchmark(base_benchmark.BaseBenchmark):
     # Establishing success here requires that we examine the output produced by
     # NightHawk. If the latency output exists we can be relatively certain that
     # all containers were able to run and execute the specified tests
-    if not "benchmark_http_client" in result.decode('utf-8'):
+    if "benchmark_http_client" not in result.decode('utf-8'):
       raise base_benchmark.BenchmarkError(
           "Unable to assert that the benchmark executed successfully")

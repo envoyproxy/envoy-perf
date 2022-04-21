@@ -85,12 +85,12 @@ class Benchmark(base_benchmark.BaseBenchmark):
       if source_def.identity == source_def.SRCID_UNSPECIFIED:
         raise BinaryBenchmarkError("No source identity specified")
 
-      if source_def.identity == source_def.SRCID_ENVOY and \
-        (source_def.source_path or source_def.source_url):
+      if source_def.identity == source_def.SRCID_ENVOY and (source_def.source_path or
+                                                            source_def.source_url):
         can_build_envoy = True
 
-      if source_def.identity == source_def.SRCID_NIGHTHAWK and \
-        (source_def.source_path or source_def.source_url):
+      if source_def.identity == source_def.SRCID_NIGHTHAWK and (source_def.source_path or
+                                                                source_def.source_url):
         can_build_nighthawk = True
 
     if not can_build_nighthawk:
@@ -122,8 +122,8 @@ class Benchmark(base_benchmark.BaseBenchmark):
       BinaryBenchmarkError: an invalid envoy binary is specified via ENVOY_PATH
     """
     if self._envoy_binary_path:
-      if not (os.path.exists(self._envoy_binary_path) \
-          and os.access(self._envoy_binary_path, os.X_OK)):
+      if not (os.path.exists(self._envoy_binary_path) and
+              os.access(self._envoy_binary_path, os.X_OK)):
         raise BinaryBenchmarkError("ENVOY_PATH environment variable specified, but invalid")
       # We already have a binary, no need to build
       log.info("Using Envoy binary specified in ENVOY_PATH environment variable")
@@ -143,7 +143,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
     self._prepare_nighthawk()
     self._prepare_envoy()
 
-    #todo: refactor args, have frontend specify them via protobuf
+    # todo: refactor args, have frontend specify them via protobuf
     cmd = ("bazel test "
            "--test_summary=detailed "
            "--test_output=all "

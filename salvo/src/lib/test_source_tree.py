@@ -140,8 +140,7 @@ def test_get_origin_fail(mock_get_source_directory, mock_run_command):
     origin = source.get_origin()
 
   assert not origin
-  assert str(source_error.value) == \
-    "Unable to determine the origin url from /some_temp_directory"
+  assert str(source_error.value) == "Unable to determine the origin url from /some_temp_directory"
 
 
 def _generate_source_tree_from_origin(origin: str) -> source_tree.SourceTree:
@@ -369,8 +368,7 @@ def test_get_previous_commit_hash_fail(mock_check_output):
     hash_string = source.get_previous_commit_hash(commit_hash)
 
   assert not hash_string
-  assert str(source_error.value) == \
-    'No commit found prior to fake_commit_hash_1'
+  assert str(source_error.value) == 'No commit found prior to fake_commit_hash_1'
 
 
 @mock.patch('src.lib.cmd_exec.run_command')
@@ -520,8 +518,7 @@ def test_get_previous_tag_fail():
     previous_tag = source.get_previous_tag(current_tag)
 
   assert not previous_tag
-  assert str(source_error.value) == \
-    'The tag specified is not the expected format'
+  assert str(source_error.value) == 'The tag specified is not the expected format'
 
 
 def test_get_previous_n_tag():

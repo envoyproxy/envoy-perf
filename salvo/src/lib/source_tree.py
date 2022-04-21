@@ -59,7 +59,7 @@ class SourceTree(object):
     #       module will have one $HOME path defined and orchestrate sources
     #       to reduce/eliminate multiple copies of a source tree
 
-    home_dir = '' if not 'HOME' in os.environ else os.environ['HOME']
+    home_dir = '' if 'HOME' not in os.environ else os.environ['HOME']
     if not home_dir.startswith(constants.SALVO_TMP):
       home_dir = constants.SALVO_TMP
 

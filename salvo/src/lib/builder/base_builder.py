@@ -82,8 +82,7 @@ class BaseBuilder():
     output = cmd_exec.run_command(cmd, cmd_params)
     log.debug(f"Clean output: {output}")
 
-  def _generate_bazel_options(self, \
-      source_id: proto_source.SourceRepository.SourceIdentity) -> str:
+  def _generate_bazel_options(self, source_id: proto_source.SourceRepository.SourceIdentity) -> str:
     """Generate the options string that we supply to bazel when building
       Envoy or NightHawk.
 
