@@ -1,7 +1,4 @@
-"""
-This module contains helper functions abstracting the interaction
-with docker.
-"""
+"""This module contains helper functions abstracting the interaction with docker."""
 import json
 import logging
 

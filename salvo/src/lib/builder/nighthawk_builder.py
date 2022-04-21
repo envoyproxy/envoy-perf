@@ -38,13 +38,11 @@ class NightHawkBuilder(base_builder.BaseBuilder):
   """This class encapsulates the logic to build the nighthawk binaries benchmark scripts, and container images from source."""
 
   def __init__(self, manager: source_manager.SourceManager) -> None:
-    """Initialize the builder with the location of the source and the commit hash at which we are \
+    """Initialize the builder with the location of the source and the commit hash at which we are
     operating.
 
     Args:
-      source_repo: The SourceRepository object describing the location
-        containig the source code, and the desired commit hash or tag
-        at which we operate.
+      manager: The SourceManager object handling the source code used by this builder object
     """
     super(NightHawkBuilder, self).__init__(manager)
     self._source_repo = self._source_manager.get_source_repository(

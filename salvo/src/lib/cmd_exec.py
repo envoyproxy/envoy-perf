@@ -1,7 +1,5 @@
-"""
-Module to execute a command and return the output generated.  Returns both
-stdout and stderr in the buffer.  We also convert bytes objects to a string
-so callers manipulate one type of object
+"""Module to execute a command and return the output generated.  Returns both stdout and stderr in
+the buffer.  We also convert bytes objects to a string so callers manipulate one type of object.
 """
 import shlex
 import subprocess

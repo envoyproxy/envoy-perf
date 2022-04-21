@@ -1,5 +1,4 @@
-"""
-Base builder class initializing the temporary directories and environment variables needed to
+"""Base builder class initializing the temporary directories and environment variables needed to
 execute bazel.
 """
 import os
@@ -27,8 +26,7 @@ class BaseBuilder():
     for operation.
 
     Args:
-      manager: The SourceManager object handling the source code
-        used by this builder object
+      manager: The SourceManager object handling the source code used by this builder object
     """
     self._source_manager = manager
 

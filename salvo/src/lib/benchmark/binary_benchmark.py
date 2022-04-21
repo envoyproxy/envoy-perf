@@ -1,5 +1,4 @@
-"""
-This module contains the methods to perform a Binary benchmark using containers for the scripts, \
+"""This module contains the methods to perform a Binary benchmark using containers for the scripts,
 nighthawk binaries, and envoy.
 
 https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md

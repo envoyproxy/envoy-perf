@@ -1,7 +1,5 @@
-"""
-General benchmark wrapper that validates that the
-job control contains all dat required for each known
-benchmark
+"""General benchmark wrapper that validates that the job control contains all dat required for each
+known benchmark.
 """
 import logging
 import os

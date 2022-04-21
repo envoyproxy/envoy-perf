@@ -13,7 +13,7 @@ def _check_call_side_effect(args, parameters):
 
   Args:
     args: The arguments supplied to the mocked function
-    parameter: The CommandParameters passed to the cmd_exec method
+    parameters: The CommandParameters passed to the cmd_exec method
   Return:
     usually this returns a string containing the command output.  In
       some cases we may raise an exception.

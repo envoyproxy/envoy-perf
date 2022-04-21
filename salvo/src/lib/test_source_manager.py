@@ -161,8 +161,7 @@ def test_determine_envoy_hashes_from_source(mock_copy_source_directory, mock_run
 @mock.patch("src.lib.cmd_exec.run_command")
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_determine_envoy_hashes_from_source2(mock_source_tree_pull, mock_run_command):
-  """
-  Verify that we can determine Envoy hashes from a source repository
+  """Verify that we can determine Envoy hashes from a source repository.
 
   This test exercises the else case where we use the head hash instead
   of a specific envoy tag.
@@ -191,9 +190,8 @@ def test_determine_envoy_hashes_from_source2(mock_source_tree_pull, mock_run_com
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 def test_determine_envoy_hashes_from_source_pull_fail(mock_copy_source_directory,
                                                       mock_source_tree_pull):
-  """
-  Verify that an exception is raised when we cannot determine Envoy hashes
-  from a job control object
+  """Verify that an exception is raised when we cannot determine Envoy hashes from a job control
+  object.
   """
   job_control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
 

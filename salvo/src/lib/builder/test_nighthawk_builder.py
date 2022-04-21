@@ -55,7 +55,7 @@ def test_prepare_nighthawk_source(mock_pull, mock_copy_source, mock_get_source_d
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_build_nighthawk_benchmarks(mock_pull, mock_copy_source, mock_run_command):
-  """Verify the calls made to build the nighthawk benchmarks target"""
+  """Verify the calls made to build the nighthawk benchmarks target."""
   mock_pull.return_value = True
   mock_copy_source.return_value = None
   mock_run_command.side_effect = ['bazel clean output ...', 'bazel build output ...']

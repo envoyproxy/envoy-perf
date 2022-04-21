@@ -1,5 +1,4 @@
-"""
-This module contains the methods to perform a Scavenging benchmark using containers for the \
+"""This module contains the methods to perform a Scavenging benchmark using containers for the
 scripts, nighthawk binaries, and envoy.
 
 https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md

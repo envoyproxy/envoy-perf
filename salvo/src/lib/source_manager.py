@@ -282,8 +282,8 @@ class SourceManager(object):
     """Create a source tree object from a SourceRepository.
 
     Args:
-      source_id: The identity of the source object we seek (eg.
-        SRCID_NIGHTHAWK or SRCID_ENVOY)
+      source_id: The identity of the source object we seek (eg.SRCID_NIGHTHAWK or SRCID_ENVOY)
+
     Returns:
       a source tree object managing the identified source repository
     """
@@ -295,8 +295,7 @@ class SourceManager(object):
     """Return the source tree object identified by source_id.
 
     Args:
-      source_id: The identity of the source tree we seek (eg.
-        SRCID_NIGHTHAWK or SRCID_ENVOY)
+      source_id: The identity of the source tree we seek (eg.SRCID_NIGHTHAWK or SRCID_ENVOY)
 
     Returns:
       a source tree object managing the identified source repository

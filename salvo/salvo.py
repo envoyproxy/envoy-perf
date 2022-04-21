@@ -19,8 +19,7 @@ def setup_logging(loglevel: int = logging.DEBUG) -> None:
   defaults to debug
 
   Args:
-    loglevel configures the level of the logger.  The default is DEBUG
-      level logging
+    loglevel: configures the level of the logger. The default is DEBUG level logging.
   """
   logging.getLogger('docker').setLevel(logging.ERROR)
   logging.getLogger('urllib3').setLevel(logging.ERROR)

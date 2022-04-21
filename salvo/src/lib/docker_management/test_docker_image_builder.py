@@ -1,6 +1,5 @@
-"""
-Test Docker image build logic.  Most of these test are shallow and do not
-verify the git operations being automated.
+"""Test Docker image build logic.  Most of these test are shallow and do not verify the git
+operations being automated.
 """
 import pytest
 from unittest import mock

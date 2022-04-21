@@ -1,4 +1,4 @@
-"""Test base builder operations"""
+"""Test base builder operations."""
 import pytest
 
 from src.lib import source_manager
