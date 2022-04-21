@@ -1,10 +1,8 @@
-"""
-This module contains the methods to perform a nighthawk benchmark using
-containers for the scripts, nighthawk binaries, and envoy
+"""This module contains the methods to perform a nighthawk benchmark using containers for the \
+  scripts, nighthawk binaries, and envoy.
 
 https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 """
-
 import logging
 
 import api.control_pb2 as proto_control
@@ -15,16 +13,13 @@ log = logging.getLogger(__name__)
 
 
 class FullyDockerizedBenchmarkError(Exception):
-  """Error rasied when running a fully dockerized benchmark in cases
-     where we cannot make progress due to abnormal conditions.
-  """
+  """Error rasied when running a fully dockerized benchmark in cases where we cannot make progress \
+    due to abnormal conditions."""
 
 
 class Benchmark(base_benchmark.BaseBenchmark):
-  """This benchmark class is the fully dockerized benchmark.  Docker images
-     containing the benchmark scripts, binaries, and envoy are used to execute
-     the tests.
-  """
+  """This benchmark class is the fully dockerized benchmark. Docker images containing the benchmark\
+    scripts, binaries, and envoy are used to execute the tests."""
 
   def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the benchmark class."""

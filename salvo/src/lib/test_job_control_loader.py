@@ -1,6 +1,4 @@
-"""
-Test module to validate parsing of the job control document
-"""
+"""Test module to validate parsing of the job control document."""
 import os
 import json
 import tempfile
@@ -55,7 +53,7 @@ def _serialize_and_read_object(pb_obj):
 
 
 def _validate_job_control_object(job_control):
-  """Common verification method for a job control object.
+  """Verify a job control object.
 
   This method reads an object and verifies its data fields
   match a predetermined set of data
@@ -158,7 +156,6 @@ def test_control_doc_parse_yaml():
         variables:
           TMP_DIR: "/home/ubuntu/nighthawk_output"
     """
-
   # Write YAML contents to a temporary file that we clean up once
   # the object is parsed
   job_control = None
@@ -178,7 +175,6 @@ def test_control_doc_parse():
   serializes it, then verifies that the serialized data matches the
   input.
   """
-
   control_json = """
     {
       "remote": true,
@@ -213,7 +209,6 @@ def test_control_doc_parse():
       }
     }
     """
-
   # Write JSON contents to a temporary file that we clean up once
   # the object is parsed
   job_control = None
@@ -266,9 +261,7 @@ def test_generate_control_doc():
 
 
 def test_bazel_options():
-  """Verify that we can specify bazel options and can handle dashes
-     in the strings.
-  """
+  """Verify that we can specify bazel options and can handle dashes in the strings."""
   job_control = proto_control.JobControl(remote=True, scavenging_benchmark=True)
 
   envoy_source = job_control.source.add()
@@ -288,7 +281,7 @@ def test_bazel_options():
 
 
 def test_read_bazel_options():
-
+  """Verify that we can read bazel options from control json file."""
   control_json = """
   {
     "remote": false,
@@ -324,7 +317,7 @@ def test_read_bazel_options():
 
 
 def _validate_job_control_object_with_options(job_control):
-  """Verification method for a job control object with bazel options
+  """Verification method for a job control object with bazel options.
 
   Args:
       job_control: The Protocol Buffer object whose data fields

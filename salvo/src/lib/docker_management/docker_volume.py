@@ -1,8 +1,4 @@
-"""
-This module contains helper functions abstracting the interaction
-with docker.
-"""
-
+"""This module contains helper functions abstracting the interaction with docker."""
 import json
 import logging
 
@@ -15,7 +11,7 @@ log = logging.getLogger(__name__)
 
 
 def generate_volume_config(output_dir: str, test_dir: str = '') -> dict:
-  """Generates the volumes config necessary for a container to run.
+  """Generate the volumes config necessary for a container to run.
 
   The docker path is hardcoded at the moment.  The output directory
   is mounted read-write and the test directory if specified is mounted

@@ -1,6 +1,4 @@
-"""
-Test envoy building operations
-"""
+"""Test envoy building operations."""
 import pytest
 from unittest import mock
 
@@ -14,8 +12,7 @@ _BAZEL_CLEAN_CMD = "bazel clean"
 
 @mock.patch.object(source_manager.SourceManager, 'get_source_repository')
 def test_prepare_nighthawk_source_fail(mock_get_source_tree):
-  """Verify an exception is raised if the source identity is invalid"""
-
+  """Verify an exception is raised if the source identity is invalid."""
   envoy_source_repo = proto_source.SourceRepository(
       identity=proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY,
       source_path='/some_random_envoy_directory',
@@ -36,8 +33,7 @@ def test_prepare_nighthawk_source_fail(mock_get_source_tree):
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_prepare_nighthawk_source(mock_pull, mock_copy_source, mock_get_source_dir):
-  """Verify that we are able to get a source tree on disk to build NightHawk"""
-
+  """Verify that we are able to get a source tree on disk to build NightHawk."""
   mock_pull.return_value = False
   mock_copy_source.return_value = None
   mock_get_source_dir.return_value = '/tmp/nighthawk_source_dir'
@@ -59,8 +55,7 @@ def test_prepare_nighthawk_source(mock_pull, mock_copy_source, mock_get_source_d
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_build_nighthawk_benchmarks(mock_pull, mock_copy_source, mock_run_command):
-  """Verify the calls made to build the nighthawk benchmarks target"""
-
+  """Verify the calls made to build the nighthawk benchmarks target."""
   mock_pull.return_value = True
   mock_copy_source.return_value = None
   mock_run_command.side_effect = ['bazel clean output ...', 'bazel build output ...']
@@ -86,8 +81,7 @@ def test_build_nighthawk_benchmarks(mock_pull, mock_copy_source, mock_run_comman
 @mock.patch.object(source_tree.SourceTree, 'copy_source_directory')
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_build_nighthawk_binaries(mock_pull, mock_copy_source, mock_run_command):
-  """Verify the calls made to build nighthawk binaries"""
-
+  """Verify the calls made to build nighthawk binaries."""
   mock_pull.return_value = True
   mock_copy_source.return_value = None
   mock_run_command.side_effect = ['bazel clean output', 'bazel nighthawk build output ...']
@@ -111,8 +105,7 @@ def test_build_nighthawk_binaries(mock_pull, mock_copy_source, mock_run_command)
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_build_nighthawk_benchmark_image(mock_pull, mock_run_command):
-  """Verify that we can build the nighthawk benchmark image"""
-
+  """Verify that we can build the nighthawk benchmark image."""
   mock_pull.return_value = True
   mock_run_command.side_effect = [
       'bazel clean output ...', 'bazel build benchmarks output ...',
@@ -135,8 +128,7 @@ def test_build_nighthawk_benchmark_image(mock_pull, mock_run_command):
 @mock.patch('src.lib.cmd_exec.run_command')
 @mock.patch.object(source_tree.SourceTree, 'pull')
 def test_build_nighthawk_binary_image(mock_pull, mock_run_command):
-  """Verify that we can build the nighthawk benchmark image"""
-
+  """Verify that we can build the nighthawk benchmark image."""
   mock_pull.return_value = True
   mock_run_command.side_effect = [
       'bazel clean output ...', 'bazel build benchmarks output ...',
@@ -158,7 +150,6 @@ def test_build_nighthawk_binary_image(mock_pull, mock_run_command):
 
 def _generate_default_source_manager():
   """Build a default SourceRepository object."""
-
   control = proto_control.JobControl(remote=False, scavenging_benchmark=True)
   control.source.add(
       identity=proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK,

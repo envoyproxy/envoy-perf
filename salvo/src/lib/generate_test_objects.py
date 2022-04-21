@@ -1,6 +1,4 @@
-"""
-Common object generation methods shared by tests
-"""
+"""Common object generation methods shared by tests."""
 from src.lib import constants
 
 import api.control_pb2 as proto_control

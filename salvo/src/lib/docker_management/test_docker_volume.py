@@ -1,6 +1,4 @@
-"""
-Test Docker volume generation
-"""
+"""Test Docker volume generation."""
 import json
 import pytest
 from unittest import mock
@@ -11,9 +9,7 @@ from src.lib.docker_management import docker_volume
 
 
 def test_generate_volume_config():
-  """Verify the volume mount map can be created with no test directory
-     specified.
-  """
+  """Verify the volume mount map can be created with no test directory specified."""
   output_dir = '/tmp/random_dir_on_disk'
   volume_map = docker_volume.generate_volume_config(output_dir)
 
@@ -26,9 +22,7 @@ def test_generate_volume_config():
 
 
 def test_generate_volume_config_with_test_dir():
-  """Verify the volume mount map can be created when a test directory
-     is specified.
-  """
+  """Verify the volume mount map can be created when a test directory is specified."""
   output_dir = '/tmp/random_dir_on_disk'
   test_dir = '/home/user/test_directory'
   volume_map = docker_volume.generate_volume_config(output_dir, test_dir)
@@ -48,13 +42,13 @@ def test_generate_volume_config_with_test_dir():
 
 
 def json_loads_side_effect(arg):
+  """Raise a Json Decoding Error."""
   raise json.decoder.JSONDecodeError("json loading failed", arg, 0)
 
 
 @mock.patch('json.loads')
 def test_generate_volume_config_json_error(mock_json_loads):
   """Verify that an exception is raised if the json serialization fails."""
-
   mock_json_loads.side_effect = json_loads_side_effect
   output_dir = '/tmp/random_dir_on_disk'
 
@@ -68,13 +62,13 @@ def test_generate_volume_config_json_error(mock_json_loads):
 
 
 def json_loads_side_effect_format_error(arg):
+  """Raise a json formatting error."""
   raise json_format.Error("Error in json format")
 
 
 @mock.patch('json.loads')
 def test_generate_volume_config_format_error(mock_json_loads):
   """Verify that an exception is raised if the json serialization fails."""
-
   mock_json_loads.side_effect = json_loads_side_effect_format_error
   output_dir = '/tmp/random_dir_on_disk'
 
@@ -87,7 +81,7 @@ def test_generate_volume_config_format_error(mock_json_loads):
 
 
 def verify_required_paths(volume_map, output_dir):
-  """Verify the required mounts in the volume map"""
+  """Verify the required mounts in the volume map."""
   assert constants.DOCKER_SOCKET_PATH in volume_map
   docker_map = volume_map[constants.DOCKER_SOCKET_PATH]
 

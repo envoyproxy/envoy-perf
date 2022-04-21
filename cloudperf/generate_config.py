@@ -1,5 +1,4 @@
 """This file generates the configuration files for nginx."""
-
 import argparse
 
 from jinja2 import Environment

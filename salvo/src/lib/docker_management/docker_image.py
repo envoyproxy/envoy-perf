@@ -1,7 +1,4 @@
-"""
-This module contains abstracts running a docker image.
-"""
-
+"""This module contains abstracts running a docker image."""
 import collections
 import logging
 import requests
@@ -27,7 +24,7 @@ DockerRunParameters = collections.namedtuple(
 
 
 class DockerImagePullError(Exception):
-  """This error is raised if an image pull is unsuccessful"""
+  """This error is raised if an image pull is unsuccessful."""
 
 
 class DockerImage():
@@ -43,7 +40,7 @@ class DockerImage():
     self._existing_tags = []
 
   def pull_image(self, image_name: str) -> docker.models.containers.Image:
-    """Pull the identified docker image
+    """Pull the identified docker image.
 
     Args:
         image_name: The name of the docker image that we are retrieving from
@@ -56,7 +53,6 @@ class DockerImage():
     Raises:
       DockerImagePullError: if the image pull is not successful
     """
-
     image = None
     existing_images = self.list_images()
     if image_name not in existing_images:
@@ -113,7 +109,6 @@ class DockerImage():
         A bytearray containing the output produced from executing the specified
           container
     """
-
     output = ''
     with DockerImageController(self) as docker_controller:
       output = docker_controller.run(image_name, run_parameters)
@@ -126,7 +121,7 @@ class DockerImage():
     return [container.name for container in self._client.containers.list(filters=image_filter)]
 
   def stop_image(self, image_name: str) -> None:
-    """Stops a running container."""
+    """Stop a running container."""
     container = self._client.containers.get(image_name)
     container.stop()
 
@@ -144,9 +139,7 @@ class DockerImageController():
     self._image = docker_image
 
   def __enter__(self):
-    """Enumerate any docker images that are running prior to invoking the
-       benchmark container.
-    """
+    """Enumerate any docker images that are running prior to invoking the benchmark container."""
     running_images = self._image.list_processes()
     log.debug(f"Currently Running images: {running_images}")
     self._running_procs = running_images
@@ -180,7 +173,6 @@ class DockerImageController():
       A bytearray containing the output produced from executing the specified
         container
     """
-
     client = self._image.get_docker_client()
     try:
       return client.containers.run(image_name,

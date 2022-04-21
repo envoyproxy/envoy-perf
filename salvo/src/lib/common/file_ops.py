@@ -1,6 +1,4 @@
-"""
-Module to abstract a few common file operations used in the framework
-"""
+"""Module to abstract a few common file operations used in the framework."""
 import json
 import shutil
 import yaml
@@ -9,7 +7,7 @@ import tempfile
 
 
 def open_json(path: str, mode: str = 'r') -> dict:
-  """Open a json file and return its contents as a dictionary
+  """Open a json file and return its contents as a dictionary.
 
   Args:
     path: the full path to the JSON file
@@ -23,7 +21,7 @@ def open_json(path: str, mode: str = 'r') -> dict:
 
 
 def open_yaml(path: str, mode: str = 'r') -> dict:
-  """Open a yaml file and return its contents as a dictionary
+  """Open a yaml file and return its contents as a dictionary.
 
   Args:
     path: the full path to the YAML file
@@ -55,7 +53,6 @@ def get_random_dir(path: str) -> tempfile.TemporaryDirectory:
   Returns:
     The full pathname of the temporary directory.
   """
-
   if not os.path.exists(path):
     os.mkdir(path)
 

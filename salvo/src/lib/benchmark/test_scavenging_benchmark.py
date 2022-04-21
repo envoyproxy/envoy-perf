@@ -1,6 +1,4 @@
-"""
-Test the scavenging benchmark class
-"""
+"""Test the scavenging benchmark class."""
 import pytest
 from unittest import mock
 
@@ -10,8 +8,7 @@ from src.lib import (source_manager, generate_test_objects)
 
 
 def test_execute_benchmark_no_images_or_sources():
-  """Verify the benchmark fails if no images or sources are present """
-
+  """Verify the benchmark fails if no images or sources are present."""
   job_control = generate_test_objects.generate_default_job_control()
   benchmark = scavenging_benchmark.Benchmark(job_control, 'scavenging')
 
@@ -22,8 +19,7 @@ def test_execute_benchmark_no_images_or_sources():
 
 
 def test_execute_benchmark_nighthawk_source_only():
-  """Verify that we detect missing Envoy sources """
-
+  """Verify that we detect missing Envoy sources."""
   job_control = generate_test_objects.generate_default_job_control()
   generate_test_objects.generate_nighthawk_source(job_control)
   benchmark = scavenging_benchmark.Benchmark(job_control, 'scavenging')
@@ -36,8 +32,7 @@ def test_execute_benchmark_nighthawk_source_only():
 
 
 def test_execute_benchmark_envoy_source_only():
-  """Verify that we detect missing NightHawk sources """
-
+  """Verify that we detect missing NightHawk sources."""
   job_control = generate_test_objects.generate_default_job_control()
   generate_test_objects.generate_envoy_source(job_control)
   benchmark = scavenging_benchmark.Benchmark(job_control, 'scavenging')
@@ -52,8 +47,7 @@ def test_execute_benchmark_envoy_source_only():
 @mock.patch.object(source_manager.SourceManager, 'get_source_tree')
 @mock.patch.object(nighthawk_builder.NightHawkBuilder, 'build_nighthawk_benchmarks')
 def test_execute_benchmark_no_environment(mock_benchmarks, mock_get_source_tree):
-  """Verify that we fail a benchmark if no environment is set """
-
+  """Verify that we fail a benchmark if no environment is set."""
   job_control = generate_test_objects.generate_default_job_control()
 
   # Add nighthawk and envoy sources
@@ -77,8 +71,7 @@ def test_execute_benchmark_no_environment(mock_benchmarks, mock_get_source_tree)
 @mock.patch.object(source_manager.SourceManager, 'get_source_tree')
 @mock.patch.object(nighthawk_builder.NightHawkBuilder, 'build_nighthawk_benchmarks')
 def test_execute_benchmark(mock_benchmarks, mock_get_source_tree, mock_run_command):
-  """Verify that we fail a benchmark if no environment is set """
-
+  """Verify that we fail a benchmark if no environment is set."""
   job_control = generate_test_objects.generate_default_job_control()
 
   # Add nighthawk and envoy sources

@@ -1,5 +1,4 @@
 """This file generates some scripts, Makefiles."""
-
 import argparse
 
 from jinja2 import Environment

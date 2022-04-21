@@ -1,7 +1,5 @@
-"""
-Base builder class initializing the temporary directories and
-environment variables needed to execute bazel
-"""
+"""Base builder class initializing the temporary directories and environment variables needed to \
+execute bazel."""
 import os
 import logging
 
@@ -14,23 +12,19 @@ log = logging.getLogger(__name__)
 
 
 class BaseBuilderError(Exception):
-  """An error raised from the BaseBuilder class if we encounter a
-  situation where no progress can be made
-  """
+  """An error raised from the BaseBuilder class if we encounter a situation where no progress can \
+  be made."""
 
 
 class BaseBuilder():
-  """BaseBuilder class encapsulating common build methods and objects managing
-  sources.
-  """
+  """BaseBuilder class encapsulating common build methods and objects managing sources."""
 
   def __init__(self, manager: source_manager.SourceManager) -> None:
-    """Initialize the builder with the location of the source and setup
-      temporary directories needed for operation.
+    """Initialize the builder with the location of the source and setup temporary directories \
+    needed for operation.
 
     Args:
-      manager: The SourceManager object handling the source code
-        used by this builder object
+      manager: The SourceManager object handling the source code used by this builder object
     """
     self._source_manager = manager
 
@@ -62,8 +56,7 @@ class BaseBuilder():
     self._build_dir = source_directory
 
   def _validate(self) -> None:
-    """A private base method verifying the source and other dependencies
-       required to build an artifact.
+    """Verify the source and other dependencies required to build an artifact.
 
     This method should be overridden by a derived class.
 
@@ -74,7 +67,6 @@ class BaseBuilder():
 
   def _run_bazel_clean(self) -> None:
     """Run bazel clean in the source tree directory."""
-
     assert self._build_dir
 
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
@@ -83,8 +75,7 @@ class BaseBuilder():
     log.debug(f"Clean output: {output}")
 
   def _generate_bazel_options(self, source_id: proto_source.SourceRepository.SourceIdentity) -> str:
-    """Generate the options string that we supply to bazel when building
-      Envoy or NightHawk.
+    """Generate the options string that we supply to bazel when building Envoy or NightHawk.
 
     Args:
       source_id: The identity of the source object containing the options

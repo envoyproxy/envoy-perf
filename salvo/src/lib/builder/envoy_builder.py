@@ -1,7 +1,4 @@
-"""
-Module to build an Envoy docker image from a source directory
-"""
-
+"""Module to build an Envoy docker image from a source directory."""
 import glob
 import os
 import logging
@@ -14,23 +11,17 @@ log = logging.getLogger(__name__)
 
 
 class EnvoyBuilderError(Exception):
-  """An error raised when an unrecoverable situation occurs while
-     building Envoy components.
-  """
+  """An error raised when an unrecoverable situation occurs while building Envoy components."""
 
 
 class EnvoyBuilder(base_builder.BaseBuilder):
-  """This class encapsulates the logic to build the envoy binary
-     and container image from source.
-  """
+  """This class encapsulates the logic to build the envoy binary and container image from source."""
 
   def __init__(self, manager: source_manager.SourceManager) -> None:
-    """Initialize the builder with the location of the source and the
-       commit hash at which we are operating.
+    """Initialize the builder with the location of the source and the commit hash at which we are operating.
 
     Args:
-      manager: The source manager object handling the source needed
-        to build Envoy
+      manager: The source manager object handling the source needed to build Envoy.
     """
     super(EnvoyBuilder, self).__init__(manager)
     self._source_tree = self._source_manager.get_source_tree(
@@ -41,9 +32,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     self.set_build_dir(self._source_tree.get_source_directory())
 
   def _validate(self) -> None:
-    """Validate the identity of the source defined from which Envoy is
-    built.
-    """
+    """Validate the identity of the source defined from which Envoy is built."""
     if self._source_repo.identity != proto_source.SourceRepository.SRCID_ENVOY:
       raise EnvoyBuilderError("This class builds Envoy only.")
 
@@ -79,7 +68,6 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     Returns:
       A string representation of the path to the created binary
     """
-
     self._validate()
     self._source_tree.copy_source_directory()
     self._source_tree.checkout_commit_hash()
@@ -101,7 +89,7 @@ class EnvoyBuilder(base_builder.BaseBuilder):
     cmd_exec.run_check_command(cmd, cmd_params)
 
   def stage_su_exec(self) -> None:
-    """Copy the su-exec binary used in the Envoy docker image
+    """Copy the su-exec binary used in the Envoy docker image.
 
     Returns:
       None
@@ -176,7 +164,6 @@ class EnvoyBuilder(base_builder.BaseBuilder):
 
   def _generate_docker_ignore(self) -> None:
     """Generate a dockerignore file to reduce the context size."""
-
     omit_from_dockerignore = ['configs', 'build_release', 'build_release_stripped', 'ci']
 
     pwd = os.getcwd()
@@ -193,7 +180,6 @@ class EnvoyBuilder(base_builder.BaseBuilder):
 
   def create_docker_image(self) -> None:
     """Build a docker image with the newly compiled Envoy binary."""
-
     self._generate_docker_ignore()
     commit_hash = self._source_repo.commit_hash
 

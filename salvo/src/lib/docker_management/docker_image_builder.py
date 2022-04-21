@@ -1,6 +1,4 @@
-"""
-This module manages the steps needed to build missing docker images
-"""
+"""This module manages the steps needed to build missing docker images."""
 import logging
 
 from src.lib import (source_tree, source_manager)
@@ -25,7 +23,6 @@ def build_envoy_docker_image(manager: source_manager.SourceManager, commit_hash:
   Returns:
     None
   """
-
   builder = envoy_builder.EnvoyBuilder(manager)
   source_repo = manager.get_source_repository(proto_source.SourceRepository.SRCID_ENVOY)
   source_repo.commit_hash = commit_hash
@@ -34,7 +31,7 @@ def build_envoy_docker_image(manager: source_manager.SourceManager, commit_hash:
 
 def build_missing_envoy_docker_image(manager: source_manager.SourceManager,
                                      envoy_image_tag: str) -> None:
-  """Builds an image for a commit hash if no image exists.
+  """Build an image for a commit hash if no image exists.
 
   Check available image tags and build an Envoy image if none exists.
   If there are bazel options specified then we will generate a custom
@@ -48,7 +45,6 @@ def build_missing_envoy_docker_image(manager: source_manager.SourceManager,
     envoy_image_tag: A commit hash or tag for which we need to
       build an envoy_image
   """
-
   have_build_options = manager.have_build_options(
       proto_source.SourceRepository.SourceIdentity.SRCID_ENVOY)
 
@@ -68,7 +64,7 @@ def build_missing_envoy_docker_image(manager: source_manager.SourceManager,
 
 
 def build_envoy_image_from_source(manager: source_manager.SourceManager, image_tag: str) -> str:
-  """Builds Envoy from a specified Source Tree.
+  """Build Envoy from a specified Source Tree.
 
   Args:
     manager: A SourceManager object that is a wrapper for git operations.
@@ -78,7 +74,6 @@ def build_envoy_image_from_source(manager: source_manager.SourceManager, image_t
   Returns:
     a tag of the Envoy image built
   """
-
   log.debug(f"Building Envoy image for {image_tag} from source")
 
   build_missing_envoy_docker_image(manager, image_tag)
@@ -118,28 +113,26 @@ def get_envoy_image_prefix(image_hash: str) -> str:
 
 
 def build_nighthawk_benchmark_image_from_source(manager: source_manager.SourceManager) -> None:
-  """Build the nighthawk benchmark image from source
+  """Build the nighthawk benchmark image from source.
 
   Args:
     manager: A SourceManager object that is a wrapper for git operations.
       The source manager can navigate the commit hashes or tags to determine
       the endpoints for the benchmark
   """
-
   # TODO: Inject the builder object into this method
   builder = nighthawk_builder.NightHawkBuilder(manager)
   builder.build_nighthawk_benchmark_image()
 
 
 def build_nighthawk_binary_image_from_source(manager: source_manager.SourceManager) -> None:
-  """Build the nighthawk binary image from source
+  """Build the nighthawk binary image from source.
 
   Args:
     manager: A SourceManager object that is a wrapper for git operations.
       The source manager can navigate the commit hashes or tags to determine
       the endpoints for the benchmark
   """
-
   # TODO: Inject the builder object into this method
   builder = nighthawk_builder.NightHawkBuilder(manager)
   builder.build_nighthawk_binary_image()

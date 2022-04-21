@@ -1,5 +1,4 @@
 """The process class to run/kill linux processes."""
-
 import shlex
 
 import sh
@@ -7,7 +6,6 @@ import sh
 
 class Process(object):
   """Process class which represents a process in linux."""
-
   def __init__(self, proc_command, outstream, args=None):
     """Initializer with arguments.
 

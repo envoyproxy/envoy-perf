@@ -1,8 +1,5 @@
-"""
-Module to execute a command and return the output generated.  Returns both
-stdout and stderr in the buffer.  We also convert bytes objects to a string
-so callers manipulate one type of object
-"""
+"""Module to execute a command and return the output generated. Returns both stdout and stderr in \
+  the buffer. We also convert bytes objects to a string so callers manipulate one type of object."""
 import shlex
 import subprocess
 import typing
@@ -38,7 +35,6 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
     subprocess.CalledProcessError: if the command exits with a non-zero exit
       code
   """
-
   # Because the stdout/stderr from nighthawk can be large, we redirect it to
   # a temporary file and re-read the output to return to the caller.  This
   # method also appears to capture output more consistently in the event of a

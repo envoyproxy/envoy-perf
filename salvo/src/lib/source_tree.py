@@ -1,4 +1,4 @@
-"""Manage a source location on disk"""
+"""Manage a source location on disk."""
 import re
 import logging
 import os
@@ -32,9 +32,8 @@ _REPO_STATUS_REGEX = r'.*ahead of \'(.*)\' by (\d+) commit'
 
 
 class SourceTreeError(Exception):
-  """Raised if we encounter a condition from which we cannot recover, when
-     manipulating SourceTree objects.
-  """
+  """Raised if we encounter a condition from which we cannot recover, when manipulating SourceTree \
+    objects."""
 
 
 def is_tag(image_tag: str) -> bool:
@@ -51,10 +50,7 @@ class SourceTree(object):
   """
 
   def __init__(self, source_repo: proto_source.SourceRepository) -> None:
-    """Create temporary directories for building and working
-        with a source tree.
-    """
-
+    """Create temporary directories for building and working with a source tree."""
     # TODO: We need one module that centralizes directory management.  This
     #       module will have one $HOME path defined and orchestrate sources
     #       to reduce/eliminate multiple copies of a source tree
@@ -72,7 +68,6 @@ class SourceTree(object):
 
   def __repr__(self) -> str:
     """Return a string representation of this class."""
-
     result = f"{type(self).__name__}: "
     result += f"Origin: [{self._source_repo.source_url}] "
     result += f"Branch: [{self._source_repo.branch}] "
@@ -97,7 +92,6 @@ class SourceTree(object):
       SourceTreeError: if no path or url is specified for the class to
         operate.
     """
-
     # We have neither a source url nor source on disk.
     # - This is a non starter and we cannot operate further. We don't know where
     #   to get the source for building anything
@@ -213,7 +207,6 @@ class SourceTree(object):
     Returns:
       a boolean indicating whether the operation was successful
     """
-
     self._validate()
 
     source_name = proto_source.SourceRepository.SourceIdentity.Name(self._source_repo.identity)
@@ -241,7 +234,7 @@ class SourceTree(object):
     return expected in output
 
   def checkout_commit_hash(self) -> bool:
-    """Checks out the specified commit hash in the source tree
+    """Check out the specified commit hash in the source tree.
 
     Returns:
       a boolean indicating whether the operation was successful
@@ -299,7 +292,6 @@ class SourceTree(object):
     Raises:
       SourceTreeError if we are not able to deduce the previous commit
     """
-
     assert current_commit
 
     if not self.pull():
@@ -334,9 +326,9 @@ class SourceTree(object):
     raise SourceTreeError(f"No commit found prior to {current_commit}")
 
   def get_revs_behind_parent_branch(self) -> int:
-    """Get the number of commits behind the parent branch.
-    Determine how many commits the current branch on disk is behind the
-    parent branch.  If we are up to date, return zero
+    """Get the number of commits behind the parent branch. Determine how many commits the current \
+      branch on disk is behind the parent branch. If we are up to date, return zero.
+
     Returns:
       an integer with the number of commits the local source lags
        behind the parent branch

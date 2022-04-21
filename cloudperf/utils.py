@@ -1,5 +1,4 @@
 """This file consists of generic Python helper functions."""
-
 import os
 import random
 import string

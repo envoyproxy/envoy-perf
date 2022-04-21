@@ -1,6 +1,4 @@
-"""
-This object abstracts the loading of json strings into protobuf objects
-"""
+"""This object abstracts the loading of json strings into protobuf objects."""
 import json
 import logging
 import yaml

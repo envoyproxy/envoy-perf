@@ -1,10 +1,8 @@
-"""
-This module contains the methods to perform a Scavenging benchmark using
-containers for the scripts, nighthawk binaries, and envoy
+"""This module contains the methods to perform a Scavenging benchmark using containers for the \
+  scripts, nighthawk binaries, and envoy.
 
 https://github.com/envoyproxy/nighthawk/blob/master/benchmarks/README.md
 """
-
 import subprocess
 import logging
 
@@ -19,20 +17,16 @@ log = logging.getLogger(__name__)
 
 
 class ScavengingBenchmarkError(Exception):
-  """Error rasied when running a scavenging benchmark in cases
-     where we cannot make progress due to abnormal conditions.
-  """
+  """Error rasied when running a scavenging benchmark in cases where we cannot make progress due \
+    to abnormal conditions."""
 
 
 class Benchmark(base_benchmark.BaseBenchmark):
-  """This benchmark class is the scavenging benchmark. We build the nighthawk
-     binaries and scripts, then execute "bazel test" to run all tests in the
-     benchmarks directory
-  """
+  """This benchmark class is the scavenging benchmark. We build the nighthawk binaries and \
+    scripts, then execute "bazel test" to run all tests in the benchmarks directory."""
 
   def __init__(self, job_control: proto_control.JobControl, benchmark_name: str) -> None:
     """Initialize the benchmark class."""
-
     self._benchmark_dir = None
     super(Benchmark, self).__init__(job_control, benchmark_name)
 
@@ -87,7 +81,6 @@ class Benchmark(base_benchmark.BaseBenchmark):
     Raises:
       BenchmarkError: if the benchmark fails to execute successfully
     """
-
     self._validate()
     self._prepare_nighthawk()
 

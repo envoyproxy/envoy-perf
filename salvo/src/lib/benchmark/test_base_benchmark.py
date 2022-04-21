@@ -1,6 +1,4 @@
-"""
-Test the base benchmark class
-"""
+"""Test the base benchmark class."""
 import os
 import copy
 import pytest
@@ -11,12 +9,10 @@ from src.lib.benchmark import base_benchmark
 
 
 def test_environment_variables():
-  """Test that the specified environment variables are set for a
-      benchmark.
+  """Test that the specified environment variables are set for a benchmark.
 
-      We copy the environment variables for verification and clear
-      the variables that we set so that we do not pollute other
-      tests.
+  We copy the environment variables for verification and clear the variables that we set so that we
+  do not pollute other tests.
   """
   environ = proto_env.EnvironmentVars()
   environ.variables["TMP_DIR"] = "/home/user/nighthawk_output"
@@ -60,9 +56,7 @@ def test_no_environment_variables_exception():
 
 
 def test_minimal_environment_variables():
-  """Test that setting the required variables works and no extra variables are
-     set.
-  """
+  """Test that setting the required variables works and no extra variables are set."""
   environ = proto_env.EnvironmentVars()
   environ.test_version = environ.IPV_V6ONLY
 
