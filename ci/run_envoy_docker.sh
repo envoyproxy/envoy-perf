@@ -3,7 +3,7 @@
 set -e
 
 # shellcheck source=ci/envoy_build_sha.sh
-# . "$(dirname "$0")"/envoy_build_sha.sh
+. "$(dirname "$0")"/envoy_build_sha.sh
 
 function is_windows() {
   [[ "$(uname -s)" == *NT* ]]
