@@ -3,13 +3,13 @@
 if [ ${UID} -ne 0 ]
 then
   echo "This script needs root priviliges to install dependencies. Continuing may elicit failures from tests"
-  exit 0
+  exit 1
 fi
 
 if [ -f ${HOME}/.salvo_deps_installed ]
 then
   echo "Dependencies already installed. Remove \"${HOME}/.salvo_deps_installed\" to reinstall."
-  exit 0
+  exit 1
 fi
 
 /usr/bin/apt update
