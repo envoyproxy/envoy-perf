@@ -12,16 +12,18 @@ stages:
     displayName: "do_ci.sh"
     dependsOn: []
     strategy:
-      maxParallel: 4
-      # Add comments to test
+      maxParallel: 1
       matrix:
         build:
           CI_TARGET: "build"
         format:
+          dependsOn: build
           CI_TARGET: "check_format"
         test:
+          dependsOn: test
           CI_TARGET: "test"
         coverage:
+          dependsOn: coverage
           CI_TARGET: "coverage"
     timeoutInMinutes: 120
     steps:
