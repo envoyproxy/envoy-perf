@@ -17,15 +17,12 @@ stages:
         build:
           CI_TARGET: "build"
         format:
-          dependsOn: build
           CI_TARGET: "check_format"
         test:
-          dependsOn: test
           CI_TARGET: "test"
         coverage:
-          dependsOn: coverage
           CI_TARGET: "coverage"
-    timeoutInMinutes: 120
+    timeoutInMinutes: 1200
     steps:
     - template: bazel.yml
       parameters:
