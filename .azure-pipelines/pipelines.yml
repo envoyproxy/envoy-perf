@@ -13,6 +13,7 @@ stages:
     dependsOn: []
     strategy:
       maxParallel: 4
+      # Add comments to test
       matrix:
         build:
           CI_TARGET: "build"
