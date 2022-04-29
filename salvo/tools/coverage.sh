@@ -36,6 +36,11 @@ CMD="${CMD} -o coverage/coverage.dat"
 
 # Extract all coverage data for salvo project files
 lcov -e coverage/coverage.dat -o coverage/salvo.dat '*/salvo/src/lib/*.py'
+if [ "$?" != "0" ]; then
+  echo "Failed to run test coverage checks."
+  exit 1
+fi
+
 
 # Redirect source file paths from the sandbox to the real source files.
 # Changes strings like this:
@@ -47,6 +52,10 @@ sed -e 's/SF.*\.runfiles\/salvo\/\(.*\)$/SF:\1/' -i coverage/salvo.dat
 # Generate HTML coverage report.
 mkdir -p coverage/html
 genhtml coverage/salvo.dat -o coverage/html
+if [ "$?" != "0" ]; then
+  echo "Failed to run test coverage checks."
+  exit 1
+fi
 echo "HTML coverage report generated, view by running:"
 echo "  (cd coverage/html && python3 -m http.server)"
 
