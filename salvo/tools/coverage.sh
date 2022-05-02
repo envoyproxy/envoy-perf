@@ -7,7 +7,7 @@
 # Exit immediately if a command exits with a non-zero status.
 # pipefail indicates that the return value of a pipeline is the status
 # of the last command to exit with a non-zero status.
-set -exo pipefail
+set -eo pipefail
 
 # Adapted from https://github.com/bazelbuild/bazel/issues/10660
 GITHUB_WORKSPACE=${PWD}
