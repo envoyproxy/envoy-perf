@@ -1,7 +1,9 @@
 #!/bin/bash
 
-set -x
-
+# Exit immediately if a command exits with a non-zero status.
+# pipefail indicates that the return value of a pipeline is the status
+# of the last command to exit with a non-zero status.
+set -exo pipefail
 
 function die()
 {
