@@ -11,14 +11,6 @@ then
   exit 0
 fi
 
-/usr/bin/apt update
-/usr/bin/apt -y install \
-  docker.io \
-  python3-pytest \
-  python3-docker \
-  openjdk-11-jdk
-
-
 pip3 install --upgrade --user pip
 pip3 install --upgrade --user setuptools
 pip3 install --user -r requirements.txt

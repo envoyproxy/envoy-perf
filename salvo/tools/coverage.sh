@@ -20,6 +20,7 @@ bazel coverage -t- --instrument_test_targets \
 	--test_output=errors \
   --linkopt=--coverage \
 	--test_env=PYTHON_COVERAGE=${GITHUB_WORKSPACE}/coveragepy-lcov-support/__main__.py \
+  --java_runtime_version=remotejdk_11 \
   //...
 
 # Combine all coverage data into one file
