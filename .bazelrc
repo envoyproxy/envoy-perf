@@ -1,6 +1,6 @@
-# The following .bazelrc content is forked from the main Envoy repository.                  # unique
+# The following .bazelrc content is forked from the Nighthawk repository.                  # unique
 # This is necessary since this needs to be available before we can access                   # unique
-# the Envoy repository contents via Bazel.                                                  # unique
+# the Nighthawk repository contents via Bazel.                                                  # unique
                                                                                             # unique
 build:clang-asan --test_timeout=900                                                         # unique
 build:clang-tsan --test_timeout=900                                                         # unique
