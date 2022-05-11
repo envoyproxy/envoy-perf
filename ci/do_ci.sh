@@ -8,7 +8,7 @@ set -e
 
 
 function install_deps() {
-  ./install_deps.sh
+  ./install_deps_ci.sh
 }
 
 # Build the salvo framework
