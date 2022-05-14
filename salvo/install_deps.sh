@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#  Install dependencies locally
+# Install dependencies locally
 
 if [ ${UID} -ne 0 ]
 then
