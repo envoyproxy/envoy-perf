@@ -13,8 +13,13 @@ one.
 1. Create a new branch from `main`, e.g. `envoy-update`.
 1. Sync (copy) [.bazelrc](.bazelrc) from
    [Nighthawk's version](https://github.com/envoyproxy/nighthawk/blob/main/.bazelrc) to
-   update our build configurations. Be sure to retain our local modifications,
-   all lines that are unique to Salvo are marked with comment `# Salvo unique`.
+   update our build configurations. Then determine the Envoy commit Nighthawk is updated to from
+   [here](https://github.com/envoyproxy/nighthawk/blob/main/bazel/repositories.bzl#L3). Finally,
+   copy [.bazelrc](.bazelrc) from
+   [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/.bazelrc) at the commit. Be
+   sure to retain Nighthawk's modifications, all lines that are unique to Nighthawk are marked with
+   comment `# unique`. Be sure to retain our local modifications, all lines that are unique to Salvo
+   are marked with comment `# Salvo unique`. 
 1. Sync (copy) [ci/run_envoy_docker.sh](ci/run_envoy_docker.sh) from
    [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/ci/run_envoy_docker.sh).
    Be sure to retain our local modifications, all lines that are unique to
@@ -28,5 +33,6 @@ one.
    in the same PR.
 1. If the PR ends up modifying any python files, execute `ci/do_ci.sh fix_format`
    to reformat the files and avoid a CI failure.
-1. Create a PR with a title like `Update Envoy to 9753819 (Jan 24th 2021)`,
-   describe all performed changes in the PR's description.
+1. Create a PR with a title like
+   `Syncing configuration files from Nighthawk and Envoy (..date here..)`, describe all performed
+   changes in the PR's description.
