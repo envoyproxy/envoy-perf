@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# Install dependencies locally
+
 if [ ${UID} -ne 0 ]
 then
   echo "This script needs root priviliges to install dependencies. Continuing may elicit failures from tests"

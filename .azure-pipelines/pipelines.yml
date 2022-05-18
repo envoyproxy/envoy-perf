@@ -1,0 +1,29 @@
+trigger:
+  branches:
+    include:
+    - "main"
+
+stages:
+- stage: salvo_test_and_check
+  dependsOn: []
+  pool: "x64-large"
+  jobs:
+  - job: salvo_test_and_check
+    displayName: "do_ci.sh"
+    dependsOn: []
+    strategy:
+      maxParallel: 1
+      matrix:
+        build:
+          CI_TARGET: "build"
+        format:
+          CI_TARGET: "check_format"
+        test:
+          CI_TARGET: "test"
+        coverage:
+          CI_TARGET: "coverage"
+    timeoutInMinutes: 1200
+    steps:
+    - template: bazel.yml
+      parameters:
+        ciTarget: $(CI_TARGET)
