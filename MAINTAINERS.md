@@ -13,20 +13,17 @@ one.
 1. Create a new branch from `main`, e.g. `envoy-update`.
 1. Sync (copy) [.bazelrc](.bazelrc) from
    [Nighthawk's version](https://github.com/envoyproxy/nighthawk/blob/main/.bazelrc) to
-   update our build configurations. Then determine the Envoy commit Nighthawk is updated to from
-   [here](https://github.com/envoyproxy/nighthawk/blob/main/bazel/repositories.bzl#L3). Finally,
-   copy [.bazelrc](.bazelrc) from
-   [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/.bazelrc) at the commit. Be
-   sure to retain Nighthawk's modifications, all lines that are unique to Nighthawk are marked with
-   comment `# unique`. Be sure to retain our local modifications, all lines that are unique to Salvo
-   are marked with comment `# Salvo unique`. 
+   update our build configurations. Be sure to retain our local modifications, all lines that are
+   unique to Salvo are marked with comment `# Salvo unique`. 
+1. Determine the Envoy commit Nighthawk is updated to from
+   [here](https://github.com/envoyproxy/nighthawk/blob/main/bazel/repositories.bzl#L3). 
 1. Sync (copy) [ci/run_envoy_docker.sh](ci/run_envoy_docker.sh) from
-   [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/ci/run_envoy_docker.sh).
-   Be sure to retain our local modifications, all lines that are unique to
+   [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/ci/run_envoy_docker.sh) at the
+   commit in step(4). Be sure to retain our local modifications, all lines that are unique to
    Salvo are marked with comment `# Salvo unique`.
 1. Sync (copy) [ci/envoy_build_sha.sh](ci/envoy_build_sha.sh) from
-   [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/ci/envoy_build_sha.sh).
-   Be sure to retain our local modifications, all lines that are unique to
+   [Envoy's version](https://github.com/envoyproxy/envoy/blob/main/ci/envoy_build_sha.sh) at the
+   commit in step(4). Be sure to retain our local modifications, all lines that are unique to
    Salvo are marked with comment `# Salvo unique`.
 1. Run `ci/do_ci.sh test`. Sometimes the dependency update comes with changes
    that break our build. Include any changes required to Salvo to fix that
