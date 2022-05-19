@@ -13,7 +13,7 @@ function die()
   exit 1
 }
 
-PYTYPE=$(which pytype)
+PYTYPE=$(which pytype) || true  # ignore exit code in this line
 if [ -z "${PYTYPE}"  -a -f ${HOME}/.local/bin/pytype ]
 then
   PYTYPE=${HOME}/.local/bin/pytype
