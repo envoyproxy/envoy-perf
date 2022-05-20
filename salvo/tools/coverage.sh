@@ -1,14 +1,18 @@
 #!/bin/bash
 
-
-MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.0}
-
 # This script executes all tests and then evaluates the code coverage
 # for Salvo.  All individual coverage files are merged to provide one
 # report for the entire codebase
 
+# Exit immediately if a command exits with a non-zero status.
+# pipefail indicates that the return value of a pipeline is the status
+# of the last command to exit with a non-zero status.
+set -eo pipefail
+
 # Adapted from https://github.com/bazelbuild/bazel/issues/10660
 GITHUB_WORKSPACE=${PWD}
+
+MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.0}
 
 cd ${GITHUB_WORKSPACE}
 if [ ! -d ${GITHUB_WORKSPACE}/coveragepy-lcov-support ]

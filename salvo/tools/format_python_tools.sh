@@ -2,7 +2,10 @@
 
 # This script runs the style and formatting checks
 
-set -e
+# Exit immediately if a command exits with a non-zero status.
+# pipefail indicates that the return value of a pipeline is the status
+# of the last command to exit with a non-zero status.
+set -eo pipefail
 
 VENV_DIR="pyformat"
 SCRIPTPATH=$(realpath "$(dirname $0)")
