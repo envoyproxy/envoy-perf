@@ -70,7 +70,6 @@ docker run --rm \
        -v "${ENVOY_DOCKER_BUILD_DIR}":"${BUILD_DIR_MOUNT_DEST}" \
        -v "${SOURCE_DIR}":"${SOURCE_DIR_MOUNT_DEST}" \
        -e AZP_BRANCH \
-       -e AZP_SHA1 `# unique` \
        -e HTTP_PROXY \
        -e HTTPS_PROXY \
        -e NO_PROXY \
@@ -102,7 +101,5 @@ docker run --rm \
        -e SYSTEM_STAGEDISPLAYNAME \
        -e SYSTEM_JOBDISPLAYNAME \
        -e SYSTEM_PULLREQUEST_PULLREQUESTNUMBER \
-       -e DOCKERHUB_USERNAME `# unique` \
-       -e DOCKERHUB_PASSWORD `# unique` \
        "${ENVOY_BUILD_IMAGE}" \
        "${START_COMMAND[@]}"
