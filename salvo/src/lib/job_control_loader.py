@@ -52,7 +52,7 @@ def _load_yaml_doc(filename: str) -> proto_control.JobControl:
   contents = None
   try:
     with open(filename, 'r') as yaml_doc:
-      contents = yaml.load(yaml_doc.read())
+      contents = yaml.load(yaml_doc.read(), Loader=yaml.FullLoader)
       contents = json_format.Parse(json.dumps(contents), proto_control.JobControl())
   except FileNotFoundError as file_not_found:
     log.exception(f"Unable to load {filename}: {file_not_found}")
