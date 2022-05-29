@@ -93,7 +93,8 @@ class DockerImage():
     """
     return self._client
 
-  def run_image(self, image_name: str, run_parameters: DockerRunParameters) -> Union[bytearray, None]:
+  def run_image(self, image_name: str,
+                run_parameters: DockerRunParameters) -> Union[bytearray, None]:
     """Execute the identified docker image using the docker controller.
 
     This method runs the specified image using the arguments specified in
