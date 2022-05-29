@@ -26,4 +26,4 @@ fi
 
 echo $PWD
 
-${PYTYPE} src -P bazel-bin:.
+${PYTYPE} src -P bazel-bin:. --disable=pyi-error
