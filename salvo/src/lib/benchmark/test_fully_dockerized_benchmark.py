@@ -84,6 +84,29 @@ def test_execute_benchmark_with_envoy_source(mock_run_image):
   mock_run_image.assert_called_once_with(
       'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag', run_parameters)
 
+@mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
+def test_execute_benchmark_with_none_result(mock_run_image):
+  """Validate that when the result of run_image is None, we raise an exception."""
+  mock_run_image.return_value = None
+
+  # create a valid configuration with a missing Envoy image
+  job_control = generate_test_objects.generate_default_job_control()
+
+  images = generate_test_objects.generate_images(job_control)
+  images.envoy_image = ""
+
+  generate_test_objects.generate_envoy_source(job_control)
+  generate_test_objects.generate_environment(job_control)
+
+  benchmark = full_docker.Benchmark(job_control, "test_benchmark")
+
+  # Calling execute_benchmark should raise an exception from validate()
+  with pytest.raises(Exception) as validation_exception:
+    benchmark.execute_benchmark()
+
+  assert str(validation_exception.value) == \
+      "Unable to assert that the benchmark executed successfully"
+
 
 def test_execute_benchmark_missing_envoy_source():
   """Validate that although sources are defined for NightHawk we raise an exception due to the \
