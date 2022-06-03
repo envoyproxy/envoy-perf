@@ -84,6 +84,7 @@ def test_execute_benchmark_with_envoy_source(mock_run_image):
   mock_run_image.assert_called_once_with(
       'envoyproxy/nighthawk-benchmark-dev:random_benchmark_image_tag', run_parameters)
 
+
 @mock.patch.object(base_benchmark.BaseBenchmark, 'run_image')
 def test_execute_benchmark_with_none_result(mock_run_image):
   """Validate that when the result of run_image is None, we raise an exception."""
