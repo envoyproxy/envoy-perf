@@ -103,7 +103,7 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     # FIXME: result needs to be unescaped. We don't use this data and the same
     # content is available in the nighthawk-human.txt file.
-    if result != None:
+    if result is not None:
       log.debug(f"Output: {len(result)} bytes")
 
     log.info(f"Benchmark output: {output_dir}")
