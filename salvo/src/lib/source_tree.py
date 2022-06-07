@@ -162,7 +162,7 @@ class SourceTree(object):
     """
     self._validate()
 
-    return self._build_dir.name
+    return str(self._build_dir.name)
 
   def copy_source_directory(self) -> bool:
     """Clone the original source directory.

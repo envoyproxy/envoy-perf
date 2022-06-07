@@ -103,13 +103,14 @@ class Benchmark(base_benchmark.BaseBenchmark):
 
     # FIXME: result needs to be unescaped. We don't use this data and the same
     # content is available in the nighthawk-human.txt file.
-    log.debug(f"Output: {len(result)} bytes")
+    if result is not None:
+      log.debug(f"Output: {len(result)} bytes")
 
     log.info(f"Benchmark output: {output_dir}")
 
     # Establishing success here requires that we examine the output produced by
     # NightHawk. If the latency output exists we can be relatively certain that
     # all containers were able to run and execute the specified tests
-    if "benchmark_http_client" not in result.decode('utf-8'):
+    if result is None or ("benchmark_http_client" not in result.decode('utf-8')):
       raise base_benchmark.BenchmarkError(
           "Unable to assert that the benchmark executed successfully")

@@ -26,4 +26,6 @@ fi
 
 echo $PWD
 
-${PYTYPE} src -P bazel-bin:.
+# disable pyi-error here because pyi parser cannot handle 'google.protobuf.descriptor_pb2', refer to
+# https://github.com/google/pytype/issues/764
+${PYTYPE} src -P bazel-bin:. --disable=pyi-error

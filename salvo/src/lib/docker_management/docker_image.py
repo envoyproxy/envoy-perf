@@ -5,7 +5,7 @@ import requests
 
 # Ref: https://docker-py.readthedocs.io/en/stable/index.html
 import docker
-from typing import List
+from typing import List, Union
 
 log = logging.getLogger(__name__)
 
@@ -93,7 +93,8 @@ class DockerImage():
     """
     return self._client
 
-  def run_image(self, image_name: str, run_parameters: DockerRunParameters) -> bytearray:
+  def run_image(self, image_name: str,
+                run_parameters: DockerRunParameters) -> Union[bytearray, None]:
     """Execute the identified docker image using the docker controller.
 
     This method runs the specified image using the arguments specified in
@@ -160,7 +161,7 @@ class DockerImageController():
       log.debug(f"Stopping image: {image_name}")
       self._image.stop_image(image_name)
 
-  def run(self, image_name: str, run_parameters: DockerRunParameters) -> bytearray:
+  def run(self, image_name: str, run_parameters: DockerRunParameters) -> Union[bytearray, None]:
     """Use the docker client to execute the specified container.
 
     Args:

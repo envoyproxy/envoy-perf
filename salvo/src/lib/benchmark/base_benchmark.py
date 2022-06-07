@@ -2,7 +2,7 @@
 import abc
 import os
 import logging
-from typing import List
+from typing import List, Union
 
 from src.lib.docker_management import (docker_image, docker_volume)
 import api.control_pb2 as proto_control
@@ -146,7 +146,7 @@ class BaseBenchmark(abc.ABC):
     return self._control.source
 
   def run_image(self, image_name: str,
-                run_parameters: docker_image.DockerRunParameters) -> bytearray:
+                run_parameters: docker_image.DockerRunParameters) -> Union[bytearray, None]:
     """Run the specified docker image with the supplied keyword arguments.
 
     Args:
