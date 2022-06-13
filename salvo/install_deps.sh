@@ -19,7 +19,8 @@ fi
   docker.io \
   python3-pytest \
   python3-docker \
-  openjdk-11-jdk
+  openjdk-11-jdk \
+  python3-pip
 
 
 pip3 install --upgrade --user pip
