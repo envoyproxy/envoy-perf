@@ -24,7 +24,7 @@ The [`install_deps.sh`](./install_deps.sh) script can be used to install any dep
 by Salvo.
 Dependencies installation needs root priviliges to perform. Using below command to make sure proxy(if any) works fine with root context.
 ```bash
-sudo http_proxy="example.com:port" https_proxy="example.com:port" ; ./install_deps.sh
+sudo http_proxy="example.com:port" https_proxy="example.com:port"  ./install_deps.sh
 ```
 
 ## Building Salvo
