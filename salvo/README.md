@@ -22,7 +22,11 @@ workflow documentation: [ENVOY_DEVELOP_WORKFLOW.md](./ENVOY_DEVELOP_WORKFLOW.md)
 
 The [`install_deps.sh`](./install_deps.sh) script can be used to install any dependencies required
 by Salvo.
-Dependencies installation needs root priviliges to perform. Using below command to make sure proxy(if any) works fine with root context.
+Dependencies installation needs root privileges to perform. Run the following command to install the required dependencies:
+```bash
+sudo ./install_deps.sh
+```
+If you are using a proxy server, run the following command to download any packages via a proxy server:
 ```bash
 sudo http_proxy="example.com:port" https_proxy="example.com:port"  ./install_deps.sh
 ```
