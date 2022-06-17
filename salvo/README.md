@@ -34,7 +34,11 @@ bazel build //...
 Salvo also support building by docker, use the following command:
 
 ```bash
-ENVOY_DOCKER_BUILD_DIR=/tmp/salvo-docker-build BUILD_DIR_MOUNT_DEST=/tmp/salvo-docker-build SOURCE_DIR_MOUNT_DEST=path_of_envoy-perf   ci/run_envoy_docker.sh 'ci/do_ci.sh build'
+export  ENVOY_DOCKER_BUILD_DIR=/tmp/salvo-docker-build
+export  BUILD_DIR_MOUNT_DEST=/tmp/salvo-docker-build
+export  SOURCE_DIR_MOUNT_DEST=path_of_your_envoy-perf
+
+ci/run_envoy_docker.sh 'ci/do_ci.sh build'
 ```
 
 ## Benchmark Test Cases for Salvo
