@@ -39,6 +39,16 @@ To build Salvo, use the following command:
 bazel build //...
 ```
 
+Salvo also supports building by docker, use the following command:
+
+```bash
+export  ENVOY_DOCKER_BUILD_DIR=/tmp/salvo-docker-build
+export  BUILD_DIR_MOUNT_DEST=/tmp/salvo-docker-build
+export  SOURCE_DIR_MOUNT_DEST=path_of_your_envoy-perf
+
+ci/run_envoy_docker.sh 'ci/do_ci.sh build'
+```
+
 ## Benchmark Test Cases for Salvo
 
 Benchmark test cases for Salvo are defined as Python files with test cases written in pytest

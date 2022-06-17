@@ -38,14 +38,14 @@ else
   ENVOY_DOCKER_OPTIONS+=(-v /var/run/docker.sock:/var/run/docker.sock)
   ENVOY_DOCKER_OPTIONS+=(--cap-add SYS_PTRACE --cap-add NET_RAW --cap-add NET_ADMIN)
   DEFAULT_ENVOY_DOCKER_BUILD_DIR=/tmp/envoy-docker-build
-  BUILD_DIR_MOUNT_DEST=/build
+  [[ -z "${BUILD_DIR_MOUNT_DEST}" ]] && BUILD_DIR_MOUNT_DEST="/build" # Salvo unique
   SOURCE_DIR="${PWD}"
-  SOURCE_DIR_MOUNT_DEST=/source
+  [[ -z "${SOURCE_DIR_MOUNT_DEST}" ]] && SOURCE_DIR_MOUNT_DEST="/source" # Salvo unique
   START_COMMAND=("/bin/bash" "-lc" "groupadd --gid $(id -g) -f envoygroup \
-    && useradd -o --uid $(id -u) --gid $(id -g) --no-create-home --home-dir /build envoybuild \
+    && useradd -o --uid $(id -u) --gid $(id -g) --no-create-home --home-dir ${BUILD_DIR_MOUNT_DEST} envoybuild `# Salvo unique`\
     && usermod -a -G pcap envoybuild \
-    && chown envoybuild:envoygroup /build \
-    && sudo -EHs -u envoybuild bash -c 'cd /source && $*'")
+    && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique`\
+    && sudo -EHs -u envoybuild bash -c 'cd ${SOURCE_DIR_MOUNT_DEST} && $*'") # Salvo unique
 fi
 
 # The IMAGE_ID defaults to the CI hash but can be set to an arbitrary image ID (found with 'docker
