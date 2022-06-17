@@ -42,9 +42,9 @@ else
   SOURCE_DIR="${PWD}"
   [[ -z "${SOURCE_DIR_MOUNT_DEST}" ]] && SOURCE_DIR_MOUNT_DEST="/source" # Salvo unique
   START_COMMAND=("/bin/bash" "-lc" "groupadd --gid $(id -g) -f envoygroup \
-    && useradd -o --uid $(id -u) --gid $(id -g) --no-create-home --home-dir ${BUILD_DIR_MOUNT_DEST} envoybuild \
+    && useradd -o --uid $(id -u) --gid $(id -g) --no-create-home --home-dir ${BUILD_DIR_MOUNT_DEST} envoybuild `# Salvo unique`\
     && usermod -a -G pcap envoybuild \
-    && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} \
+    && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique`\
     && sudo -EHs -u envoybuild bash -c 'cd ${SOURCE_DIR_MOUNT_DEST} && $*'") # Salvo unique
 fi
 

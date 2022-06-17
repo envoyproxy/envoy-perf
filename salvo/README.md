@@ -39,7 +39,7 @@ To build Salvo, use the following command:
 bazel build //...
 ```
 
-Salvo also support building by docker, use the following command:
+Salvo also supports building by docker, use the following command:
 
 ```bash
 export  ENVOY_DOCKER_BUILD_DIR=/tmp/salvo-docker-build
