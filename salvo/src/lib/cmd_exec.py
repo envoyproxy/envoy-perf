@@ -17,7 +17,7 @@ CommandParameters = typing.NamedTuple(
     ])
 
 
-def run_command(cmd: str, parameters: CommandParameters) -> str:
+def run_command(cmd: str, parameters: CommandParameters, debug=True) -> str:
   """Run the specified command returning its output to the caller.
 
   Args:
@@ -61,8 +61,8 @@ def run_command(cmd: str, parameters: CommandParameters) -> str:
 
     if isinstance(output, bytes):
       output = output.decode('utf-8').strip()
-
-    log.debug(f"Returning output: [{output}]")
+    if debug:
+      log.debug(f"Returning output: [{output}]")
 
   return output
 

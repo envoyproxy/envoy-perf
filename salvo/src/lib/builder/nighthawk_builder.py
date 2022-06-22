@@ -30,7 +30,7 @@ def _execute_docker_image_script(script: str, build_dir: str) -> None:
     build_dir: The nighthawk source location
   """
   cmd_params = cmd_exec.CommandParameters(cwd=build_dir)
-  output = cmd_exec.run_command(script, cmd_params)
+  output = cmd_exec.run_command(script, cmd_params, False)
   log.debug(f"NightHawk Docker image output for {script}: {output}")
 
 
@@ -89,7 +89,7 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     bazel_options = self._generate_bazel_options(
         proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
     cmd = "bazel build {bazel_options} //benchmarks:benchmarks".format(bazel_options=bazel_options)
-    output = cmd_exec.run_command(cmd, cmd_params)
+    output = cmd_exec.run_command(cmd, cmd_params, False)
 
     log.debug(f"Nighthawk build output: {output}")
 
@@ -104,7 +104,7 @@ class NightHawkBuilder(base_builder.BaseBuilder):
     bazel_options = self._generate_bazel_options(
         proto_source.SourceRepository.SourceIdentity.SRCID_NIGHTHAWK)
     cmd = "bazel build {bazel_options} //:nighthawk".format(bazel_options=bazel_options)
-    output = cmd_exec.run_command(cmd, cmd_params)
+    output = cmd_exec.run_command(cmd, cmd_params, False)
 
     log.debug(f"Nighthawk build output: {output}")
 

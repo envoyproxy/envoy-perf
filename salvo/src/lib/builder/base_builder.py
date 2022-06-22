@@ -71,7 +71,7 @@ class BaseBuilder():
 
     cmd_params = cmd_exec.CommandParameters(cwd=self._build_dir)
     cmd = "bazel clean"
-    output = cmd_exec.run_command(cmd, cmd_params)
+    output = cmd_exec.run_command(cmd, cmd_params, False)
     log.debug(f"Clean output: {output}")
 
   def _generate_bazel_options(self, source_id: proto_source.SourceRepository.SourceIdentity) -> str:
