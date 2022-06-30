@@ -27,6 +27,7 @@ def run_command(cmd: str, parameters: CommandParameters, debug=True) -> str:
         where the command is to be executed.  Other parameters supported
         by the subprocess module will be added as they become necessary for
         execution.
+      debug: Argument to control default log output print behavior.
 
   Returns:
       The output produced by the command

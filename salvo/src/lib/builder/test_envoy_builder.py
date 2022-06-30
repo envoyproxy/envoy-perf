@@ -8,12 +8,14 @@ from src.lib.builder import envoy_builder
 from src.lib import (constants, source_tree, source_manager)
 
 
-def _check_call_side_effect(args, parameters):
+def _check_call_side_effect(args, parameters, debug=False):
   """Examine the incoming arguments for command execution and return the expected or unexpected output.
 
   Args:
     args: The arguments supplied to the mocked function
     parameters: The CommandParameters passed to the cmd_exec method
+    debug: Argument to control default log output print behavior.
+
   Return:
     usually this returns a string containing the command output.  In
       some cases we may raise an exception.

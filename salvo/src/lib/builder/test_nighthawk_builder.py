@@ -46,7 +46,7 @@ def test_prepare_nighthawk_source(mock_pull, mock_copy_source, mock_get_source_d
     builder.prepare_nighthawk_source()
 
   params = cmd_exec.CommandParameters(cwd='/tmp/nighthawk_source_dir')
-  mock_cmd.assert_called_once_with(_BAZEL_CLEAN_CMD, params)
+  mock_cmd.assert_called_once_with(_BAZEL_CLEAN_CMD, params, False)
   mock_pull.assert_called_once()
   mock_copy_source.assert_called_once()
 
@@ -60,8 +60,8 @@ def test_build_nighthawk_benchmarks(mock_pull, mock_copy_source, mock_run_comman
   mock_copy_source.return_value = None
   mock_run_command.side_effect = ['bazel clean output ...', 'bazel build output ...']
   calls = [
-      mock.call(_BAZEL_CLEAN_CMD, mock.ANY),
-      mock.call("bazel build --jobs 4 -c opt //benchmarks:benchmarks", mock.ANY)
+      mock.call(_BAZEL_CLEAN_CMD, mock.ANY, mock.ANY),
+      mock.call("bazel build --jobs 4 -c opt //benchmarks:benchmarks", mock.ANY, mock.ANY)
   ]
 
   manager = _generate_default_source_manager()
@@ -86,8 +86,8 @@ def test_build_nighthawk_binaries(mock_pull, mock_copy_source, mock_run_command)
   mock_copy_source.return_value = None
   mock_run_command.side_effect = ['bazel clean output', 'bazel nighthawk build output ...']
   calls = [
-      mock.call(_BAZEL_CLEAN_CMD, mock.ANY),
-      mock.call("bazel build --jobs 4 -c dbg //:nighthawk", mock.ANY)
+      mock.call(_BAZEL_CLEAN_CMD, mock.ANY, mock.ANY),
+      mock.call("bazel build --jobs 4 -c dbg //:nighthawk", mock.ANY, mock.ANY)
   ]
   manager = _generate_default_source_manager()
 
@@ -112,9 +112,9 @@ def test_build_nighthawk_benchmark_image(mock_pull, mock_run_command):
       'bazel benchmark image build output ...'
   ]
   calls = [
-      mock.call(_BAZEL_CLEAN_CMD, mock.ANY),
-      mock.call("bazel build -c opt //benchmarks:benchmarks", mock.ANY),
-      mock.call(constants.NH_BENCHMARK_IMAGE_SCRIPT, mock.ANY)
+      mock.call(_BAZEL_CLEAN_CMD, mock.ANY, mock.ANY),
+      mock.call("bazel build -c opt //benchmarks:benchmarks", mock.ANY, mock.ANY),
+      mock.call(constants.NH_BENCHMARK_IMAGE_SCRIPT, mock.ANY, mock.ANY)
   ]
 
   manager = _generate_default_source_manager()
@@ -135,9 +135,9 @@ def test_build_nighthawk_binary_image(mock_pull, mock_run_command):
       'bazel benchmark image build output ...'
   ]
   calls = [
-      mock.call(_BAZEL_CLEAN_CMD, mock.ANY),
-      mock.call("bazel build -c opt //:nighthawk", mock.ANY),
-      mock.call(constants.NH_BINARY_IMAGE_SCRIPT, mock.ANY)
+      mock.call(_BAZEL_CLEAN_CMD, mock.ANY, mock.ANY),
+      mock.call("bazel build -c opt //:nighthawk", mock.ANY, mock.ANY),
+      mock.call(constants.NH_BINARY_IMAGE_SCRIPT, mock.ANY, mock.ANY)
   ]
 
   manager = _generate_default_source_manager()
