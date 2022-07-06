@@ -46,6 +46,7 @@ export  ENVOY_DOCKER_BUILD_DIR=/tmp/salvo-docker-build
 export  BUILD_DIR_MOUNT_DEST=/tmp/salvo-docker-build
 export  SOURCE_DIR_MOUNT_DEST=path_of_your_envoy-perf
 
+# Switch to root directory of envoy-perf
 ci/run_envoy_docker.sh 'ci/do_ci.sh build'
 ```
 
