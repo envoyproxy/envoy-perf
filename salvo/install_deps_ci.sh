@@ -13,7 +13,8 @@ then
   exit 0
 fi
 
-sudo apt-get update && sudo apt install -y libcairo2-dev
+/usr/bin/apt update
+/usr/bin/apt -y install libcairo2-dev
 pip3 install --upgrade --user pip
 pip3 install --upgrade --user setuptools
 pip3 install --user -r requirements.txt
