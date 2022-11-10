@@ -41,8 +41,9 @@ else
   [[ -z "${BUILD_DIR_MOUNT_DEST}" ]] && BUILD_DIR_MOUNT_DEST="/build" # Salvo unique
   SOURCE_DIR="${PWD}"
   [[ -z "${SOURCE_DIR_MOUNT_DEST}" ]] && SOURCE_DIR_MOUNT_DEST="/source" # Salvo unique
-  START_COMMAND=("/bin/bash" "-lc" "groupadd --gid $(id -g) -f envoygroup \
-    && useradd -o --uid $(id -u) --gid $(id -g) --no-create-home --home-dir ${BUILD_DIR_MOUNT_DEST} envoybuild `# Salvo unique`\
+  DOCKER_GID="$(stat -c %g /var/run/docker.sock 2>/dev/null || stat -f %g /var/run/docker.sock)"
+  START_COMMAND=("/bin/bash" "-lc" "groupadd --gid ${DOCKER_GID} -f envoygroup \
+    && useradd -o --uid $(id -u) --gid ${DOCKER_GID} --no-create-home --home-dir ${BUILD_DIR_MOUNT_DEST} envoybuild `# Salvo unique`\
     && usermod -a -G pcap envoybuild \
     && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique`\
     && apt-get update && apt -y install libcairo2-dev `# Salvo unique` \

@@ -14,7 +14,6 @@ then
 fi
 
 pip3 install --upgrade --user pip
-ln -sv $(which pip3) /usr/bin/pip3
 pip3 install --upgrade --user setuptools
 pip3 install --user -r requirements.txt
 
