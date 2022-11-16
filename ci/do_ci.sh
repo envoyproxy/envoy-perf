@@ -74,18 +74,23 @@ build_target=${1:-build}
 
 case $build_target in
   "build")
+    exit 1
     build_salvo
     ;;
   "test")
+    exit 1
     test_salvo
     ;;
   "check_format")
+    exit 1
     check_format
     ;;
   "fix_format")
+    exit 1
     fix_format
     ;;
   "coverage")
+    exit 1
     coverage
     ;;
   *)
