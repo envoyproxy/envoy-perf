@@ -47,13 +47,13 @@ stages:
   dependsOn: []
   pool: "x64-large"
   jobs:
-  - job: test
+  - job: coverage
     displayName: "do_ci.sh"
     dependsOn: []
     strategy:
       maxParallel: 1
       matrix:
-        test:
+        coverage:
           CI_TARGET: "coverage"
     timeoutInMinutes: 120
     steps:
