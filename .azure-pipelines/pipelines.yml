@@ -4,46 +4,47 @@ trigger:
     - "main"
 
 stages:
-- stage: check
-  dependsOn: []
-  pool: "x64-large"
-  jobs:
-  - job: build_and_format
-    displayName: "do_ci.sh"
-    dependsOn: []
-    strategy:
-      maxParallel: 2
-      matrix:
-        build:
-          CI_TARGET: "build"
-        format:
-          CI_TARGET: "check_format"
-    timeoutInMinutes: 120
-    steps:
-    - template: bazel.yml
-      parameters:
-        ciTarget: $(CI_TARGET)
-
-- stage: test
-  dependsOn: ["check"]
-  pool: "x64-large"
-  jobs:
-  - job: test
-    displayName: "do_ci.sh"
-    dependsOn: []
-    strategy:
-      maxParallel: 1
-      matrix:
-        test:
-          CI_TARGET: "test"
-    timeoutInMinutes: 120
-    steps:
-    - template: bazel.yml
-      parameters:
-        ciTarget: $(CI_TARGET)
+#- stage: check
+#  dependsOn: []
+#  pool: "x64-large"
+#  jobs:
+#  - job: build_and_format
+#    displayName: "do_ci.sh"
+#    dependsOn: []
+#    strategy:
+#      maxParallel: 2
+#      matrix:
+#        build:
+#          CI_TARGET: "build"
+#        format:
+#          CI_TARGET: "check_format"
+#    timeoutInMinutes: 120
+#    steps:
+#    - template: bazel.yml
+#      parameters:
+#        ciTarget: $(CI_TARGET)
+#
+#- stage: test
+#  dependsOn: ["check"]
+#  pool: "x64-large"
+#  jobs:
+#  - job: test
+#    displayName: "do_ci.sh"
+#    dependsOn: []
+#    strategy:
+#      maxParallel: 1
+#      matrix:
+#        test:
+#          CI_TARGET: "test"
+#    timeoutInMinutes: 120
+#    steps:
+#    - template: bazel.yml
+#      parameters:
+#        ciTarget: $(CI_TARGET)
 
 - stage: coverage
-  dependsOn: ["test"]
+  #dependsOn: ["test"]
+  dependsOn: []
   pool: "x64-large"
   jobs:
   - job: test
@@ -59,3 +60,7 @@ stages:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
+    - task: PublishPipelineArtifact@1
+      inputs:
+        targetPath: $(System.DefaultWorkingDirectory)/salvo/coverage/html.zip
+        artifactName: CoverageReport
