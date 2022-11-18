@@ -16,11 +16,13 @@ fi
 
 /usr/bin/apt update
 /usr/bin/apt -y install \
-  docker.io \
-  python3-pytest \
-  python3-docker \
+  docker.io
+/usr/bin/apt -y install \
+  lcov \
   openjdk-11-jdk \
-  python3-pip
+  python3-docker \
+  python3-pip \
+  python3-pytest
 
 
 pip3 install --upgrade --user pip

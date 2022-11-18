@@ -12,7 +12,7 @@ set -eo pipefail
 # Adapted from https://github.com/bazelbuild/bazel/issues/10660
 GITHUB_WORKSPACE=${PWD}
 
-MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.0}
+MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.5}
 
 cd ${GITHUB_WORKSPACE}
 if [ ! -d ${GITHUB_WORKSPACE}/coveragepy-lcov-support ]
@@ -20,10 +20,11 @@ then
   curl -L https://github.com/ulfjack/coveragepy/archive/lcov-support.tar.gz | tar xz
 fi
 
-bazel coverage -t- --instrument_test_targets \
-	--test_output=errors \
+bazel coverage -t- \
+  --instrument_test_targets \
+  --test_output=errors \
   --linkopt=--coverage \
-	--test_env=PYTHON_COVERAGE=${GITHUB_WORKSPACE}/coveragepy-lcov-support/__main__.py \
+  --test_env=PYTHON_COVERAGE=${GITHUB_WORKSPACE}/coveragepy-lcov-support/__main__.py \
   --java_runtime_version=remotejdk_11 \
   //...
 
@@ -38,8 +39,18 @@ mkdir -p coverage
 CMD="${CMD} -o coverage/coverage.dat"
 (${CMD})
 
+# Remove files we can't calculate coverage on:
+#   - auto-generated protocol buffer libraries.
+lcov \
+  --remove coverage/coverage.dat \
+  -o coverage/coverage_filtered.dat \
+  '*_pb2.py'
+
 # Extract all coverage data for salvo project files
-lcov -e coverage/coverage.dat -o coverage/salvo.dat '*/salvo/src/lib/*.py'
+lcov \
+  -e coverage/coverage_filtered.dat \
+  -o coverage/salvo.dat \
+  '*/*runfiles/salvo/*'
 
 # Redirect source file paths from the sandbox to the real source files.
 # Changes strings like this:
@@ -51,8 +62,18 @@ sed -e 's/SF.*\.runfiles\/salvo\/\(.*\)$/SF:\1/' -i coverage/salvo.dat
 # Generate HTML coverage report.
 mkdir -p coverage/html
 genhtml coverage/salvo.dat -o coverage/html
-echo "HTML coverage report generated, view by running:"
-echo "  (cd coverage/html && python3 -m http.server)"
+zip -r coverage/html.zip coverage/html/
+
+echo <<EOF
+HTML coverage report generated.
+
+If you are running the CI script locally, you can view it by starting a local
+HTTP server, e.g.:
+  (cd salvo/coverage/html && python3 -m http.server)
+
+If the coverage runs in Azure Pipelines, the pipeline publishes a zipped
+coverage report as a pipeline artifact.
+EOF
 
 # Examine the coverage summary and extract the overall coverage percentage.
 # If the reported threshold drops below the specified threshold, then we
@@ -66,5 +87,5 @@ then
   exit 1
 fi
 
-echo "Tests coverage ${COVERAGE_PERCENTAGE}% was higher than or equest to ${MINIMUM_THRESHOLD}%"
+echo "Tests coverage ${COVERAGE_PERCENTAGE}% was higher than or equal to ${MINIMUM_THRESHOLD}%"
 exit 0
