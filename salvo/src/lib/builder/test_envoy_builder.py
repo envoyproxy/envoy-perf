@@ -26,7 +26,8 @@ def _check_call_side_effect(args, parameters):
     return "building..."
   elif args == "bazel build -c opt external:su-exec":
     return "building su-exec ..."
-  elif args == ("cp -fv bazel-bin/source/exe/envoy-static " "build_release_stripped/envoy"):
+  elif args == ("cp -fv bazel-bin/source/exe/envoy-static "
+                "build_release_stripped/envoy"):
     return "copied..."
   elif args == ("cp -fv bazel-bin/external/com_github_ncopa_suexec/su-exec "
                 "build_release/su-exec"):

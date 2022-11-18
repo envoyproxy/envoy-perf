@@ -10,6 +10,7 @@ from src.lib.benchmark import (scavenging_benchmark, fully_dockerized_benchmark 
                                binary_benchmark as binbench)
 
 import logging
+
 logging.basicConfig(level=logging.DEBUG)
 
 _BUILD_ENVOY_IMAGE_FROM_SOURCE = \

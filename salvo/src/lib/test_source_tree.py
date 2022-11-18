@@ -177,7 +177,8 @@ def mock_run_command_side_effect(*function_args):
   elif function_args[0] == ("git rev-list --no-merges "
                             "--committer=\'GitHub <noreply@github.com>\' "
                             "--max-count=2 fake_commit_hash_1"):
-    return ("fake_commit_hash_1\n" "fake_commit_hash_2\n")
+    return ("fake_commit_hash_1\n"
+            "fake_commit_hash_2\n")
 
   elif function_args[0] == ("git rev-list --no-merges "
                             "--committer=\'GitHub <noreply@github.com>\' "

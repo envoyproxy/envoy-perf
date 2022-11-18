@@ -189,7 +189,8 @@ class SourceTree(object):
     if os.path.exists(output_directory):
       file_ops.delete_directory(output_directory)
 
-    log.debug(f"Copying tree from {self._source_repo.source_path} " f"to {output_directory}")
+    log.debug(f"Copying tree from {self._source_repo.source_path} "
+              f"to {output_directory}")
     ignore_bazel = shutil.ignore_patterns('bazel-*')
     shutil.copytree(self._source_repo.source_path,
                     output_directory,
@@ -210,7 +211,8 @@ class SourceTree(object):
     self._validate()
 
     source_name = proto_source.SourceRepository.SourceIdentity.Name(self._source_repo.identity)
-    log.debug(f"Pulling [{source_name}] from origin: " f"[{self._source_repo.source_url}]")
+    log.debug(f"Pulling [{source_name}] from origin: "
+              f"[{self._source_repo.source_url}]")
 
     if not self._source_repo.source_url:
       log.debug("No url specified for source. Cannot pull.")
@@ -320,7 +322,8 @@ class SourceTree(object):
     # lines that may have trailed the original git output
     for commit_hash in hash_list.split('\n')[::-1]:
       if commit_hash:
-        log.debug(f"Returning {commit_hash} as the previous commit to " f"{current_commit}")
+        log.debug(f"Returning {commit_hash} as the previous commit to "
+                  f"{current_commit}")
         return commit_hash
 
     raise SourceTreeError(f"No commit found prior to {current_commit}")
