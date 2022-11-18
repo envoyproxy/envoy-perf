@@ -60,6 +60,7 @@ stages:
       parameters:
         ciTarget: $(CI_TARGET)
     - task: PublishPipelineArtifact@1
+      displayName: 'Publish the line coverage report'
       inputs:
         targetPath: $(System.DefaultWorkingDirectory)/salvo/coverage/html.zip
         artifactName: CoverageReport
