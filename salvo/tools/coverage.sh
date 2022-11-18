@@ -64,9 +64,16 @@ mkdir -p coverage/html
 genhtml coverage/salvo.dat -o coverage/html
 zip -r coverage/html.zip coverage/html/
 
-echo "HTML coverage report generated, view by running:"
-echo "  (cd salvo/coverage/html && python3 -m http.server)"
-echo "Or download the zip file from salvo/coverage/html.zip"
+echo <<EOF
+HTML coverage report generated.
+
+If you are running the CI script locally, you can view it by starting a local
+HTTP server, e.g.:
+  (cd salvo/coverage/html && python3 -m http.server)
+
+If the coverage runs in Azure Pipelines, the pipeline publishes a zipped
+coverage report as a pipeline artifact.
+EOF
 
 # Examine the coverage summary and extract the overall coverage percentage.
 # If the reported threshold drops below the specified threshold, then we
