@@ -383,5 +383,6 @@ class BenchmarkRunner(object):
 
     bar = '=' * 20
     for benchmark in self._test:
-      log.info(f"{bar} Running {benchmark.get_name()} for " f"{benchmark.get_image()} {bar}")
+      log.info(f"{bar} Running {benchmark.get_name()} for "
+               f"{benchmark.get_image()} {bar}")
       benchmark.execute_benchmark()

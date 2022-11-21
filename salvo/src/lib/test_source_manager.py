@@ -50,7 +50,8 @@ def _run_command_side_effect(*args):
   elif args[0] == ("git rev-list --no-merges "
                    "--committer=\'GitHub <noreply@github.com>\' "
                    "--max-count=2 expected_baseline_hash"):
-    return ('expected_baseline_hash\n' 'expected_previous_commit_hash')
+    return ('expected_baseline_hash\n'
+            'expected_previous_commit_hash')
 
   elif args[0] == 'git clone git@github.com:username/reponame.git .':
     return 'Cloning into \'.\''

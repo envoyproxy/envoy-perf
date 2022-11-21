@@ -12,7 +12,7 @@ set -eo pipefail
 # Adapted from https://github.com/bazelbuild/bazel/issues/10660
 GITHUB_WORKSPACE=${PWD}
 
-MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.5}
+MINIMUM_THRESHOLD=${MINIMUM_THRESHOLD:=97.4}
 
 cd ${GITHUB_WORKSPACE}
 if [ ! -d ${GITHUB_WORKSPACE}/coveragepy-lcov-support ]
