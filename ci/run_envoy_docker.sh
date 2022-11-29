@@ -46,6 +46,7 @@ else
     && useradd -o --uid $(id -u) --gid ${DOCKER_GID} --no-create-home --home-dir ${BUILD_DIR_MOUNT_DEST} envoybuild `# Salvo unique`\
     && usermod -a -G pcap envoybuild \
     && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique`\
+    && chown envoybuild /proc/self/fd/2 \
     && apt-get update && apt -y install libcairo2-dev `# Salvo unique` \
     && sudo -EHs -u envoybuild bash -c 'cd ${SOURCE_DIR_MOUNT_DEST} && $*'") # Salvo unique
 fi
