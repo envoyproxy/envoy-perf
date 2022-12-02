@@ -30,7 +30,7 @@ def open_yaml(path: str, mode: str = 'r') -> dict:
   """
   data = {}
   with open(path, mode) as yaml_file:
-    data = yaml.load(yaml_file, Loader=yaml.FullLoader)
+    data = yaml.safe_load(yaml_file)
   return data
 
 
