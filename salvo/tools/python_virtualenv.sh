@@ -20,4 +20,3 @@ fi
 
 source "${VENV_DIR}"/venv/bin/activate
 pip install -r requirements.txt
-exit 0

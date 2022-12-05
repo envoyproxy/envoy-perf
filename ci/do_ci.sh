@@ -6,7 +6,7 @@
 # in build logs
 set -e
 
-# Setup Python virtual environment.
+# Setup a Python virtual environment.
 function setup_venv() {
   tools/python_virtualenv.sh
 }
