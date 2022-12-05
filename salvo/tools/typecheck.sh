@@ -13,6 +13,8 @@ function die()
   exit 1
 }
 
+echo "in typecheck.sh, PATH is: ${PATH}"
+
 PYTYPE=$(which pytype) || true  # ignore exit code in this line
 if [ -z "${PYTYPE}"  -a -f ${HOME}/.local/bin/pytype ]
 then
