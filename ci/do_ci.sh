@@ -7,8 +7,9 @@
 set -e
 
 # Setup a Python virtual environment.
-function setup_venv() {
-  tools/python_virtualenv.sh
+function setup_salvo_venv() {
+  source tools/python_virtualenv.sh
+  reuse_or_create_salvo_venv
 }
 
 # Build the salvo framework
@@ -16,7 +17,7 @@ function build_salvo() {
   echo "Building Salvo"
   pushd salvo
 
-  setup_venv
+  setup_salvo_venv
   bazel build //...
   tools/typecheck.sh
 
@@ -28,7 +29,7 @@ function test_salvo() {
   echo "Running Salvo unit tests"
   pushd salvo
 
-  setup_venv
+  setup_salvo_venv
   tools/coverage.sh
 
   popd
@@ -49,7 +50,7 @@ function fix_format() {
   echo "Fixing the Salvo python files format"
   pushd salvo
 
-  setup_venv
+  setup_salvo_venv
   tools/format_python_tools.sh fix 
 
   popd
@@ -62,7 +63,7 @@ function coverage() {
 
   export MINIMUM_THRESHOLD=97
   echo "Setting the minimum threshold of coverage to ${MINIMUM_THRESHOLD}%"
-  setup_venv
+  setup_salvo_venv
   tools/coverage.sh
 
   popd
