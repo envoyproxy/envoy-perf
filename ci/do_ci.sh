@@ -6,9 +6,9 @@
 # in build logs
 set -e
 
-
-function install_deps() {
-  ./install_deps_ci.sh
+# Setup Python virtual environment.
+function setup_venv() {
+  tools/python_virtualenv.sh
 }
 
 # Build the salvo framework
@@ -16,7 +16,7 @@ function build_salvo() {
   echo "Building Salvo"
   pushd salvo
 
-  install_deps
+  setup_venv
   bazel build //...
   tools/typecheck.sh
 
@@ -28,7 +28,7 @@ function test_salvo() {
   echo "Running Salvo unit tests"
   pushd salvo
 
-  install_deps
+  setup_venv
   tools/coverage.sh
 
   popd
@@ -49,7 +49,7 @@ function fix_format() {
   echo "Fixing the Salvo python files format"
   pushd salvo
 
-  install_deps
+  setup_venv
   tools/format_python_tools.sh fix 
 
   popd
@@ -62,7 +62,7 @@ function coverage() {
 
   export MINIMUM_THRESHOLD=97
   echo "Setting the minimum threshold of coverage to ${MINIMUM_THRESHOLD}%"
-  install_deps
+  setup_venv
   tools/coverage.sh
 
   popd
