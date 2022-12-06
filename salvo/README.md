@@ -20,15 +20,27 @@ workflow documentation: [ENVOY_DEVELOP_WORKFLOW.md](./ENVOY_DEVELOP_WORKFLOW.md)
 
 ## Dependencies
 
-The [`install_deps.sh`](./install_deps.sh) script can be used to install any dependencies required
-by Salvo.
-Dependencies installation needs root privileges to perform. Run the following command to install the required dependencies:
+A set of system level packages needs to be installed in order to run Salvo. You
+can run the following commands to install the required dependencies on an Ubuntu
+OS:
+
 ```bash
-sudo ./install_deps.sh
+sudo apt install \
+  docker.io \
+  lcov \
+  libcairo2-dev \
+  libgirepository1.0-dev \
+  openjdk-11-jdk \
+  python3-apt \
+  python3-docker \
+  python3-pip \
+  python3-pytest
 ```
-If you are using a proxy server, run the following command to download any packages via a proxy server:
+
+If you are using a proxy server, include the proxy server configuration in the
+command as follows:
 ```bash
-sudo http_proxy="example.com:port" https_proxy="example.com:port"  ./install_deps.sh
+sudo http_proxy="example.com:port" https_proxy="example.com:port" apt install ...
 ```
 
 ## Building Salvo
@@ -36,7 +48,7 @@ sudo http_proxy="example.com:port" https_proxy="example.com:port"  ./install_dep
 To build Salvo, use the following command:
 
 ```bash
-bazel build //...
+./ci/do_ci.sh build
 ```
 
 Salvo also supports building by docker, use the following command:
@@ -49,6 +61,16 @@ export  SOURCE_DIR_MOUNT_DEST=path_of_your_envoy-perf
 # Switch to root directory of envoy-perf
 ci/run_envoy_docker.sh 'ci/do_ci.sh build'
 ```
+
+### Python virtual environment
+
+Salvo uses a Python virtual environment located in the `salvo/salvo_venv`
+directory. This environment is created when `./ci/do_ci.sh` is executed. The
+`./ci/do_ci.sh` script reuses a previously created virtual environment if found.
+
+If you encounter issues related to Python dependencies, a good first step in
+debugging is to remove the existing virtual environment by deleting the
+`salvo/salvo_venv` directory.
 
 ## Benchmark Test Cases for Salvo
 
