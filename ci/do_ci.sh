@@ -31,8 +31,6 @@ function test_salvo() {
 
   setup_salvo_venv
   bazel test //...
-  # TODO(#187): Re-enable once coverage reporting is fixed.
-  # tools/coverage.sh
 
   popd
 }
