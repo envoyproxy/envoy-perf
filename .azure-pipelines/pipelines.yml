@@ -64,4 +64,4 @@ stages:
       displayName: 'Publish the line coverage report'
       inputs:
         targetPath: $(System.DefaultWorkingDirectory)/salvo/coverage/html.zip
-        artifactName: CoverageReport
+        artifactName: CoverageReport-$(System.JobAttempt)
