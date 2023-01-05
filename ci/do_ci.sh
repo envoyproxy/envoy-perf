@@ -30,7 +30,7 @@ function test_salvo() {
   pushd salvo
 
   setup_salvo_venv
-  tools/coverage.sh
+  bazel test //...
 
   popd
 }
