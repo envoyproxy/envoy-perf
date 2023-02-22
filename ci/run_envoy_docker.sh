@@ -85,12 +85,13 @@ if [[ -n "${ENVOY_DOCKER_PULL}" ]]; then
     time docker pull "${ENVOY_BUILD_IMAGE}"
 fi
 
+
 # Since we specify an explicit hash, docker-run will pull from the remote repo if missing.
 docker run --rm \
        "${ENVOY_DOCKER_OPTIONS[@]}" \
        "${VOLUMES[@]}" \
        -e AZP_BRANCH \
-       -e AZP_SHA1 `# unique` \
+       -e AZP_COMMIT_SHA \
        -e HTTP_PROXY \
        -e HTTPS_PROXY \
        -e NO_PROXY \
@@ -122,7 +123,5 @@ docker run --rm \
        -e SYSTEM_STAGEDISPLAYNAME \
        -e SYSTEM_JOBDISPLAYNAME \
        -e SYSTEM_PULLREQUEST_PULLREQUESTNUMBER \
-       -e DOCKERHUB_USERNAME `# unique` \
-       -e DOCKERHUB_PASSWORD `# unique` \
        "${ENVOY_BUILD_IMAGE}" \
        "${START_COMMAND[@]}"
