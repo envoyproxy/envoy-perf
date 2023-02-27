@@ -16,7 +16,7 @@ Performance benchmarking can take multiple forms:
 
 1. [cloudperf/](cloudperf/README.md) contains what appears to be an attempt
    at measuring performance in a realistic multi-machine
-   scenario. However, the insructions don't work, and it hasn't been touched in
+   scenario. However, the instructions don't work, and it hasn't been touched in
    a year (other than moving the files).
 2. [siege/](siege/README.md) contains an initial attempt at a simple test to run
    iteratively during development to get a view of the time/space impact of the
