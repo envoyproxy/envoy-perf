@@ -15,6 +15,8 @@ steps:
   displayName: "Run the CI script"
   env:
     BAZEL_REMOTE_CACHE: $(LocalBuildCache)
+    # Ideally this is only enabled when actually required.
+    ENVOY_DOCKER_IN_DOCKER: 1
 
 - bash: |
     echo "disk space at end of build:"
