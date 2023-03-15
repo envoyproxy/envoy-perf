@@ -11,6 +11,7 @@ resources:
   repositories:
     - repository: "nighthawk"
       type: "github"
+      endpoint: "GitHub - mum4k - Salvo MVP"
       name: "envoyproxy/nighthawk"
 
 stages:
