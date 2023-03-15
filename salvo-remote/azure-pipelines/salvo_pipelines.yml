@@ -26,11 +26,10 @@ stages:
       maxParallel: 1
       matrix:
         build:
-          REPO: "nighthawk"
           CI_TARGET: "build"
     timeoutInMinutes: 120
     steps:
-    - checkout: $(REPO)
+    - checkout: "nighthawk"
     - template: "bazel.yml"
       parameters:
         ciTarget: $(CI_TARGET)
