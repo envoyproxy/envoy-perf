@@ -26,11 +26,6 @@ stages:
   - job: build
     displayName: "build"
     dependsOn: []
-    strategy:
-      maxParallel: 1
-      matrix:
-        build:
-          CI_TARGET: "build"
     timeoutInMinutes: 120
     steps:
     - checkout: "nighthawk"
@@ -38,8 +33,8 @@ stages:
     - template: "bazel.yml"
       parameters:
         repo: "nighthawk"
-        ciTarget: $(CI_TARGET)
+        ciTarget: "build"
     - template: "bazel.yml"
       parameters:
         repo: "envoy"
-        ciTarget: $(CI_TARGET)
+        ciTarget: "bazel.release.server_only"
