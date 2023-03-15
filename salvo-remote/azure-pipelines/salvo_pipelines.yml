@@ -13,6 +13,10 @@ resources:
       type: "github"
       endpoint: "GitHub - mum4k - Salvo MVP"
       name: "envoyproxy/nighthawk"
+    - repository: "envoy"
+      type: "github"
+      endpoint: "GitHub - mum4k - Salvo MVP"
+      name: "envoyproxy/envoy"
 
 stages:
 - stage: build
@@ -30,6 +34,12 @@ stages:
     timeoutInMinutes: 120
     steps:
     - checkout: "nighthawk"
+    - checkout: "envoy"
     - template: "bazel.yml"
       parameters:
+        repo: "nighthawk"
+        ciTarget: $(CI_TARGET)
+    - template: "bazel.yml"
+      parameters:
+        repo: "envoy"
         ciTarget: $(CI_TARGET)
