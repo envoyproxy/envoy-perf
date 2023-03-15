@@ -30,6 +30,8 @@ stages:
           CI_TARGET: "build"
     timeoutInMinutes: 120
     steps:
-    - template: bazel.yml
+    - checkout: "nighthawk"
+    - template: "bazel.yml"
       parameters:
+        repo: $(REPO)
         ciTarget: $(CI_TARGET)
