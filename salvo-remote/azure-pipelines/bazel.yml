@@ -28,9 +28,18 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
-- bash: |
-    ls -laR nighthawk/bazel-bin
-  displayName: "ls in nighthawk"
+- script: "ls -laR"
+  workingDirectory: "$(Build.SourcesDirectory)"
+  displayName: "ls in Build.SourcesDirectory"
+- script: "ls -laR"
+  workingDirectory: "$(Build.ArtifactStagingDirectory)"
+  displayName: "ls in Build.ArtifactStagingDirectory"
+- script: "ls -laR"
+  workingDirectory: "$(Build.BinariesDirectory)"
+  displayName: "ls in Build.BinariesDirectory"
+- script: "ls -laR"
+  workingDirectory: "$(Build.StagingDirectory)"
+  displayName: "ls in Build.StagingDirectory"
 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
