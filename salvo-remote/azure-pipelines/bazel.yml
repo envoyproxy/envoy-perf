@@ -16,7 +16,7 @@ steps:
 
 - script: "${{ parameters.repo }}/ci/run_envoy_docker.sh ${{ parameters.repo }}/ci/do_ci.sh ${{ parameters.ciTarget }}"
   workingDirectory: $(Build.SourcesDirectory)
-  displayName: "CI script in ${{ parameters.repo }"
+  displayName: "CI script in ${{ parameters.repo }}"
   env:
     BAZEL_REMOTE_CACHE: $(LocalBuildCache)
 
