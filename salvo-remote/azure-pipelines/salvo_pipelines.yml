@@ -25,6 +25,7 @@ stages:
       maxParallel: 1
       matrix:
         build:
+          REPO: "nighthawk"
           CI_TARGET: "build"
     timeoutInMinutes: 120
     steps:
