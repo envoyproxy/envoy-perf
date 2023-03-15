@@ -14,7 +14,8 @@ steps:
     df -h
   displayName: "Check disk space at beginning"
 
-- script: "${{ parameters.repo }}/ci/run_envoy_docker.sh ${{ parameters.repo }}/ci/do_ci.sh ${{ parameters.ciTarget }}"
+#- script: "${{ parameters.repo }}/ci/run_envoy_docker.sh ${{ parameters.repo }}/ci/do_ci.sh ${{ parameters.ciTarget }}"
+- script: "ls -laR"
   workingDirectory: $(Build.SourcesDirectory)
   displayName: "Run the CI script"
   env:
