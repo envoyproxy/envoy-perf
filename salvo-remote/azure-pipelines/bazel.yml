@@ -28,6 +28,10 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
+- bash: |
+    ls -laR nighthawk/
+  displayName: "ls in nighthawk"
+
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
   - task: PublishPipelineArtifact@1

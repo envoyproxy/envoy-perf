@@ -34,9 +34,6 @@ stages:
       parameters:
         repo: "nighthawk"
         ciTarget: "build"
-    - bash: |
-        ls -laR nighthawk/
-      displayName: "ls in nighthawk"
     - template: "bazel.yml"
       parameters:
         repo: "envoy"
