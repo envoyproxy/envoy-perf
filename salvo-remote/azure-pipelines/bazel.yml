@@ -1,8 +1,4 @@
 parameters:
-- name: repo
-  displayName: "repository"
-  type: string
-  default: ""
 - name: ciTarget
   displayName: "CI target"
   type: string
@@ -14,8 +10,7 @@ steps:
     df -h
   displayName: "Check disk space at beginning"
 
-#- script: "${{ parameters.repo }}/ci/run_envoy_docker.sh ${{ parameters.repo }}/ci/do_ci.sh ${{ parameters.ciTarget }}"
-- script: "ls -laR"
+- script: "ci/run_envoy_docker.sh ci/do_ci.sh ${{ parameters.ciTarget }}"
   workingDirectory: $(Build.SourcesDirectory)
   displayName: "Run the CI script"
   env:
