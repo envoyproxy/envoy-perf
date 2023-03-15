@@ -19,12 +19,12 @@ resources:
       name: "envoyproxy/envoy"
 
 stages:
-- stage: build
+- stage: "build"
   dependsOn: []
   pool: "x64-large"
   jobs:
   - job: build
-    displayName: "build"
+    displayName: "components"
     dependsOn: []
     timeoutInMinutes: 120
     steps:

@@ -27,3 +27,16 @@ steps:
     rm -rf $(Build.StagingDirectory)/tmp/*/*/external/go_sdk/test/fixedbugs
   displayName: "Check disk space at end"
   condition: always()
+
+# Publish the binaries as artifacts.
+- ${{ if eq(parameters.repo, 'nighthawk') }}:
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Nighthawk client"
+    inputs:
+      targetPath: "$(Build.SourcesDirectory)/nighthawk/bazel-bin/nighthawk_client"
+      artifactName: "Nighthawk client"
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Nighthawk test server"
+    inputs:
+      targetPath: "$(Build.SourcesDirectory)/nighthawk/bazel-bin/nighthawk_test_server"
+      artifactName: "Nighthawk test server"
