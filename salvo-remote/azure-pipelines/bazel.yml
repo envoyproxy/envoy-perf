@@ -14,8 +14,8 @@ steps:
     df -h
   displayName: "Check disk space at beginning"
 
-- script: "${{ parameters.repo }}/ci/run_envoy_docker.sh ${{ parameters.repo }}/ci/do_ci.sh ${{ parameters.ciTarget }}"
-  workingDirectory: $(Build.SourcesDirectory)
+- script: "ci/run_envoy_docker.sh ci/do_ci.sh ${{ parameters.ciTarget }}"
+  workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
   displayName: "CI script in ${{ parameters.repo }}"
   env:
     BAZEL_REMOTE_CACHE: $(LocalBuildCache)
