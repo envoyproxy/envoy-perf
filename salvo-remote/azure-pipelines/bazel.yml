@@ -40,6 +40,9 @@ steps:
 - script: "ls -laR"
   workingDirectory: "$(Build.StagingDirectory)"
   displayName: "ls in Build.StagingDirectory"
+- script: "grep 'docker\|lxc' /proc/1/cgroup"
+  workingDirectory: "$(Build.StagingDirectory)"
+  displayName: "are we docker?"
 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
