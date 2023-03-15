@@ -29,7 +29,7 @@ steps:
   condition: always()
 
 - bash: |
-    ls -laR nighthawk/
+    ls -laR nighthawk/bazel-bin
   displayName: "ls in nighthawk"
 
 # Publish the binaries as artifacts.
