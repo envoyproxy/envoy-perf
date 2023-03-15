@@ -1,0 +1,33 @@
+# Initial pipeline for Salvo MVP.
+#
+# MVP doc:  https://docs.google.com/document/d/15auKcxLfw8iILL7EF4tJ8VrnHce6KiZvd9tzWweT0DY/edit
+# Design: https://docs.google.com/document/d/1Qfueli357u4QgOb-7-8RL98N0XnMeu2k6VJDoUwN0A4/edit?resourcekey=0-AyeFMQHHiuajx8JK2w_yfA
+# Pivot to direct VM: https://docs.google.com/document/d/1auXzV-AEXgMzbtdG06XlZ2d9X5l_XadMheA9h51E7yc/edit
+# AZP docs: https://learn.microsoft.com/en-us/azure/devops/pipelines/?view=azure-devops
+
+# Salvo builds the Nighthawk (load generator), The Envoy (system under test)
+# and the Nighthawk test server (the fake backend).
+resources:
+  repositories:
+    - repository: "nighthawk"
+      type: "github"
+      name: "envoyproxy/nighthawk"
+
+stages:
+- stage: build
+  dependsOn: []
+  pool: "x64-large"
+  jobs:
+  - job: build
+    displayName: "build"
+    dependsOn: []
+    strategy:
+      maxParallel: 1
+      matrix:
+        build:
+          CI_TARGET: "build"
+    timeoutInMinutes: 120
+    steps:
+    - template: bazel.yml
+      parameters:
+        ciTarget: $(CI_TARGET)
