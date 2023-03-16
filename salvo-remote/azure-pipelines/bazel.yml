@@ -29,31 +29,15 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
-- script: "ls -laR"
-  workingDirectory: "$(Build.SourcesDirectory)"
-  displayName: "ls in Build.SourcesDirectory"
-- script: "ls -laR"
-  workingDirectory: "$(Build.ArtifactStagingDirectory)"
-  displayName: "ls in Build.ArtifactStagingDirectory"
-- script: "ls -laR"
-  workingDirectory: "$(Build.BinariesDirectory)"
-  displayName: "ls in Build.BinariesDirectory"
-- script: "ls -laR"
-  workingDirectory: "$(Build.StagingDirectory)"
-  displayName: "ls in Build.StagingDirectory"
-- script: "ls -laR"
-  workingDirectory: "/tmp/envoy-docker-build"
-  displayName: "ls in /tmp/envoy-docker-build"
-
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
   - task: PublishPipelineArtifact@1
     displayName: "Publish Nighthawk client"
     inputs:
-      targetPath: "$(Build.SourcesDirectory)/nighthawk/bazel-bin/nighthawk_client"
+      targetPath: "$(Build.StagingDirectory)/nighthawk_client"
       artifactName: "Nighthawk client"
   - task: PublishPipelineArtifact@1
     displayName: "Publish Nighthawk test server"
     inputs:
-      targetPath: "$(Build.SourcesDirectory)/nighthawk/bazel-bin/nighthawk_test_server"
+      targetPath: "$(Build.StagingDirectory)/nighthawk_test_server"
       artifactName: "Nighthawk test server"
