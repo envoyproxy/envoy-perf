@@ -40,6 +40,9 @@ steps:
 - script: "ls -laR"
   workingDirectory: "$(Build.StagingDirectory)"
   displayName: "ls in Build.StagingDirectory"
+- script: "ls -laR"
+  workingDirectory: "/tmp/envoy-docker-build"
+  displayName: "ls in /tmp/envoy-docker-build"
 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
