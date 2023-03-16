@@ -41,7 +41,7 @@ steps:
   workingDirectory: "$(Build.StagingDirectory)"
   displayName: "ls in Build.StagingDirectory"
 - script: "ci/run_envoy_docker.sh egrep 'docker|lxc' /proc/1/cgroup"
-  workingDirectory: "$(Build.StagingDirectory)"
+  workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
   displayName: "are we docker?"
 
 # Publish the binaries as artifacts.
