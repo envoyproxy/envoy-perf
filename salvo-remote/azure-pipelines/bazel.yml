@@ -40,7 +40,7 @@ steps:
 - script: "ls -laR"
   workingDirectory: "$(Build.StagingDirectory)"
   displayName: "ls in Build.StagingDirectory"
-- script: "egrep 'docker|lxc' /proc/1/cgroup"
+- script: "ci/run_envoy_docker.sh egrep 'docker|lxc' /proc/1/cgroup"
   workingDirectory: "$(Build.StagingDirectory)"
   displayName: "are we docker?"
 
