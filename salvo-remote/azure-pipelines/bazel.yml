@@ -25,7 +25,6 @@ steps:
   workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
   displayName: "CI script in ${{ parameters.repo }}"
   env:
-    BAZEL_REMOTE_CACHE: $(LocalBuildCache)
     ENVOY_DOCKER_BUILD_DIR: $(Build.StagingDirectory)
     ${{ if parameters.rbe }}:
       GCP_SERVICE_ACCOUNT_KEY: $(GcpServiceAccountKey)
