@@ -11,6 +11,9 @@ parameters:
   displayName: "Enable RBE"
   type: boolean
   default: true
+- name: bazelBuildExtraOptions
+  type: string
+  default: ""
 
 steps:
 - bash: |
