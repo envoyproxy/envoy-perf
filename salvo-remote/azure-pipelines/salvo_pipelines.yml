@@ -32,7 +32,7 @@ stages:
     - checkout: "envoy"
     - template: "bazel.yml"
       parameters:
-        rbe: true
+        rbe: false
         repo: "nighthawk"
         ciTarget: "build"
     - template: "bazel.yml"

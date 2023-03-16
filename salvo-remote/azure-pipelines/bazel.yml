@@ -1,17 +1,22 @@
 parameters:
 - name: ciTarget
+  # The CI target to build, this is the $1 given to ci/do_ci.sh below.
   displayName: "CI target"
   type: string
   default: "build"
 - name: repo
+  # The repository to build in.
   displayName: "repository"
   type: string
   default: ""
 - name: rbe
+  # If set to true, build is performed using the RBE service.
   displayName: "Enable RBE"
   type: boolean
   default: true
 - name: bazelBuildExtraOptions
+  # Additional options to pass to Bazel while building.
+  displayName: "Bazel extra build options"
   type: string
   default: ""
 
