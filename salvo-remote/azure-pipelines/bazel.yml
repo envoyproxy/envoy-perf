@@ -19,6 +19,7 @@ steps:
   displayName: "CI script in ${{ parameters.repo }}"
   env:
     BAZEL_REMOTE_CACHE: $(LocalBuildCache)
+    ENVOY_DOCKER_BUILD_DIR: $(Build.StagingDirectory)
 
 - bash: |
     echo "disk space at end of build:"
