@@ -36,6 +36,6 @@ stages:
     #    ciTarget: "build"
     - template: "bazel.yml"
       parameters:
-        rbe: false
+        rbe: true
         repo: "envoy"
         ciTarget: "bazel.release.server_only"
