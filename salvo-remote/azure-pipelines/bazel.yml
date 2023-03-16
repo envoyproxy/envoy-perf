@@ -7,6 +7,10 @@ parameters:
   displayName: "repository"
   type: string
   default: ""
+- name: rbe
+  displayName: "Enable RBE"
+  type: boolean
+  default: true
 
 steps:
 - bash: |
@@ -20,6 +24,19 @@ steps:
   env:
     BAZEL_REMOTE_CACHE: $(LocalBuildCache)
     ENVOY_DOCKER_BUILD_DIR: $(Build.StagingDirectory)
+    ${{ if parameters.rbe }}:
+      GCP_SERVICE_ACCOUNT_KEY: $(GcpServiceAccountKey)
+      ENVOY_RBE: "1"
+      BAZEL_BUILD_EXTRA_OPTIONS: "--config=remote-ci --jobs=$(RbeJobs) ${{ parameters.bazelBuildExtraOptions }}"
+      BAZEL_REMOTE_CACHE: grpcs://remotebuildexecution.googleapis.com
+      BAZEL_REMOTE_INSTANCE: projects/envoy-ci/instances/default_instance
+    ${{ if eq(parameters.rbe, false) }}:
+      BAZEL_BUILD_EXTRA_OPTIONS: "${{ parameters.bazelBuildExtraOptions }}"
+      BAZEL_REMOTE_CACHE: $(LocalBuildCache)
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+        BAZEL_REMOTE_INSTANCE: "instances/$(System.PullRequest.TargetBranch)"
+      ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        BAZEL_REMOTE_INSTANCE: "instances/$(Build.SourceBranchName)"
 
 - bash: |
     echo "disk space at end of build:"
@@ -28,6 +45,10 @@ steps:
     rm -rf $(Build.StagingDirectory)/tmp/*/*/external/go_sdk/test/fixedbugs
   displayName: "Check disk space at end"
   condition: always()
+
+- script: "ls -laR"
+  workingDirectory: "$(Build.StagingDirectory)"
+  displayName: "ls in Build.StagingDirectory"
 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
@@ -41,3 +62,9 @@ steps:
     inputs:
       targetPath: "$(Build.StagingDirectory)/nighthawk_test_server"
       artifactName: "Nighthawk test server"
+- ${{ if eq(parameters.repo, 'envoy') }}:
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Envoy server"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/envoy"
+      artifactName: "Envoy server"
