@@ -69,5 +69,5 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: "Publish Envoy server"
     inputs:
-      targetPath: "$(Build.StagingDirectory)/envoy/source/exe/envoy"
+      targetPath: "$(Build.StagingDirectory)/envoy/envoy_binary.tar.gz"
       artifactName: "Envoy server"
