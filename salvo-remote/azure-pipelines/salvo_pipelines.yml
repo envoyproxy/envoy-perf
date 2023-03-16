@@ -30,10 +30,11 @@ stages:
     steps:
     - checkout: "nighthawk"
     - checkout: "envoy"
-    #- template: "bazel.yml"
-    #  parameters:
-    #    repo: "nighthawk"
-    #    ciTarget: "build"
+    - template: "bazel.yml"
+      parameters:
+        rbe: true
+        repo: "nighthawk"
+        ciTarget: "build"
     - template: "bazel.yml"
       parameters:
         rbe: true
