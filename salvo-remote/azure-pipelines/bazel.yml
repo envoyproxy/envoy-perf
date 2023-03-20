@@ -6,7 +6,7 @@ parameters:
   default: "build"
 - name: repo
   # The repository to build in.
-  displayName: "repository"
+  displayName: "Repository"
   type: string
   default: ""
 - name: rbe
