@@ -1,0 +1,73 @@
+parameters:
+- name: ciTarget
+  # The CI target to build, this is the $1 given to ci/do_ci.sh below.
+  displayName: "CI target"
+  type: string
+  default: "build"
+- name: repo
+  # The repository to build in.
+  displayName: "Repository"
+  type: string
+  default: ""
+- name: rbe
+  # If set to true, build is performed using the RBE service.
+  displayName: "Enable RBE"
+  type: boolean
+  default: true
+- name: bazelBuildExtraOptions
+  # Additional options to pass to Bazel while building.
+  displayName: "Bazel extra build options"
+  type: string
+  default: ""
+
+steps:
+- bash: |
+    echo "disk space at beginning of build:"
+    df -h
+  displayName: "Check disk space at beginning"
+
+- script: "ci/run_envoy_docker.sh ci/do_ci.sh ${{ parameters.ciTarget }}"
+  workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
+  displayName: "CI script in ${{ parameters.repo }}"
+  env:
+    ENVOY_DOCKER_BUILD_DIR: $(Build.StagingDirectory)
+    ${{ if parameters.rbe }}:
+      GCP_SERVICE_ACCOUNT_KEY: $(GcpServiceAccountKey)
+      ENVOY_RBE: "1"
+      BAZEL_BUILD_EXTRA_OPTIONS: "--config=remote-ci --jobs=$(RbeJobs) ${{ parameters.bazelBuildExtraOptions }}"
+      BAZEL_REMOTE_CACHE: grpcs://remotebuildexecution.googleapis.com
+      BAZEL_REMOTE_INSTANCE: projects/envoy-ci/instances/default_instance
+    ${{ if eq(parameters.rbe, false) }}:
+      BAZEL_BUILD_EXTRA_OPTIONS: "${{ parameters.bazelBuildExtraOptions }}"
+      BAZEL_REMOTE_CACHE: $(LocalBuildCache)
+      ${{ if eq(variables['Build.Reason'], 'PullRequest') }}:
+        BAZEL_REMOTE_INSTANCE: "instances/$(System.PullRequest.TargetBranch)"
+      ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
+        BAZEL_REMOTE_INSTANCE: "instances/$(Build.SourceBranchName)"
+
+- bash: |
+    echo "disk space at end of build:"
+    df -h
+    # Cleanup offending files with unicode names
+    rm -rf $(Build.StagingDirectory)/tmp/*/*/external/go_sdk/test/fixedbugs
+  displayName: "Check disk space at end"
+  condition: always()
+
+# Publish the binaries as artifacts.
+- ${{ if eq(parameters.repo, 'nighthawk') }}:
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Nighthawk client"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/nighthawk_client"
+      artifactName: "Nighthawk client"
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Nighthawk test server"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/nighthawk_test_server"
+      artifactName: "Nighthawk test server"
+- ${{ if eq(parameters.repo, 'envoy') }}:
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Envoy server"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/envoy/envoy_binary.tar.gz"
+      artifactName: "Envoy server"
