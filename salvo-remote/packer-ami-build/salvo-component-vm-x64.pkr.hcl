@@ -69,6 +69,6 @@ build {
       "AZURE_DEVOPS_EXT_PAT" : "${var.azure_devops_ext_pat}"
       "AZP_BUILD_ID" : "${var.azp_build_id}"
     }
-    execute_command = "echo 'vagrant' | {{.Vars}} sudo -S -E sh -eux '{{.Path}}'"
+    execute_command = "{{.Vars}} sudo -S -E sh -eux '{{.Path}}'"
   }
 }
