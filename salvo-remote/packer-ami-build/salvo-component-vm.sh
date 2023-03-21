@@ -55,4 +55,3 @@ sudo chmod 0755 /salvo/components/nighthawk*
 # Undo the libssl workaround done for AzureCLI.
 sudo sed -i 's/#openssl_conf = openssl_init/openssl_conf = openssl_init/g' /etc/ssl/openssl.cnf
 sudo dpkg -r $(dpkg -f "${LIBSSL1_PACKAGE}" Package)
-
