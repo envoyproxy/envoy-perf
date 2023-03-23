@@ -8,4 +8,5 @@ steps:
     AZURE_DEVOPS_EXT_PAT: $(SalvoAzureDevOpsExtPat)
     AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
     AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
-    BUILD_ID: $(Build.BuildId)
+    BUILD_ID: "132047"
+    #BUILD_ID: $(Build.BuildId)
