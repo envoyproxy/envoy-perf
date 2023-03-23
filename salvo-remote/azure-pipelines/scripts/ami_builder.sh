@@ -12,6 +12,7 @@ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
 # the AWS AMI.
 export BUILD_ID=${BUILD_ID:-}
 
+packer init
 packer build \
   -var "azure_devops_ext_pat=${AZURE_DEVOPS_EXT_PAT}" \
   -var "azp_build_id=${BUILD_ID}" \
