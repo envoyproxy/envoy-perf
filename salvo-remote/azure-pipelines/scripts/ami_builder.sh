@@ -12,8 +12,9 @@ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
 # the AWS AMI.
 export BUILD_ID=${BUILD_ID:-}
 
-packer init
+export PACKER_AMI_BUILD_DIR="salvo-remote/packer-ami-build"
+packer init "${PACKER_AMI_BUILD_DIR}"
 packer build \
   -var "azure_devops_ext_pat=${AZURE_DEVOPS_EXT_PAT}" \
   -var "azp_build_id=${BUILD_ID}" \
-  salvo-remote/packer-ami-build/salvo-component-vm-x64.pkr.hcl
+  "${PACKER_AMI_BUILD_DIR}/salvo-component-vm-x64.pkr.hcl"
