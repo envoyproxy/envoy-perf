@@ -41,7 +41,8 @@ stages:
 #        ciTarget: "bazel.release.server_only"
 
 - stage: "build_amis"
-  dependsOn: ["build_components"]
+  #dependsOn: ["build_components"]
+  dependsOn: []
   pool:
     vmImage: "ubuntu-22.04"
   jobs:
