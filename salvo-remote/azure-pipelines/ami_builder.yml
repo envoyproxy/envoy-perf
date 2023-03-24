@@ -1,0 +1,11 @@
+# Pipeline steps that build VM AMI images on AWS using packer.
+
+steps:
+- script: "salvo-remote/azure-pipelines/scripts/ami_builder.sh"
+  workingDirectory: "$(Build.SourcesDirectory)"
+  displayName: "ami_builder.sh"
+  env:
+    AZURE_DEVOPS_EXT_PAT: $(SalvoAzureDevOpsExtPat)
+    AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
+    AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
+    BUILD_ID: $(Build.BuildId)
