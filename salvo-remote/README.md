@@ -22,7 +22,7 @@ The following documents outline the requirements for and design of Salvo.
 
 Salvo's
 [MVP](https://docs.google.com/document/d/15auKcxLfw8iILL7EF4tJ8VrnHce6KiZvd9tzWweT0DY/edit)
-is in development. Project status can be seen in the task list of Gantt chart on
+is in development. Project status can be seen in the task list and the Gantt chart:
 
 - [Task list](https://app.asana.com/read-only/Salvo-MVP/1203151608185622/c3a265ce3aaf6f108ff846613c1dd8e9/list)
 - [Gantt chart](https://app.asana.com/read-only/Salvo-MVP-Gantt/1203151608185622/3630497a685762a972cc33e16803be5c/timeline)
@@ -43,8 +43,8 @@ Salvo is a framework that reuses existing components:
 Salvo's code and configuration is split into multiple locations and repositories:
 
 - The [salvo](../salvo) directory in this repository stores code that is used for local execution of Salvo.
-- This (`salvo-remote`) directory contains code and configuration related to the instrumentation of individual test sandboxes and test runs, i.e. resources that are started for a run and terminated afterwards.
-- The [envoyproxy/envoy-perf](https://github.com/envoyproxy/envoy-perf) repository contains code and configurations related to the common (always-on) infrastructure that Salvo uses across all the executions.
+- This (the `salvo-remote`) directory contains code and configuration related to the instrumentation of individual test sandboxes and test runs, i.e. resources that are started for a run and terminated afterwards.
+- The [envoyproxy/ci-infra](https://github.com/envoyproxy/ci-infra) repository contains code and configurations related to the common (always-on) infrastructure that Salvo uses across all the executions.
 
 ## Contributions
 
@@ -56,10 +56,10 @@ welcome. Please contact us if you would like to participate.
 ### People
 
 - Project owner: Jakub Sobon ([mum4k](https://github.com/mum4k)) (mumak@google.com)
-- Contributor: Fei Deng ([fei-deng](https://github.com/fei-deng)) (feid@google.com)
+- Contributor: Fei Deng ([fei-deng](https://github.com/fei-deng))
 - Contributor: [gyohuangxin](https://github.com/gyohuangxin)
 
 ### Slack channels
 
-You can also reach out to us on the [Envoy Slack](envoyproxy.slack.com) in
+You can also reach out to us on [Envoy Slack](envoyproxy.slack.com) in
 channel `#salvo`.
