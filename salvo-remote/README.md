@@ -79,7 +79,7 @@ welcome. Please contact us if you would like to participate.
 - Project lead: Jakub Sobon ([mum4k](https://github.com/mum4k))
   (mumak@google.com)
 - Contributor: Fei Deng ([fei-deng](https://github.com/fei-deng))
-- Contributor: Xin Huang [gyohuangxin](https://github.com/gyohuangxin)
+- Contributor: Xin Huang ([gyohuangxin](https://github.com/gyohuangxin))
 
 ### Slack channels
 
