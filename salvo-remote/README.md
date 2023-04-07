@@ -43,8 +43,8 @@ Salvo is a framework that reuses existing components:
 Salvo's code and configuration is split into multiple locations and repositories:
 
 - The [salvo](../salvo) directory in this repository stores code that is used for local execution of Salvo.
-- This (the `salvo-remote`) directory contains code and configuration related to the instrumentation of individual test sandboxes and test runs, i.e. resources that are started for a run and terminated afterwards.
-- The [envoyproxy/ci-infra](https://github.com/envoyproxy/ci-infra) repository contains code and configurations related to the common (always-on) infrastructure that Salvo uses across all the executions.
+- This (the `salvo-remote`) directory contains code and configuration related to the remote execution of Salvo. The directory content deals with the instrumentation of individual test sandboxes and test runs, i.e. resources that are started for a run and terminated afterwards.
+- The [envoyproxy/ci-infra](https://github.com/envoyproxy/ci-infra) repository contains code and configurations related to the remote execution of Salvo. The directory deals with the common (always-on) infrastructure that Salvo uses across all the remote executions.
 
 ## Contributions
 
@@ -55,9 +55,9 @@ welcome. Please contact us if you would like to participate.
 
 ### People
 
-- Project owner: Jakub Sobon ([mum4k](https://github.com/mum4k)) (mumak@google.com)
+- Project lead: Jakub Sobon ([mum4k](https://github.com/mum4k)) (mumak@google.com)
 - Contributor: Fei Deng ([fei-deng](https://github.com/fei-deng))
-- Contributor: [gyohuangxin](https://github.com/gyohuangxin)
+- Contributor: Xin Huang [gyohuangxin](https://github.com/gyohuangxin)
 
 ### Slack channels
 
