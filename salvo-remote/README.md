@@ -83,5 +83,5 @@ welcome. Please contact us if you would like to participate.
 
 ### Slack channels
 
-You can also reach out to us on [Envoy Slack](envoyproxy.slack.com) in channel
-`#salvo`.
+You can also reach out to us on [Envoy Slack](https://envoyproxy.slack.com) in
+channel `#salvo`.
