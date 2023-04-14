@@ -6,7 +6,7 @@ trigger:
 stages:
 - stage: check
   dependsOn: []
-  pool: "x64-large"
+  pool: "envoy-x64-large"
   jobs:
   - job: build_and_format
     displayName: "do_ci.sh"
@@ -26,7 +26,7 @@ stages:
 
 - stage: test
   dependsOn: ["check"]
-  pool: "x64-large"
+  pool: "envoy-x64-large"
   jobs:
   - job: test
     displayName: "do_ci.sh"
@@ -45,7 +45,7 @@ stages:
 # TODO(#187): Re-enable once coverage reporting is fixed.
 #- stage: coverage
 #  dependsOn: ["test"]
-#  pool: "x64-large"
+#  pool: "envoy-x64-large"
 #  jobs:
 #  - job: coverage
 #    displayName: "do_ci.sh"

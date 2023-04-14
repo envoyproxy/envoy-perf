@@ -21,7 +21,7 @@ resources:
 stages:
 - stage: "build_components"
   dependsOn: []
-  pool: "x64-large"
+  pool: "envoy-x64-large"
   jobs:
   - job: "build_components"
     displayName: "Build components"
