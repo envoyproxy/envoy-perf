@@ -66,12 +66,8 @@ steps:
       targetPath: "$(Build.StagingDirectory)/nighthawk_test_server"
       artifactName: "Nighthawk test server"
 - ${{ if eq(parameters.repo, 'envoy') }}:
-  - script: "ls -laR ."
-    workingDirectory: "$(Build.StagingDirectory)"
-    displayName: "LS"
-    condition: always()
-  #- task: PublishPipelineArtifact@1
-  #  displayName: "Publish Envoy server"
-  #  inputs:
-  #    targetPath: "$(Build.StagingDirectory)/envoy/envoy_binary.tar.gz"
-  #    artifactName: "Envoy server"
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish Envoy server"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/envoy/x64/envoy_binary.tar.gz"
+      artifactName: "Envoy server"
