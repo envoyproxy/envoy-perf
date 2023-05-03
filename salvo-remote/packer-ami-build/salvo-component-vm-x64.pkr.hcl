@@ -25,9 +25,9 @@ source "amazon-ebs" "salvo-component-vm-x64" {
   ami_name                    = "salvo-component-vm-x64-${var.azp_build_id}-{{timestamp}}"
   instance_type               = "m6i.large"
   region                      = "us-west-1"
-  vpc_id                      = "vpc-09623ca46adcf44aa" # salvo-vpc
+  vpc_id                      = "vpc-0b1493d6a970c32bd" # salvo-vpc
   associate_public_ip_address = true
-  subnet_id                   = "subnet-06a291300c69ce70c" # salvo-packer-subnet
+  subnet_id                   = "subnet-0d07ecf83aad87c08" # salvo-packer-subnet
 
   source_ami_filter {
     filters = {
