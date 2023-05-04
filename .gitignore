@@ -7,3 +7,6 @@
 bazel-*
 **/venv/*
 **/.pytype/*
+# Local .terraform directories and files.
+**/.terraform/*
+**/.terraform.*
