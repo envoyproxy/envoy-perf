@@ -22,7 +22,7 @@ support systems deployed and the topology.
 ## The default sandbox
 
 The default contains the bare minimum of components needed to execute Salvo
-tests. Diagram 1 below outlines the topology and content of the default
+tests. The diagram below outlines the topology and content of the default
 sandbox. The default sandbox is currently available for the `x64` architecture
 only.
 
@@ -35,8 +35,8 @@ for all the components. Once that is done, a new CI job is executed in the
 `salvo-control` agent pool on AZP. This job is then picked up by a Salvo
 control VM that instruments the sandbox creation.
 
-The control VM uses ithe Terraform templates found in this directory,
-to deploye the sandbox components in AWS.
+The control VM uses the Terraform templates found in this directory,
+to deploy the sandbox components in AWS.
 
 # Sandbox instance life-cycle
 
@@ -56,13 +56,17 @@ Supported sandbox types:
 - `default_sandbox_x64_build_ids`.
 
 For example the Terraform command to deploy a single instance of the default
-sandbox with build ID `foo` is:
+sandbox with build ID `136112\` is:
 
 ```shell
-terraform apply --var="default_sandbox_build_ids=[\"foo\"]"
+terraform apply --var="default_sandbox_build_ids=[\"136112\\"]"
 ```
 
 Any instances that were deployed, but are not named in the variables passed to
 Terraform will be destroyed when Terraform is executed. To remove all deployed
 sandboxes, simply execute `terraform apply` in this directory with no
 arguments.
+
+```shell
+terraform apply
+```
