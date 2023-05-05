@@ -22,8 +22,8 @@ support systems deployed and the topology.
 
 ## The default sandbox
 
-The default contains the bare minimum of components needed to execute Salvo
-tests. The diagram below outlines the topology and content of the default
+The default sandbox contains the bare minimum of components needed to execute
+Salvo tests. The diagram below outlines the topology and content of the default
 sandbox. The default sandbox is currently available for the `x64` architecture
 only.
 
@@ -31,10 +31,16 @@ only.
 
 # Sandbox creation
 
-When Salvo executes, the CI pipeline will produce binaries and VM disk images
-for all the components. Once that is done, a new CI job is executed in the
-`salvo-control` agent pool on AZP. This job is then picked up by a Salvo
-control VM running a Salvo controller that instruments the sandbox creation.
+When Salvo executes, an execution of the [AZP CI
+pipeline](https://github.com/envoyproxy/envoy-perf/blob/main/salvo-remote/azure-pipelines/salvo_pipelines.yml)
+is started. Each CI pipeline execution is uniquely identified by a build ID.
+This execution will produce binaries and VM disk images for all the sandbox
+components.
+
+Once the binaries and VM disk images are built, the AZP CI pipeline starts a
+job in the `salvo-control` agent pool on AZP. This job is then picked up by a
+Salvo control VM running a Salvo controller that instruments the sandbox
+creation.
 
 The Salvo controller uses the Terraform templates found in this directory,
 to deploy the sandbox components in AWS.
@@ -45,12 +51,14 @@ The Terraform configuration for sandboxes uses shared state bucket deployed in
 S3 on AWS. The sandbox instances that will be deployed or destroyed are
 determined based on the variables passed to Terraform.
 
-Each of the following variables is a list of build IDs. Each list represents
-one sandbox type. Each listed build ID represents an instance of the sandbox
-type that should be deployed. The build IDs must match the AZP build ID of the
-[CI
-pipeline](https://github.com/envoyproxy/envoy-perf/blob/main/salvo-remote/azure-pipelines/salvo_pipelines.yml)
-execution that produced the binaries and VM images for this Sandbox.
+When a sandbox is starting up, it needs to locate the binaries and VM disk
+images that were produced by the AZP CI pipeline. This is achieved by providing
+the sandbox with the build ID that uniquely identifies the AZP CI pipeline
+execution that produced them.
+
+Each of the following variables is a list of these build IDs. Each list
+represents one sandbox type. Each listed build ID represents an instance of the
+sandbox type that should be deployed.
 
 Supported sandbox types:
 
