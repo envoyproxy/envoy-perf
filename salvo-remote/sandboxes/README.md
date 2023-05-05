@@ -1,7 +1,8 @@
 # Sandboxes for remote Salvo executions
 
-This directory contains definition of sandboxes. A sandbox are all the
-resources deployed in AWS for a single Salvo execution. At the minimum a sandbox will contain:
+This directory contains definition of Salvo sandboxes. A sandbox is the
+collection of resources needed for a single Salvo execution. These resources
+are deployed in AWS. At the minimum a sandbox will contain:
 
 - a VM running Nighthawk (the load generator).
 - a VM running Envoy (the system under test or SUT).
@@ -33,9 +34,9 @@ only.
 When Salvo executes, the CI pipeline will produce binaries and VM disk images
 for all the components. Once that is done, a new CI job is executed in the
 `salvo-control` agent pool on AZP. This job is then picked up by a Salvo
-control VM that instruments the sandbox creation.
+control VM running a Salvo controller that instruments the sandbox creation.
 
-The control VM uses the Terraform templates found in this directory,
+The Salvo controller uses the Terraform templates found in this directory,
 to deploy the sandbox components in AWS.
 
 # Sandbox instance life-cycle
@@ -56,10 +57,10 @@ Supported sandbox types:
 - `default_sandbox_x64_build_ids`.
 
 For example the Terraform command to deploy a single instance of the default
-sandbox with build ID `136112\` is:
+sandbox with build ID `136112` is:
 
 ```shell
-terraform apply --var="default_sandbox_build_ids=[\"136112\\"]"
+terraform apply --var="default_sandbox_build_ids=[\"136112\"]"
 ```
 
 Any instances that were deployed, but are not named in the variables passed to
