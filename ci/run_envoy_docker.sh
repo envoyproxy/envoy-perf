@@ -60,6 +60,8 @@ else
           && usermod -a -G pcap envoybuild \
           && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique` \
           && chown envoybuild /proc/self/fd/2 \
+          && rm -rf /usr/bin/cmake \
+          && cmake &> /dev/null || echo 'No cmake here!' \
           && apt-get update && apt -y install libcairo2-dev `# Salvo unique` \
           && sudo -EHs -u envoybuild bash -c 'cd ${SOURCE_DIR_MOUNT_DEST} && $*'") # Salvo unique
 fi
