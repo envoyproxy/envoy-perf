@@ -12,7 +12,7 @@ function setup_salvo_venv() {
   reuse_or_create_salvo_venv
 }
 
-# Build the salvo framework
+# Build the salvo framework.
 function build_salvo() {
   echo "Building Salvo"
   pushd salvo
@@ -23,10 +23,20 @@ function build_salvo() {
 
   popd
 }
- 
-# Test the salvo framework
+
+# Build the salvo-remote controller.
+function build_salvo_remote() {
+  echo "Building Salvo Remote"
+  pushd salvo-remote
+
+  bazel build ...
+
+  popd
+}
+
+# Test the salvo framework.
 function test_salvo() {
-  echo "Running Salvo unit tests"
+  echo "Running salvo unit tests"
   pushd salvo
 
   setup_salvo_venv
@@ -35,9 +45,19 @@ function test_salvo() {
   popd
 }
 
-# Check the Salvo python files format
+# Test the salvo-remote controller.
+function test_salvo_remote() {
+  echo "Running salvo-remote unit tests"
+  pushd salvo-remote
+
+  bazel test ...
+
+  popd
+}
+
+# Check the salvo python files format.
 function check_format() {
-  echo "Checking the Salvo python files format"
+  echo "Checking the salvo python files format"
   pushd salvo
 
   tools/format_python_tools.sh check
@@ -45,9 +65,20 @@ function check_format() {
   popd
 }
 
-# Fix the Salvo python files format
+# Check the salvo-remote Go files.
+function check_format_salvo_remote() {
+  echo "Checking the salvo-remote Go files"
+  pushd salvo-remote
+
+  go vet ./...
+  diff -u <(echo -n) <(gofmt -d -s .)
+
+  popd
+}
+
+# Fix the salvo python files format.
 function fix_format() {
-  echo "Fixing the Salvo python files format"
+  echo "Fixing the salvo python files format"
   pushd salvo
 
   setup_salvo_venv
@@ -56,15 +87,36 @@ function fix_format() {
   popd
 }
 
-# Calacute Salvo test coverage
+# Fix the salvo-remote Go files format.
+function fix_format_salvo_remote() {
+  echo "Fixing the salvo-remote Go files format"
+  pushd salvo-remote
+
+  gofmt -w -s .
+
+  popd
+}
+
+# Calculate salvo test coverage.
 function coverage() {
-  echo "Calcuting the Salvo unit tests coverage"
+  echo "Calculating the salvo unit tests coverage"
   pushd salvo
 
   export MINIMUM_THRESHOLD=97
   echo "Setting the minimum threshold of coverage to ${MINIMUM_THRESHOLD}%"
   setup_salvo_venv
   tools/coverage.sh
+
+  popd
+}
+
+# Calculate salvo-remote test coverage.
+function coverage_salvo_remote() {
+  echo "Calculating the salvo-remote unit tests coverage"
+  pushd salvo-remote
+
+  # TODO(mum4k): Implement coverage threshold checking.
+  bazel coverage ...
 
   popd
 }
@@ -76,18 +128,23 @@ build_target=${1:-build}
 case $build_target in
   "build")
     build_salvo
+    build_salvo_remote
     ;;
   "test")
     test_salvo
+    test_salvo_remote
     ;;
   "check_format")
     check_format
+    check_format_salvo_remote
     ;;
   "fix_format")
     fix_format
+    fix_format_salvo_remote
     ;;
   "coverage")
     coverage
+    coverage_salvo_remote
     ;;
   *)
     echo "must be one of [build, test, check_format, fix_format, coverage]"
