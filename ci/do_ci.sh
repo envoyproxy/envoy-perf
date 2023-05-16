@@ -128,26 +128,36 @@ build_target=${1:-build}
 case $build_target in
   "build")
     build_salvo
+    ;;
+  "build_salvo_remote")
     build_salvo_remote
     ;;
   "test")
     test_salvo
+    ;;
+  "test_salvo_remote")
     test_salvo_remote
     ;;
   "check_format")
     check_format
+    ;;
+  "check_format_salvo_remote")
     check_format_salvo_remote
     ;;
   "fix_format")
     fix_format
+    ;;
+  "fix_format_salvo_remote")
     fix_format_salvo_remote
     ;;
   "coverage")
     coverage
+    ;;
+  "coverage_salvo_remote")
     coverage_salvo_remote
     ;;
   *)
-    echo "must be one of [build, test, check_format, fix_format, coverage]"
+    echo "must be one of [build, build_salvo_remote, test, test_salvo_remote, check_format, check_format_salvo_remote, fix_format, fix_format_salvo_remote, coverage, coverage_salvo_remote]"
     exit 1
     ;;
 esac
