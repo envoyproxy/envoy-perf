@@ -23,7 +23,7 @@ stages:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
-- stage: check-salvo-remote
+- stage: check_salvo_remote
   dependsOn: []
   pool:
     vmImage: "ubuntu-20.04"
@@ -62,7 +62,7 @@ stages:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
-- stage: test-salvo-remote
+- stage: test_salvo_remote
   dependsOn: ["check"]
   pool:
     vmImage: "ubuntu-20.04"
