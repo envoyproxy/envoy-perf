@@ -15,7 +15,7 @@ steps:
   displayName: "Check disk space at beginning"
 
 - script: ci/run_envoy_docker.sh 'ci/do_ci.sh ${{ parameters.ciTarget }}'
-  condition: eq(parameters.runInDocker, true)
+  condition: eq('${{ parameters.runInDocker }}', true)
   workingDirectory: $(Build.SourcesDirectory)
   displayName: "Run the CI script inside Docker"
   env:
@@ -24,7 +24,7 @@ steps:
     ENVOY_DOCKER_IN_DOCKER: 1
 
 - script: ci/do_ci.sh ${{ parameters.ciTarget }}
-  condition: eq(parameters.runInDocker, false)
+  condition: eq('${{ parameters.runInDocker }}', false)
   workingDirectory: $(Build.SourcesDirectory)
   displayName: "Run the CI script"
   env:
