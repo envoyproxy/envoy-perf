@@ -5,7 +5,7 @@ parameters:
   default: build 
 - name: runInDocker
   displayName: "Run inside Docker"
-  type: bool
+  type: boolean
   default: true
 
 steps:
