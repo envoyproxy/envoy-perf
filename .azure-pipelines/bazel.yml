@@ -14,20 +14,17 @@ steps:
     df -h
   displayName: "Check disk space at beginning"
 
-${{ if parameters.runInDocker }}:
-  - script: ci/run_envoy_docker.sh 'ci/do_ci.sh ${{ parameters.ciTarget }}'
-    workingDirectory: $(Build.SourcesDirectory)
-    displayName: "Run the CI script inside Docker"
-    env:
-      BAZEL_REMOTE_CACHE: $(LocalBuildCache)
-      # Ideally this is only enabled when actually required.
-      ENVOY_DOCKER_IN_DOCKER: 1
-${{ if eq(parameters.runInDocker, false) }}:
-  - script: ci/do_ci.sh ${{ parameters.ciTarget }}
-    workingDirectory: $(Build.SourcesDirectory)
-    displayName: "Run the CI script"
-    env:
-      BAZEL_REMOTE_CACHE: $(LocalBuildCache)
+- script:
+  ${{ if parameters.runInDocker }}:
+    ci/run_envoy_docker.sh 'ci/do_ci.sh ${{ parameters.ciTarget }}'
+  ${{ if eq(parameters.runInDocker, false) }}:
+    ci/do_ci.sh ${{ parameters.ciTarget }}
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: "Run the CI script inside Docker"
+  env:
+    BAZEL_REMOTE_CACHE: $(LocalBuildCache)
+    # Ideally this is only enabled when actually required.
+    ENVOY_DOCKER_IN_DOCKER: 1
 
 - bash: |
     echo "disk space at end of build:"
