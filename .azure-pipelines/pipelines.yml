@@ -35,14 +35,15 @@ stages:
       maxParallel: 2
       matrix:
         build:
-          CI_TARGET: "build"
+          CI_TARGET: "build_salvo_remote"
         format:
-          CI_TARGET: "check_format"
+          CI_TARGET: "check_format_salvo_remote"
     timeoutInMinutes: 120
     steps:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
+        runInDocker: false
 
 
 - stage: test
@@ -74,12 +75,13 @@ stages:
       maxParallel: 1
       matrix:
         test:
-          CI_TARGET: "test"
+          CI_TARGET: "test_salvo_remote"
     timeoutInMinutes: 120
     steps:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
+        runInDocker: false
 
 
 # TODO(#187): Re-enable once coverage reporting is fixed.
