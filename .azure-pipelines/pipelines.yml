@@ -63,7 +63,7 @@ stages:
       parameters:
         ciTarget: $(CI_TARGET)
 - stage: test_salvo_remote
-  dependsOn: ["check"]
+  dependsOn: ["check_salvo_remote"]
   pool:
     vmImage: "ubuntu-20.04"
   jobs:
