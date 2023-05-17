@@ -14,7 +14,7 @@ function setup_salvo_venv() {
 
 # Build the salvo framework.
 function build_salvo() {
-  echo "Building Salvo"
+  echo "Building salvo"
   pushd salvo
 
   setup_salvo_venv
@@ -26,7 +26,7 @@ function build_salvo() {
 
 # Build the salvo-remote controller.
 function build_salvo_remote() {
-  echo "Building Salvo Remote"
+  echo "Building salvo-remote"
   pushd salvo-remote
 
   bazel build ...
