@@ -67,6 +67,25 @@ repositories:
   The directory deals with the common (always-on) infrastructure that Salvo
   uses across all the remote executions.
 
+### Building salvo-remote
+
+#### Install dependencies
+
+- Install [bazelisk](https://github.com/bazelbuild/bazelisk).
+
+
+#### Build salvo-remote
+
+```sh
+bazel build ...
+```
+
+#### Run salvo-remote unit tests
+
+```sh
+bazel test ...
+```
+
 ## Contributions
 
 Contributions to Salvo on all levels, whether design, code or testing are

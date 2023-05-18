@@ -23,6 +23,28 @@ stages:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
+- stage: check_salvo_remote
+  dependsOn: []
+  pool:
+    vmImage: "ubuntu-22.04"
+  jobs:
+  - job: build_and_format
+    displayName: "do_ci.sh"
+    dependsOn: []
+    strategy:
+      maxParallel: 2
+      matrix:
+        build:
+          CI_TARGET: "build_salvo_remote"
+        format:
+          CI_TARGET: "check_format_salvo_remote"
+    timeoutInMinutes: 120
+    steps:
+    - template: bazel.yml
+      parameters:
+        ciTarget: $(CI_TARGET)
+        runInDocker: false
+
 
 - stage: test
   dependsOn: ["check"]
@@ -41,6 +63,26 @@ stages:
     - template: bazel.yml
       parameters:
         ciTarget: $(CI_TARGET)
+- stage: test_salvo_remote
+  dependsOn: ["check_salvo_remote"]
+  pool:
+    vmImage: "ubuntu-22.04"
+  jobs:
+  - job: test
+    displayName: "do_ci.sh"
+    dependsOn: []
+    strategy:
+      maxParallel: 1
+      matrix:
+        test:
+          CI_TARGET: "test_salvo_remote"
+    timeoutInMinutes: 120
+    steps:
+    - template: bazel.yml
+      parameters:
+        ciTarget: $(CI_TARGET)
+        runInDocker: false
+
 
 # TODO(#187): Re-enable once coverage reporting is fixed.
 #- stage: coverage
