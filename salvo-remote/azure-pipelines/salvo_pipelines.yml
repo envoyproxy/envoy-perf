@@ -72,22 +72,6 @@ stages:
         rbe: false
         repo: "envoy-perf"
         ciTarget: "package_salvo_remote_and_sandboxes"
-
-- stage: "build_salvo_remote"
-  dependsOn: []
-  pool: "envoy-x64-large"
-  jobs:
-  - job: "build_salvo_remote"
-    displayName: "Build salvo-remote and preheat ASG"
-    timeoutInMinutes: 120
-    steps:
-    - checkout: "nighthawk"
-    - checkout: "self"
-    - template: "bazel.yml"
-      parameters:
-        rbe: false
-        repo: "envoy-perf"
-        ciTarget: "package_salvo_remote_and_sandboxes"
     - template: "salvo_controller.yml"
       parameters:
         action: "preheat"
