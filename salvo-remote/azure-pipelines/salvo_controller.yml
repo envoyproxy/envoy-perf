@@ -33,7 +33,7 @@ steps:
       project: "4684fb3d-0389-4e0b-8251-221942316e06" # envoy
       definition: "58" # salvo-mvp
       buildVersionToDownload: "specific"
-      pipelineId: "${{ parameters.usePreviousBuildId }}"
+      pipelineId: "$(usePreviousBuildId2)"
       artifactName: "salvo-remote controller and sandboxes"
       targetPath: "$(System.ArtifactsDirectory)"
 
