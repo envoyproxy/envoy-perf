@@ -112,7 +112,7 @@ stages:
     - template: "salvo_controller.yml"
       parameters:
         action: "run"
-        usePreviousBuildId: "$(usePreviousBuildId)"
+        usePreviousBuildId: "$(usePreviousBuildId2)"
 
 - stage: "cooldown_salvo_asg"
   dependsOn: ["run_salvo_remote"]

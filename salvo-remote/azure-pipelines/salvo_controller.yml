@@ -29,9 +29,9 @@ steps:
         targetPath: "$(System.ArtifactsDirectory)"
 
   - ${{ if ne(parameters.usePreviousBuildId, '') }}:
+    # Download salvo-remote built in a previous pipeline execution.
     - task: DownloadPipelineArtifact@2
       displayName: "Get $(usePreviousBuildId) salvo-remote"
-    # Download salvo-remote built in a previous pipeline execution.
       inputs:
         buildType: "specific"
         project: "4684fb3d-0389-4e0b-8251-221942316e06" # envoy
