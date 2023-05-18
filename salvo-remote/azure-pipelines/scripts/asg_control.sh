@@ -10,6 +10,9 @@ export AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
 # The name of the salvo-remote ASG (Auto Scaling Group) this script controls.
 export SALVO_REMOTE_ASG="salvo-azp-agent-vm-x64_salvo-control_pool"
 
+# The region Salvo resources run in.
+export AWS_REGION="us-west-1"
+
 # Sets the capacity of the salvo-remote ASG.
 # Arguments:
 #   An integer, the desired capacity.
