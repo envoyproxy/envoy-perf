@@ -15,12 +15,11 @@ steps:
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
 
 - ${{ if eq(parameters.action, 'run') }}:
-  - task: DownloadBuildArtifacts@0
+  - task: DownloadPipelineArtifact@2
     inputs:
       buildType: $(usePreviousBuildId)
-      downloadType: 'single'
       artifactName: 'salvo-remote controller and sandboxes'
-      downloadPath: '$(System.ArtifactsDirectory)'
+      targetPath: '$(System.ArtifactsDirectory)'
 
   - bash: |
       echo "ls in System.ArtifactsDirectory:"
