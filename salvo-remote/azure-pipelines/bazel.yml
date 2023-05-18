@@ -53,13 +53,6 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
-- ${{ if eq(parameters.repo, 'envoy-perf') }}:
-  - bash: |
-      echo "ls in Build.StagingDirectory"
-      ls -laR "$(Build.StagingDirectory)/"
-    displayName: "ls in Build.StagingDirectory"
-    condition: always()
-
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
   - task: PublishPipelineArtifact@1
