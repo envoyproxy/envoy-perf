@@ -62,7 +62,7 @@ stages:
   pool: "envoy-x64-large"
   jobs:
   - job: "build_salvo_remote"
-    displayName: "Build salvo-remote"
+    displayName: "Build salvo-remote and preheat ASG"
     timeoutInMinutes: 120
     steps:
     - checkout: "nighthawk"
@@ -75,3 +75,17 @@ stages:
     - template: "salvo_controller.yml"
       parameters:
         action: "preheat"
+
+- stage: "run_salvo_remote"
+  dependsOn: ["build_salvo_remote"]
+  pool: "salvo-control"
+  jobs:
+  - job: "run_salvo_remote"
+    displayName: "Run salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "salvo_controller.yml"
+      parameters:
+        action: "run"
