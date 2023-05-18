@@ -68,6 +68,7 @@ stages:
     - checkout: "nighthawk"
     - checkout: "self"
     - template: "bazel.yml"
+      condition: eq(variables.usePreviousBuildId, '12345')
       parameters:
         rbe: false
         repo: "envoy-perf"
