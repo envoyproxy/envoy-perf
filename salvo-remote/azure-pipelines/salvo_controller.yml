@@ -15,7 +15,7 @@ steps:
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
 
 - ${{ if eq(parameters.action, 'run') }}:
-  - ${{ if eq(variables.usePreviousBuildId, '') }}:
+  - ${{ if eq(variables['usePreviousBuildId'], '') }}:
     # Download salvo-remote from the current pipeline execution.
     - task: DownloadPipelineArtifact@2
       displayName: "Get current salvo-remote"
@@ -24,7 +24,7 @@ steps:
         artifactName: "salvo-remote controller and sandboxes"
         targetPath: "$(System.ArtifactsDirectory)"
 
-  - ${{ if ne(variables.usePreviousBuildId, '') }}:
+  - ${{ if ne(variables['usePreviousBuildId'], '') }}:
     - task: DownloadPipelineArtifact@2
       displayName: "Get $(usePreviousBuildId) salvo-remote"
     # Download salvo-remote built in a previous pipeline execution.

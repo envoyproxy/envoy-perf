@@ -105,8 +105,7 @@ stages:
 
 - stage: "cooldown_salvo_asg"
   dependsOn: ["run_salvo_remote"]
-  #condition: always()
-  condition: eq(1,2)
+  condition: eq(variables.usePreviousBuildId, '12345')
   pool: "envoy-x64-large"
   jobs:
   - job: "cooldown_salvo_asg"
