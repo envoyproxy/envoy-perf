@@ -17,6 +17,10 @@ resources:
       type: "github"
       endpoint: "GitHub - mum4k - Salvo MVP"
       name: "envoyproxy/envoy"
+    - repository: "envoy-perf"
+      type: "github"
+      endpoint: "GitHub - mum4k - Salvo MVP"
+      name: "envoyproxy/envoy-perf"
 
 stages:
 - stage: "build_components"
@@ -29,6 +33,7 @@ stages:
     steps:
     - checkout: "nighthawk"
     - checkout: "envoy"
+    - checkout: "envoy-perf"
     #- template: "bazel.yml"
     #  parameters:
     #    rbe: false
