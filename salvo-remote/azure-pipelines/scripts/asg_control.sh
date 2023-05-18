@@ -32,7 +32,7 @@ function preheat_salvo_asg() {
   set_salvo_asg_capacity 1
 
   # Give the VM enough time to start up and register with AZP.
-  local sleep_time=120
+  local sleep_time=1
   echo "Sleeping for ${sleep_time} seconds to give the ASG time to setup a VM."
   sleep ${sleep_time}
 }
