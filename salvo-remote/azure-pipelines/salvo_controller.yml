@@ -32,7 +32,7 @@ steps:
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "unzip salvo-remote"
 
-  - script: "./salvo-remote -build_type $(usePreviousBuildId) -build_id $(Build.BuildId)"
+  - script: "./salvo-remote -build_id_override $(usePreviousBuildId) -build_id $(Build.BuildId)"
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "Run salvo-remote"
 
