@@ -21,17 +21,11 @@ steps:
       artifactName: "salvo-remote controller and sandboxes"
       targetPath: "$(System.ArtifactsDirectory)"
 
-  - bash: |
-      echo "ls in System.ArtifactsDirectory:"
-      ls -laR "$(System.ArtifactsDirectory)"
-    displayName: "ls in System.ArtifactsDirectory"
-    condition: always()
-
   - script: "unzip salvo-remote.zip"
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "unzip salvo-remote"
 
-  - script: "./salvo-remote -build_id_override $(usePreviousBuildId) -build_id $(Build.BuildId)"
+  - script: "./salvo-remote -build_id_override $(variables.usePreviousBuildId) -build_id $(Build.BuildId)"
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "Run salvo-remote"
 
