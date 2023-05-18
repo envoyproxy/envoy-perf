@@ -4,6 +4,10 @@ parameters:
   displayName: "The action to perform, must be one of [preheat, run, cooldown]."
   type: string
   default: ""
+- name: usePreviousBuildId
+  displayName: "Allows using components built in a a previous pipeline execution. If set to an AZP Build ID, Salvo will run with components created in the specified build."
+  type: string
+  default: ""
 
 steps:
 - ${{ if eq(parameters.action, 'preheat') }}:
@@ -25,7 +29,7 @@ steps:
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "unzip salvo-remote"
 
-  - script: "./salvo-remote -build_id_override $(variables.usePreviousBuildId) -build_id $(Build.BuildId)"
+  - script: "./salvo-remote -build_id_override $(usePreviousBuildId) -build_id $(Build.BuildId)"
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "Run salvo-remote"
 
