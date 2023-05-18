@@ -6,7 +6,7 @@ parameters:
   default: ""
 
 steps:
-- ${{ if eq(parameters.action, "preheat") }}:
+- ${{ if eq(parameters.action, 'preheat') }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
     workingDirectory: "$(Build.SourcesDirectory)"
     displayName: "preheat the salvo-remote ASG"
@@ -14,7 +14,7 @@ steps:
       AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
 
-- ${{ if eq(parameters.action, "run") }}:
+- ${{ if eq(parameters.action, 'run') }}:
   - task: DownloadPipelineArtifact@2
     inputs:
       buildType: "current"
@@ -35,7 +35,7 @@ steps:
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "Run salvo-remote"
 
-- ${{ if eq(parameters.action, "cooldown") }}:
+- ${{ if eq(parameters.action, 'cooldown') }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh cooldown"
     workingDirectory: "$(Build.SourcesDirectory)"
     displayName: "preheat the salvo-remote ASG"
