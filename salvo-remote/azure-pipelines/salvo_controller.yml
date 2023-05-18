@@ -28,6 +28,14 @@ steps:
     displayName: "ls in System.ArtifactsDirectory"
     condition: always()
 
+  - script: "unzip salvo-remote.zip"
+    workingDirectory: $(System.ArtifactsDirectory)
+    displayName: "unzip salvo-remote"
+
+  - script: "./salvo-remote -build_type $(usePreviousBuildId) -build_id $(Build.BuildId)"
+    workingDirectory: $(System.ArtifactsDirectory)
+    displayName: "Run salvo-remote"
+
 - ${{ if eq(parameters.action, 'cooldown') }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
     workingDirectory: "$(Build.SourcesDirectory)"

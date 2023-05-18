@@ -20,9 +20,10 @@ function set_salvo_asg_capacity() {
 	local desired_capacity="$1"
 
   aws autoscaling update-auto-scaling-group \
-    --auto-scaling-group-name ${SALVO_REMOTE_ASG} \
-    --min-size ${desired_capacity} \
-    --desired-capacity ${desired_capacity}
+    --region "${AWS_REGION}" \
+    --auto-scaling-group-name "${SALVO_REMOTE_ASG}" \
+    --min-size "${desired_capacity}" \
+    --desired-capacity "${desired_capacity}"
 }
 
 # Configure the salvo-remote ASG to have at least one instance to process jobs.
