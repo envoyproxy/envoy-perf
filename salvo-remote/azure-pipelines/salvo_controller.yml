@@ -5,7 +5,7 @@ parameters:
   type: string
   default: ""
 - name: usePreviousBuildId
-  displayName: "Allows using components built in a a previous pipeline execution. If set to an AZP Build ID, Salvo will run with components created in the specified build."
+  displayName: "Allows using components built in a previous pipeline execution. If set to an AZP Build ID, Salvo will run with components created in the specified build. Defaults to an empty string in which case Salvo runs with components built by the current pipeline execution."
   type: string
   default: ""
 
