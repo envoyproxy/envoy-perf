@@ -7,6 +7,15 @@
 
 # Salvo builds the Nighthawk (load generator), The Envoy (system under test)
 # and the Nighthawk test server (the fake backend).
+#
+# Pipeline variable usePreviousBuildId is used for debugging.
+#   - When set to an empty value, all components are built, ASG is pre-heated,
+#     salvo-remote is executed with the built components and the ASG is cooled
+#     down.
+#   - When set to an AZP pipeline build ID, component building, pre-heating and
+#     cooling down is skipped. Salvo-remote gets executed with components built
+#     in a previous pipeline execution identified by the value if
+#     usePreviousBuildId.
 resources:
   repositories:
     - repository: "nighthawk"
