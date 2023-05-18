@@ -15,27 +15,27 @@ steps:
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
 
 - ${{ if eq(parameters.action, 'run') }}:
-  - ${{ if eq(variables['usePreviousBuildId2'], '') }}:
-    # Download salvo-remote from the current pipeline execution.
-    - task: DownloadPipelineArtifact@2
-      displayName: "Get current salvo-remote"
-      inputs:
-        buildType: "current"
-        artifactName: "salvo-remote controller and sandboxes"
-        targetPath: "$(System.ArtifactsDirectory)"
+  # Download salvo-remote from the current pipeline execution.
+  - task: DownloadPipelineArtifact@2
+    condition: $[ eq(variables['usePreviousBuildId2'], '') ]
+    displayName: "Get current salvo-remote"
+    inputs:
+      buildType: "current"
+      artifactName: "salvo-remote controller and sandboxes"
+      targetPath: "$(System.ArtifactsDirectory)"
 
-  - ${{ if ne(variables['usePreviousBuildId2'], '') }}:
-    # Download salvo-remote built in a previous pipeline execution.
-    - task: DownloadPipelineArtifact@2
-      displayName: "Get $(usePreviousBuildId) salvo-remote"
-      inputs:
-        buildType: "specific"
-        project: "4684fb3d-0389-4e0b-8251-221942316e06" # envoy
-        definition: "58" # salvo-mvp
-        buildVersionToDownload: "specific"
-        pipelineId: "${{ parameters.usePreviousBuildId }}"
-        artifactName: "salvo-remote controller and sandboxes"
-        targetPath: "$(System.ArtifactsDirectory)"
+  # Download salvo-remote built in a previous pipeline execution.
+  - task: DownloadPipelineArtifact@2
+    condition: $[ ne(variables['usePreviousBuildId2'], '') ]
+    displayName: "Get previous salvo-remote"
+    inputs:
+      buildType: "specific"
+      project: "4684fb3d-0389-4e0b-8251-221942316e06" # envoy
+      definition: "58" # salvo-mvp
+      buildVersionToDownload: "specific"
+      pipelineId: "${{ parameters.usePreviousBuildId }}"
+      artifactName: "salvo-remote controller and sandboxes"
+      targetPath: "$(System.ArtifactsDirectory)"
 
 
   - script: "unzip salvo-remote.zip"
