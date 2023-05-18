@@ -42,11 +42,13 @@ stages:
     - template: "bazel.yml"
       parameters:
         rbe: false
+        runInDocker: false
         repo: "envoy-perf"
         ciTarget: "package_salvo_remote_and_sandboxes"
 
 - stage: "build_amis"
   dependsOn: ["build_components"]
+  condition: never()
   pool:
     vmImage: "ubuntu-22.04"
   jobs:
