@@ -1,0 +1,15 @@
+# Pipeline steps that execute the salvo-remote controller.
+parameters:
+- name: action
+  displayName: "The action to perform"
+  type: string
+  default: ""
+
+steps:
+- ${{ if eq(parameters.action, 'preheat') }}:
+  - script: "salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
+    workingDirectory: "$(Build.SourcesDirectory)"
+    displayName: "preheat the salvo-remote ASG"
+    env:
+      AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
+      AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
