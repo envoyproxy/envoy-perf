@@ -82,5 +82,5 @@ steps:
   - task: PublishPipelineArtifact@1
     displayName: "Publish the salvo-remote controller and sandboxes"
     inputs:
-      targetPath: "$(Build.StagingDirectory)/envoy-perf/salvo-remote/bazel-bin/salvo-remote.zip"
+      targetPath: "$(Build.StagingDirectory)/salvo-remote.zip"
       artifactName: "salvo-remote controller and sandboxes"

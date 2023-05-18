@@ -21,7 +21,7 @@ resources:
 stages:
 - stage: "build_components"
   dependsOn: []
-  condition: eq(variables.usePreviousBuildId, '')
+  condition: eq(variables.usePreviousBuildId, '12345')
   pool: "envoy-x64-large"
   jobs:
   - job: "build_components"
@@ -31,25 +31,20 @@ stages:
     - checkout: "nighthawk"
     - checkout: "envoy"
     - checkout: "self"
-    #- template: "bazel.yml"
-    #  parameters:
-    #    rbe: false
-    #    repo: "nighthawk"
-    #    ciTarget: "opt_build"
-    #- template: "bazel.yml"
-    #  parameters:
-    #    rbe: true
-    #    repo: "envoy"
-    #    ciTarget: "bazel.release.server_only"
     - template: "bazel.yml"
       parameters:
         rbe: false
-        repo: "envoy-perf"
-        ciTarget: "package_salvo_remote_and_sandboxes"
+        repo: "nighthawk"
+        ciTarget: "opt_build"
+    - template: "bazel.yml"
+      parameters:
+        rbe: true
+        repo: "envoy"
+        ciTarget: "bazel.release.server_only"
 
 - stage: "build_amis"
   dependsOn: ["build_components"]
-  condition: eq(1, 2)
+  condition: eq(variables.usePreviousBuildId, '12345')
   pool:
     vmImage: "ubuntu-22.04"
   jobs:
@@ -61,3 +56,19 @@ stages:
       parameters:
         repo: "nighthawk"
         ciTarget: "opt_build"
+
+- stage: "build_salvo_remote"
+  dependsOn: []
+  pool: "envoy-x64-large"
+  jobs:
+  - job: "build_salvo_remote"
+    displayName: "Build salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "bazel.yml"
+      parameters:
+        rbe: false
+        repo: "envoy-perf"
+        ciTarget: "package_salvo_remote_and_sandboxes"
