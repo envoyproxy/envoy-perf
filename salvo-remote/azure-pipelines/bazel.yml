@@ -19,6 +19,10 @@ parameters:
   displayName: "Bazel extra build options"
   type: string
   default: ""
+- name: runInDocker
+  displayName: "Run the CI script inside Docker"
+  type: boolean
+  default: true
 
 steps:
 - bash: |
@@ -27,8 +31,9 @@ steps:
   displayName: "Check disk space at beginning"
 
 - script: "ci/run_envoy_docker.sh ci/do_ci.sh ${{ parameters.ciTarget }}"
+  condition: eq('${{ parameters.runInDocker }}', true)
   workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
-  displayName: "CI script in ${{ parameters.repo }}"
+  displayName: "Run Dockerized CI script in ${{ parameters.repo }}"
   env:
     ENVOY_DOCKER_BUILD_DIR: $(Build.StagingDirectory)
     ${{ if parameters.rbe }}:
@@ -44,6 +49,13 @@ steps:
         BAZEL_REMOTE_INSTANCE: "instances/$(System.PullRequest.TargetBranch)"
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         BAZEL_REMOTE_INSTANCE: "instances/$(Build.SourceBranchName)"
+
+- script: "ci/do_ci.sh ${{ parameters.ciTarget }}"
+  condition: eq('${{ parameters.runInDocker }}', false)
+  workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
+  displayName: "Run CI script in ${{ parameters.repo }}"
+  env:
+    BAZEL_REMOTE_CACHE: $(LocalBuildCache)
 
 - bash: |
     echo "disk space at end of build:"
@@ -71,3 +83,9 @@ steps:
     inputs:
       targetPath: "$(Build.StagingDirectory)/envoy/x64/envoy_binary.tar.gz"
       artifactName: "Envoy server"
+- ${{ if eq(parameters.repo, 'envoy-perf') }}:
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish the salvo-remote controller and sandboxes"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/envoy-perf/salvo-remote/bazel-bin/salvo-remote.zip"
+      artifactName: "salvo-remote controller and sandboxes"
