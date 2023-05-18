@@ -9,13 +9,11 @@
 # and the Nighthawk test server (the fake backend).
 #
 # Pipeline variable usePreviousBuildId is used for debugging.
-#   - When set to an empty value, all components are built, ASG is pre-heated,
-#     salvo-remote is executed with the built components and the ASG is cooled
-#     down.
-#   - When set to an AZP pipeline build ID, component building, pre-heating and
-#     cooling down is skipped. Salvo-remote gets executed with components built
-#     in a previous pipeline execution identified by the value if
-#     usePreviousBuildId.
+#   - When set to an empty value, all components are built, and salvo-remote is
+#     executed with the built components.
+#   - When set to an AZP pipeline build ID, component building is skipped.
+#     Salvo-remote gets executed with components built in a previous pipeline
+#     execution identified by the value if usePreviousBuildId.
 resources:
   repositories:
     - repository: "nighthawk"
@@ -85,7 +83,6 @@ stages:
 
 - stage: "preheat_salvo_asg"
   dependsOn: []
-  condition: eq(variables.usePreviousBuildId, '')
   pool: "envoy-x64-large"
   jobs:
   - job: "preheat_salvo_asg"
@@ -98,24 +95,38 @@ stages:
       parameters:
         action: "preheat"
 
-- stage: "run_salvo_remote"
+- stage: "run_current_salvo_remote"
   dependsOn: ["build_amis", "build_salvo_remote", "preheat_salvo_asg"]
-  condition: always()
+  condition: eq(variables.usePreviousBuildId2, '')
   pool: "salvo-control"
   jobs:
-  - job: "run_salvo_remote"
-    displayName: "Run salvo-remote"
+  - job: "run_current_salvo_remote"
+    displayName: "Run current salvo-remote"
     timeoutInMinutes: 120
     steps:
     - checkout: "nighthawk"
     - checkout: "self"
     - template: "salvo_controller.yml"
       parameters:
-        action: "run"
+        action: "run_current"
+
+- stage: "run_previous_salvo_remote"
+  dependsOn: ["build_amis", "build_salvo_remote", "preheat_salvo_asg"]
+  condition: ne(variables.usePreviousBuildId2, '')
+  pool: "salvo-control"
+  jobs:
+  - job: "run_previous_salvo_remote"
+    displayName: "Run previous salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "salvo_controller.yml"
+      parameters:
+        action: "run_previous"
 
 - stage: "cooldown_salvo_asg"
-  dependsOn: ["run_salvo_remote"]
-  condition: eq(variables.usePreviousBuildId, '')
+  dependsOn: ["run_current_salvo_remote", "run_previous_salvo_remote"]
   pool: "envoy-x64-large"
   jobs:
   - job: "cooldown_salvo_asg"
