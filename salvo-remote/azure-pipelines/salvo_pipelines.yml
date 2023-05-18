@@ -76,7 +76,6 @@ stages:
 
 - stage: "preheat_salvo_asg"
   dependsOn: ["build_salvo_remote"]
-  condition: always()
   pool: "envoy-x64-large"
   jobs:
   - job: "preheat_salvo_asg"
@@ -91,6 +90,7 @@ stages:
 
 - stage: "run_salvo_remote"
   dependsOn: ["preheat_salvo_asg"]
+  condition: always()
   pool: "salvo-control"
   jobs:
   - job: "run_salvo_remote"
