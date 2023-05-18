@@ -90,7 +90,7 @@ stages:
         action: "preheat"
 
 - stage: "run_salvo_remote"
-  dependsOn: ["build_salvo_remote"]
+  dependsOn: ["preheat_salvo_asg"]
   pool: "salvo-control"
   jobs:
   - job: "run_salvo_remote"
