@@ -37,7 +37,7 @@ steps:
     displayName: "Run salvo-remote"
 
 - ${{ if eq(parameters.action, 'cooldown') }}:
-  - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
+  - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh cooldown"
     workingDirectory: "$(Build.SourcesDirectory)"
     displayName: "preheat the salvo-remote ASG"
     env:

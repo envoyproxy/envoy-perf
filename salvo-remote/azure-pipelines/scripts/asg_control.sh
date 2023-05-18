@@ -24,6 +24,9 @@ function set_salvo_asg_capacity() {
     --auto-scaling-group-name "${SALVO_REMOTE_ASG}" \
     --min-size "${desired_capacity}" \
     --desired-capacity "${desired_capacity}"
+
+  # Give the VM enough time to start up and register with AZP.
+  sleep 150
 }
 
 # Configure the salvo-remote ASG to have at least one instance to process jobs.
