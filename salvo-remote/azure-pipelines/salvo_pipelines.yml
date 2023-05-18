@@ -48,7 +48,7 @@ stages:
 
 - stage: "build_amis"
   dependsOn: ["build_components"]
-  condition: never()
+  condition: eq(1, 2)
   pool:
     vmImage: "ubuntu-22.04"
   jobs:
