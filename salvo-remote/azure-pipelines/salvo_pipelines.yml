@@ -75,7 +75,7 @@ stages:
         ciTarget: "package_salvo_remote_and_sandboxes"
 
 - stage: "preheat_salvo_asg"
-  dependsOn: ["build_salvo_remote"]
+  dependsOn: []
   pool: "envoy-x64-large"
   jobs:
   - job: "preheat_salvo_asg"
@@ -89,7 +89,7 @@ stages:
         action: "preheat"
 
 - stage: "run_salvo_remote"
-  dependsOn: ["preheat_salvo_asg"]
+  dependsOn: ["build_components", "build_salvo_remote", "preheat_salvo_asg"]
   condition: always()
   pool: "salvo-control"
   jobs:
