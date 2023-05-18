@@ -1,4 +1,4 @@
-parameters:
+self:
 - name: ciTarget
   # The CI target to build, this is the $1 given to ci/do_ci.sh below.
   displayName: "CI target"
