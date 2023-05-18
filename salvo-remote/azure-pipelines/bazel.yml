@@ -55,9 +55,9 @@ steps:
 
 - ${{ if eq(parameters.repo, 'envoy-perf') }}:
   - bash: |
-      echo "ls in envoy-perf"
-      ls -laR "$(Build.StagingDirectory)/envoy-perf/"
-    displayName: "ls in envoy-perf"
+      echo "ls in Build.StagingDirectory"
+      ls -laR "$(Build.StagingDirectory)/"
+    displayName: "ls in Build.StagingDirectory"
     condition: always()
 
 # Publish the binaries as artifacts.

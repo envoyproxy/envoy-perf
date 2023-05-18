@@ -21,6 +21,7 @@ resources:
 stages:
 - stage: "build_components"
   dependsOn: []
+  condition: eq(variables.usePreviousBuildId, '')
   pool: "envoy-x64-large"
   jobs:
   - job: "build_components"
