@@ -30,11 +30,6 @@ function set_salvo_asg_capacity() {
 function preheat_salvo_asg() {
   echo "Preheating the salvo-remote ASG."
   set_salvo_asg_capacity 1
-
-  # Give the VM enough time to start up and register with AZP.
-  local sleep_time=120
-  echo "Sleeping for ${sleep_time} seconds to give the ASG time to setup a VM."
-  sleep ${sleep_time}
 }
 
 # Configure the salvo-remote ASG to have zero instance.
