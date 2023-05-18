@@ -43,7 +43,6 @@ stages:
     - template: "bazel.yml"
       parameters:
         rbe: false
-        runInDocker: true
         repo: "envoy-perf"
         ciTarget: "package_salvo_remote_and_sandboxes"
 

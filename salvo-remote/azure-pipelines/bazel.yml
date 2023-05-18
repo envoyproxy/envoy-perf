@@ -19,10 +19,6 @@ parameters:
   displayName: "Bazel extra build options"
   type: string
   default: ""
-- name: runInDocker
-  displayName: "Run the CI script inside Docker"
-  type: boolean
-  default: true
 
 steps:
 - bash: |
@@ -31,7 +27,6 @@ steps:
   displayName: "Check disk space at beginning"
 
 - script: "ci/run_envoy_docker.sh ci/do_ci.sh ${{ parameters.ciTarget }}"
-  condition: eq('${{ parameters.runInDocker }}', true)
   workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
   displayName: "Run Dockerized CI script in ${{ parameters.repo }}"
   env:
@@ -50,13 +45,6 @@ steps:
       ${{ if ne(variables['Build.Reason'], 'PullRequest') }}:
         BAZEL_REMOTE_INSTANCE: "instances/$(Build.SourceBranchName)"
 
-- script: "ci/do_ci.sh ${{ parameters.ciTarget }}"
-  condition: eq('${{ parameters.runInDocker }}', false)
-  workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
-  displayName: "Run CI script in ${{ parameters.repo }}"
-  env:
-    BAZEL_REMOTE_CACHE: $(LocalBuildCache)
-
 - bash: |
     echo "disk space at end of build:"
     df -h
@@ -64,6 +52,13 @@ steps:
     rm -rf $(Build.StagingDirectory)/tmp/*/*/external/go_sdk/test/fixedbugs
   displayName: "Check disk space at end"
   condition: always()
+
+- ${{ if eq(parameters.repo, 'envoy-perf') }}:
+  - bash: |
+      echo "ls in envoy-perf"
+      ls -laR "$(Build.StagingDirectory)/envoy-perf/"
+    displayName: "ls in envoy-perf"
+    condition: always()
 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
