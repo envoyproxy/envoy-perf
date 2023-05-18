@@ -100,7 +100,7 @@ stages:
 
 - stage: "run_current_salvo_remote"
   dependsOn: ["build_amis", "build_salvo_remote", "preheat_salvo_asg"]
-  condition: eq(variables.usePreviousBuildId2, '')
+  condition: eq(variables.usePreviousBuildId, '')
   pool: "salvo-control"
   jobs:
   - job: "run_current_salvo_remote"
@@ -115,7 +115,7 @@ stages:
 
 - stage: "run_previous_salvo_remote"
   dependsOn: ["build_amis", "build_salvo_remote", "preheat_salvo_asg"]
-  condition: ne(variables.usePreviousBuildId2, '')
+  condition: ne(variables.usePreviousBuildId, '')
   pool: "salvo-control"
   jobs:
   - job: "run_previous_salvo_remote"
