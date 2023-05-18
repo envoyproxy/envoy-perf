@@ -17,14 +17,11 @@ resources:
       type: "github"
       endpoint: "GitHub - mum4k - Salvo MVP"
       name: "envoyproxy/envoy"
-    - repository: "envoy-perf"
-      type: "github"
-      endpoint: "GitHub - mum4k - Salvo MVP"
-      name: "envoyproxy/envoy-perf"
 
 stages:
 - stage: "build_components"
   dependsOn: []
+  condition: eq(1, 2)
   pool: "envoy-x64-large"
   jobs:
   - job: "build_components"
@@ -33,23 +30,41 @@ stages:
     steps:
     - checkout: "nighthawk"
     - checkout: "envoy"
-    - checkout: "envoy-perf"
-    #- template: "bazel.yml"
-    #  parameters:
-    #    rbe: false
-    #    repo: "nighthawk"
-    #    ciTarget: "opt_build"
-    #- template: "bazel.yml"
-    #  parameters:
-    #    rbe: true
-    #    repo: "envoy"
-    #    ciTarget: "bazel.release.server_only"
+    - template: "bazel.yml"
+      parameters:
+        rbe: false
+        repo: "nighthawk"
+        ciTarget: "opt_build"
+    - template: "bazel.yml"
+      parameters:
+        rbe: true
+        repo: "envoy"
+        ciTarget: "bazel.release.server_only"
     - template: "bazel.yml"
       parameters:
         rbe: false
         runInDocker: false
         repo: "envoy-perf"
         ciTarget: "package_salvo_remote_and_sandboxes"
+
+- stage: "build_salvo_remote"
+  dependsOn: []
+  pool:
+    vmImage: "ubuntu-22.04"
+  jobs:
+  - job: "build_salvo_remote"
+    displayName: "Build salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "bazel.yml"
+      parameters:
+        rbe: false
+        runInDocker: false
+        repo: "envoy-perf"
+        ciTarget: "package_salvo_remote_and_sandboxes"
+
 
 - stage: "build_amis"
   dependsOn: ["build_components"]
