@@ -4,10 +4,6 @@ parameters:
   displayName: "The action to perform, must be one of [preheat, run, cooldown]."
   type: string
   default: ""
-- name: usePreviousBuildId
-  displayName: "Allows using components built in a previous pipeline execution. If set to an AZP Build ID, Salvo will run with components created in the specified build. Defaults to an empty string in which case Salvo runs with components built by the current pipeline execution."
-  type: string
-  default: ""
 
 steps:
 - ${{ if eq(parameters.action, 'preheat') }}:
@@ -19,7 +15,7 @@ steps:
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
 
 - ${{ if eq(parameters.action, 'run') }}:
-  - ${{ if eq(parameters.usePreviousBuildId, '') }}:
+  - $[if eq(variables.usePreviousBuildId2, '')]:
     # Download salvo-remote from the current pipeline execution.
     - task: DownloadPipelineArtifact@2
       displayName: "Get current salvo-remote"
@@ -28,7 +24,7 @@ steps:
         artifactName: "salvo-remote controller and sandboxes"
         targetPath: "$(System.ArtifactsDirectory)"
 
-  - ${{ if ne(parameters.usePreviousBuildId, '') }}:
+  - $[if ne(variables.usePreviousBuildId2, '')]:
     # Download salvo-remote built in a previous pipeline execution.
     - task: DownloadPipelineArtifact@2
       displayName: "Get $(usePreviousBuildId) salvo-remote"
