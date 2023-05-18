@@ -134,8 +134,8 @@ function package_salvo_remote_and_sandboxes() {
     salvo-remote sandboxes/ \
     -x \*/.terraform/\*
 
-  # This directory is created inside docker if we are running under
-  # ci/run_envoy_docker.sh.
+  # If we are running under ci/run_envoy_docker.sh, this is the only directory
+  # accessible by the host (outside of Docker).
   export BUILD_DIR="/build"
   if [ -d ${BUILD_DIR} ]; then
     cp bazel-bin/salvo-remote.zip ${BUILD_DIR}

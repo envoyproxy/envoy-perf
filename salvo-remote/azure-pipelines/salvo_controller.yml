@@ -1,12 +1,12 @@
 # Pipeline steps that execute the salvo-remote controller.
 parameters:
 - name: action
-  displayName: "The action to perform"
+  displayName: "The action to perform, must be one of [preheat, run, cooldown]."
   type: string
   default: ""
 
 steps:
-- ${{ if eq(parameters.action, 'preheat') }}:
+- ${{ if eq(parameters.action, "preheat") }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
     workingDirectory: "$(Build.SourcesDirectory)"
     displayName: "preheat the salvo-remote ASG"
@@ -14,12 +14,12 @@ steps:
       AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
 
-- ${{ if eq(parameters.action, 'run') }}:
+- ${{ if eq(parameters.action, "run") }}:
   - task: DownloadPipelineArtifact@2
     inputs:
-      buildType: $(usePreviousBuildId)
-      artifactName: 'salvo-remote controller and sandboxes'
-      targetPath: '$(System.ArtifactsDirectory)'
+      buildType: "current"
+      artifactName: "salvo-remote controller and sandboxes"
+      targetPath: "$(System.ArtifactsDirectory)"
 
   - bash: |
       echo "ls in System.ArtifactsDirectory:"
@@ -35,7 +35,7 @@ steps:
     workingDirectory: $(System.ArtifactsDirectory)
     displayName: "Run salvo-remote"
 
-- ${{ if eq(parameters.action, 'cooldown') }}:
+- ${{ if eq(parameters.action, "cooldown") }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh cooldown"
     workingDirectory: "$(Build.SourcesDirectory)"
     displayName: "preheat the salvo-remote ASG"

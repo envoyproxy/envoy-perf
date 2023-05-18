@@ -9,7 +9,7 @@ import (
 )
 
 var buildID = flag.String("build_id", "", "The ID of the AZP build that produced components and binaries for this salvo-remote execution. Can be overridden by providing a different ID in -build_id_override.")
-var buildIDOverride = flag.String("build_id_override", "current", "If set to other value than 'current', this overrides the value set via -build_id.")
+var buildIDOverride = flag.String("build_id_override", "", "If set, it overrides the value set via -build_id.")
 
 func main() {
 	flag.Parse()
