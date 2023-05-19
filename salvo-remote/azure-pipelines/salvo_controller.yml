@@ -9,7 +9,7 @@ steps:
 - ${{ if eq(parameters.action, 'preheat') }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
     workingDirectory: "$(Build.SourcesDirectory)"
-    displayName: "preheat the salvo-remote ASG"
+    displayName: "Preheat the salvo-remote ASG"
     env:
       AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
@@ -40,7 +40,7 @@ steps:
 - ${{ if or(eq(parameters.action, 'run_current'), eq(parameters.action, 'run_previous')) }}:
   - script: "unzip salvo-remote.zip"
     workingDirectory: $(System.ArtifactsDirectory)
-    displayName: "unzip salvo-remote"
+    displayName: "Unzip salvo-remote"
 
   - script: "./salvo-remote -build_id_override '$(usePreviousBuildId)' -build_id '$(Build.BuildId)'"
     workingDirectory: $(System.ArtifactsDirectory)
@@ -49,7 +49,7 @@ steps:
 - ${{ if eq(parameters.action, 'cooldown') }}:
   - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh cooldown"
     workingDirectory: "$(Build.SourcesDirectory)"
-    displayName: "cooldown the salvo-remote ASG"
+    displayName: "Cooldown the salvo-remote ASG"
     env:
       AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
       AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
