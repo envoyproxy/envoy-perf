@@ -1,0 +1,55 @@
+# Pipeline steps that execute the salvo-remote controller.
+parameters:
+- name: action
+  displayName: "The action to perform, must be one of [preheat, run_current, run_previous, cooldown]."
+  type: string
+  default: ""
+
+steps:
+- ${{ if eq(parameters.action, 'preheat') }}:
+  - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh preheat"
+    workingDirectory: "$(Build.SourcesDirectory)"
+    displayName: "Preheat the salvo-remote ASG"
+    env:
+      AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
+      AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)
+
+- ${{ if eq(parameters.action, 'run_current') }}:
+  # Download salvo-remote from the current pipeline execution.
+  - task: DownloadPipelineArtifact@2
+    displayName: "Get current salvo-remote"
+    inputs:
+      buildType: "current"
+      artifactName: "salvo-remote controller and sandboxes"
+      targetPath: "$(System.ArtifactsDirectory)"
+
+- ${{ if eq(parameters.action, 'run_previous') }}:
+  # Download salvo-remote built in a previous pipeline execution.
+  - task: DownloadPipelineArtifact@2
+    displayName: "Get previous salvo-remote"
+    inputs:
+      buildType: "specific"
+      project: "4684fb3d-0389-4e0b-8251-221942316e06" # envoy
+      definition: "58" # salvo-mvp
+      buildVersionToDownload: "specific"
+      pipelineId: "$(usePreviousBuildId)"
+      artifactName: "salvo-remote controller and sandboxes"
+      targetPath: "$(System.ArtifactsDirectory)"
+
+
+- ${{ if or(eq(parameters.action, 'run_current'), eq(parameters.action, 'run_previous')) }}:
+  - script: "unzip salvo-remote.zip"
+    workingDirectory: $(System.ArtifactsDirectory)
+    displayName: "Unzip salvo-remote"
+
+  - script: "./salvo-remote -build_id_override '$(usePreviousBuildId)' -build_id '$(Build.BuildId)'"
+    workingDirectory: $(System.ArtifactsDirectory)
+    displayName: "Run salvo-remote"
+
+- ${{ if eq(parameters.action, 'cooldown') }}:
+  - script: "envoy-perf/salvo-remote/azure-pipelines/scripts/asg_control.sh cooldown"
+    workingDirectory: "$(Build.SourcesDirectory)"
+    displayName: "Cooldown the salvo-remote ASG"
+    env:
+      AWS_ACCESS_KEY_ID: $(SalvoAwsAccessKeyId)
+      AWS_SECRET_ACCESS_KEY: $(SalvoAwsSecretAccessKey)

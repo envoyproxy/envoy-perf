@@ -7,6 +7,15 @@
 
 # Salvo builds the Nighthawk (load generator), The Envoy (system under test)
 # and the Nighthawk test server (the fake backend).
+#
+# Pipeline variable usePreviousBuildId is used for debugging.
+#   - When set to an empty value, all components are built, ASG is pre-heated,
+#     salvo-remote is executed with the built components and the ASG is cooled
+#     down.
+#   - When set to an AZP pipeline build ID, component building, pre-heating and
+#     cooling down is skipped. Salvo-remote gets executed with components built
+#     in a previous pipeline execution identified by the value if
+#     usePreviousBuildId.
 resources:
   repositories:
     - repository: "nighthawk"
@@ -21,6 +30,7 @@ resources:
 stages:
 - stage: "build_components"
   dependsOn: []
+  condition: eq(variables.usePreviousBuildId, '')
   pool: "envoy-x64-large"
   jobs:
   - job: "build_components"
@@ -29,6 +39,7 @@ stages:
     steps:
     - checkout: "nighthawk"
     - checkout: "envoy"
+    - checkout: "self"
     - template: "bazel.yml"
       parameters:
         rbe: false
@@ -42,6 +53,7 @@ stages:
 
 - stage: "build_amis"
   dependsOn: ["build_components"]
+  condition: eq(variables.usePreviousBuildId, '')
   pool:
     vmImage: "ubuntu-22.04"
   jobs:
@@ -53,3 +65,80 @@ stages:
       parameters:
         repo: "nighthawk"
         ciTarget: "opt_build"
+
+- stage: "build_salvo_remote"
+  dependsOn: []
+  condition: eq(variables.usePreviousBuildId, '')
+  pool: "envoy-x64-large"
+  jobs:
+  - job: "build_salvo_remote"
+    displayName: "Build salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "bazel.yml"
+      parameters:
+        rbe: false
+        repo: "envoy-perf"
+        ciTarget: "package_salvo_remote_and_sandboxes"
+
+- stage: "preheat_salvo_asg"
+  dependsOn: []
+  condition: eq(variables.usePreviousBuildId, '')
+  pool: "envoy-x64-large"
+  jobs:
+  - job: "preheat_salvo_asg"
+    displayName: "Preheat the salvo-control ASG"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "salvo_controller.yml"
+      parameters:
+        action: "preheat"
+
+- stage: "run_current_salvo_remote"
+  dependsOn: ["build_amis", "build_salvo_remote", "preheat_salvo_asg"]
+  condition: eq(variables.usePreviousBuildId, '')
+  pool: "salvo-control"
+  jobs:
+  - job: "run_current_salvo_remote"
+    displayName: "Run current salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "salvo_controller.yml"
+      parameters:
+        action: "run_current"
+
+- stage: "run_previous_salvo_remote"
+  dependsOn: ["build_amis", "build_salvo_remote", "preheat_salvo_asg"]
+  condition: ne(variables.usePreviousBuildId, '')
+  pool: "salvo-control"
+  jobs:
+  - job: "run_previous_salvo_remote"
+    displayName: "Run previous salvo-remote"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "salvo_controller.yml"
+      parameters:
+        action: "run_previous"
+
+- stage: "cooldown_salvo_asg"
+  dependsOn: ["run_current_salvo_remote", "run_previous_salvo_remote"]
+  condition: eq(variables.usePreviousBuildId, '')
+  pool: "envoy-x64-large"
+  jobs:
+  - job: "cooldown_salvo_asg"
+    displayName: "Cooldown the salvo-control ASG"
+    timeoutInMinutes: 120
+    steps:
+    - checkout: "nighthawk"
+    - checkout: "self"
+    - template: "salvo_controller.yml"
+      parameters:
+        action: "cooldown"

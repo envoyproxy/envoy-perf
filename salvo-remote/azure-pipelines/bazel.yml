@@ -28,7 +28,7 @@ steps:
 
 - script: "ci/run_envoy_docker.sh ci/do_ci.sh ${{ parameters.ciTarget }}"
   workingDirectory: "$(Build.SourcesDirectory)/${{ parameters.repo }}"
-  displayName: "CI script in ${{ parameters.repo }}"
+  displayName: "Run Dockerized CI script in ${{ parameters.repo }}"
   env:
     ENVOY_DOCKER_BUILD_DIR: $(Build.StagingDirectory)
     ${{ if parameters.rbe }}:
@@ -71,3 +71,9 @@ steps:
     inputs:
       targetPath: "$(Build.StagingDirectory)/envoy/x64/envoy_binary.tar.gz"
       artifactName: "Envoy server"
+- ${{ if eq(parameters.repo, 'envoy-perf') }}:
+  - task: PublishPipelineArtifact@1
+    displayName: "Publish the salvo-remote controller and sandboxes"
+    inputs:
+      targetPath: "$(Build.StagingDirectory)/salvo-remote.zip"
+      artifactName: "salvo-remote controller and sandboxes"

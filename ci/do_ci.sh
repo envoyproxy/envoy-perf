@@ -121,6 +121,31 @@ function coverage_salvo_remote() {
   popd
 }
 
+# Package the salvo-remote binary and sandbox definitions into a zip file.
+function package_salvo_remote_and_sandboxes() {
+  echo "Packaging salvo-remote and sandboxes"
+  pushd salvo-remote
+
+  bazel build -c opt salvo-remote
+  cp bazel-bin/salvo-remote_/salvo-remote .
+  chmod 0755 salvo-remote
+  zip -r \
+    bazel-bin/salvo-remote.zip \
+    salvo-remote sandboxes/ \
+    -x \*/.terraform/\*
+
+  # If we are running under ci/run_envoy_docker.sh, this is the only directory
+  # accessible by the host (outside of Docker).
+  export BUILD_DIR="/build"
+  if [ -d ${BUILD_DIR} ]; then
+    cp bazel-bin/salvo-remote.zip ${BUILD_DIR}
+  fi
+
+  popd
+}
+
+
+
 # Set the build target. If no parameters are specified
 # we default to "build"
 build_target=${1:-build}
@@ -156,8 +181,11 @@ case $build_target in
   "coverage_salvo_remote")
     coverage_salvo_remote
     ;;
+  "package_salvo_remote_and_sandboxes")
+    package_salvo_remote_and_sandboxes
+    ;;
   *)
-    echo "must be one of [build, build_salvo_remote, test, test_salvo_remote, check_format, check_format_salvo_remote, fix_format, fix_format_salvo_remote, coverage, coverage_salvo_remote]"
+    echo "must be one of [build, build_salvo_remote, test, test_salvo_remote, check_format, check_format_salvo_remote, fix_format, fix_format_salvo_remote, coverage, coverage_salvo_remote, package_salvo_remote_and_sandboxes]"
     exit 1
     ;;
 esac
