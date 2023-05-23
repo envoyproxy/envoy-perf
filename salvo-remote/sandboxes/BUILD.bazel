@@ -1,0 +1,24 @@
+load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
+
+go_library(
+    name = "sandboxes",
+    srcs = ["sandboxes.go"],
+    importpath = "github.com/envoyproxy/envoy-perf/salvo-remote/sandboxes",
+    visibility = ["//visibility:public"],
+    deps = [
+        "@com_github_hashicorp_go_version//:go-version",
+        "@com_github_hashicorp_hc_install//product",
+        "@com_github_hashicorp_hc_install//releases",
+        "@com_github_hashicorp_terraform_exec//tfexec",
+    ],
+)
+
+go_test(
+    name = "sandboxes_test",
+    srcs = ["sandboxes_test.go"],
+    embed = [":sandboxes"],
+    deps = [
+        "@com_github_google_go_cmp//cmp",
+        "@com_github_hashicorp_terraform_exec//tfexec",
+    ],
+)
