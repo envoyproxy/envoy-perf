@@ -45,7 +45,7 @@ func runSalvoRemote(sm sandboxManager) error {
 	}
 
 	sbxs := map[sandboxes.Type]sandboxes.Instances{
-		sandboxes.TypeDefaultSandboxX64: sandboxes.Instances{getBuildID()},
+		sandboxes.TypeDefaultSandboxX64: {getBuildID()},
 	}
 	ctx := context.Background()
 

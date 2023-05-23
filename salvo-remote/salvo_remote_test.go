@@ -60,7 +60,7 @@ func TestRunSalvoRemote(t *testing.T) {
 			buildID:        12345,
 			fakeSMStartErr: errors.New("fake error"),
 			wantSbxs: map[sandboxes.Type]sandboxes.Instances{
-				sandboxes.TypeDefaultSandboxX64: sandboxes.Instances{12345},
+				sandboxes.TypeDefaultSandboxX64: {12345},
 			},
 			wantErrSubstr: "sm.Start =>",
 		},
@@ -68,7 +68,7 @@ func TestRunSalvoRemote(t *testing.T) {
 			desc:    "starts sandbox with -build_id",
 			buildID: 12345,
 			wantSbxs: map[sandboxes.Type]sandboxes.Instances{
-				sandboxes.TypeDefaultSandboxX64: sandboxes.Instances{12345},
+				sandboxes.TypeDefaultSandboxX64: {12345},
 			},
 		},
 		{
@@ -76,7 +76,7 @@ func TestRunSalvoRemote(t *testing.T) {
 			buildID:         12345,
 			buildIDOverride: 67890,
 			wantSbxs: map[sandboxes.Type]sandboxes.Instances{
-				sandboxes.TypeDefaultSandboxX64: sandboxes.Instances{67890},
+				sandboxes.TypeDefaultSandboxX64: {67890},
 			},
 		},
 	}

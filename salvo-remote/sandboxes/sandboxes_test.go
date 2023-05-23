@@ -65,7 +65,7 @@ func TestStart(t *testing.T) {
 		{
 			desc: "fails on unsupported sandbox type",
 			sbxs: map[Type]Instances{
-				-1: Instances{12345},
+				-1: {12345},
 			},
 			wantErrSubstr: "unsupported sandbox type",
 		},
@@ -79,28 +79,28 @@ func TestStart(t *testing.T) {
 		{
 			desc: "fails with duplicate instances",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345, 12345},
+				TypeDefaultSandboxX64: {12345, 12345},
 			},
 			wantErrSubstr: "duplicate instance",
 		},
 		{
 			desc: "fails with negative instance",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{-1},
+				TypeDefaultSandboxX64: {-1},
 			},
 			wantErrSubstr: "minimum allowed",
 		},
 		{
 			desc: "fails with instance zero",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{0},
+				TypeDefaultSandboxX64: {0},
 			},
 			wantErrSubstr: "minimum allowed",
 		},
 		{
 			desc: "fails when terraform initialization fails",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345},
+				TypeDefaultSandboxX64: {12345},
 			},
 			initErr:       errors.New("fake error"),
 			wantErrSubstr: "fake error",
@@ -108,7 +108,7 @@ func TestStart(t *testing.T) {
 		{
 			desc: "fails when terraform apply fails",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345},
+				TypeDefaultSandboxX64: {12345},
 			},
 			applyErr:      errors.New("fake error"),
 			wantErrSubstr: "tf.Apply =>",
@@ -116,13 +116,13 @@ func TestStart(t *testing.T) {
 		{
 			desc: "successfully starts a sandbox instance",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345},
+				TypeDefaultSandboxX64: {12345},
 			},
 		},
 		{
 			desc: "successfully starts multiple sandbox instances",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345, 67890},
+				TypeDefaultSandboxX64: {12345, 67890},
 			},
 		},
 	}
@@ -197,7 +197,7 @@ func TestSbxsToTfVars(t *testing.T) {
 		{
 			desc: "fails on unsupported sandbox type",
 			sbxs: map[Type]Instances{
-				-1: Instances{12345},
+				-1: {12345},
 			},
 			wantErr: true,
 		},
@@ -211,28 +211,28 @@ func TestSbxsToTfVars(t *testing.T) {
 		{
 			desc: "fails with duplicate instances",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345, 12345},
+				TypeDefaultSandboxX64: {12345, 12345},
 			},
 			wantErr: true,
 		},
 		{
 			desc: "fails with negative instance",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{-1},
+				TypeDefaultSandboxX64: {-1},
 			},
 			wantErr: true,
 		},
 		{
 			desc: "fails with instance zero",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{0},
+				TypeDefaultSandboxX64: {0},
 			},
 			wantErr: true,
 		},
 		{
 			desc: "correct vars for a single instance",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345},
+				TypeDefaultSandboxX64: {12345},
 			},
 			want: []string{
 				"default_sandbox_x64_build_ids=[12345]",
@@ -241,7 +241,7 @@ func TestSbxsToTfVars(t *testing.T) {
 		{
 			desc: "correct vars for multiple instances",
 			sbxs: map[Type]Instances{
-				TypeDefaultSandboxX64: Instances{12345, 67890},
+				TypeDefaultSandboxX64: {12345, 67890},
 			},
 			want: []string{
 				"default_sandbox_x64_build_ids=[12345,67890]",
