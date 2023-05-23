@@ -6,10 +6,10 @@ go_library(
     importpath = "github.com/envoyproxy/envoy-perf/salvo-remote/sandboxes",
     visibility = ["//visibility:public"],
     deps = [
-        "@com_github_hashicorp_go_version//:go-version",
-        "@com_github_hashicorp_hc_install//product",
-        "@com_github_hashicorp_hc_install//releases",
-        "@com_github_hashicorp_terraform_exec//tfexec",
+        "@com_github_hashicorp_go_version//:go_default_library",
+        "@com_github_hashicorp_hc_install//product:go_default_library",
+        "@com_github_hashicorp_hc_install//releases:go_default_library",
+        "@com_github_hashicorp_terraform_exec//tfexec:go_default_library",
     ],
 )
 
@@ -18,7 +18,7 @@ go_test(
     srcs = ["sandboxes_test.go"],
     embed = [":sandboxes"],
     deps = [
-        "@com_github_google_go_cmp//cmp",
-        "@com_github_hashicorp_terraform_exec//tfexec",
+        "@com_github_google_go_cmp//cmp:go_default_library",
+        "@com_github_hashicorp_terraform_exec//tfexec:go_default_library",
     ],
 )
