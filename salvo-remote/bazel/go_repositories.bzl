@@ -47,6 +47,8 @@ def salvo_remote_go_dependencies():
   go_repository(
     name = "com_github_cloudflare_circl",
     importpath = "github.com/cloudflare/circl",
+    patch_args = ["-p1"],
+    patches = ["//bazel:com_github_cloudflare_circl/0001-fix-cgo.patch"],
     tag = "v1.3.3",
   )
 
