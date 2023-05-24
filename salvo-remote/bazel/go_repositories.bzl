@@ -47,6 +47,7 @@ def salvo_remote_go_dependencies():
   go_repository(
     name = "com_github_cloudflare_circl",
     importpath = "github.com/cloudflare/circl",
+    # Enables cgo, see https://github.com/bazelbuild/bazel-gazelle/issues/1421.
     patch_args = ["-p1"],
     patches = ["//bazel:com_github_cloudflare_circl/0001-fix-cgo.patch"],
     tag = "v1.3.3",
