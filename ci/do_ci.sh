@@ -131,7 +131,7 @@ function package_salvo_remote_and_sandboxes() {
   chmod 0755 salvo-remote
   zip -r \
     bazel-bin/salvo-remote.zip \
-    salvo-remote sandboxes/ \
+    salvo-remote sandboxes/terraform \
     -x \*/.terraform/\*
 
   # If we are running under ci/run_envoy_docker.sh, this is the only directory
