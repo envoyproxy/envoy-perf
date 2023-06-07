@@ -2,7 +2,10 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 
 go_library(
     name = "sandboxes",
-    srcs = ["sandboxes.go"],
+    srcs = [
+        "json.go",
+        "sandboxes.go",
+    ],
     importpath = "github.com/envoyproxy/envoy-perf/salvo-remote/sandboxes",
     visibility = ["//visibility:public"],
     deps = [
@@ -15,7 +18,10 @@ go_library(
 
 go_test(
     name = "sandboxes_test",
-    srcs = ["sandboxes_test.go"],
+    srcs = [
+        "json_test.go",
+        "sandboxes_test.go",
+    ],
     embed = [":sandboxes"],
     deps = [
         "@com_github_google_go_cmp//cmp:go_default_library",
