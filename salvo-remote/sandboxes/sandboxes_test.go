@@ -2,7 +2,9 @@ package sandboxes
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
+	"net"
 	"strings"
 	"testing"
 
@@ -16,13 +18,19 @@ type fakeTerraformAPI struct {
 	initErr error
 	// applyErr is the error to return when Apply is called on the Terraform object.
 	applyErr error
+	// outputErr is the error to return when Output is called on the Terraform object.
+	outputErr error
+	// output is the output to return when Output is called on the Terraform object.
+	output map[string]tfexec.OutputMeta
 }
 
 // newFakeTerraformAPI creates a new fakeTerraformAPI instance.
-func newFakeTerraformAPI(initErr, applyErr error) *fakeTerraformAPI {
+func newFakeTerraformAPI(initErr, applyErr, outputErr error, output map[string]tfexec.OutputMeta) *fakeTerraformAPI {
 	return &fakeTerraformAPI{
-		initErr:  initErr,
-		applyErr: applyErr,
+		initErr:   initErr,
+		applyErr:  applyErr,
+		outputErr: outputErr,
+		output:    output,
 	}
 }
 
@@ -30,24 +38,34 @@ func (f *fakeTerraformAPI) initTf(ctx context.Context, workingDir string) (terra
 	if f.initErr != nil {
 		return nil, f.initErr
 	}
-	return newFakeTerraform(f.applyErr), nil
+	return newFakeTerraform(f.applyErr, f.outputErr, f.output), nil
 }
 
 // fakeTerraform is a fake implementation of Terraform.
 type fakeTerraform struct {
 	// applyErr is the error to return when Apply is called on the Terraform object.
 	applyErr error
+	// outputErr is the error to return when Output is called on the Terraform object.
+	outputErr error
+	// output is the output to return when Output is called on the Terraform object.
+	output map[string]tfexec.OutputMeta
 }
 
 // newFakeTerraform returns a new fake Terraform object.
-func newFakeTerraform(applyErr error) *fakeTerraform {
+func newFakeTerraform(applyErr, outputErr error, output map[string]tfexec.OutputMeta) *fakeTerraform {
 	return &fakeTerraform{
-		applyErr: applyErr,
+		applyErr:  applyErr,
+		outputErr: outputErr,
+		output:    output,
 	}
 }
 
 func (f *fakeTerraform) Apply(ctx context.Context, opts ...tfexec.ApplyOption) error {
 	return f.applyErr
+}
+
+func (f *fakeTerraform) Output(ctx context.Context, opts ...tfexec.OutputOption) (map[string]tfexec.OutputMeta, error) {
+	return f.output, f.outputErr
 }
 
 func TestStart(t *testing.T) {
@@ -56,6 +74,9 @@ func TestStart(t *testing.T) {
 		sbxs          map[Type]Instances
 		initErr       error
 		applyErr      error
+		outputErr     error
+		output        map[string]tfexec.OutputMeta
+		want          map[int64]*Instance
 		wantErrSubstr string
 	}{
 		{
@@ -114,9 +135,84 @@ func TestStart(t *testing.T) {
 			wantErrSubstr: "tf.Apply =>",
 		},
 		{
+			desc: "fails when terraform output fails",
+			sbxs: map[Type]Instances{
+				TypeDefaultSandboxX64: {12345},
+			},
+			outputErr:     errors.New("fake error"),
+			wantErrSubstr: "tf.Output =>",
+		},
+		{
 			desc: "successfully starts a sandbox instance",
 			sbxs: map[Type]Instances{
 				TypeDefaultSandboxX64: {12345},
+			},
+			output: map[string]tfexec.OutputMeta{
+				defSbxX64Gen0ControlIPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["1.1.1.1"]
+					}
+`),
+				},
+				defSbxX64Sut0ControlIPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["2.2.2.1"]
+					}
+`),
+				},
+				defSbxX64Bac0ControlIPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["3.3.3.1"]
+					}
+`),
+				},
+				defSbxX64Gen0IPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["10.1.1.1"]
+					}
+`),
+				},
+				defSbxX64Sut0IPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["20.2.2.1"]
+					}
+`),
+				},
+				defSbxX64Bac0IPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["30.3.3.1"]
+					}
+`),
+				},
+			},
+			want: map[int64]*Instance{
+				12345: {
+					Type: TypeDefaultSandboxX64,
+					LoadGenerators: []*VM{
+						{
+							IP:        net.ParseIP("10.1.1.1"),
+							ControlIP: net.ParseIP("1.1.1.1"),
+						},
+					},
+					SUTs: []*VM{
+						{
+							IP:        net.ParseIP("20.2.2.1"),
+							ControlIP: net.ParseIP("2.2.2.1"),
+						},
+					},
+					Backends: []*VM{
+						{
+							IP:        net.ParseIP("30.3.3.1"),
+							ControlIP: net.ParseIP("3.3.3.1"),
+						},
+					},
+				},
 			},
 		},
 		{
@@ -124,21 +220,119 @@ func TestStart(t *testing.T) {
 			sbxs: map[Type]Instances{
 				TypeDefaultSandboxX64: {12345, 67890},
 			},
+			output: map[string]tfexec.OutputMeta{
+				defSbxX64Gen0ControlIPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["1.1.1.1"],
+						"67890": ["1.1.1.2"]
+					}
+`),
+				},
+				defSbxX64Sut0ControlIPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["2.2.2.1"],
+						"67890": ["2.2.2.2"]
+					}
+`),
+				},
+				defSbxX64Bac0ControlIPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["3.3.3.1"],
+						"67890": ["3.3.3.2"]
+					}
+`),
+				},
+				defSbxX64Gen0IPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["10.1.1.1"],
+						"67890": ["10.1.1.2"]
+					}
+`),
+				},
+				defSbxX64Sut0IPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["20.2.2.1"],
+						"67890": ["20.2.2.2"]
+					}
+`),
+				},
+				defSbxX64Bac0IPs: {
+					Value: json.RawMessage(`
+					{
+						"12345": ["30.3.3.1"],
+						"67890": ["30.3.3.2"]
+					}
+`),
+				},
+			},
+			want: map[int64]*Instance{
+				12345: {
+					Type: TypeDefaultSandboxX64,
+					LoadGenerators: []*VM{
+						{
+							IP:        net.ParseIP("10.1.1.1"),
+							ControlIP: net.ParseIP("1.1.1.1"),
+						},
+					},
+					SUTs: []*VM{
+						{
+							IP:        net.ParseIP("20.2.2.1"),
+							ControlIP: net.ParseIP("2.2.2.1"),
+						},
+					},
+					Backends: []*VM{
+						{
+							IP:        net.ParseIP("30.3.3.1"),
+							ControlIP: net.ParseIP("3.3.3.1"),
+						},
+					},
+				},
+				67890: {
+					Type: TypeDefaultSandboxX64,
+					LoadGenerators: []*VM{
+						{
+							IP:        net.ParseIP("10.1.1.2"),
+							ControlIP: net.ParseIP("1.1.1.2"),
+						},
+					},
+					SUTs: []*VM{
+						{
+							IP:        net.ParseIP("20.2.2.2"),
+							ControlIP: net.ParseIP("2.2.2.2"),
+						},
+					},
+					Backends: []*VM{
+						{
+							IP:        net.ParseIP("30.3.3.2"),
+							ControlIP: net.ParseIP("3.3.3.2"),
+						},
+					},
+				},
+			},
 		},
 	}
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			fakeAPI := newFakeTerraformAPI(tc.initErr, tc.applyErr)
+			fakeAPI := newFakeTerraformAPI(tc.initErr, tc.applyErr, tc.outputErr, tc.output)
 			m := NewManager(customTerraformAPI(fakeAPI))
 			ctx := context.Background()
-			err := m.Start(ctx, tc.sbxs)
+			got, err := m.Start(ctx, tc.sbxs)
 			if (err != nil) != (tc.wantErrSubstr != "") {
 				t.Errorf("Start => unexpected error: %v, wantErrSubstr: %q", err, tc.wantErrSubstr)
 			}
 			if err != nil && !strings.Contains(err.Error(), tc.wantErrSubstr) {
 				t.Errorf("Start => unexpected error substring, got:%q, want substring:%q", err, tc.wantErrSubstr)
 
+			}
+
+			if diff := cmp.Diff(tc.want, got); diff != "" {
+				t.Errorf("Start => unexpected diff (-want, +got):\n%s", diff)
 			}
 		})
 	}
@@ -168,7 +362,7 @@ func TestStopAll(t *testing.T) {
 
 	for _, tc := range tests {
 		t.Run(tc.desc, func(t *testing.T) {
-			fakeAPI := newFakeTerraformAPI(tc.initErr, tc.applyErr)
+			fakeAPI := newFakeTerraformAPI(tc.initErr, tc.applyErr, nil, nil)
 			m := NewManager(customTerraformAPI(fakeAPI))
 			ctx := context.Background()
 			err := m.StopAll(ctx)
