@@ -41,7 +41,7 @@ const (
 )
 
 // Instances represent sandbox instances, each integer is an AZP Build ID corresponding to AZP pipeline execution that built the components for the sandbox.
-type Instances []int
+type Instances []int64
 
 // terraformAPI abstracts calls to functions that interact with Terraform.
 // Exists to support dependency injection for unit testing.
@@ -54,6 +54,7 @@ type terraformAPI interface {
 // Exists to support dependency injection for unit testing.
 type terraform interface {
 	Apply(ctx context.Context, opts ...tfexec.ApplyOption) error
+	Output(ctx context.Context, opts ...tfexec.OutputOption) (map[string]tfexec.OutputMeta, error)
 }
 
 // tfexecTerraformAPI implements terraformAPI using the real tfexec library.
@@ -102,15 +103,16 @@ func NewManager(opts ...Option) *Manager {
 }
 
 // Start starts the specified sandbox instances.
-func (m *Manager) Start(ctx context.Context, sbxs map[Type]Instances) error {
+// Returns a map of sandbox build IDs to information about the sandbox instance.
+func (m *Manager) Start(ctx context.Context, sbxs map[Type]Instances) (map[int64]*Instance, error) {
 	tf, err := m.tAPI.initTf(ctx, sandboxDefDir)
 	if err != nil {
-		return err
+		return nil, err
 	}
 
 	vars, err := sbxsToTfVars(sbxs)
 	if err != nil {
-		return err
+		return nil, err
 	}
 	var opts []tfexec.ApplyOption
 	for _, v := range vars {
@@ -119,9 +121,19 @@ func (m *Manager) Start(ctx context.Context, sbxs map[Type]Instances) error {
 
 	log.Printf("Starting Salvo sbxs %+v.", sbxs)
 	if err := tf.Apply(ctx, opts...); err != nil {
-		return fmt.Errorf("tf.Apply => %v", err)
+		return nil, fmt.Errorf("tf.Apply => %v", err)
 	}
-	return nil
+
+	out, err := tf.Output(ctx)
+	if err != nil {
+		return nil, fmt.Errorf("tf.Output => %v", err)
+	}
+
+	res, err := parseInstances(sbxs, out)
+	if err != nil {
+		return nil, fmt.Errorf("parseInstances => %v", err)
+	}
+	return res, nil
 }
 
 // StopAll stops all sandbox instances.
@@ -152,7 +164,7 @@ func sbxsToTfVars(sbxs map[Type]Instances) ([]string, error) {
 		if len(instances) == 0 {
 			return nil, fmt.Errorf("requested sandboxes specified sandbox Type %v with zero instances, at least one instance (one build ID) must be specified", t)
 		}
-		seen := map[int]bool{}
+		seen := map[int64]bool{}
 		var instStrs []string
 		for _, inst := range instances {
 			if seen[inst] {
@@ -160,7 +172,7 @@ func sbxsToTfVars(sbxs map[Type]Instances) ([]string, error) {
 			}
 			seen[inst] = true
 
-			if min := 1; inst < min {
+			if min := int64(1); inst < min {
 				return nil, fmt.Errorf("requested sandboxes specified sandbox Type %v with instance (build ID) %d, the minimum allowed instance is %d", t, inst, min)
 			}
 			instStrs = append(instStrs, fmt.Sprintf("%d", inst))
