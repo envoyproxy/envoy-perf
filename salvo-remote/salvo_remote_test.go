@@ -12,6 +12,8 @@ import (
 
 // fakeSandboxManager is a fake sandboxes.Manager implementation.
 type fakeSandboxManager struct {
+	// startOut is the output to return when Start is called.
+	startOut map[int64]*sandboxes.Instance
 	// startErr is the error to return when Start is called.
 	startErr error
 
@@ -19,22 +21,23 @@ type fakeSandboxManager struct {
 	sbxs map[sandboxes.Type]sandboxes.Instances
 }
 
-func newFakeSandboxManager(startErr error) *fakeSandboxManager {
+func newFakeSandboxManager(startOut map[int64]*sandboxes.Instance, startErr error) *fakeSandboxManager {
 	return &fakeSandboxManager{
+		startOut: startOut,
 		startErr: startErr,
 	}
 }
 
-func (fsm *fakeSandboxManager) Start(ctx context.Context, sbxs map[sandboxes.Type]sandboxes.Instances) error {
+func (fsm *fakeSandboxManager) Start(ctx context.Context, sbxs map[sandboxes.Type]sandboxes.Instances) (map[int64]*sandboxes.Instance, error) {
 	fsm.sbxs = sbxs
-	return fsm.startErr
+	return fsm.startOut, fsm.startErr
 }
 
 func TestRunSalvoRemote(t *testing.T) {
 	tests := []struct {
 		desc            string
-		buildID         int
-		buildIDOverride int
+		buildID         int64
+		buildIDOverride int64
 		fakeSMStartErr  error
 		wantSbxs        map[sandboxes.Type]sandboxes.Instances
 		wantErrSubstr   string
@@ -86,7 +89,7 @@ func TestRunSalvoRemote(t *testing.T) {
 			*buildID = tc.buildID
 			*buildIDOverride = tc.buildIDOverride
 
-			fsm := newFakeSandboxManager(tc.fakeSMStartErr)
+			fsm := newFakeSandboxManager(map[int64]*sandboxes.Instance{}, tc.fakeSMStartErr)
 			err := runSalvoRemote(fsm)
 			if (err != nil) != (tc.wantErrSubstr != "") {
 				t.Errorf("runSalvoRemote => unexpected error %v, wantErrSubstr: %q", err, tc.wantErrSubstr)
