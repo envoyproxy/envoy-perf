@@ -3,6 +3,7 @@ load("@io_bazel_rules_go//go:def.bzl", "go_library", "go_test")
 go_library(
     name = "sandboxes",
     srcs = [
+        "instances.go",
         "json.go",
         "sandboxes.go",
     ],
@@ -19,6 +20,7 @@ go_library(
 go_test(
     name = "sandboxes_test",
     srcs = [
+        "instances_test.go",
         "json_test.go",
         "sandboxes_test.go",
     ],
