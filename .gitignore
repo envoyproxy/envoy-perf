@@ -10,3 +10,5 @@ bazel-*
 # Local .terraform directories and files.
 **/.terraform/*
 **/.terraform.*
+# MacOS files.
+**/.DS_Store
