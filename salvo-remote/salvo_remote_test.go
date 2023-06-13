@@ -33,8 +33,8 @@ func (fsm *fakeSandboxManager) Start(ctx context.Context, sbxs map[sandboxes.Typ
 func TestRunSalvoRemote(t *testing.T) {
 	tests := []struct {
 		desc            string
-		buildID         int
-		buildIDOverride int
+		buildID         int64
+		buildIDOverride int64
 		fakeSMStartErr  error
 		wantSbxs        map[sandboxes.Type]sandboxes.Instances
 		wantErrSubstr   string

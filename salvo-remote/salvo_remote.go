@@ -11,8 +11,8 @@ import (
 	"github.com/envoyproxy/envoy-perf/salvo-remote/sandboxes"
 )
 
-var buildID = flag.Int("build_id", 0, "The ID of the AZP build that produced components and binaries for this salvo-remote execution. Can be overridden by providing a different ID in -build_id_override.")
-var buildIDOverride = flag.Int("build_id_override", 0, "If set, it overrides the value set via -build_id.")
+var buildID = flag.Int64("build_id", 0, "The ID of the AZP build that produced components and binaries for this salvo-remote execution. Can be overridden by providing a different ID in -build_id_override.")
+var buildIDOverride = flag.Int64("build_id_override", 0, "If set, it overrides the value set via -build_id.")
 
 // validateFlags validates the provided flag values.
 func validateFlags() error {
@@ -26,7 +26,7 @@ func validateFlags() error {
 }
 
 // getBuildID determines what build ID should Salvo execute with.
-func getBuildID() int {
+func getBuildID() int64 {
 	if (*buildIDOverride) != 0 {
 		return *buildIDOverride
 	}
