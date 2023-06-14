@@ -6,6 +6,7 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"log"
 	"os"
 
 	"github.com/envoyproxy/envoy-perf/salvo-remote/sandboxes"
@@ -35,7 +36,7 @@ func getBuildID() int64 {
 
 // sandboxManager abstracts a type that manages sandbox instances.
 type sandboxManager interface {
-	Start(context.Context, map[sandboxes.Type]sandboxes.Instances) error
+	Start(context.Context, map[sandboxes.Type]sandboxes.Instances) (map[int64]*sandboxes.Instance, error)
 }
 
 // runSalvoRemote executes Salvo remotely and returns the exit code.
@@ -49,9 +50,12 @@ func runSalvoRemote(sm sandboxManager) error {
 	}
 	ctx := context.Background()
 
-	if err := sm.Start(ctx, sbxs); err != nil {
+	insts, err := sm.Start(ctx, sbxs)
+	if err != nil {
 		return fmt.Errorf("sm.Start => %v", err)
 	}
+
+	log.Printf("Terraform returned sandbox instances:\n%v", insts)
 	return nil
 }
 
