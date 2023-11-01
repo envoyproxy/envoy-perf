@@ -9,8 +9,7 @@ set -e
 # Setup a Python virtual environment.
 function setup_salvo_venv() {
   echo "Installing virtualenv"
-  pip3 install --upgrade pip
-  pip3 install vitualenv
+  pip3 install --upgrade virtualenv
   
   source tools/python_virtualenv.sh
   reuse_or_create_salvo_venv
