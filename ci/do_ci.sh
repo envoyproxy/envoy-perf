@@ -8,9 +8,6 @@ set -e
 
 # Setup a Python virtual environment.
 function setup_salvo_venv() {
-  echo "Installing virtualenv"
-  pip3 install --upgrade virtualenv
-  
   source tools/python_virtualenv.sh
   reuse_or_create_salvo_venv
 }
@@ -63,7 +60,6 @@ function check_format() {
   echo "Checking the salvo python files format"
   pushd salvo
 
-  setup_salvo_venv
   tools/format_python_tools.sh check
 
   popd
