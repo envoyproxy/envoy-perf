@@ -9,7 +9,6 @@ set -e
 # Setup a Python virtual environment.
 function setup_salvo_venv() {
   echo "Installing virtualenv"
-  apt-get install python3-pip
   pip3 install vitualenv
   
   source tools/python_virtualenv.sh
