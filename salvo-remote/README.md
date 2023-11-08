@@ -12,26 +12,20 @@ long-term performance of the [Envoy proxy](https://www.envoyproxy.io/).
 
 The following documents outline the requirements for and design of Salvo.
 
-- [Requirements](https://docs.google.com/document/d/1mAma-ksRN0OIBInoZKUdjdaIhK2nTQxFnCujq2fKi4E/edit).
+- [Requirements](https://1drv.ms/w/c/41f5e3e2a47dacf2/EdqGBqz-dPtDmGfI7d6yLg4BPicDimc6mScj-sehZ_jGsg?e=zg9F4G).
 - [Design
-  document](https://docs.google.com/document/d/1Qfueli357u4QgOb-7-8RL98N0XnMeu2k6VJDoUwN0A4/edit?resourcekey=0-AyeFMQHHiuajx8JK2w_yfA).
+  document](https://1drv.ms/w/c/41f5e3e2a47dacf2/EZZJ8DIs84JPm_GjW9PEAtgBVYu_uY9hEnLQCoZwR4YJBg?e=FESTxo).
 - [Definition of the Minimum Viable Product
-  (MVP)](https://docs.google.com/document/d/15auKcxLfw8iILL7EF4tJ8VrnHce6KiZvd9tzWweT0DY/edit).
-- [Roadmap](https://docs.google.com/document/d/1LIWYuEaS4wwbmbaWj7cSsDzda3-o4ia-LN-bnfI94Yc/edit).
+  (MVP)](https://1drv.ms/w/c/41f5e3e2a47dacf2/EYgOE6itYKhPgRG9pxuv6qkBzVhjHpqU2D814G7sSnFaZA?e=3LEHSu).
+- [Roadmap](https://1drv.ms/w/c/41f5e3e2a47dacf2/ERIlwSS0DA5MixuqAFofrp0BAPuwt_fqjnAs2r7PF05G0Q?e=RxvTAl).
 - [Design pivot to direct VM
-  execution](https://docs.google.com/document/d/1auXzV-AEXgMzbtdG06XlZ2d9X5l_XadMheA9h51E7yc/edit).
+  execution](https://1drv.ms/w/c/41f5e3e2a47dacf2/EQtPDYrP2oNMmLP7Ajn38bYBGuIRGT5vvmaW5BaC8M-Lvg?e=n5irug).
 
 ## Current status
 
 Salvo's
-[MVP](https://docs.google.com/document/d/15auKcxLfw8iILL7EF4tJ8VrnHce6KiZvd9tzWweT0DY/edit)
-is in development. Project status can be seen in the task list and the Gantt
-chart:
-
-- [Task
-  list](https://app.asana.com/read-only/Salvo-MVP/1203151608185622/c3a265ce3aaf6f108ff846613c1dd8e9/list)
-- [Gantt
-  chart](https://app.asana.com/read-only/Salvo-MVP-Gantt/1203151608185622/3630497a685762a972cc33e16803be5c/timeline)
+[MVP](https://1drv.ms/w/c/41f5e3e2a47dacf2/EYgOE6itYKhPgRG9pxuv6qkBzVhjHpqU2D814G7sSnFaZA?e=3LEHSu)
+is in development.
 
 ## Overview
 
