@@ -51,6 +51,7 @@ else
   [[ -z "${BUILD_DIR_MOUNT_DEST}" ]] && BUILD_DIR_MOUNT_DEST="/build" # Salvo unique
   SOURCE_DIR="${PWD}"
   [[ -z "${SOURCE_DIR_MOUNT_DEST}" ]] && SOURCE_DIR_MOUNT_DEST="/source" # Salvo unique
+  ENVOY_DOCKER_SOURCE_DIR="${ENVOY_DOCKER_SOURCE_DIR:-${SOURCE_DIR_MOUNT_DEST}}"
   START_COMMAND=(
       "/bin/bash"
       "-lc"
@@ -60,7 +61,7 @@ else
           && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique` \
           && chown envoybuild /proc/self/fd/2 \
           && apt-get update && apt -y install libcairo2-dev python3-virtualenv `# Salvo unique` \
-          && sudo -EHs -u envoybuild bash -c 'cd ${SOURCE_DIR_MOUNT_DEST} && $*'") # Salvo unique
+          && sudo -EHs -u envoybuild bash -c 'cd ${ENVOY_DOCKER_SOURCE_DIR} && $*'")
 fi
 
 if [[ -n "$ENVOY_DOCKER_PLATFORM" ]]; then
