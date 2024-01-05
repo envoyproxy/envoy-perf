@@ -3,15 +3,15 @@
 
 version: 2
 updates:
-  - package-ecosystem: github-actions
-    directory: /
-    schedule:
-      interval: weekly
-  - package-ecosystem: gomod
-    directory: /salvo-remote
-    schedule:
-      interval: weekly
-  - package-ecosystem: pip
-    directory: /salvo
-    schedule:
-      interval: weekly
+- package-ecosystem: github-actions
+  directory: /
+  schedule:
+    interval: weekly
+- package-ecosystem: gomod
+  directory: /salvo-remote
+  schedule:
+    interval: weekly
+- package-ecosystem: pip
+  directory: /salvo
+  schedule:
+    interval: weekly
