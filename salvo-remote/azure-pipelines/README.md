@@ -5,11 +5,11 @@ Definition of pipelins that run Salvo performance workflows.
 ## Pipelines
 
 - `salvo_pipelines.yml` defines pipelines for the MVP of Salvo. See the [MVP
-  doc](https://docs.google.com/document/d/15auKcxLfw8iILL7EF4tJ8VrnHce6KiZvd9tzWweT0DY/edit),
+  doc](https://1drv.ms/w/c/41f5e3e2a47dacf2/EYgOE6itYKhPgRG9pxuv6qkBzVhjHpqU2D814G7sSnFaZA?e=3LEHSu),
   the [Design
-  doc](https://docs.google.com/document/d/1Qfueli357u4QgOb-7-8RL98N0XnMeu2k6VJDoUwN0A4/edit?resourcekey=0-AyeFMQHHiuajx8JK2w_yfA)
+  doc](https://1drv.ms/w/c/41f5e3e2a47dacf2/EZZJ8DIs84JPm_GjW9PEAtgBVYu_uY9hEnLQCoZwR4YJBg?e=FESTxo)
   and the [Pivot to direct
-  VM](https://docs.google.com/document/d/1auXzV-AEXgMzbtdG06XlZ2d9X5l_XadMheA9h51E7yc/edit).
+  VM](https://1drv.ms/w/c/41f5e3e2a47dacf2/EQtPDYrP2oNMmLP7Ajn38bYBGuIRGT5vvmaW5BaC8M-Lvg?e=n5irug).
 
 ## Required credentials
 
