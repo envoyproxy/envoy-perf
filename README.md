@@ -2,7 +2,6 @@
 
 [![OpenSSF Scorecard](https://api.securityscorecards.dev/projects/github.com/envoyproxy/envoy-perf/badge)](https://securityscorecards.dev/viewer/?uri=github.com/envoyproxy/envoy-perf)
 
-
 ## Performance benchmarking Options
 
 Performance benchmarking can take multiple forms:
