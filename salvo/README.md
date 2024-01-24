@@ -43,6 +43,19 @@ command as follows:
 sudo http_proxy="example.com:port" https_proxy="example.com:port" apt install ...
 ```
 
+### Python virtual environment
+
+Salvo uses a Python virtual environment located in the `salvo/salvo_venv`
+directory. This environment is created when `./ci/do_ci.sh` is executed. The
+`./ci/do_ci.sh` script reuses a previously created virtual environment if found.
+
+Therefore, you need to install the Python virtualenv dependencies, please refer to: 
+https://virtualenv.pypa.io/en/latest/installation.html
+
+If you encounter issues related to Python dependencies, a good first step in
+debugging is to remove the existing virtual environment by deleting the
+`salvo/salvo_venv` directory.
+
 ## Building Salvo
 
 To build Salvo, use the following command:
@@ -61,16 +74,6 @@ export  SOURCE_DIR_MOUNT_DEST=path_of_your_envoy-perf
 # Switch to root directory of envoy-perf
 ci/run_envoy_docker.sh 'ci/do_ci.sh build'
 ```
-
-### Python virtual environment
-
-Salvo uses a Python virtual environment located in the `salvo/salvo_venv`
-directory. This environment is created when `./ci/do_ci.sh` is executed. The
-`./ci/do_ci.sh` script reuses a previously created virtual environment if found.
-
-If you encounter issues related to Python dependencies, a good first step in
-debugging is to remove the existing virtual environment by deleting the
-`salvo/salvo_venv` directory.
 
 ## Benchmark Test Cases for Salvo
 
