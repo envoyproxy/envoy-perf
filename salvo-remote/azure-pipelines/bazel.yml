@@ -53,6 +53,13 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
+- bash: |
+    search_dir=.
+	for files in "$search_dir"/*
+	  do
+  	  echo "$files"
+	done
+ 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
   - task: PublishPipelineArtifact@1
