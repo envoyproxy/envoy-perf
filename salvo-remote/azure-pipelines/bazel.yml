@@ -52,12 +52,14 @@ steps:
     rm -rf $(Build.StagingDirectory)/tmp/*/*/external/go_sdk/test/fixedbugs
   displayName: "Check disk space at end"
   condition: always()
-bash: |
+
+- bash: |
 search_dir=.
 for files in "$search_dir"/*
  do
   echo "$files"
 done
+
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
   - task: PublishPipelineArtifact@1
