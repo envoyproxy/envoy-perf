@@ -54,11 +54,11 @@ steps:
   condition: always()
 
 - bash: |
-search_dir=.
-for files in "$search_dir"/*
- do
+  search_dir=.
+  for files in "$search_dir"/*
+    do
   echo "$files"
-done
+  done
 
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
