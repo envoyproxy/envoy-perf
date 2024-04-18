@@ -53,7 +53,6 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
-  steps:
 - bash: |
     echo "list contents of subdir:"
     ls -lR
