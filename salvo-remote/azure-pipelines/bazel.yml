@@ -53,6 +53,11 @@ steps:
   displayName: "Check disk space at end"
   condition: always()
 
+- bash: |
+    echo "list contents of subdir:"
+    ls -lR
+  displayName: "list contents of subdir"
+
 # Publish the binaries as artifacts.
 - ${{ if eq(parameters.repo, 'nighthawk') }}:
   - task: PublishPipelineArtifact@1
