@@ -62,7 +62,10 @@ else
           && usermod -a -G pcap envoybuild \
           && chown envoybuild:envoygroup ${BUILD_DIR_MOUNT_DEST} `# Salvo unique` \
           && chown envoybuild /proc/self/fd/2 \
-          && apt-get update && apt -y install libcairo2-dev python3-virtualenv `# Salvo unique` \
+          && apt-get update && apt -y install libcairo2-dev python3-virtualenv build-essential gcc-10 g++-10`# Salvo unique` \
+          && g++ --version \
+          && sudo update-alternatives --set g++ /usr/bin/g++-10 \
+          && g++ --version \
           && sudo -EHs -u envoybuild bash -c 'cd ${ENVOY_DOCKER_SOURCE_DIR} && $*'")
 fi
 
